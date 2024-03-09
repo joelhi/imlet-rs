@@ -7,19 +7,23 @@ use marching_cubes::{algorithm::generate_iso_surface, types::{core::*, dense_gri
 use crate::marching_cubes::types::implicit_functions::examples::{DistanceFunction, GyroidFunction};
 
 fn main() {
+
+    let size = 10.0;
+    let num_cells = 25;
+
     let grid = DenseGrid3f {
         origin: XYZ::get_origin(),
-        cell_size: 1.0,
-        num_x: 10,
-        num_y: 10,
-        num_z: 10,
+        cell_size: size / num_cells as f32,
+        num_x: num_cells,
+        num_y: num_cells,
+        num_z: num_cells,
     };
 
     let distance_func = DistanceFunction{source: XYZ::get_origin()};
     let gyroid = GyroidFunction{
-        length_x: 5.0,
-        length_y: 5.0,
-        length_z: 5.0
+        length_x: 2.5,
+        length_y: 2.5,
+        length_z: 2.5
     };
 
     let before = Instant::now();
