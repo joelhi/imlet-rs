@@ -16,9 +16,9 @@ impl DenseGrid3f {
         // Evaluate the function at all positions
         let mut coord: Vec<XYZ> = Vec::new();
         let mut values: Vec<f32> = Vec::new();
-        for i in 0..self.num_x {
+        for k in 0..self.num_x {
             for j in 0..self.num_y {
-                for k in 0..self.num_z {
+                for i in 0..self.num_z {
                     let temp_coord = XYZ {
                         x: self.cell_size * i as f32,
                         y: self.cell_size * j as f32,
@@ -41,12 +41,12 @@ impl DenseGrid3f {
         [
             self.get_index(i, j, k),
             self.get_index(i + 1, j, k),
-            self.get_index(i, j + 1, k),
             self.get_index(i + 1, j + 1, k),
+            self.get_index(i, j + 1, k),
             self.get_index(i, j, k + 1),
             self.get_index(i + 1, j, k + 1),
-            self.get_index(i, j + 1, k + 1),
             self.get_index(i + 1, j + 1, k + 1),
+            self.get_index(i, j + 1, k + 1),
         ]
     }
 

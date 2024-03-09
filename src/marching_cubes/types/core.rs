@@ -13,7 +13,19 @@ impl XYZ {
     }
 
     pub fn get_origin() -> XYZ {
-        XYZ { x: 0.0, y: 0.0, z: 0.0 }
+        XYZ {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
+    }
+
+    pub fn interpolate(first: &XYZ, second: &XYZ, parameter: f32) -> XYZ {
+        XYZ {
+            x: first.x + parameter * (second.x - first.x),
+            y: first.y + parameter * (second.y - first.y),
+            z: first.z + parameter * (second.z - first.z),
+        }
     }
 }
 
