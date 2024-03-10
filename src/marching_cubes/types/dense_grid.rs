@@ -144,7 +144,25 @@ impl DenseGrid3f {
         let k = index / (self.num_x * self.num_y);
         let temp = index - (k * self.num_x * self.num_y);
         let j = temp / self.num_x;
-        let i = temp % self.num_x;
+        let i = temp % (self.num_x-1);
+
+        (i, j, k)
+    }
+
+    pub fn get_index_c(&self, i: usize, j: usize, k: usize) -> usize {
+        assert!(
+            i < self.num_x && j < self.num_y && k < self.num_z,
+            "Coordinates out of bounds"
+        );
+        (k * (self.num_x-1) * (self.num_y-1)) + (j * (self.num_x-1)) + i
+    }
+
+    pub fn get_coord_c(&self, index: usize) -> (usize, usize, usize) {
+        assert!(index < self.get_num_points(), "Index out of bounds");
+        let k = index / ((self.num_x-1) * (self.num_y-1));
+        let temp = index - (k * (self.num_x-1) * (self.num_y-1));
+        let j = temp / (self.num_x-1);
+        let i = temp % (self.num_x-1);
 
         (i, j, k)
     }

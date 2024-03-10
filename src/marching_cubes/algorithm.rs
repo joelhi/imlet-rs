@@ -8,8 +8,8 @@ pub fn generate_iso_surface(grid: &DenseGrid3f, iso_val: f32) -> Vec<Triangle> {
     let mut triangles: Vec<Triangle> = Vec::new();
 
     // Generate triangles for cell
-    for index in 0..grid.get_num_cells() {
-        let (i, j, k) = grid.get_coord(index);
+    for cell_index in 0..grid.get_num_cells() {
+        let (i, j, k) = grid.get_coord_c(cell_index);
         polygonize_cell(
             iso_val,
             &grid.get_cell_coord(i, j, k),

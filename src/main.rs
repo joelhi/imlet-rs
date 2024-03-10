@@ -14,7 +14,7 @@ use crate::marching_cubes::types::implicit_functions::examples::{
 
 fn main() {
     let size = 10.0;
-    let num_pts = 2;
+    let num_pts = 10;
 
     let mut grid = DenseGrid3f::new(
         XYZ::get_origin(),
