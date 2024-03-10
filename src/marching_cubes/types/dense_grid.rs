@@ -143,8 +143,8 @@ impl DenseGrid3f {
         assert!(index < self.get_num_points(), "Index out of bounds");
         let k = index / (self.num_x * self.num_y);
         let temp = index - (k * self.num_x * self.num_y);
-        let j = index / self.num_x;
-        let i = index % self.num_x;
+        let j = temp / self.num_x;
+        let i = temp % self.num_x;
 
         (i, j, k)
     }
