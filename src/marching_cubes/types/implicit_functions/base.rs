@@ -1,5 +1,5 @@
 use crate::XYZ;
 
 pub trait ImplicitFunction {
-    fn eval(&self, pt:XYZ)->f32;
+    fn eval(&self, x:f32, y:f32, z:f32)->f32;
 }

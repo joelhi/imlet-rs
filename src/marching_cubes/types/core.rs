@@ -8,8 +8,12 @@ pub struct XYZ {
 }
 
 impl XYZ {
-    pub fn distance_to(&self, pt: XYZ) -> f32 {
+    pub fn distance_to_xyz(&self, pt: XYZ) -> f32 {
         ((self.x - pt.x).powi(2) + (self.y - pt.y).powi(2) + (self.z - pt.z).powi(2)).sqrt()
+    }
+
+    pub fn distance_to_coord(&self, x: f32, y:f32, z:f32) -> f32 {
+        ((self.x - x).powi(2) + (self.y - y).powi(2) + (self.z - z).powi(2)).sqrt()
     }
 
     pub fn get_origin() -> XYZ {
