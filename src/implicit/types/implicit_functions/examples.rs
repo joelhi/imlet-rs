@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 
 use super::base::ImplicitFunction;
-use crate::marching_cubes::types::core::XYZ;
+use crate::implicit::types::core::XYZ;
 
 pub struct GyroidFunction {
     pub length_x: f32,

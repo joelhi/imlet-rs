@@ -2,17 +2,17 @@ use super::{
     tables::{EDGE_TABLE, TRI_TABLE},
     types::dense_grid::DenseGrid3f,
 };
-use crate::marching_cubes::types::core::*;
+use crate::implicit::types::core::*;
 
 pub fn generate_iso_surface(grid: &DenseGrid3f, iso_val: f32) -> Vec<Triangle> {
     let mut triangles: Vec<Triangle> = Vec::new();
 
     // Generate triangles for cell
     for cell_index in 0..grid.get_num_cells() {
-        let (i, j, k) = grid.get_coord_c(cell_index);
+        let (i, j, k) = grid.get_cell_coord(cell_index);
         polygonize_cell(
             iso_val,
-            &grid.get_cell_coord(i, j, k),
+            &&grid.get_cell_xyz(i, j, k),
             &grid.get_cell_values(i, j, k),
             &mut triangles,
         );

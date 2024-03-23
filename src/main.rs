@@ -1,20 +1,19 @@
-mod marching_cubes;
+mod implicit;
 
-use core::num;
 use std::{fs, time::Instant};
 
-use marching_cubes::{
-    algorithm::generate_iso_surface,
+use implicit::{
+    marching_cubes::generate_iso_surface,
     types::{core::*, dense_grid::DenseGrid3f},
 };
 
-use crate::marching_cubes::types::implicit_functions::examples::{
+use crate::implicit::types::implicit_functions::examples::{
     DistanceFunction, GyroidFunction,
 };
 
 fn main() {
     let size = 10.0;
-    let num_pts = 10;
+    let num_pts = 500;
 
     let mut grid = DenseGrid3f::new(
         XYZ::get_origin(),
@@ -34,7 +33,7 @@ fn main() {
     };
 
     let before = Instant::now();
-    grid.evaluate(&_distance_func);
+    grid.evaluate(&gyroid);
 
     let triangles = generate_iso_surface(&grid, 2.5);
 
