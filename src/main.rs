@@ -4,13 +4,15 @@ use std::time::Instant;
 use implicit::types::grid::DenseGrid3f;
 use implicit::types::core::*;
 
+use implicit::types::mesh::Mesh;
 use implicit::utils::implicit_functions::{DistanceFunction, GyroidFunction};
 
 use implicit::algorithms::marching_cubes::generate_iso_surface;
+use implicit::utils::io::mesh_to_obj;
 
 fn main() {
     let size = 10.0;
-    let num_pts = 500;
+    let num_pts = 25;
 
     let mut grid = DenseGrid3f::new(
         XYZ::get_origin(),
@@ -24,9 +26,9 @@ fn main() {
         source: XYZ::get_origin(),
     };
     let gyroid = GyroidFunction {
-        length_x: 2.5,
+        length_x: 10.0,
         length_y: 2.5,
-        length_z: 2.5,
+        length_z: 3.0,
     };
 
     let before = Instant::now();
@@ -38,7 +40,9 @@ fn main() {
         before.elapsed()
     );
 
-    let triangles = generate_iso_surface(&grid, 2.5);
+    let triangles = generate_iso_surface(&grid, 0.0);
+
+    let mesh = Mesh::from_triangles(&triangles);
 
     println!(
         "Full isosurface for {} points generated in {:.2?}",
@@ -46,20 +50,6 @@ fn main() {
         before.elapsed()
     );
 
-    fs::write("data.txt", get_triangle_as_str(&triangles)).expect("Unable to write file");
-}
-
-fn get_triangle_as_str(triangles: &Vec<Triangle>) -> String {
-    let mut data = String::new();
-
-    for t in triangles {
-        let p1 = format!("{{{},{},{}}}\n", t.p1.x, t.p1.y, t.p1.z);
-        data.push_str(&p1);
-        let p2 = format!("{{{},{},{}}}\n", t.p2.x, t.p2.y, t.p2.z);
-        data.push_str(&p2);
-        let p3 = format!("{{{},{},{}}}\n", t.p3.x, t.p3.y, t.p3.z);
-        data.push_str(&p3);
-    }
-
-    data
+    fs::write("data.obj", mesh_to_obj(&mesh)).expect("Unable to write file");
+    //fs::write("data.txt", get_triangles_as_str(&triangles)).expect("Unable to write file");
 }

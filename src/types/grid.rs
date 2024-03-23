@@ -52,14 +52,14 @@ impl DenseGrid3f {
             panic!("Index out of bounds");
         }
         [
-            self.get_cell_index(i, j, k),
-            self.get_cell_index(i + 1, j, k),
-            self.get_cell_index(i + 1, j + 1, k),
-            self.get_cell_index(i, j + 1, k),
-            self.get_cell_index(i, j, k + 1),
-            self.get_cell_index(i + 1, j, k + 1),
-            self.get_cell_index(i + 1, j + 1, k + 1),
-            self.get_cell_index(i, j + 1, k + 1),
+            self.get_point_index(i, j, k),
+            self.get_point_index(i + 1, j, k),
+            self.get_point_index(i + 1, j + 1, k),
+            self.get_point_index(i, j + 1, k),
+            self.get_point_index(i, j, k + 1),
+            self.get_point_index(i + 1, j, k + 1),
+            self.get_point_index(i + 1, j + 1, k + 1),
+            self.get_point_index(i, j + 1, k + 1),
         ]
     }
 
@@ -79,39 +79,39 @@ impl DenseGrid3f {
                 z: k_val * size,
             },
             XYZ {
-                x: i_val + 1.0 * size,
+                x: (i_val + 1.0) * size,
                 y: j_val * size,
                 z: k_val * size,
             },
             XYZ {
-                x: i_val + 1.0 * size,
-                y: j_val + 1.0 * size,
+                x: (i_val + 1.0) * size,
+                y: (j_val + 1.0) * size,
                 z: k_val * size,
             },
             XYZ {
                 x: i_val * size,
-                y: j_val + 1.0 * size,
+                y: (j_val + 1.0) * size,
                 z: k_val * size,
             },
             XYZ {
                 x: i_val * size,
                 y: j_val * size,
-                z: k_val + 1.0 * size,
+                z: (k_val + 1.0) * size,
             },
             XYZ {
-                x: i_val + 1.0 * size,
+                x: (i_val + 1.0) * size,
                 y: j_val * size,
-                z: k_val + 1.0 * size,
+                z: (k_val + 1.0) * size,
             },
             XYZ {
-                x: i_val + 1.0 * size,
-                y: j_val + 1.0 * size,
-                z: k_val + 1.0 * size,
+                x: (i_val + 1.0) * size,
+                y: (j_val + 1.0) * size,
+                z: (k_val + 1.0) * size,
             },
             XYZ {
                 x: i_val * size,
-                y: j_val + 1.0 * size,
-                z: k_val + 1.0 * size,
+                y: (j_val + 1.0) * size,
+                z: (k_val + 1.0) * size,
             },
         ]
     }
@@ -138,7 +138,7 @@ impl DenseGrid3f {
         (k * self.num_x * self.num_y) + (j * self.num_x) + i
     }
 
-    pub fn get_point_index3(&self, index: usize) -> (usize, usize, usize) {
+    pub fn get_point_coord(&self, index: usize) -> (usize, usize, usize) {
         assert!(index < self.get_num_points(), "Index out of bounds");
         let k = index / (self.num_x * self.num_y);
         let temp = index - (k * self.num_x * self.num_y);

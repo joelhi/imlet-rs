@@ -1,5 +1,6 @@
 use crate::types::core::*;
 use crate::types::grid::DenseGrid3f;
+use crate::types::mesh::Triangle;
 use super::tables::*;
 
 pub fn generate_iso_surface(grid: &DenseGrid3f, iso_val: f32) -> Vec<Triangle> {
@@ -34,11 +35,9 @@ fn get_cube_index(cell_values: &[f32; 8], iso_val: f32) -> usize {
     if cell_values[0] < iso_val {
         cube_index |= 1;
     }
-
     if cell_values[1] < iso_val {
         cube_index |= 2;
     }
-
     if cell_values[2] < iso_val {
         cube_index |= 4;
     }
