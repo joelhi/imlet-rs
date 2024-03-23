@@ -1,6 +1,6 @@
 use std::ops;
 
-const SPATIAL_TOL: f32 = 1E-3;
+const SPATIAL_TOL: f32 = 1E-5;
 
 #[derive(Debug, Clone, Copy)]
 pub struct XYZ {

@@ -26,8 +26,8 @@ fn main() {
         source: XYZ::get_origin(),
     };
     let gyroid = GyroidFunction {
-        length_x: 10.0,
-        length_y: 2.5,
+        length_x: 3.0,
+        length_y: 3.0,
         length_z: 3.0,
     };
 
