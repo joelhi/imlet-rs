@@ -1,6 +1,5 @@
-use crate::XYZ;
-
-use super::implicit_functions::base::ImplicitFunction;
+use super::core::XYZ;
+use super::core::ImplicitFunction;
 
 #[derive(Debug, Clone)]
 pub struct DenseGrid3f {
@@ -38,9 +37,9 @@ impl DenseGrid3f {
             for j in 0..self.num_y {
                 for i in 0..self.num_z {
                     self.buffer.push(function.eval(
-                        self.cell_size * i as f32,
-                        self.cell_size * j as f32,
-                        self.cell_size * k as f32,
+                        self.origin.x + self.cell_size * i as f32,
+                        self.origin.y + self.cell_size * j as f32,
+                        self.origin.z + self.cell_size * k as f32,
                     ));
                 }
             }

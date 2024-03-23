@@ -1,8 +1,6 @@
-use super::{
-    tables::{EDGE_TABLE, TRI_TABLE},
-    types::dense_grid::DenseGrid3f,
-};
-use crate::implicit::types::core::*;
+use crate::types::core::*;
+use crate::types::grid::DenseGrid3f;
+use super::tables::*;
 
 pub fn generate_iso_surface(grid: &DenseGrid3f, iso_val: f32) -> Vec<Triangle> {
     let mut triangles: Vec<Triangle> = Vec::new();

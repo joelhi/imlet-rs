@@ -1,15 +1,12 @@
-mod implicit;
+use std::fs;
+use std::time::Instant;
 
-use std::{fs, time::Instant};
+use implicit::types::grid::DenseGrid3f;
+use implicit::types::core::*;
 
-use implicit::{
-    marching_cubes::generate_iso_surface,
-    types::{core::*, dense_grid::DenseGrid3f},
-};
+use implicit::utils::implicit_functions::{DistanceFunction, GyroidFunction};
 
-use crate::implicit::types::implicit_functions::examples::{
-    DistanceFunction, GyroidFunction,
-};
+use implicit::algorithms::marching_cubes::generate_iso_surface;
 
 fn main() {
     let size = 10.0;
@@ -35,10 +32,16 @@ fn main() {
     let before = Instant::now();
     grid.evaluate(&gyroid);
 
+    println!(
+        "Dense value buffer for {} points generated in {:.2?}",
+        grid.get_num_points(),
+        before.elapsed()
+    );
+
     let triangles = generate_iso_surface(&grid, 2.5);
 
     println!(
-        "Isosurface for {} points generated in {:.2?}",
+        "Full isosurface for {} points generated in {:.2?}",
         grid.get_num_points(),
         before.elapsed()
     );

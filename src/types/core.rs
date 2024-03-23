@@ -77,3 +77,7 @@ pub struct Triangle {
     pub p2: XYZ,
     pub p3: XYZ,
 }
+
+pub trait ImplicitFunction {
+    fn eval(&self, x:f32, y:f32, z:f32)->f32;
+}
