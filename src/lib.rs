@@ -1,3 +1,2 @@
-pub mod algorithms;
-pub mod utils;
-pub mod types;
+pub mod engine;
+pub mod viewer;

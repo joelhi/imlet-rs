@@ -1,4 +1,4 @@
-use crate::types::mesh::{Mesh, Triangle};
+use crate::engine::types::mesh::{Mesh, Triangle};
 
 pub fn get_triangles_as_str(triangles: &Vec<Triangle>) -> String {
     let mut data = String::new();

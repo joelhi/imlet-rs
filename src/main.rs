@@ -1,18 +1,20 @@
 use std::fs;
 use std::time::Instant;
 
-use implicit::types::grid::DenseGrid3f;
-use implicit::types::core::*;
+use implicit::engine::types::grid::DenseGrid3f;
+use implicit::engine::types::core::*;
 
-use implicit::types::mesh::Mesh;
-use implicit::utils::implicit_functions::{DistanceFunction, GyroidFunction};
+use implicit::engine::types::mesh::Mesh;
+use implicit::engine::utils::implicit_functions::{DistanceFunction, GyroidFunction};
 
-use implicit::algorithms::marching_cubes::generate_iso_surface;
-use implicit::utils::io::mesh_to_obj;
+use implicit::engine::algorithms::marching_cubes::generate_iso_surface;
+use implicit::engine::utils::io::mesh_to_obj;
+
+use implicit::viewer::window_helper::{self, run};
 
 fn main() {
     let size = 10.0;
-    let num_pts = 25;
+    let num_pts = 10;
 
     let mut grid = DenseGrid3f::new(
         XYZ::get_origin(),
@@ -50,6 +52,8 @@ fn main() {
         before.elapsed()
     );
 
-    fs::write("data.obj", mesh_to_obj(&mesh)).expect("Unable to write file");
+    pollster::block_on(run());
+
+    //fs::write("data.obj", mesh_to_obj(&mesh)).expect("Unable to write file");
     //fs::write("data.txt", get_triangles_as_str(&triangles)).expect("Unable to write file");
 }

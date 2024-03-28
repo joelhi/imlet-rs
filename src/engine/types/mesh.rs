@@ -64,19 +64,17 @@ impl Mesh {
         mesh
     }
 
-    pub fn resolve_vertex_index(pt: XYZ, map:&mut HashMap<usize,usize>, vertices: &mut Vec<XYZ>)->usize{
-        let index: usize;
-        let hash = &pt.spatial_hash();
-        if map.contains_key(hash){
-            index = map[hash];
+    pub fn resolve_vertex_index(pt: XYZ, map: &mut HashMap<usize, usize>, vertices: &mut Vec<XYZ>) -> usize {
+        let hash = pt.spatial_hash();
+        match map.get(&hash) {
+            Some(&index) => index,
+            None => {
+                let index = vertices.len();
+                map.insert(hash, index);
+                vertices.push(pt);
+                index
+            }
         }
-        else{
-            index = vertices.len();
-            map.insert(*hash, index);
-            vertices.push(pt);
-        }
-
-        index
     }
 }
 
