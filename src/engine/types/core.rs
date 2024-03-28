@@ -1,7 +1,5 @@
 use std::ops;
 
-const SPATIAL_TOL: f32 = 1E-5;
-
 #[derive(Debug, Clone, Copy)]
 pub struct XYZ {
     pub x: f32,
@@ -11,11 +9,19 @@ pub struct XYZ {
 
 impl XYZ {
     pub fn distance_to_xyz(&self, pt: XYZ) -> f32 {
-        ((self.x - pt.x).powi(2) + (self.y - pt.y).powi(2) + (self.z - pt.z).powi(2)).sqrt()
+        self.distance_to_xyz(pt).sqrt()
     }
 
     pub fn distance_to_coord(&self, x: f32, y:f32, z:f32) -> f32 {
-        ((self.x - x).powi(2) + (self.y - y).powi(2) + (self.z - z).powi(2)).sqrt()
+        self.distance_to_coord_squared(x, y, z).sqrt()
+    }
+
+    pub fn distance_to_xyz_squared(&self, pt: XYZ) -> f32 {
+        ((self.x - pt.x).powi(2) + (self.y - pt.y).powi(2) + (self.z - pt.z).powi(2))
+    }
+
+    pub fn distance_to_coord_squared(&self, x: f32, y:f32, z:f32) -> f32 {
+        ((self.x - x).powi(2) + (self.y - y).powi(2) + (self.z - z).powi(2))
     }
 
     pub fn get_origin() -> XYZ {
@@ -32,17 +38,6 @@ impl XYZ {
             y: first.y + parameter * (second.y - first.y),
             z: first.z + parameter * (second.z - first.z),
         }
-    }
-
-    pub fn spatial_hash(&self)->usize{
-        let multiplier = 1.0 / SPATIAL_TOL;
-        let mut s_hash = 23;
-
-        s_hash = s_hash * 37 + (self.x * multiplier) as usize;
-        s_hash = s_hash * 37 + (self.y * multiplier) as usize;
-        s_hash = s_hash * 37 + (self.z * multiplier) as usize;
-
-        return s_hash;
     }
 }
 

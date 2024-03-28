@@ -1,6 +1,8 @@
 use std::{collections::HashMap, usize};
-
+use crate::engine::types::hash_grid::SpatialHashGrid;
 use super::core::XYZ;
+
+
 
 pub struct Mesh{
     vertices:Vec<XYZ>,
@@ -33,48 +35,22 @@ impl Mesh {
 
     pub fn from_triangles(triangles:&[Triangle])->Mesh{
         // Contruct vertex buffer using a hashset for coordinates to index mapping
-        let mut vertices:Vec<XYZ> = Vec::new();
         let mut faces:Vec<[usize;3]> = Vec::new();
-        let mut map: HashMap<usize, usize> = HashMap::new();
+        let mut grid = SpatialHashGrid::new();
 
         let mut mesh = Mesh::new();
         for triangle in triangles{
             faces.push(
                 [
-                    Self::resolve_vertex_index(
-                        triangle.p1,
-                        &mut map,
-                        &mut vertices
-                    ),
-                    Self::resolve_vertex_index(
-                        triangle.p2,
-                        &mut map,
-                        &mut vertices
-                    ),
-                    Self::resolve_vertex_index(
-                        triangle.p3,
-                        &mut map,
-                        &mut vertices
-                    )
+                    grid.add_point(triangle.p1),
+                    grid.add_point(triangle.p2),
+                    grid.add_point(triangle.p3)
                 ]
             );
         }
-        mesh.add_vertices(&vertices);
+        mesh.add_vertices(&grid.vertices());
         mesh.add_faces(&faces);
         mesh
-    }
-
-    pub fn resolve_vertex_index(pt: XYZ, map: &mut HashMap<usize, usize>, vertices: &mut Vec<XYZ>) -> usize {
-        let hash = pt.spatial_hash();
-        match map.get(&hash) {
-            Some(&index) => index,
-            None => {
-                let index = vertices.len();
-                map.insert(hash, index);
-                vertices.push(pt);
-                index
-            }
-        }
     }
 }
 

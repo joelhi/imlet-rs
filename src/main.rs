@@ -52,6 +52,7 @@ fn main() {
         before.elapsed()
     );
 
+    println!("Running viewer...");
     pollster::block_on(run());
 
     //fs::write("data.obj", mesh_to_obj(&mesh)).expect("Unable to write file");
