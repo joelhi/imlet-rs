@@ -4,14 +4,15 @@ use implicit::engine::types::*;
 use implicit::engine::utils::implicit_functions::{DistanceFunction, GyroidFunction};
 
 use implicit::engine::algorithms::marching_cubes::generate_iso_surface;
+use implicit::engine::utils::io::write_as_obj;
 
-use implicit::viewer::window_helper::{self, run};
+use implicit::viewer::window_helper::run;
 
 fn main() {
     let size = 10.0;
     let num_pts = 10;
 
-    let mut grid = DenseGrid3f::new(
+    let mut grid = DenseGridF32::new(
         XYZ::get_origin(),
         size / num_pts as f32,
         num_pts,
@@ -48,7 +49,7 @@ fn main() {
     );
 
 
-
+    write_as_obj(&mesh, "output");
 
     println!("Running viewer...");
     pollster::block_on(run());

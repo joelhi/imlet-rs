@@ -17,11 +17,11 @@ impl XYZ {
     }
 
     pub fn distance_to_xyz_squared(&self, pt: XYZ) -> f32 {
-        ((self.x - pt.x).powi(2) + (self.y - pt.y).powi(2) + (self.z - pt.z).powi(2))
+        (self.x - pt.x).powi(2) + (self.y - pt.y).powi(2) + (self.z - pt.z).powi(2)
     }
 
     pub fn distance_to_coord_squared(&self, x: f32, y:f32, z:f32) -> f32 {
-        ((self.x - x).powi(2) + (self.y - y).powi(2) + (self.z - z).powi(2))
+        (self.x - x).powi(2) + (self.y - y).powi(2) + (self.z - z).powi(2)
     }
 
     pub fn get_origin() -> XYZ {

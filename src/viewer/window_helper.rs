@@ -72,13 +72,9 @@ struct State {
     size: winit::dpi::PhysicalSize<u32>,
     render_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
-    num_vertices: u32,
     index_buffer: wgpu::Buffer,
     num_indices: u32,
 
-    // The window must be declared after the surface so
-    // it gets dropped after it as the surface contains
-    // unsafe references to the window's resources.
     window: Window,
 }
 
@@ -226,7 +222,6 @@ impl State {
             contents: bytemuck::cast_slice(VERTICES),
             usage: wgpu::BufferUsages::VERTEX,
         });
-        let num_vertices = VERTICES.len() as u32;
         let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Index Buffer"),
             contents: bytemuck::cast_slice(INDICES),
@@ -242,7 +237,6 @@ impl State {
             size,
             render_pipeline,
             vertex_buffer,
-            num_vertices,
             index_buffer,
             num_indices,
         }

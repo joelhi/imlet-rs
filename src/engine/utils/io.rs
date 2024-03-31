@@ -1,6 +1,6 @@
 use std::fs;
 
-use crate::engine::types::{Mesh, Triangle};
+use crate::engine::types::Mesh;
 
 pub fn mesh_to_obj(mesh: &Mesh) -> String {
     let mut data = String::new();
@@ -19,5 +19,5 @@ pub fn mesh_to_obj(mesh: &Mesh) -> String {
 }
 
 pub fn write_as_obj(mesh: &Mesh, name: &str)->bool{
-    fs::write(name.to_owned() + "obj", mesh_to_obj(&mesh)).is_ok()
+    fs::write(name.to_owned() + ".obj", mesh_to_obj(&mesh)).is_ok()
 }

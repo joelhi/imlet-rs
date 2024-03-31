@@ -4,7 +4,7 @@ use super::ImplicitFunction;
 
 
 #[derive(Debug, Clone)]
-pub struct DenseGrid3f {
+pub struct DenseGridF32 {
     origin: XYZ,
     cell_size: f32,
     num_x: usize,
@@ -14,15 +14,15 @@ pub struct DenseGrid3f {
     buffer: Vec<f32>,
 }
 
-impl DenseGrid3f {
+impl DenseGridF32 {
     pub fn new(
         origin: XYZ,
         cell_size: f32,
         size_x: usize,
         sixe_y: usize,
         size_z: usize,
-    ) -> DenseGrid3f {
-        DenseGrid3f {
+    ) -> DenseGridF32 {
+        DenseGridF32 {
             origin: origin,
             cell_size: cell_size,
             num_x: size_x,
