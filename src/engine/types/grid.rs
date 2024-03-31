@@ -1,5 +1,7 @@
-use super::core::XYZ;
-use super::core::ImplicitFunction;
+use super::XYZ;
+use super::ImplicitFunction;
+
+
 
 #[derive(Debug, Clone)]
 pub struct DenseGrid3f {

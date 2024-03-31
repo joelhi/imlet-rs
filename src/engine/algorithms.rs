@@ -1,2 +1,2 @@
 pub mod marching_cubes;
-pub mod tables;
+mod tables;

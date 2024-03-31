@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use crate::engine::types::core::{ImplicitFunction, XYZ};
+use crate::engine::types::{ImplicitFunction, XYZ};
 
 pub struct GyroidFunction {
     pub length_x: f32,

@@ -1,6 +1,6 @@
-use crate::engine::types::core::*;
-use crate::engine::types::grid::DenseGrid3f;
-use crate::engine::types::mesh::Triangle;
+use crate::engine::types::XYZ;
+use crate::engine::types::DenseGrid3f;
+use crate::engine::types::Triangle;
 use super::tables::*;
 
 pub fn generate_iso_surface(grid: &DenseGrid3f, iso_val: f32) -> Vec<Triangle> {

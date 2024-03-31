@@ -1,8 +1,6 @@
-use std::{collections::HashMap, usize};
-use crate::engine::types::hash_grid::SpatialHashGrid;
-use super::core::XYZ;
-
-
+use std::usize;
+use super::SpatialHashGrid;
+use super::XYZ;
 
 pub struct Mesh{
     vertices:Vec<XYZ>,

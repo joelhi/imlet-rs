@@ -1,4 +1,4 @@
-use super::core::XYZ;
+use super::XYZ;
 use std::{collections::HashMap, usize};
 
 const DEFAULT_SPATIAL_TOL: f32 = 1E-5;

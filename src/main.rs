@@ -1,14 +1,9 @@
-use std::fs;
 use std::time::Instant;
 
-use implicit::engine::types::grid::DenseGrid3f;
-use implicit::engine::types::core::*;
-
-use implicit::engine::types::mesh::Mesh;
+use implicit::engine::types::*;
 use implicit::engine::utils::implicit_functions::{DistanceFunction, GyroidFunction};
 
 use implicit::engine::algorithms::marching_cubes::generate_iso_surface;
-use implicit::engine::utils::io::mesh_to_obj;
 
 use implicit::viewer::window_helper::{self, run};
 
@@ -52,9 +47,10 @@ fn main() {
         before.elapsed()
     );
 
+
+
+
     println!("Running viewer...");
     pollster::block_on(run());
 
-    //fs::write("data.obj", mesh_to_obj(&mesh)).expect("Unable to write file");
-    //fs::write("data.txt", get_triangles_as_str(&triangles)).expect("Unable to write file");
 }

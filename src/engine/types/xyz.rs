@@ -9,7 +9,7 @@ pub struct XYZ {
 
 impl XYZ {
     pub fn distance_to_xyz(&self, pt: XYZ) -> f32 {
-        self.distance_to_xyz(pt).sqrt()
+        self.distance_to_xyz_squared(pt).sqrt()
     }
 
     pub fn distance_to_coord(&self, x: f32, y:f32, z:f32) -> f32 {
@@ -77,8 +77,4 @@ impl ops::Mul<f32> for XYZ {
             z: self.z * rhs,
         }
     }
-}
-
-pub trait ImplicitFunction {
-    fn eval(&self, x:f32, y:f32, z:f32)->f32;
 }
