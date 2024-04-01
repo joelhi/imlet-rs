@@ -93,7 +93,7 @@ fn get_vertices(
     cell_values: &[f32; 8],
     iso_val: f32,
 ) -> [XYZ; 12] {
-    let mut vertices = [XYZ::get_origin(); 12];
+    let mut vertices = [XYZ::origin(); 12];
 
     if EDGE_TABLE[cube_index] == 0 {
         return vertices;

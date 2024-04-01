@@ -27,4 +27,5 @@ pub mod viewer{
     mod vertex;
     mod camera;
     mod camera_controller;
+    mod texture;
 }

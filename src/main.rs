@@ -9,11 +9,11 @@ use implicit::engine::utils::io::write_as_obj;
 use implicit::viewer::window::run;
 
 fn main() {
-    let size = 200.0;
-    let num_pts = 75;
+    let size = 50.0;
+    let num_pts = 25;
 
     let mut grid = DenseGridF32::new(
-        XYZ::get_origin(),
+        XYZ::origin(),
         size / (num_pts as f32),
         num_pts,
         num_pts,
@@ -21,12 +21,12 @@ fn main() {
     );
 
     let _distance_func = DistanceFunction {
-        source: XYZ::get_origin(),
+        source: XYZ::origin(),
     };
     let gyroid = GyroidFunction {
-        length_x: 50.0,
-        length_y: 50.0,
-        length_z: 50.0,
+        length_x: 10.0,
+        length_y: 10.0,
+        length_z: 10.0,
     };
 
     let before = Instant::now();

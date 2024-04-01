@@ -5,6 +5,7 @@ use std::usize;
 pub struct Mesh {
     vertices: Vec<XYZ>,
     faces: Vec<[usize; 3]>,
+    normals: Option<Vec<XYZ>>,
 }
 
 impl Mesh {
@@ -12,6 +13,7 @@ impl Mesh {
         Mesh {
             vertices: Vec::new(),
             faces: Vec::new(),
+            normals: None,
         }
     }
 
@@ -40,7 +42,7 @@ impl Mesh {
     }
 
     pub fn get_centroid(&self)->XYZ{
-        let mut centroid: XYZ = XYZ::get_origin();
+        let mut centroid: XYZ = XYZ::origin();
 
         for &v in self.get_vertices(){
             centroid=centroid+v;
@@ -49,32 +51,25 @@ impl Mesh {
         centroid*(1.0/self.num_vertices() as f32)
     }
 
-    pub fn get_bounds(&self)->(XYZ, XYZ){
-        let mut min: XYZ = XYZ::get_origin();
-        let mut max: XYZ = XYZ::get_origin();
-
-        for v in self.get_vertices(){
-            if(v.x > max.x){
-                max.x = v.x;
-            }
-            if(v.y > max.y){
-                max.y= v.y;
-            }
-            if(v.z > max.z){
-                max.z = v.z;
-            }
-            if(v.x < min.x){
-                min.x = v.x;
-            }
-            if(v.y < min.y){
-                min.y= v.y;
-            }
-            if(v.z < min.z){
-                min.z = v.z;
-            }
+    pub fn get_bounds(&self) -> (XYZ, XYZ) {
+        let mut min = XYZ::origin();
+        let mut max = XYZ::origin();
+    
+        for v in self.get_vertices() {
+            min.x = min.x.min(v.x);
+            min.y = min.y.min(v.y);
+            min.z = min.z.min(v.z);
+            
+            max.x = max.x.max(v.x);
+            max.y = max.y.max(v.y);
+            max.z = max.z.max(v.z);
         }
-
+    
         (min, max)
+    }
+
+    pub fn compute_normals(&self){
+        panic!("Not implemented.")
     }
 
     pub fn from_triangles(triangles: &[Triangle]) -> Mesh {

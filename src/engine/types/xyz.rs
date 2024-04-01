@@ -24,7 +24,7 @@ impl XYZ {
         (self.x - x).powi(2) + (self.y - y).powi(2) + (self.z - z).powi(2)
     }
 
-    pub fn get_origin() -> XYZ {
+    pub fn origin() -> XYZ {
         XYZ {
             x: 0.0,
             y: 0.0,
@@ -43,7 +43,6 @@ impl XYZ {
 
 impl ops::Add<XYZ> for XYZ {
     type Output = XYZ;
-
     fn add(self, _rhs: XYZ) -> XYZ {
         {
             XYZ {
@@ -57,7 +56,6 @@ impl ops::Add<XYZ> for XYZ {
 
 impl ops::Sub<XYZ> for XYZ {
     type Output = XYZ;
-
     fn sub(self, _rhs: XYZ) -> XYZ {
         XYZ {
             x: self.x - _rhs.x,
@@ -69,12 +67,18 @@ impl ops::Sub<XYZ> for XYZ {
 
 impl ops::Mul<f32> for XYZ {
     type Output = XYZ;
-
     fn mul(self, rhs: f32) -> Self::Output {
         XYZ {
             x: self.x * rhs,
             y: self.y * rhs,
             z: self.z * rhs,
         }
+    }
+}
+
+impl ops::Mul<XYZ> for XYZ {
+    type Output = f32;
+    fn mul(self, rhs: XYZ) -> Self::Output {
+        (self.x * rhs.x) + (self.y * rhs.y) + (self.z * rhs.z)
     }
 }

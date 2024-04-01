@@ -7,15 +7,10 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
-
 use crate::engine::types::{Mesh, XYZ};
 
 use super::{
-    camera::{Camera, CameraUniform},
-    camera_controller::CameraController,
-    vertex::Vertex,
+    camera::{Camera, CameraUniform}, camera_controller::CameraController, texture::{self, Texture}, vertex::Vertex
 };
 
 struct State {
@@ -33,6 +28,7 @@ struct State {
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
     camera_bind_group: wgpu::BindGroup,
+    depth_texture: Texture,
     window: Window,
 }
 
@@ -149,6 +145,8 @@ impl State {
             label: Some("camera_bind_group"),
         });
 
+        let depth_texture = texture::Texture::create_depth_texture(&device, &config, "depth_texture");
+
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
@@ -192,7 +190,13 @@ impl State {
                 // Requires Features::CONSERVATIVE_RASTERIZATION
                 conservative: false,
             },
-            depth_stencil: None,
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: texture::Texture::DEPTH_FORMAT,
+                depth_write_enabled: true,
+                depth_compare: wgpu::CompareFunction::Less,
+                stencil: wgpu::StencilState::default(),
+                bias: wgpu::DepthBiasState::default(),
+            }),
             multisample: wgpu::MultisampleState {
                 count: 1,
                 mask: !0,
@@ -230,6 +234,7 @@ impl State {
             camera_buffer,
             camera_bind_group,
             camera_uniform,
+            depth_texture,
             window,
         }
     }
@@ -244,7 +249,7 @@ impl State {
             self.config.width = new_size.width;
             self.config.height = new_size.height;
             self.surface.configure(&self.device, &self.config);
-
+            self.depth_texture = texture::Texture::create_depth_texture(&self.device, &self.config, "depth_texture");
             self.camera.aspect = self.config.width as f32 / self.config.height as f32;
         }
     }
@@ -291,7 +296,14 @@ impl State {
                         store: wgpu::StoreOp::Store,
                     },
                 })],
-                depth_stencil_attachment: None,
+                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                    view: &self.depth_texture.view,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(1.0),
+                        store: wgpu::StoreOp::Store,
+                    }),
+                    stencil_ops: None,
+                }),
                 occlusion_query_set: None,
                 timestamp_writes: None,
             });
