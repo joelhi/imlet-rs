@@ -1,7 +1,5 @@
-use super::XYZ;
 use super::ImplicitFunction;
-
-
+use super::XYZ;
 
 #[derive(Debug, Clone)]
 pub struct DenseGridF32 {
@@ -145,7 +143,7 @@ impl DenseGridF32 {
         let k = index / (self.num_x * self.num_y);
         let temp = index - (k * self.num_x * self.num_y);
         let j = temp / self.num_x;
-        let i = temp % (self.num_x-1);
+        let i = temp % (self.num_x - 1);
 
         (i, j, k)
     }
@@ -155,15 +153,15 @@ impl DenseGridF32 {
             i < self.num_x && j < self.num_y && k < self.num_z,
             "Coordinates out of bounds"
         );
-        (k * (self.num_x-1) * (self.num_y-1)) + (j * (self.num_x-1)) + i
+        (k * (self.num_x - 1) * (self.num_y - 1)) + (j * (self.num_x - 1)) + i
     }
 
     pub fn get_cell_coord(&self, index: usize) -> (usize, usize, usize) {
         assert!(index < self.get_num_points(), "Index out of bounds");
-        let k = index / ((self.num_x-1) * (self.num_y-1));
-        let temp = index - (k * (self.num_x-1) * (self.num_y-1));
-        let j = temp / (self.num_x-1);
-        let i = temp % (self.num_x-1);
+        let k = index / ((self.num_x - 1) * (self.num_y - 1));
+        let temp = index - (k * (self.num_x - 1) * (self.num_y - 1));
+        let j = temp / (self.num_x - 1);
+        let i = temp % (self.num_x - 1);
 
         (i, j, k)
     }
@@ -173,6 +171,6 @@ impl DenseGridF32 {
     }
 
     pub fn get_num_cells(&self) -> usize {
-       (self.num_x - 1) * (self.num_y - 1) * (self.num_z - 1)
+        (self.num_x - 1) * (self.num_y - 1) * (self.num_z - 1)
     }
 }

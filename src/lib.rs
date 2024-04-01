@@ -23,5 +23,8 @@ pub mod engine{
     }
 }
 pub mod viewer{
-    pub mod window_helper;
+    pub mod window;
+    mod vertex;
+    mod camera;
+    mod camera_controller;
 }

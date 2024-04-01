@@ -12,7 +12,7 @@ impl XYZ {
         self.distance_to_xyz_squared(pt).sqrt()
     }
 
-    pub fn distance_to_coord(&self, x: f32, y:f32, z:f32) -> f32 {
+    pub fn distance_to_coord(&self, x: f32, y: f32, z: f32) -> f32 {
         self.distance_to_coord_squared(x, y, z).sqrt()
     }
 
@@ -20,7 +20,7 @@ impl XYZ {
         (self.x - pt.x).powi(2) + (self.y - pt.y).powi(2) + (self.z - pt.z).powi(2)
     }
 
-    pub fn distance_to_coord_squared(&self, x: f32, y:f32, z:f32) -> f32 {
+    pub fn distance_to_coord_squared(&self, x: f32, y: f32, z: f32) -> f32 {
         (self.x - x).powi(2) + (self.y - y).powi(2) + (self.z - z).powi(2)
     }
 

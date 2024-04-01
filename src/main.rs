@@ -6,15 +6,15 @@ use implicit::engine::utils::implicit_functions::{DistanceFunction, GyroidFuncti
 use implicit::engine::algorithms::marching_cubes::generate_iso_surface;
 use implicit::engine::utils::io::write_as_obj;
 
-use implicit::viewer::window_helper::run;
+use implicit::viewer::window::run;
 
 fn main() {
-    let size = 10.0;
-    let num_pts = 10;
+    let size = 200.0;
+    let num_pts = 75;
 
     let mut grid = DenseGridF32::new(
         XYZ::get_origin(),
-        size / num_pts as f32,
+        size / (num_pts as f32),
         num_pts,
         num_pts,
         num_pts,
@@ -24,9 +24,9 @@ fn main() {
         source: XYZ::get_origin(),
     };
     let gyroid = GyroidFunction {
-        length_x: 3.0,
-        length_y: 3.0,
-        length_z: 3.0,
+        length_x: 50.0,
+        length_y: 50.0,
+        length_z: 50.0,
     };
 
     let before = Instant::now();
@@ -48,10 +48,9 @@ fn main() {
         before.elapsed()
     );
 
-
     write_as_obj(&mesh, "output");
 
     println!("Running viewer...");
-    pollster::block_on(run());
+    pollster::block_on(run(&mesh));
 
 }
