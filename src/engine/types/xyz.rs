@@ -39,6 +39,26 @@ impl XYZ {
             z: first.z + parameter * (second.z - first.z),
         }
     }
+
+    pub fn dot(&self, rhs: XYZ) -> f32 {
+        (self.x * rhs.x) + (self.y * rhs.y) + (self.z * rhs.z)
+    }
+
+    pub fn cross(&self, rhs: XYZ) -> XYZ {
+        XYZ {
+            x: self.y * rhs.z - self.z * rhs.y,
+            y: self.z * rhs.x - self.x * rhs.z,
+            z: self.x * rhs.y - self.y * rhs.x,
+        }
+    }
+
+    pub fn magnitude(&self)->f32{
+        self.distance_to_coord(0.0, 0.0, 0.0)
+    }
+
+    pub fn normalize(&self)->XYZ{
+        *self/self.magnitude()
+    }
 }
 
 impl ops::Add<XYZ> for XYZ {
@@ -79,6 +99,17 @@ impl ops::Mul<f32> for XYZ {
 impl ops::Mul<XYZ> for XYZ {
     type Output = f32;
     fn mul(self, rhs: XYZ) -> Self::Output {
-        (self.x * rhs.x) + (self.y * rhs.y) + (self.z * rhs.z)
+        self.dot(rhs)
+    }
+}
+
+impl ops::Div<f32> for XYZ{
+    type Output = XYZ;
+    fn div(self, rhs: f32) -> Self::Output {
+        XYZ {
+            x: self.x / rhs,
+            y: self.y / rhs,
+            z: self.z / rhs,
+        }
     }
 }

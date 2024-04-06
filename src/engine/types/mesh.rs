@@ -68,8 +68,44 @@ impl Mesh {
         (min, max)
     }
 
-    pub fn compute_normals(&self){
-        panic!("Not implemented.")
+    pub fn compute_vertex_normals(&mut self){
+        let mut vertex_normals:Vec<XYZ> = Vec::with_capacity(self.num_vertices());
+        let face_normals: Vec<XYZ> = self.compute_face_normals();
+        let vertex_faces: Vec<Vec<usize>> = self.compute_vertex_faces();
+
+        for (id, v) in self.vertices.iter().enumerate(){
+            let mut n = XYZ::origin();
+            for &f in &vertex_faces[id]{
+                n = n + face_normals[f];
+            }
+            vertex_normals.push(n/(vertex_faces[id].len() as f32));
+        }
+
+        self.normals = Some(vertex_normals);
+    }
+
+    pub fn compute_face_normals(&self)->Vec<XYZ>{
+        let mut normals: Vec<XYZ> = Vec::with_capacity(self.num_faces());
+        for f in &self.faces{
+            let v1 = self.vertices[f[1]] - self.vertices[f[0]];
+            let v2 = self.vertices[f[2]] - self.vertices[f[0]];
+
+            normals.push(v1.cross(v2).normalize());
+        }
+
+        normals
+    }
+
+    pub fn compute_vertex_faces(&self)->Vec<Vec<usize>>{
+        let mut vertex_faces = vec![Vec::new(); self.num_vertices()];
+
+        for (id, f) in self.faces.iter().enumerate(){
+            vertex_faces[f[0]].push(id);
+            vertex_faces[f[1]].push(id);
+            vertex_faces[f[2]].push(id);
+        }
+
+        vertex_faces
     }
 
     pub fn from_triangles(triangles: &[Triangle]) -> Mesh {
@@ -87,6 +123,7 @@ impl Mesh {
         }
         mesh.add_vertices(&grid.vertices());
         mesh.add_faces(&faces);
+        mesh.compute_vertex_normals();
         mesh
     }
 }
