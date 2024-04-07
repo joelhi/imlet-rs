@@ -41,7 +41,7 @@ impl State {
     async fn new(
         window: Window,
         vertices: &[Vertex],
-        indices: &[u16],
+        indices: &[u32],
         centroid: XYZ,
         max: XYZ,
         material: Material,
@@ -195,7 +195,7 @@ impl State {
             primitive: wgpu::PrimitiveState {
                 topology: wgpu::PrimitiveTopology::TriangleList,
                 strip_index_format: None,
-                front_face: wgpu::FrontFace::Ccw,
+                front_face: wgpu::FrontFace::Cw,
                 cull_mode: None,
                 polygon_mode: wgpu::PolygonMode::Fill,
                 // Requires Features::DEPTH_CLIP_CONTROL
@@ -325,7 +325,7 @@ impl State {
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_bind_group(0, &self.camera_bind_group, &[]);
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16);
+            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
             render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
         }
 
@@ -405,7 +405,7 @@ pub async fn run(mesh: &Mesh, material: Material) {
     });
 }
 
-pub fn to_buffers(mesh: &Mesh) -> (Vec<Vertex>, Vec<u16>) {
+pub fn to_buffers(mesh: &Mesh) -> (Vec<Vertex>, Vec<u32>) {
     let mut vertices: Vec<Vertex> = Vec::with_capacity(mesh.num_vertices());
     let default = vec![
         XYZ {
@@ -423,11 +423,11 @@ pub fn to_buffers(mesh: &Mesh) -> (Vec<Vertex>, Vec<u16>) {
         })
     }
 
-    let mut indices: Vec<u16> = Vec::with_capacity(mesh.num_faces() * 3);
+    let mut indices: Vec<u32> = Vec::with_capacity(mesh.num_faces() * 3);
     for face in mesh.get_faces() {
-        indices.push(face[0] as u16);
-        indices.push(face[1] as u16);
-        indices.push(face[2] as u16);
+        indices.push(face[0] as u32);
+        indices.push(face[1] as u32);
+        indices.push(face[2] as u32);
     }
 
     (vertices, indices)
