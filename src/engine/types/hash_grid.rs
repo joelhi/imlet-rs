@@ -18,7 +18,7 @@ impl SpatialHashGrid {
         }
     }
 
-    pub fn new_with_tolerance(tolerance: f32) -> Self {
+    pub fn with_tolerance(tolerance: f32) -> Self {
         SpatialHashGrid {
             map: HashMap::new(),
             vertices: Vec::new(),
@@ -32,16 +32,19 @@ impl SpatialHashGrid {
 
     pub fn add_point(&mut self, v: XYZ) -> usize {
         let hash = self.spatial_hash(v);
-        match self.map.get(&hash).as_ref() {
-            Some(&index) => {
+        match self.map.get_mut(&hash) {
+            Some(index) => {
                 // Find closest point based on indices in list
-                for &id in index {
+                for &id in index.iter() {
                     if v.distance_to_xyz(self.vertices[id]) < self.tolerance {
                         return id;
                     }
                 }
-                // Add new entry and return current count
-                self.get_new_id(hash, v)
+                // Add vertex to list and return current count
+                let new_index = self.vertices.len();
+                index.push(new_index);
+                self.vertices.push(v);
+                new_index
             }
             None => {
                 // Add new entry and return current count

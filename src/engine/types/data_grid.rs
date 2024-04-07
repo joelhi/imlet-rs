@@ -33,9 +33,9 @@ impl DenseGridF32 {
     pub fn evaluate<T: ImplicitFunction>(&mut self, function: &T) {
         self.buffer.clear();
         // Evaluate the function at all positions
-        for k in 0..self.num_x {
+        for k in 0..self.num_z {
             for j in 0..self.num_y {
-                for i in 0..self.num_z {
+                for i in 0..self.num_x {
                     self.buffer.push(function.eval(
                         self.origin.x + self.cell_size * i as f32,
                         self.origin.y + self.cell_size * j as f32,

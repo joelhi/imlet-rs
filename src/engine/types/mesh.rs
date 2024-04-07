@@ -33,6 +33,10 @@ impl Mesh {
         &self.faces
     }
 
+    pub fn get_normals(&self)->Option<&Vec<XYZ>>{
+        self.normals.as_ref()
+    }
+
     pub fn num_vertices(&self)->usize{
         self.vertices.len()
     }
@@ -111,15 +115,19 @@ impl Mesh {
     pub fn from_triangles(triangles: &[Triangle]) -> Mesh {
         // Contruct vertex buffer using a hash grid for coordinates to index mapping
         let mut faces: Vec<[usize; 3]> = Vec::new();
-        let mut grid = SpatialHashGrid::new();
+        let mut grid = SpatialHashGrid::with_tolerance(1E-7);
 
         let mut mesh = Mesh::new();
         for triangle in triangles {
-            faces.push([
+            let vertex_ids = [
                 grid.add_point(triangle.p1),
                 grid.add_point(triangle.p2),
                 grid.add_point(triangle.p3),
-            ]);
+            ];
+            
+            if !(vertex_ids[0] == vertex_ids[1] || vertex_ids[0] == vertex_ids[2] || vertex_ids[1] == vertex_ids[2]) {
+                faces.push(vertex_ids);
+            }
         }
         mesh.add_vertices(&grid.vertices());
         mesh.add_faces(&faces);

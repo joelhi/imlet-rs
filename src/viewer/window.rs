@@ -1,5 +1,6 @@
-use std::{cmp::max, iter};
+use std::{cmp::max, default, iter};
 
+use cgmath::Point3;
 use wgpu::util::DeviceExt;
 use winit::{
     event::*,
@@ -10,7 +11,11 @@ use winit::{
 use crate::engine::types::{Mesh, XYZ};
 
 use super::{
-    camera::{Camera, CameraUniform}, camera_controller::CameraController, texture::{self, Texture}, vertex::Vertex
+    camera::{Camera, CameraUniform},
+    camera_controller::CameraController,
+    texture::{self, Texture},
+    vertex::Vertex,
+    material::Material
 };
 
 struct State {
@@ -38,7 +43,8 @@ impl State {
         vertices: &[Vertex],
         indices: &[u16],
         centroid: XYZ,
-        max: XYZ
+        max: XYZ,
+        material: Material,
     ) -> Self {
         let size = window.inner_size();
 
@@ -101,16 +107,22 @@ impl State {
             view_formats: vec![],
         };
         surface.configure(&device, &config);
+        let default_position: Point3<f32> = (1.5 * max.x, 1.5 * max.y, 1.5 * max.z).into();
+        let default_target: Point3<f32> = (centroid.x, centroid.y, centroid.z).into();
         let camera = Camera {
-            eye: (1.5*max.x, 1.5*max.y, 1.5*max.z).into(),
-            target: (centroid.x, centroid.y, centroid.z).into(),
+            eye: default_position,
+            target: default_target,
             up: cgmath::Vector3::unit_y(),
             aspect: config.width as f32 / config.height as f32,
             fovy: 45.0,
             znear: 0.1,
-            zfar: 100.0,
+            zfar: 1000.0,
         };
-        let camera_controller = CameraController::new(0.025*(max-centroid).distance_to_coord(0.0, 0.0, 0.0));
+        let camera_controller = CameraController::new(
+            0.025 * (max - centroid).distance_to_coord(0.0, 0.0, 0.0),
+            default_position,
+            default_target,
+        );
 
         let mut camera_uniform = CameraUniform::new();
         camera_uniform.update_view_proj(&camera);
@@ -145,11 +157,12 @@ impl State {
             label: Some("camera_bind_group"),
         });
 
-        let depth_texture = texture::Texture::create_depth_texture(&device, &config, "depth_texture");
+        let depth_texture =
+            texture::Texture::create_depth_texture(&device, &config, "depth_texture");
 
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
+            source: wgpu::ShaderSource::Wgsl(material.load_shader_source().into()),
         });
 
         let render_pipeline_layout =
@@ -182,7 +195,7 @@ impl State {
             primitive: wgpu::PrimitiveState {
                 topology: wgpu::PrimitiveTopology::TriangleList,
                 strip_index_format: None,
-                front_face: wgpu::FrontFace::Cw,
+                front_face: wgpu::FrontFace::Ccw,
                 cull_mode: None,
                 polygon_mode: wgpu::PolygonMode::Fill,
                 // Requires Features::DEPTH_CLIP_CONTROL
@@ -249,7 +262,8 @@ impl State {
             self.config.width = new_size.width;
             self.config.height = new_size.height;
             self.surface.configure(&self.device, &self.config);
-            self.depth_texture = texture::Texture::create_depth_texture(&self.device, &self.config, "depth_texture");
+            self.depth_texture =
+                texture::Texture::create_depth_texture(&self.device, &self.config, "depth_texture");
             self.camera.aspect = self.config.width as f32 / self.config.height as f32;
         }
     }
@@ -288,9 +302,9 @@ impl State {
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 9.0 / 255.0,
-                            g: 10.0 / 255.0,
-                            b: 11.0 / 255.0,
+                            r: 5.0 / 255.0,
+                            g: 6.0 / 255.0,
+                            b: 7.0 / 255.0,
                             a: 1.0,
                         }),
                         store: wgpu::StoreOp::Store,
@@ -323,14 +337,25 @@ impl State {
 }
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
-pub async fn run(mesh: &Mesh) {
+pub async fn run(mesh: &Mesh, material: Material) {
     let (vertices, indices) = to_buffers(mesh);
 
     let event_loop = EventLoop::new();
-    let window = WindowBuilder::new().build(&event_loop).unwrap();
+    let window = WindowBuilder::new()
+        .with_title("Implicit Viewer")
+        .build(&event_loop)
+        .unwrap();
 
     // State::new uses async code, so we're going to wait for it to finish
-    let mut state = State::new(window, &vertices, &indices, mesh.get_centroid(), mesh.get_bounds().1).await;
+    let mut state = State::new(
+        window,
+        &vertices,
+        &indices,
+        mesh.get_centroid(),
+        mesh.get_bounds().1,
+        material
+    )
+    .await;
 
     event_loop.run(move |event, _, control_flow| {
         match event {
@@ -365,19 +390,14 @@ pub async fn run(mesh: &Mesh) {
                 state.update();
                 match state.render() {
                     Ok(_) => {}
-                    // Reconfigure the surface if it's lost or outdated
                     Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
                         state.resize(state.size)
                     }
-                    // The system is out of memory, we should probably quit
                     Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
-                    // We're ignoring timeouts
                     Err(wgpu::SurfaceError::Timeout) => log::warn!("Surface timeout"),
                 }
             }
             Event::MainEventsCleared => {
-                // RedrawRequested will only trigger once, unless we manually
-                // request it.
                 state.window().request_redraw();
             }
             _ => {}
@@ -386,19 +406,22 @@ pub async fn run(mesh: &Mesh) {
 }
 
 pub fn to_buffers(mesh: &Mesh) -> (Vec<Vertex>, Vec<u16>) {
-    let (min, max) = mesh.get_bounds();
-    let vertices = mesh
-        .get_vertices()
-        .iter()
-        .map(|v| Vertex {
+    let mut vertices: Vec<Vertex> = Vec::with_capacity(mesh.num_vertices());
+    let default = vec![
+        XYZ {
+            x: 1.0,
+            y: 1.0,
+            z: 1.0
+        };
+        mesh.num_vertices()
+    ];
+    let normals = mesh.get_normals().unwrap_or(&default);
+    for (v, n) in mesh.get_vertices().iter().zip(normals) {
+        vertices.push(Vertex {
             position: [v.x, v.y, v.z],
-            color: [
-                (v.x - min.x) / (max.x - min.x),
-                (v.y - min.y) / (max.y - min.y),
-                (v.z - min.z) / (max.z - min.z),
-            ],
+            normal: [n.x, n.y, n.z],
         })
-        .collect();
+    }
 
     let mut indices: Vec<u16> = Vec::with_capacity(mesh.num_faces() * 3);
     for face in mesh.get_faces() {
