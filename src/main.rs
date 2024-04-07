@@ -10,8 +10,9 @@ use implicit::viewer::material::Material;
 use implicit::viewer::window::run;
 
 fn main() {
+
     let size = 50.0;
-    let num_pts = 75;
+    let num_pts = 100;
 
     let mut grid = DenseGridF32::new(
         XYZ::origin(),
@@ -29,9 +30,9 @@ fn main() {
         },
     };
     let _gyroid = GyroidFunction {
-        length_x: 21.0,
-        length_y: 21.0,
-        length_z: 21.0,
+        length_x: 30.0,
+        length_y: 7.5,
+        length_z: 15.0,
     };
 
     let before = Instant::now();
@@ -48,13 +49,15 @@ fn main() {
     let mesh = Mesh::from_triangles(&triangles);
 
     println!(
-        "Full isosurface for {} points generated in {:.2?}",
+        "Full isosurface for {} points generated in {:.2?} with {} vertices and {} faces",
         grid.get_num_points(),
-        before.elapsed()
+        before.elapsed(),
+        mesh.num_vertices(),
+        mesh.num_faces()
     );
 
     write_as_obj(&mesh, "output");
 
     println!("Running viewer...");
-    pollster::block_on(run(&mesh, Material::Normal));
+    pollster::block_on(run(&mesh, Material::InsideOutside));
 }
