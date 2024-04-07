@@ -30,9 +30,9 @@ fn main() {
         },
     };
     let _gyroid = GyroidFunction {
-        length_x: 30.0,
-        length_y: 7.5,
-        length_z: 15.0,
+        length_x: 7.0,
+        length_y: 10.0,
+        length_z: 12.0,
     };
 
     let before = Instant::now();
@@ -44,7 +44,7 @@ fn main() {
         before.elapsed()
     );
 
-    let triangles = generate_iso_surface(&grid, 0.0);
+    let triangles = generate_iso_surface(&grid, 0.15);
 
     let mesh = Mesh::from_triangles(&triangles);
 
@@ -59,5 +59,5 @@ fn main() {
     write_as_obj(&mesh, "output");
 
     println!("Running viewer...");
-    pollster::block_on(run(&mesh, Material::InsideOutside));
+    pollster::block_on(run(&mesh, Material::Normal));
 }
