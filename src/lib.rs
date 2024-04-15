@@ -30,3 +30,12 @@ pub mod viewer{
     mod camera_controller;
     mod texture;
 }
+
+pub mod examples{
+    mod gyroid;
+    mod compute_shader;
+    mod bitmask_gyroid;
+    pub use gyroid::run_gyroid;
+    pub use compute_shader::run_compute_shader;
+    pub use bitmask_gyroid::run_bitmask_gyroid;
+}

@@ -17,3 +17,4 @@ wgpu = "0.18"
 pollster = "0.3"
 bytemuck = { version = "1.12", features = [ "derive" ] }
 cgmath = "0.18"
+futures-intrusive = "0.5.0"
