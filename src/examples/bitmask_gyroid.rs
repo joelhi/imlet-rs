@@ -1,17 +1,24 @@
 use std::time::Instant;
 
-use crate::{engine::{algorithms::marching_cubes::generate_iso_surface, types::{DenseGridF32, Mesh, XYZ}, utils::implicit_functions::{BitMask, GyroidFunction, ImplicitProduct, Sphere}}, viewer::{material::Material, window::run}};
+use crate::{
+    engine::{
+        algorithms::marching_cubes::generate_iso_surface,
+        types::{DenseGridF32, Mesh, XYZ},
+        utils::implicit_functions::{
+            BitMask, Constant, GaussianMollifier, GyroidFunction, ImplicitProduct, Sphere,
+        },
+    },
+    viewer::{material::Material, window::run},
+};
 
 pub fn run_bitmask_gyroid(num_pts: usize, size: f32, length: f32) {
-    let _bounds = Sphere {
-        source: XYZ{x: size/2.0, y: size/2.0, z: size/2.0},
-        radius: 0.4*size,
-    };
-
-    let bounds = GyroidFunction {
-        length_x: length * 5.0,
-        length_y: length * 5.0,
-        length_z: length * 5.0,
+    let sphere = Sphere {
+        source: XYZ {
+            x: size / 2.0,
+            y: size / 2.0,
+            z: size / 2.0,
+        },
+        radius: 0.4 * size,
     };
 
     let gyroid = GyroidFunction {
@@ -21,23 +28,20 @@ pub fn run_bitmask_gyroid(num_pts: usize, size: f32, length: f32) {
     };
 
     let bit_mask = BitMask {
-        function: bounds,
-        cut_off: 0.0, 
+        function: sphere,
+        cut_off: 0.0,
     };
 
-    let bit_mask2 = BitMask {
-        function: _bounds,
-        cut_off: 0.0, 
-    };
+    let mollifier = GaussianMollifier { size };
+
+    // let smooth_mask = ImplicitProduct{
+    //     f: bit_mask,
+    //     g: mollifier
+    // };
 
     let product = ImplicitProduct{
         f: gyroid,
         g: bit_mask
-    };
-
-    let product2 = ImplicitProduct{
-        f: product,
-        g: bit_mask2
     };
 
     let mut grid = DenseGridF32::new(
@@ -49,7 +53,7 @@ pub fn run_bitmask_gyroid(num_pts: usize, size: f32, length: f32) {
     );
 
     let before = Instant::now();
-    grid.evaluate(&product2);
+    grid.evaluate(&product);
 
     println!(
         "Dense value buffer for {} points generated in {:.2?}",
@@ -57,7 +61,7 @@ pub fn run_bitmask_gyroid(num_pts: usize, size: f32, length: f32) {
         before.elapsed()
     );
 
-    let triangles = generate_iso_surface(&grid, 0.15);
+    let triangles = generate_iso_surface(&grid, 0.75);
 
     let mesh = Mesh::from_triangles(&triangles);
 
@@ -71,5 +75,4 @@ pub fn run_bitmask_gyroid(num_pts: usize, size: f32, length: f32) {
 
     println!("Running viewer...");
     pollster::block_on(run(&mesh, Material::Normal));
-
 }

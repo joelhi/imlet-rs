@@ -18,7 +18,7 @@ impl ImplicitFunction for GyroidFunction {
 
 pub struct Sphere {
     pub source: XYZ,
-    pub radius: f32
+    pub radius: f32,
 }
 
 impl ImplicitFunction for Sphere {
@@ -27,9 +27,9 @@ impl ImplicitFunction for Sphere {
     }
 }
 
-pub struct BitMask<T: ImplicitFunction>{
+pub struct BitMask<T: ImplicitFunction> {
     pub function: T,
-    pub cut_off: f32
+    pub cut_off: f32,
 }
 
 impl<T: ImplicitFunction> ImplicitFunction for BitMask<T> {
@@ -52,12 +52,26 @@ impl<F: ImplicitFunction, G: ImplicitFunction> ImplicitFunction for ImplicitProd
     }
 }
 
-pub struct Constant{
-    pub value: f32
+pub struct Constant {
+    pub value: f32,
 }
 
-impl ImplicitFunction for Constant{
+impl ImplicitFunction for Constant {
     fn eval(&self, _: f32, _: f32, _: f32) -> f32 {
         self.value
+    }
+}
+
+pub struct GaussianMollifier {
+    pub size: f32
+}
+
+impl ImplicitFunction for GaussianMollifier {
+    fn eval(&self, x: f32, y: f32, z: f32) -> f32 {
+        let sigma = 10.0; // Adjust sigma for the desired smoothing effect
+        let r_squared = (x / self.size) * (x / self.size) + (y / self.size) * (y / self.size) + (z / self.size) * (z / self.size);
+        let normalization = 1.0 / (sigma * (2.0 * PI).sqrt());
+        let exponent = -r_squared / (2.0 * sigma * sigma);
+        normalization * exponent.exp()
     }
 }
