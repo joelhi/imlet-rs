@@ -1,4 +1,4 @@
-use std::{cmp::max, default, iter};
+use std::{iter};
 
 use cgmath::Point3;
 use wgpu::util::DeviceExt;

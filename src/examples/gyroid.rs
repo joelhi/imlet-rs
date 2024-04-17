@@ -1,9 +1,9 @@
 use std::time::Instant;
 
-use crate::{engine::{algorithms::marching_cubes::generate_iso_surface, types::{DenseGridF32, Mesh, XYZ}, utils::{implicit_functions::GyroidFunction, io::write_as_obj}}, viewer::{material::Material, window::run}};
+use crate::{engine::{algorithms::marching_cubes::generate_iso_surface, types::{DenseFieldF32, Mesh, XYZ}, utils::implicit_functions::{GyroidFunction, ImplicitDifference, ImplicitIntersection, ImplicitOffset}}, viewer::{material::Material, window::run}};
 
 pub fn run_gyroid(num_pts: usize, size: f32, length: f32){
-    let mut grid = DenseGridF32::new(
+    let mut grid = DenseFieldF32::new(
         XYZ::origin(),
         size / (num_pts as f32),
         num_pts,
@@ -17,8 +17,24 @@ pub fn run_gyroid(num_pts: usize, size: f32, length: f32){
         length_z: length,
     };
 
+    let _gyroid2 = GyroidFunction {
+        length_x: length,
+        length_y: length,
+        length_z: length,
+    };
+
+    let offset = ImplicitOffset{
+        f: _gyroid2,
+        distance: -0.1
+    };
+
+    let diff = ImplicitDifference{
+        f: offset,
+        g: _gyroid
+    };
+
     let before = Instant::now();
-    grid.evaluate(&_gyroid);
+    grid.evaluate(&diff);
 
     println!(
         "Dense value buffer for {} points generated in {:.2?}",

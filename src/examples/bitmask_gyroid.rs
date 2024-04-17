@@ -3,11 +3,11 @@ use std::time::Instant;
 use crate::{
     engine::{
         algorithms::marching_cubes::generate_iso_surface,
-        types::{DenseGridF32, Mesh, XYZ},
+        types::{DenseFieldF32, Mesh, XYZ},
         utils::implicit_functions::{
-            BitMask, Constant, GaussianMollifier, GyroidFunction, ImplicitIntersection, ImplicitProduct, ImplicitSmoothUnion, ImplicitUnion, Sphere
+            GyroidFunction, ImplicitDifference, ImplicitIntersection, ImplicitOffset, ImplicitSmoothUnion, Sphere
         },
-    }, examples::gyroid, viewer::{material::Material, window::run}
+    }, viewer::{material::Material, window::run}
 };
 
 pub fn run_bitmask_gyroid(num_pts: usize, size: f32, length: f32) {
@@ -29,10 +29,26 @@ pub fn run_bitmask_gyroid(num_pts: usize, size: f32, length: f32) {
         radius: 0.25 * size,
     };
 
-    let gyroid = GyroidFunction{
+    let gyroid = GyroidFunction {
         length_x: length,
         length_y: length,
         length_z: length,
+    };
+
+    let gyroid2 = GyroidFunction {
+        length_x: length,
+        length_y: length,
+        length_z: length,
+    };
+
+    let offset = ImplicitOffset{
+        f: gyroid2,
+        distance: -0.5
+    };
+
+    let thick_gyroid = ImplicitDifference{
+        f: offset,
+        g: gyroid
     };
 
     let spheres = ImplicitSmoothUnion{
@@ -41,11 +57,11 @@ pub fn run_bitmask_gyroid(num_pts: usize, size: f32, length: f32) {
     };
 
     let final_func = ImplicitIntersection{
-        f: gyroid,
+        f: thick_gyroid,
         g: spheres
     };
 
-    let mut grid = DenseGridF32::new(
+    let mut grid = DenseFieldF32::new(
         XYZ::origin(),
         size / (num_pts as f32),
         num_pts,
@@ -62,7 +78,7 @@ pub fn run_bitmask_gyroid(num_pts: usize, size: f32, length: f32) {
         before.elapsed()
     );
 
-    let triangles = generate_iso_surface(&grid, -0.75);
+    let triangles = generate_iso_surface(&grid, 0.0);
 
     let mesh = Mesh::from_triangles(&triangles);
 

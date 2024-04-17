@@ -4,13 +4,13 @@ pub mod engine{
         mod tables;
     }
     pub mod types {
-        mod data_grid;
+        mod dense_field;
         mod hash_grid;
         mod implicit_func;
         mod mesh;
         mod xyz;
     
-        pub use data_grid::*;
+        pub use dense_field::*;
         pub use implicit_func::*;
         pub use mesh::*;
         pub use xyz::*;

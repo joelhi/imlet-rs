@@ -10,6 +10,7 @@ pub struct SpatialHashGrid {
 }
 
 impl SpatialHashGrid {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         SpatialHashGrid {
             map: HashMap::new(),

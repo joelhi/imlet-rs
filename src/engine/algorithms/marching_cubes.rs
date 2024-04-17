@@ -1,9 +1,9 @@
 use crate::engine::types::XYZ;
-use crate::engine::types::DenseGridF32;
+use crate::engine::types::DenseFieldF32;
 use crate::engine::types::Triangle;
 use super::tables::*;
 
-pub fn generate_iso_surface(grid: &DenseGridF32, iso_val: f32) -> Vec<Triangle> {
+pub fn generate_iso_surface(grid: &DenseFieldF32, iso_val: f32) -> Vec<Triangle> {
     let mut triangles: Vec<Triangle> = Vec::new();
 
     // Generate triangles for cell

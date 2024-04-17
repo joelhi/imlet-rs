@@ -77,7 +77,7 @@ impl Mesh {
         let face_normals: Vec<XYZ> = self.compute_face_normals();
         let vertex_faces: Vec<Vec<usize>> = self.compute_vertex_faces();
 
-        for (id, v) in self.vertices.iter().enumerate(){
+        for id in 0..self.num_vertices(){
             let mut n = XYZ::origin();
             for &f in &vertex_faces[id]{
                 n = n + face_normals[f];

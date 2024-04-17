@@ -73,7 +73,7 @@ impl<F: ImplicitFunction, G: ImplicitFunction> ImplicitFunction for ImplicitSmoo
         let f_val = self.f.eval(x, y, z);
         let g_val = self.g.eval(x, y, z);
 
-        2.0/3.0*(f_val + g_val - (f_val.powi(2) + g_val.powi(2) - f_val * g_val).sqrt())
+        2.0 / 3.0 * (f_val + g_val - (f_val.powi(2) + g_val.powi(2) - f_val * g_val).sqrt())
     }
 }
 
@@ -88,6 +88,17 @@ impl<F: ImplicitFunction, G: ImplicitFunction> ImplicitFunction for ImplicitInte
     }
 }
 
+pub struct ImplicitDifference<F, G> {
+    pub f: F,
+    pub g: G,
+}
+
+impl<F: ImplicitFunction, G: ImplicitFunction> ImplicitFunction for ImplicitDifference<F, G> {
+    fn eval(&self, x: f32, y: f32, z: f32) -> f32 {
+        self.f.eval(x, y, z).max(-self.g.eval(x, y, z))
+    }
+}
+
 pub struct Constant {
     pub value: f32,
 }
@@ -98,14 +109,27 @@ impl ImplicitFunction for Constant {
     }
 }
 
+pub struct ImplicitOffset<F: ImplicitFunction> {
+    pub f: F,
+    pub distance: f32,
+}
+
+impl<F: ImplicitFunction> ImplicitFunction for ImplicitOffset<F> {
+    fn eval(&self, x: f32, y: f32, z: f32) -> f32 {
+        self.f.eval(x, y, z) + self.distance
+    }
+}
+
 pub struct GaussianMollifier {
-    pub size: f32
+    pub size: f32,
 }
 
 impl ImplicitFunction for GaussianMollifier {
     fn eval(&self, x: f32, y: f32, z: f32) -> f32 {
         let sigma = 10.0; // Adjust sigma for the desired smoothing effect
-        let r_squared = (x / self.size) * (x / self.size) + (y / self.size) * (y / self.size) + (z / self.size) * (z / self.size);
+        let r_squared = (x / self.size) * (x / self.size)
+            + (y / self.size) * (y / self.size)
+            + (z / self.size) * (z / self.size);
         let normalization = 1.0 / (sigma * (2.0 * PI).sqrt());
         let exponent = -r_squared / (2.0 * sigma * sigma);
         normalization * exponent.exp()

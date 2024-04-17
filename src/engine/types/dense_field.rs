@@ -2,7 +2,7 @@ use super::ImplicitFunction;
 use super::XYZ;
 
 #[derive(Debug, Clone)]
-pub struct DenseGridF32 {
+pub struct DenseFieldF32 {
     origin: XYZ,
     cell_size: f32,
     num_x: usize,
@@ -12,15 +12,15 @@ pub struct DenseGridF32 {
     buffer: Vec<f32>,
 }
 
-impl DenseGridF32 {
+impl DenseFieldF32 {
     pub fn new(
         origin: XYZ,
         cell_size: f32,
         size_x: usize,
         sixe_y: usize,
         size_z: usize,
-    ) -> DenseGridF32 {
-        DenseGridF32 {
+    ) -> DenseFieldF32 {
+        DenseFieldF32 {
             origin: origin,
             cell_size: cell_size,
             num_x: size_x,
