@@ -5,43 +5,44 @@ use crate::{
         algorithms::marching_cubes::generate_iso_surface,
         types::{DenseGridF32, Mesh, XYZ},
         utils::implicit_functions::{
-            BitMask, Constant, GaussianMollifier, GyroidFunction, ImplicitProduct, Sphere,
+            BitMask, Constant, GaussianMollifier, GyroidFunction, ImplicitIntersection, ImplicitProduct, ImplicitSmoothUnion, ImplicitUnion, Sphere
         },
-    },
-    viewer::{material::Material, window::run},
+    }, examples::gyroid, viewer::{material::Material, window::run}
 };
 
 pub fn run_bitmask_gyroid(num_pts: usize, size: f32, length: f32) {
-    let sphere = Sphere {
+    let sphere1 = Sphere {
+        source: XYZ {
+            x: size / 2.0,
+            y: size / 4.0,
+            z: size / 2.0,
+        },
+        radius: 0.25 * size,
+    };
+
+    let sphere2 = Sphere {
         source: XYZ {
             x: size / 2.0,
             y: size / 2.0,
-            z: size / 2.0,
+            z: size / 3.0,
         },
-        radius: 0.4 * size,
+        radius: 0.25 * size,
     };
 
-    let gyroid = GyroidFunction {
+    let gyroid = GyroidFunction{
         length_x: length,
         length_y: length,
         length_z: length,
     };
 
-    let bit_mask = BitMask {
-        function: sphere,
-        cut_off: 0.0,
+    let spheres = ImplicitSmoothUnion{
+        f: sphere1,
+        g: sphere2
     };
 
-    let mollifier = GaussianMollifier { size };
-
-    // let smooth_mask = ImplicitProduct{
-    //     f: bit_mask,
-    //     g: mollifier
-    // };
-
-    let product = ImplicitProduct{
+    let final_func = ImplicitIntersection{
         f: gyroid,
-        g: bit_mask
+        g: spheres
     };
 
     let mut grid = DenseGridF32::new(
@@ -53,7 +54,7 @@ pub fn run_bitmask_gyroid(num_pts: usize, size: f32, length: f32) {
     );
 
     let before = Instant::now();
-    grid.evaluate(&product);
+    grid.evaluate(&final_func);
 
     println!(
         "Dense value buffer for {} points generated in {:.2?}",
@@ -61,7 +62,7 @@ pub fn run_bitmask_gyroid(num_pts: usize, size: f32, length: f32) {
         before.elapsed()
     );
 
-    let triangles = generate_iso_surface(&grid, 0.75);
+    let triangles = generate_iso_surface(&grid, -0.75);
 
     let mesh = Mesh::from_triangles(&triangles);
 

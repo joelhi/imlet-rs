@@ -52,6 +52,42 @@ impl<F: ImplicitFunction, G: ImplicitFunction> ImplicitFunction for ImplicitProd
     }
 }
 
+pub struct ImplicitUnion<F, G> {
+    pub f: F,
+    pub g: G,
+}
+
+impl<F: ImplicitFunction, G: ImplicitFunction> ImplicitFunction for ImplicitUnion<F, G> {
+    fn eval(&self, x: f32, y: f32, z: f32) -> f32 {
+        self.f.eval(x, y, z).min(self.g.eval(x, y, z))
+    }
+}
+
+pub struct ImplicitSmoothUnion<F, G> {
+    pub f: F,
+    pub g: G,
+}
+
+impl<F: ImplicitFunction, G: ImplicitFunction> ImplicitFunction for ImplicitSmoothUnion<F, G> {
+    fn eval(&self, x: f32, y: f32, z: f32) -> f32 {
+        let f_val = self.f.eval(x, y, z);
+        let g_val = self.g.eval(x, y, z);
+
+        2.0/3.0*(f_val + g_val - (f_val.powi(2) + g_val.powi(2) - f_val * g_val).sqrt())
+    }
+}
+
+pub struct ImplicitIntersection<F, G> {
+    pub f: F,
+    pub g: G,
+}
+
+impl<F: ImplicitFunction, G: ImplicitFunction> ImplicitFunction for ImplicitIntersection<F, G> {
+    fn eval(&self, x: f32, y: f32, z: f32) -> f32 {
+        self.f.eval(x, y, z).max(self.g.eval(x, y, z))
+    }
+}
+
 pub struct Constant {
     pub value: f32,
 }
