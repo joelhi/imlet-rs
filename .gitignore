@@ -1,4 +1,5 @@
 /target
 .vscode
+.DS_Store
 data.*
 output.*
