@@ -1,3 +1,8 @@
+use itertools::iproduct;
+
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelIterator;
+
 use super::ImplicitFunction;
 use super::XYZ;
 
@@ -30,19 +35,52 @@ impl DenseFieldF32 {
         }
     }
 
-    pub fn evaluate<T: ImplicitFunction>(&mut self, function: &T) {
+    pub fn evaluate<T: ImplicitFunction + Sync>(&mut self, function: &T, parallel: bool){
+        if parallel{
+            self.evaluate_parallel(function)
+        }
+        else {
+            self.evaluate_single(function)
+        }
+    }
+
+    pub fn evaluate_single<T: ImplicitFunction>(&mut self, function: &T) {
         self.buffer.clear();
         // Evaluate the function at all positions
         for k in 0..self.num_z {
             for j in 0..self.num_y {
                 for i in 0..self.num_x {
-                    self.buffer.push(function.eval(
+                    let value = function.eval(
                         self.origin.x + self.cell_size * i as f32,
                         self.origin.y + self.cell_size * j as f32,
                         self.origin.z + self.cell_size * k as f32,
-                    ));
+                    );
+                    self.buffer.push(value);
                 }
             }
+        }
+    }
+
+    pub fn evaluate_parallel<T: ImplicitFunction + Sync>(&mut self, function: &T) {
+        let coordinates: Vec<(usize, usize, usize)> =
+            iproduct!(0..self.num_x, 0..self.num_y, 0..self.num_z).collect();
+
+        let local_buffer: Vec<(usize, f32)> = coordinates
+            .into_par_iter()
+            .map(|(i, j, k)| {
+                let x = self.origin.x + self.cell_size * i as f32;
+                let y = self.origin.y + self.cell_size * j as f32;
+                let z = self.origin.z + self.cell_size * k as f32;
+                let value = function.eval(x, y, z);
+
+                (self.get_point_index(i, j, k), value)
+            })
+            .collect();
+
+        self.buffer.clear();
+        self.buffer.resize(self.get_num_points(), 0.0);
+        for (index, value) in local_buffer{
+            self.buffer[index] = value;
         }
     }
 

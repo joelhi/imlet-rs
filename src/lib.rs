@@ -35,7 +35,9 @@ pub mod examples{
     mod gyroid;
     mod compute_shader;
     mod bitmask_gyroid;
+    mod run_sphere;
     pub use gyroid::run_gyroid;
     pub use compute_shader::run_compute_shader;
     pub use bitmask_gyroid::run_bitmask_gyroid;
+    pub use run_sphere::run_sphere;
 }

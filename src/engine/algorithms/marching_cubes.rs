@@ -1,32 +1,35 @@
-use crate::engine::types::XYZ;
+use rayon::iter::IntoParallelIterator;
+use rayon::iter::ParallelIterator;
+
+use super::tables::*;
 use crate::engine::types::DenseFieldF32;
 use crate::engine::types::Triangle;
-use super::tables::*;
+use crate::engine::types::XYZ;
 
 pub fn generate_iso_surface(grid: &DenseFieldF32, iso_val: f32) -> Vec<Triangle> {
-    let mut triangles: Vec<Triangle> = Vec::new();
-
     // Generate triangles for cell
-    for cell_index in 0..grid.get_num_cells() {
-        let (i, j, k) = grid.get_cell_coord(cell_index);
-        polygonize_cell(
-            iso_val,
-            &&grid.get_cell_xyz(i, j, k),
-            &grid.get_cell_values(i, j, k),
-            &mut triangles,
-        );
-    }
+    //let mut triangles: Vec<Triangle> = Vec::with_capacity(grid.get_num_cells() * 1);
+
+    // Iterate over cell indices in parallel and collect triangles
+    let triangles = ((0..grid.get_num_cells())
+        .into_par_iter()
+        .map(|cell_index| {
+            let (i, j, k) = grid.get_cell_coord(cell_index);
+            let cell_xyz = grid.get_cell_xyz(i, j, k);
+            let cell_values = grid.get_cell_values(i, j, k);
+            polygonize_cell(iso_val, &&cell_xyz, &cell_values)
+        })
+        .reduce(Vec::new, |mut acc, triangles| {
+            acc.extend(triangles);
+            acc
+        }));
+
     triangles
 }
 
-fn polygonize_cell(
-    iso_val: f32,
-    cell_coord: &[XYZ; 8],
-    cell_values: &[f32; 8],
-    triangles: &mut Vec<Triangle>,
-) -> i32 {
+fn polygonize_cell(iso_val: f32, cell_coord: &[XYZ; 8], cell_values: &[f32; 8]) -> Vec<Triangle> {
     let cube_index = get_cube_index(cell_values, iso_val);
-    get_triangles(cube_index, &cell_coord, &cell_values, iso_val, triangles)
+    get_triangles(cube_index, &cell_coord, &cell_values, iso_val)
 }
 
 fn get_cube_index(cell_values: &[f32; 8], iso_val: f32) -> usize {
@@ -65,9 +68,8 @@ fn get_triangles(
     cell_coord: &[XYZ; 8],
     cell_values: &[f32; 8],
     iso_val: f32,
-    triangles: &mut Vec<Triangle>,
-) -> i32 {
-    let mut triangle_num = 0;
+) -> Vec<Triangle> {
+    let mut triangles = Vec::new();
 
     let vertices = get_vertices(cube_index, cell_coord, cell_values, iso_val);
     for i in (0..15).step_by(3) {
@@ -82,9 +84,8 @@ fn get_triangles(
             p2: vertices[TRI_TABLE[cube_index][i + 1] as usize],
             p3: vertices[TRI_TABLE[cube_index][i + 2] as usize],
         });
-        triangle_num += 1;
     }
-    triangle_num
+    triangles
 }
 
 fn get_vertices(

@@ -10,7 +10,7 @@ use crate::{
     }, viewer::{material::Material, window::run}
 };
 
-pub fn run_bitmask_gyroid(num_pts: usize, size: f32, length: f32) {
+pub fn run_bitmask_gyroid(num_pts: usize, size: f32, length: f32, parallel: bool) {
     let sphere1 = Sphere {
         source: XYZ {
             x: size / 2.0,
@@ -70,7 +70,7 @@ pub fn run_bitmask_gyroid(num_pts: usize, size: f32, length: f32) {
     );
 
     let before = Instant::now();
-    grid.evaluate(&final_func);
+    grid.evaluate(&final_func, parallel);
 
     println!(
         "Dense value buffer for {} points generated in {:.2?}",

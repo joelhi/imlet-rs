@@ -34,7 +34,7 @@ pub fn run_gyroid(num_pts: usize, size: f32, length: f32){
     };
 
     let before = Instant::now();
-    grid.evaluate(&diff);
+    grid.evaluate(&diff, true);
 
     println!(
         "Dense value buffer for {} points generated in {:.2?}",
