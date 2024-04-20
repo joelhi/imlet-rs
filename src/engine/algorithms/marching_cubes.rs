@@ -11,7 +11,7 @@ pub fn generate_iso_surface(grid: &DenseFieldF32, iso_val: f32) -> Vec<Triangle>
     //let mut triangles: Vec<Triangle> = Vec::with_capacity(grid.get_num_cells() * 1);
 
     // Iterate over cell indices in parallel and collect triangles
-    let triangles = ((0..grid.get_num_cells())
+    let triangles = (0..grid.get_num_cells())
         .into_par_iter()
         .map(|cell_index| {
             let (i, j, k) = grid.get_cell_coord(cell_index);
@@ -22,7 +22,7 @@ pub fn generate_iso_surface(grid: &DenseFieldF32, iso_val: f32) -> Vec<Triangle>
         .reduce(Vec::new, |mut acc, triangles| {
             acc.extend(triangles);
             acc
-        }));
+        });
 
     triangles
 }
