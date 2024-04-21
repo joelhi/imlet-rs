@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use cgmath::InnerSpace;
+
 use itertools::iproduct;
 
 use rayon::iter::IntoParallelIterator;
