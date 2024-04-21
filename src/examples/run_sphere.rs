@@ -1,7 +1,6 @@
 use std::time::Instant;
 
-use crate::{engine::{algorithms::marching_cubes::generate_iso_surface, types::{DenseFieldF32, Mesh, XYZ}, utils::implicit_functions::Sphere}, viewer::{material::Material, window::run}};
-
+use crate::{engine::{algorithms::marching_cubes::generate_iso_surface, types::{functions::Sphere, DenseFieldF32, Mesh, XYZ}}, viewer::{material::Material, window::run}};
 
 pub fn run_sphere(num_pts: usize, size: f32){
     
@@ -18,27 +17,12 @@ pub fn run_sphere(num_pts: usize, size: f32){
         source: XYZ::origin(),
         radius: size * 0.9,
     };
-    let before = Instant::now();
-    grid.evaluate(&sphere_function, true);
 
-    println!(
-        "Dense value buffer for {} points generated in {:.2?}",
-        grid.get_num_points(),
-        before.elapsed()
-    );
+    grid.evaluate(&sphere_function, true);
 
     let triangles = generate_iso_surface(&grid, 0.0);
 
     let mesh = Mesh::from_triangles(&triangles);
 
-    println!(
-        "Full isosurface for {} points generated in {:.2?} with {} vertices and {} faces",
-        grid.get_num_points(),
-        before.elapsed(),
-        mesh.num_vertices(),
-        mesh.num_faces()
-    );
-
-    println!("Running viewer...");
     pollster::block_on(run(&mesh, Material::Normal));
 }

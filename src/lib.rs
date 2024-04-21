@@ -9,16 +9,15 @@ pub mod engine{
         mod implicit_func;
         mod mesh;
         mod xyz;
+        pub mod functions;
     
         pub use dense_field::*;
-        pub use implicit_func::*;
         pub use mesh::*;
         pub use xyz::*;
 
         use hash_grid::SpatialHashGrid;
     }
     pub mod utils {
-        pub mod implicit_functions;
         pub mod io;
     }
 }

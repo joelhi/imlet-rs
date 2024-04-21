@@ -1,10 +1,14 @@
+use std::time::Instant;
+
 use itertools::iproduct;
 
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 
-use super::ImplicitFunction;
+use crate::engine::types::functions::ImplicitFunction;
 use super::XYZ;
+
+use env_logger;
 
 #[derive(Debug, Clone)]
 pub struct DenseFieldF32 {
@@ -45,8 +49,8 @@ impl DenseFieldF32 {
     }
 
     pub fn evaluate_single<T: ImplicitFunction>(&mut self, function: &T) {
+        let before = Instant::now();
         self.buffer.clear();
-        // Evaluate the function at all positions
         for k in 0..self.num_z {
             for j in 0..self.num_y {
                 for i in 0..self.num_x {
@@ -59,9 +63,16 @@ impl DenseFieldF32 {
                 }
             }
         }
+        
+        log::info!(
+            "Dense value buffer for {} points generated in {:.2?}",
+            self.get_num_points(),
+            before.elapsed()
+        );
     }
 
     pub fn evaluate_parallel<T: ImplicitFunction + Sync>(&mut self, function: &T) {
+        let before = Instant::now();
         let coordinates: Vec<(usize, usize, usize)> =
             iproduct!(0..self.num_x, 0..self.num_y, 0..self.num_z).collect();
 
@@ -82,6 +93,12 @@ impl DenseFieldF32 {
         for (index, value) in local_buffer{
             self.buffer[index] = value;
         }
+
+        log::info!(
+            "Dense value buffer for {} points generated in {:.2?}",
+            self.get_num_points(),
+            before.elapsed()
+        );
     }
 
     pub fn get_cell_ids(&self, i: usize, j: usize, k: usize) -> [usize; 8] {

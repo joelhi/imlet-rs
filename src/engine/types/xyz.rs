@@ -8,6 +8,15 @@ pub struct XYZ {
 }
 
 impl XYZ {
+
+    pub fn new(x: f32, y: f32, z: f32)->Self{
+        XYZ {
+            x: x,
+            y: y,
+            z: z,
+        }
+    }
+
     pub fn distance_to_xyz(&self, pt: XYZ) -> f32 {
         self.distance_to_xyz_squared(pt).sqrt()
     }
@@ -32,6 +41,30 @@ impl XYZ {
         }
     }
 
+    pub fn x_axis() -> XYZ {
+        XYZ {
+            x: 1.0,
+            y: 0.0,
+            z: 0.0,
+        }
+    }
+
+    pub fn y_axis() -> XYZ {
+        XYZ {
+            x: 0.0,
+            y: 1.0,
+            z: 0.0,
+        }
+    }
+
+    pub fn z_axis() -> XYZ {
+        XYZ {
+            x: 0.0,
+            y: 0.0,
+            z: 1.0,
+        }
+    }
+
     pub fn interpolate(first: &XYZ, second: &XYZ, parameter: f32) -> XYZ {
         XYZ {
             x: first.x + parameter * (second.x - first.x),
@@ -42,6 +75,10 @@ impl XYZ {
 
     pub fn dot(&self, rhs: XYZ) -> f32 {
         (self.x * rhs.x) + (self.y * rhs.y) + (self.z * rhs.z)
+    }
+
+    pub fn dot_xyz(&self, x: f32, y: f32, z: f32) -> f32 {
+        (self.x * x) + (self.y * y) + (self.z * z)
     }
 
     pub fn cross(&self, rhs: XYZ) -> XYZ {
