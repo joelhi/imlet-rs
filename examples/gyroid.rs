@@ -14,9 +14,9 @@ pub fn main() {
     utils::logging::init();
 
     // Inputs
-    let num_pts = 200;
+    let num_pts = 150;
     let size = 10.0;
-    let length = 3.0;
+    let length = 2.5;
 
     // Design space
     let mut grid = DenseFieldF32::new(

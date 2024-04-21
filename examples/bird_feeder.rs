@@ -88,5 +88,5 @@ pub fn main() {
     let mesh = Mesh::from_triangles(&triangles);
 
     // Run viewer
-    pollster::block_on(run(&mesh, Material::Normal));
+    pollster::block_on(run(&mesh, Material::Arctic));
 }
