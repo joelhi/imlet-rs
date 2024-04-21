@@ -1,17 +1,15 @@
-use std::f32::consts::E;
+use implicit::{engine::{algorithms::marching_cubes::generate_iso_surface, types::{functions::*, DenseFieldF32, Mesh, Plane, XYZ}, utils::{self, io::write_as_obj}}, viewer::{material::Material, window::run}};
 
-use crate::{
-    engine::{
-        algorithms::marching_cubes::generate_iso_surface,
-        types::{functions::*, DenseFieldF32, Mesh, Plane, XYZ},
-        utils::{self, io::write_as_obj},
-    },
-    viewer::{material::Material, window::run},
-};
 
-pub fn run_bird_feeder(num_pts: usize, size: f32, length: f32, parallel: bool) {
+pub fn main() {
     utils::logging::init();
 
+    // Inputs
+    let num_pts = 300;
+    let size = 100.0;
+    let length = 5.0;
+
+    // Build model
     let center = XYZ::new(size / 2.0, size / 2.0, size / 2.0);
 
     let sphere = Sphere::new(center, 0.4 * size);
@@ -29,10 +27,7 @@ pub fn run_bird_feeder(num_pts: usize, size: f32, length: f32, parallel: bool) {
         plane: Plane::new(XYZ::new(0.0, size / 1.8, 0.0), -1.0 * XYZ::y_axis()),
     };
 
-    let bowl = Intersection {
-        f: thick_gyroid,    
-        g: trimmed_sphere,
-    };
+    let bowl = Intersection::new(thick_gyroid, trimmed_sphere);
 
     let r = 2.5;
     let translation = XYZ::new(0.0, 4.0, 0.0);
@@ -61,6 +56,8 @@ pub fn run_bird_feeder(num_pts: usize, size: f32, length: f32, parallel: bool) {
         plane: Plane::new(XYZ::new(0.0, (center + translation).y, 0.0), -1.0 * XYZ::y_axis()),
     };
 
+
+    // Design space
     let mut grid = DenseFieldF32::new(
         XYZ::origin(),
         size / (num_pts as f32),
@@ -69,12 +66,14 @@ pub fn run_bird_feeder(num_pts: usize, size: f32, length: f32, parallel: bool) {
         num_pts,
     );
 
-    grid.evaluate(&clipped, parallel);
+    grid.evaluate(&clipped, true);
 
+
+    // generate mesh
     let triangles = generate_iso_surface(&grid, 0.0);
-
     let mesh = Mesh::from_triangles(&triangles);
 
-    write_as_obj(&mesh, "feeder");
+    // Run viewer
     pollster::block_on(run(&mesh, Material::Normal));
+
 }

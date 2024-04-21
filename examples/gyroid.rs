@@ -1,8 +1,16 @@
 use std::time::Instant;
 
-use crate::{engine::{algorithms::marching_cubes::generate_iso_surface, types::{DenseFieldF32, Mesh, XYZ, functions::*}}, viewer::{material::Material, window::run}};
+use implicit::{engine::{algorithms::marching_cubes::generate_iso_surface, types::{functions::{Difference, Gyroid, Offset}, DenseFieldF32, Mesh, XYZ}, utils}, viewer::{material::Material, window::run}};
 
-pub fn run_gyroid(num_pts: usize, size: f32, length: f32){
+pub fn main(){
+    utils::logging::init();
+    
+    // Inputs
+    let num_pts = 200;
+    let size = 10.0;
+    let length = 3.0;
+
+    // Design space
     let mut grid = DenseFieldF32::new(
         XYZ::origin(),
         size / (num_pts as f32),
@@ -11,43 +19,17 @@ pub fn run_gyroid(num_pts: usize, size: f32, length: f32){
         num_pts,
     );
 
-    let _gyroid = Gyroid {
-        length_x: length,
-        length_y: length,
-        length_z: length,
-    };
+    // Function
+    let gyroid = Gyroid::with_equal_spacing(length);
+    let offset = Offset::new(gyroid, -0.1);
+    let diff = Difference::new(offset, gyroid);
 
-    let _gyroid2 = Gyroid {
-        length_x: length,
-        length_y: length,
-        length_z: length,
-    };
-
-    let offset = Offset{
-        f: _gyroid2,
-        distance: -0.1
-    };
-
-    let diff = Difference{
-        f: offset,
-        g: _gyroid
-    };
-
-    let before = Instant::now();
     grid.evaluate(&diff, true);
 
+    // Generate output
     let triangles = generate_iso_surface(&grid, 0.15);
-
     let mesh = Mesh::from_triangles(&triangles);
 
-    println!(
-        "Full isosurface for {} points generated in {:.2?} with {} vertices and {} faces",
-        grid.get_num_points(),
-        before.elapsed(),
-        mesh.num_vertices(),
-        mesh.num_faces()
-    );
-
-    println!("Running viewer...");
+    // Run viewer
     pollster::block_on(run(&mesh, Material::Normal));
 }
