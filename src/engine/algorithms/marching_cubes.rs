@@ -21,7 +21,7 @@ pub fn generate_iso_surface(grid: &DenseFieldF32, iso_val: f32) -> Vec<Triangle>
                 let (i, j, k) = grid.get_cell_coord(cell_index);
                 let cell_xyz = grid.get_cell_xyz(i, j, k);
                 let cell_values = grid.get_cell_values(i, j, k);
-                polygonize_cell(iso_val, &&cell_xyz, &cell_values)
+                polygonize_cell(iso_val, &cell_xyz, &cell_values)
             })
             .reduce(Vec::new, |mut acc, triangles| {
                 acc.extend(triangles);

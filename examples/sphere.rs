@@ -1,7 +1,13 @@
-use implicit::{engine::{algorithms::marching_cubes::generate_iso_surface, types::{functions::*, DenseFieldF32, Mesh, XYZ}, utils}, viewer::{material::Material, window::run}};
+use implicit::{
+    engine::{
+        algorithms::marching_cubes::generate_iso_surface,
+        types::{functions::*, DenseFieldF32, Mesh, XYZ},
+        utils,
+    },
+    viewer::{material::Material, window::run},
+};
 
-
-pub fn main(){
+pub fn main() {
     utils::logging::init();
 
     // Inputs
@@ -10,7 +16,7 @@ pub fn main(){
 
     // Function
     let sphere_function = Sphere {
-        source: XYZ::new(size/2.0, size/2.0, size/2.0),
+        source: XYZ::new(size / 2.0, size / 2.0, size / 2.0),
         radius: size * 0.45,
     };
 
@@ -23,7 +29,6 @@ pub fn main(){
         num_pts,
     );
     grid.evaluate(&sphere_function, true);
-
 
     // Generate mesh
     let triangles = generate_iso_surface(&grid, 0.0);

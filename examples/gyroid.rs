@@ -1,10 +1,18 @@
-use std::time::Instant;
+use implicit::{
+    engine::{
+        algorithms::marching_cubes::generate_iso_surface,
+        types::{
+            functions::{Difference, Gyroid, Offset},
+            DenseFieldF32, Mesh, XYZ,
+        },
+        utils,
+    },
+    viewer::{material::Material, window::run},
+};
 
-use implicit::{engine::{algorithms::marching_cubes::generate_iso_surface, types::{functions::{Difference, Gyroid, Offset}, DenseFieldF32, Mesh, XYZ}, utils}, viewer::{material::Material, window::run}};
-
-pub fn main(){
+pub fn main() {
     utils::logging::init();
-    
+
     // Inputs
     let num_pts = 200;
     let size = 10.0;
