@@ -1,9 +1,9 @@
-use std::time::Instant;
 
-use crate::{engine::{algorithms::marching_cubes::generate_iso_surface, types::{functions::Sphere, DenseFieldF32, Mesh, XYZ}}, viewer::{material::Material, window::run}};
+
+use crate::{engine::{algorithms::marching_cubes::generate_iso_surface, types::{functions::Sphere, DenseFieldF32, Mesh, XYZ}, utils}, viewer::{material::Material, window::run}};
 
 pub fn run_sphere(num_pts: usize, size: f32){
-    
+    utils::logging::init();
     let mut grid = DenseFieldF32::new(
         XYZ::origin(),
         size / (num_pts as f32),

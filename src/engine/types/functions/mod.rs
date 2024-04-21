@@ -6,7 +6,9 @@ mod arithmetic_ops;
 mod boolean_ops;
 mod constant;
 mod offset;
-mod clip;
+mod clipping;
+mod torus;
+mod line;
 
 pub use implicit_function::*;
 pub use gyroid::*;
@@ -16,4 +18,6 @@ pub use arithmetic_ops::*;
 pub use boolean_ops::*;
 pub use constant::*;
 pub use offset::*;
-pub use clip::*;
+pub use clipping::*;
+pub use torus::*;
+pub use line::*;

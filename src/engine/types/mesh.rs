@@ -1,5 +1,6 @@
 use super::SpatialHashGrid;
 use super::XYZ;
+use std::time::Instant;
 use std::usize;
 
 pub struct Mesh {
@@ -113,6 +114,7 @@ impl Mesh {
     }
 
     pub fn from_triangles(triangles: &[Triangle]) -> Mesh {
+        let before = Instant::now();
         // Contruct vertex buffer using a hash grid for coordinates to index mapping
         let mut faces: Vec<[usize; 3]> = Vec::new();
         let mut grid = SpatialHashGrid::with_tolerance(1E-7);
@@ -132,6 +134,14 @@ impl Mesh {
         mesh.add_vertices(&grid.vertices());
         mesh.add_faces(&faces);
         mesh.compute_vertex_normals();
+
+        log::info!(
+            "Mesh generated with {} points and {} triangles in {:.2?}",
+            mesh.num_vertices(),
+            mesh.num_faces(),
+            before.elapsed()
+        );
+
         mesh
     }
 }

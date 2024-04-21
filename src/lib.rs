@@ -9,16 +9,19 @@ pub mod engine{
         mod implicit_func;
         mod mesh;
         mod xyz;
+        mod plane;
         pub mod functions;
     
         pub use dense_field::*;
         pub use mesh::*;
         pub use xyz::*;
+        pub use plane::*;
 
         use hash_grid::SpatialHashGrid;
     }
     pub mod utils {
         pub mod io;
+        pub mod logging;
     }
 }
 pub mod viewer{
@@ -28,15 +31,4 @@ pub mod viewer{
     mod camera;
     mod camera_controller;
     mod texture;
-}
-
-pub mod examples{
-    mod gyroid;
-    mod compute_shader;
-    mod bitmask_gyroid;
-    mod run_sphere;
-    pub use gyroid::run_gyroid;
-    pub use compute_shader::run_compute_shader;
-    pub use bitmask_gyroid::run_bitmask_gyroid;
-    pub use run_sphere::run_sphere;
 }

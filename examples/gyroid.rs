@@ -36,12 +36,6 @@ pub fn run_gyroid(num_pts: usize, size: f32, length: f32){
     let before = Instant::now();
     grid.evaluate(&diff, true);
 
-    println!(
-        "Dense value buffer for {} points generated in {:.2?}",
-        grid.get_num_points(),
-        before.elapsed()
-    );
-
     let triangles = generate_iso_surface(&grid, 0.15);
 
     let mesh = Mesh::from_triangles(&triangles);

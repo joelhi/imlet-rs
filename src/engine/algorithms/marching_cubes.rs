@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 
@@ -7,22 +9,31 @@ use crate::engine::types::Triangle;
 use crate::engine::types::XYZ;
 
 pub fn generate_iso_surface(grid: &DenseFieldF32, iso_val: f32) -> Vec<Triangle> {
+    let before = Instant::now();
     // Generate triangles for cell
     let mut triangles: Vec<Triangle> = Vec::with_capacity(grid.get_num_cells() * 1);
 
     // Iterate over cell indices in parallel and collect triangles
-    triangles.extend((0..grid.get_num_cells())
-        .into_par_iter()
-        .map(|cell_index| {
-            let (i, j, k) = grid.get_cell_coord(cell_index);
-            let cell_xyz = grid.get_cell_xyz(i, j, k);
-            let cell_values = grid.get_cell_values(i, j, k);
-            polygonize_cell(iso_val, &&cell_xyz, &cell_values)
-        })
-        .reduce(Vec::new, |mut acc, triangles| {
-            acc.extend(triangles);
-            acc
-        }));
+    triangles.extend(
+        (0..grid.get_num_cells())
+            .into_par_iter()
+            .map(|cell_index| {
+                let (i, j, k) = grid.get_cell_coord(cell_index);
+                let cell_xyz = grid.get_cell_xyz(i, j, k);
+                let cell_values = grid.get_cell_values(i, j, k);
+                polygonize_cell(iso_val, &&cell_xyz, &cell_values)
+            })
+            .reduce(Vec::new, |mut acc, triangles| {
+                acc.extend(triangles);
+                acc
+            }),
+    );
+
+    log::info!(
+        "Marching cubes generated {} triangles in {:.2?}",
+        triangles.len(),
+        before.elapsed()
+    );
 
     triangles
 }

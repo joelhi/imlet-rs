@@ -17,6 +17,14 @@ impl Gyroid {
             length_z: length_z,
         }
     }
+
+    pub fn with_equal_spacing(length: f32)->Self{
+        Gyroid {
+            length_x: length,
+            length_y: length,
+            length_z: length,
+        }
+    }
 }
 
 impl ImplicitFunction for Gyroid {

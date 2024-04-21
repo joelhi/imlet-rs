@@ -123,3 +123,35 @@ impl<F: ImplicitFunction, G: ImplicitFunction> ImplicitFunction for Divide<F, G>
         self.f.eval(x, y, z) / self.g.eval(x, y, z)
     }
 }
+
+
+#[derive(Debug, Clone, Copy)]
+pub struct Max<F, G> {
+    pub f: F,
+    pub g: G,
+}
+
+impl<F: ImplicitFunction, G: ImplicitFunction> Max<F, G>{
+    pub fn new(f: F, g: G)->Self{
+        Max{
+            f,
+            g
+        }
+
+    }
+}
+
+impl<F: ImplicitFunction> Max<F, Constant> {
+    pub fn with_constant(f: F, value: f32) -> Self {
+        Max {
+            f,
+            g: Constant::new(value),
+        }
+    }
+}
+
+impl<F: ImplicitFunction, G: ImplicitFunction> ImplicitFunction for Max<F, G> {
+    fn eval(&self, x: f32, y: f32, z: f32) -> f32 {
+        self.f.eval(x, y, z) / self.g.eval(x, y, z)
+    }
+}

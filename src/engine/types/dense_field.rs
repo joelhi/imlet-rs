@@ -1,5 +1,6 @@
 use std::time::Instant;
 
+use cgmath::InnerSpace;
 use itertools::iproduct;
 
 use rayon::iter::IntoParallelIterator;
@@ -8,7 +9,7 @@ use rayon::iter::ParallelIterator;
 use crate::engine::types::functions::ImplicitFunction;
 use super::XYZ;
 
-use env_logger;
+
 
 #[derive(Debug, Clone)]
 pub struct DenseFieldF32 {

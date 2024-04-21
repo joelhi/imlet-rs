@@ -133,6 +133,17 @@ impl ops::Mul<f32> for XYZ {
     }
 }
 
+impl ops::Mul<XYZ> for f32 {
+    type Output = XYZ;
+    fn mul(self, rhs: XYZ) -> Self::Output {
+        XYZ {
+            x: self * rhs.x,
+            y: self * rhs.y,
+            z: self * rhs.z,
+        }
+    }
+}
+
 impl ops::Mul<XYZ> for XYZ {
     type Output = f32;
     fn mul(self, rhs: XYZ) -> Self::Output {
