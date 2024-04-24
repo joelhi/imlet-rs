@@ -1,7 +1,7 @@
 use implicit::{
     engine::{
         algorithms::marching_cubes::generate_iso_surface,
-        types::{functions::*, DenseFieldF32, Mesh, Plane, XYZ}
+        types::{functions::*, DenseFieldF32, Mesh, Plane, XYZ}, utils
     },
     viewer::{material::Material, window::run},
 };
@@ -12,18 +12,18 @@ pub fn main() {
     // Inputs
     let num_pts = 300;
     let size = 100.0;
-    let length = 5.0;
+    let length = 7.5;
 
     // Build model
     let center = XYZ::new(size / 2.0, size / 2.0, size / 2.0);
 
     let sphere = Sphere::new(center, 0.4 * size);
 
-    let offset_sphere = Offset::new(sphere, 3.0);
+    let offset_sphere = Offset::new(sphere, 5.0);
 
     let gyroid = Gyroid::with_equal_spacing(length);
 
-    let thick_gyroid = Difference::new(Offset::new(gyroid, -0.75), Offset::new(gyroid, 0.75));
+    let thick_gyroid = Difference::new(Offset::new(gyroid, -0.8), Offset::new(gyroid, 0.8));
 
     let spheres = Difference::new(sphere, offset_sphere);
 
@@ -39,14 +39,14 @@ pub fn main() {
     let edge = Torus::new(center + translation, 0.4 * size - r, r);
 
     let line1 = Line::new(
-        XYZ::new(size / 2.0, size / 2.0 + 4.0, r),
-        XYZ::new(size / 2.0, size / 2.0 + 4.0, size - r),
+        XYZ::new(size / 2.0, size / 2.0 + 4.0, 1.5*r),
+        XYZ::new(size / 2.0, size / 2.0 + 4.0, size - (1.5*r)),
         r,
     );
 
     let line2 = Line::new(
-        XYZ::new(r, size / 2.0 + 4.0, size / 2.0),
-        XYZ::new(size - r, size / 2.0 + 4.0, size / 2.0),
+        XYZ::new(1.5 * r, size / 2.0 + 4.0, size / 2.0),
+        XYZ::new(size - (1.5*r), size / 2.0 + 4.0, size / 2.0),
         r,
     );
 
@@ -62,12 +62,10 @@ pub fn main() {
 
     let union = Union::new(union, inner_ring);
 
-    let clean = Max::with_constant(union, 0.1);
-
     let clipped = ClippingPlane {
-        function: clean,
+        function: union,
         plane: Plane::new(
-            XYZ::new(0.0, (center + translation).y, 0.0),
+            XYZ::new(0.0, (center - 1.5*translation).y, 0.0),
             -1.0 * XYZ::y_axis(),
         ),
     };
@@ -75,18 +73,20 @@ pub fn main() {
     // Design space
     let mut grid = DenseFieldF32::new(
         XYZ::origin(),
-        size / (num_pts as f32),
+        size / ((num_pts - 1) as f32),
         num_pts,
         num_pts,
         num_pts,
     );
 
     grid.evaluate(&clipped, true);
-
+    grid.smooth(0.8, 3);
+    //grid.threshold(0.01);
     // generate mesh
     let triangles = generate_iso_surface(&grid, 0.0);
     let mesh = Mesh::from_triangles(&triangles);
 
+    utils::io::write_as_obj(&mesh, "design_L");
     // Run viewer
     pollster::block_on(run(&mesh, Material::Arctic));
 }

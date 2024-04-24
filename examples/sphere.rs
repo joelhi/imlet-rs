@@ -11,7 +11,7 @@ pub fn main() {
     utils::logging::init();
 
     // Inputs
-    let num_pts = 50;
+    let num_pts = 4;
     let size = 10.0;
 
     // Function
@@ -23,13 +23,12 @@ pub fn main() {
     // Design space
     let mut grid = DenseFieldF32::new(
         XYZ::origin(),
-        size / (num_pts as f32),
+        size / ((num_pts - 1) as f32),
         num_pts,
         num_pts,
         num_pts,
     );
     grid.evaluate(&sphere_function, true);
-
     // Generate mesh
     let triangles = generate_iso_surface(&grid, 0.0);
     let mesh = Mesh::from_triangles(&triangles);

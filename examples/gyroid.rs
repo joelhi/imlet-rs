@@ -2,7 +2,7 @@ use implicit::{
     engine::{
         algorithms::marching_cubes::generate_iso_surface,
         types::{
-            functions::{Difference, Gyroid, Offset},
+            functions::{Difference, Gyroid, Intersection, Offset, Sphere, Union},
             DenseFieldF32, Mesh, XYZ,
         },
         utils,
@@ -21,7 +21,7 @@ pub fn main() {
     // Design space
     let mut grid = DenseFieldF32::new(
         XYZ::origin(),
-        size / (num_pts as f32),
+        size / ((num_pts - 1) as f32),
         num_pts,
         num_pts,
         num_pts,
@@ -29,10 +29,13 @@ pub fn main() {
 
     // Function
     let gyroid = Gyroid::with_equal_spacing(length);
-    let offset = Offset::new(gyroid, -0.1);
+    let offset = Offset::new(gyroid, -0.80);
     let diff = Difference::new(offset, gyroid);
+    let sphere = Sphere::new(XYZ::new(size/2.0,size/2.0,size/2.0), 0.45 * size);
+    let union = Intersection::new(sphere, diff);
 
-    grid.evaluate(&diff, true);
+    grid.evaluate(&union, true);
+    grid.smooth(0.75, 10);
 
     // Generate output
     let triangles = generate_iso_surface(&grid, 0.15);
