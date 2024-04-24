@@ -117,7 +117,7 @@ impl Mesh {
         let before = Instant::now();
         // Contruct vertex buffer using a hash grid for coordinates to index mapping
         let mut faces: Vec<[usize; 3]> = Vec::new();
-        let mut grid = SpatialHashGrid::with_tolerance(1E-7);
+        let mut grid = SpatialHashGrid::with_tolerance( 1E-7);
 
         let mut mesh = Mesh::new();
         for triangle in triangles {

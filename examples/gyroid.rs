@@ -2,7 +2,7 @@ use implicit::{
     engine::{
         algorithms::marching_cubes::generate_iso_surface,
         types::{
-            functions::{Difference, Gyroid, Intersection, Offset, Sphere, Union},
+            functions::{Difference, Gyroid, Intersection, Offset, Sphere},
             DenseFieldF32, Mesh, XYZ,
         },
         utils,
@@ -14,7 +14,7 @@ pub fn main() {
     utils::logging::init();
 
     // Inputs
-    let num_pts = 150;
+    let num_pts = 200;
     let size = 10.0;
     let length = 2.5;
 
