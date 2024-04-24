@@ -1,15 +1,13 @@
 use std::time::Instant;
 
-
 use itertools::iproduct;
 
+use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 
-use crate::engine::types::functions::ImplicitFunction;
 use super::XYZ;
-
-
+use crate::engine::types::functions::ImplicitFunction;
 
 #[derive(Debug, Clone)]
 pub struct DenseFieldF32 {
@@ -40,11 +38,10 @@ impl DenseFieldF32 {
         }
     }
 
-    pub fn evaluate<T: ImplicitFunction + Sync>(&mut self, function: &T, parallel: bool){
-        if parallel{
+    pub fn evaluate<T: ImplicitFunction + Sync>(&mut self, function: &T, parallel: bool) {
+        if parallel {
             self.evaluate_parallel(function)
-        }
-        else {
+        } else {
             self.evaluate_single(function)
         }
     }
@@ -64,7 +61,7 @@ impl DenseFieldF32 {
                 }
             }
         }
-        
+
         log::info!(
             "Dense value buffer for {} points generated in {:.2?}",
             self.get_num_points(),
@@ -91,7 +88,7 @@ impl DenseFieldF32 {
 
         self.buffer.clear();
         self.buffer.resize(self.get_num_points(), 0.0);
-        for (index, value) in local_buffer{
+        for (index, value) in local_buffer {
             self.buffer[index] = value;
         }
 
@@ -100,6 +97,60 @@ impl DenseFieldF32 {
             self.get_num_points(),
             before.elapsed()
         );
+    }
+
+    pub fn smooth(&mut self, factor: f32, iterations: u32) {
+        let before = Instant::now();
+        for _ in 0..iterations {
+            let smoothed_values: Vec<_> = self.buffer.clone()
+                .into_par_iter()
+                .enumerate()
+                .map(|(index, val)| {
+                    let smoothed_val = if let Some(sum) = self.get_neighbours_sum(index) {
+                        let laplacian = sum / 6.0;
+                        (1.0 - factor) * val + factor * laplacian
+                    } else {
+                        val
+                    };
+                    (index, smoothed_val)
+                })
+                .collect();
+    
+            for (index, smoothed_val) in smoothed_values {
+                self.buffer[index] = smoothed_val;
+            }
+        }
+        
+        log::info!(
+            "Dense value buffer for {} points smoothed in {:.2?} for {} iterations",
+            self.get_num_points(),
+            before.elapsed(),
+            iterations
+        );
+    }
+
+    pub fn threshold(&mut self, limit: f32){
+        for value in self.buffer.iter_mut() {
+            if *value < limit {
+                *value = 0.0;
+            }
+        }
+    }
+
+    fn get_neighbours_sum(&self, index: usize) -> Option<f32> {
+        let (i, j, k) = self.get_point_coord(index);
+
+        if i < 1 || j < 1 || k < 1 || i == self.num_x -1 || j == self.num_y -1 || k == self.num_z -1 {
+            return None;
+        }
+        Some(
+            self.buffer[self.get_point_index(i + 1, j, k)] +
+            self.buffer[self.get_point_index(i - 1, j, k)] +
+            self.buffer[self.get_point_index(i, j + 1, k)] +
+            self.buffer[self.get_point_index(i, j - 1, k)] +
+            self.buffer[self.get_point_index(i, j, k + 1)] +
+            self.buffer[self.get_point_index(i, j, k - 1)]
+        )
     }
 
     pub fn get_cell_ids(&self, i: usize, j: usize, k: usize) -> [usize; 8] {
@@ -199,7 +250,7 @@ impl DenseFieldF32 {
         let k = index / (self.num_x * self.num_y);
         let temp = index - (k * self.num_x * self.num_y);
         let j = temp / self.num_x;
-        let i = temp % (self.num_x - 1);
+        let i = temp % (self.num_x );
 
         (i, j, k)
     }
