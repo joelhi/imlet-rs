@@ -80,8 +80,8 @@ pub fn main() {
     );
 
     grid.evaluate(&clipped, true);
-    grid.smooth(0.8, 3);
-    grid.threshold(0.01);
+    grid.smooth(0.5, 3);
+
     // generate mesh
     let triangles = generate_iso_surface(&grid, 0.0);
     let mesh = Mesh::from_triangles(&triangles);

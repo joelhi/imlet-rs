@@ -1,33 +1,22 @@
 use super::{constant::Constant, ImplicitFunction};
 
 #[derive(Debug, Clone, Copy)]
-pub struct Multiply<F, G> {
-    pub f: F,
-    pub g: G,
-}
+pub struct Multiply { }
 
-impl<F: ImplicitFunction, G: ImplicitFunction> Multiply<F, G>{
-    pub fn new(f: F, g: G)->Self{
-        Multiply{
-            f,
-            g
-        }
+impl Multiply{
+    pub fn new()->Self{
+        Multiply{ }
 
     }
 }
 
-impl<F: ImplicitFunction> Multiply<F, Constant> {
-    pub fn with_constant(f: F, value: f32) -> Self {
-        Multiply {
-            f,
-            g: Constant::new(value),
-        }
+impl ImplicitFunction for Multiply {
+    fn eval(&self, params: &[f32], _: f32, _: f32, _: f32) -> f32 {
+        params[0] * params[1]
     }
-}
 
-impl<F: ImplicitFunction, G: ImplicitFunction> ImplicitFunction for Multiply<F, G> {
-    fn eval(&self, x: f32, y: f32, z: f32) -> f32 {
-        self.f.eval(x, y, z) * self.g.eval(x, y, z)
+    fn num_params(&self)->usize {
+        2
     }
 }
 
@@ -119,7 +108,7 @@ impl<F: ImplicitFunction> Divide<F, Constant> {
 }
 
 impl<F: ImplicitFunction, G: ImplicitFunction> ImplicitFunction for Divide<F, G> {
-    fn eval(&self, x: f32, y: f32, z: f32) -> f32 {
+    fn eval(&self, params: &[f32], x: f32, y: f32, z: f32) -> f32 {
         self.f.eval(x, y, z) / self.g.eval(x, y, z)
     }
 }

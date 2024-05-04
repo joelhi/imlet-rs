@@ -10,6 +10,7 @@ pub mod engine{
         mod mesh;
         mod xyz;
         mod plane;
+        pub mod computation;
         pub mod functions;
     
         pub use dense_field::*;
