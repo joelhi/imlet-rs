@@ -40,25 +40,24 @@ impl DenseFieldF32 {
         if parallel {
             self.evaluate_parallel(function)
         } else {
-            self.evaluate_single(function)
+            self.evaluate_sequential(function)
         }
     }
 
-    pub fn evaluate_single<T: ImplicitFunction>(&mut self, function: &T) {
+    pub fn evaluate_sequential<T: ImplicitFunction>(&mut self, function: &T) {
         let before = Instant::now();
-        self.buffer.clear();
-        for k in 0..self.num_z {
-            for j in 0..self.num_y {
-                for i in 0..self.num_x {
-                    let value = function.eval(
-                        self.origin.x + self.cell_size * i as f32,
-                        self.origin.y + self.cell_size * j as f32,
-                        self.origin.z + self.cell_size * k as f32,
-                    );
-                    self.buffer.push(value);
-                }
-            }
-        }
+        let (num_x, num_y, num_z) = (self.num_x, self.num_y, self.num_z);
+        self.buffer
+            .iter_mut()
+            .enumerate()
+            .for_each(|(index, value)| {
+                let (i, j, k) = DenseFieldF32::index3d_from_index1d(index, num_x, num_y, num_z);
+                *value = function.eval(
+                    self.origin.x + self.cell_size * i as f32,
+                    self.origin.y + self.cell_size * j as f32,
+                    self.origin.z + self.cell_size * k as f32,
+                );
+            });
 
         log::info!(
             "Dense value buffer for {} points generated in {:.2?}",
@@ -74,7 +73,7 @@ impl DenseFieldF32 {
             .par_iter_mut()
             .enumerate()
             .for_each(|(index, value)| {
-                let (i, j, k) = DenseFieldF32::get_coord_from_size(index, num_x, num_y, num_z);
+                let (i, j, k) = DenseFieldF32::index3d_from_index1d(index, num_x, num_y, num_z);
                 *value = function.eval(
                     self.origin.x + self.cell_size * i as f32,
                     self.origin.y + self.cell_size * j as f32,
@@ -117,9 +116,7 @@ impl DenseFieldF32 {
     }
 
     pub fn threshold(&mut self, limit: f32) {
-        self.buffer
-        .iter_mut()
-        .for_each( |value| {
+        self.buffer.iter_mut().for_each(|value| {
             if *value < limit {
                 *value = 0.0;
             }
@@ -127,7 +124,7 @@ impl DenseFieldF32 {
     }
 
     fn get_neighbours_sum(&self, index: usize) -> Option<f32> {
-        let (i, j, k) = self.get_point_coord(index);
+        let (i, j, k) = self.get_point_index3d(index);
 
         if i < 1
             || j < 1
@@ -139,12 +136,12 @@ impl DenseFieldF32 {
             return None;
         }
         Some(
-            self.buffer[self.get_point_index(i + 1, j, k)]
-                + self.buffer[self.get_point_index(i - 1, j, k)]
-                + self.buffer[self.get_point_index(i, j + 1, k)]
-                + self.buffer[self.get_point_index(i, j - 1, k)]
-                + self.buffer[self.get_point_index(i, j, k + 1)]
-                + self.buffer[self.get_point_index(i, j, k - 1)],
+            self.buffer[self.get_point_index1d(i + 1, j, k)]
+                + self.buffer[self.get_point_index1d(i - 1, j, k)]
+                + self.buffer[self.get_point_index1d(i, j + 1, k)]
+                + self.buffer[self.get_point_index1d(i, j - 1, k)]
+                + self.buffer[self.get_point_index1d(i, j, k + 1)]
+                + self.buffer[self.get_point_index1d(i, j, k - 1)],
         )
     }
 
@@ -154,14 +151,14 @@ impl DenseFieldF32 {
             panic!("Index out of bounds");
         }
         [
-            self.get_point_index(i, j, k),
-            self.get_point_index(i + 1, j, k),
-            self.get_point_index(i + 1, j + 1, k),
-            self.get_point_index(i, j + 1, k),
-            self.get_point_index(i, j, k + 1),
-            self.get_point_index(i + 1, j, k + 1),
-            self.get_point_index(i + 1, j + 1, k + 1),
-            self.get_point_index(i, j + 1, k + 1),
+            self.get_point_index1d(i, j, k),
+            self.get_point_index1d(i + 1, j, k),
+            self.get_point_index1d(i + 1, j + 1, k),
+            self.get_point_index1d(i, j + 1, k),
+            self.get_point_index1d(i, j, k + 1),
+            self.get_point_index1d(i + 1, j, k + 1),
+            self.get_point_index1d(i + 1, j + 1, k + 1),
+            self.get_point_index1d(i, j + 1, k + 1),
         ]
     }
 
@@ -232,48 +229,55 @@ impl DenseFieldF32 {
         ]
     }
 
-    pub fn get_point_index(&self, i: usize, j: usize, k: usize) -> usize {
+    pub fn get_point_index1d(&self, i: usize, j: usize, k: usize) -> usize {
+        DenseFieldF32::index1d_from_index3d(i, j, k, self.num_x, self.num_y, self.num_z)
+    }
+
+    pub fn get_point_index3d(&self, index: usize) -> (usize, usize, usize) {
+        DenseFieldF32::index3d_from_index1d(index, self.num_x, self.num_y, self.num_z)
+    }
+
+    pub fn get_cell_index1d(&self, i: usize, j: usize, k: usize) -> usize {
+        DenseFieldF32::index1d_from_index3d(
+            i,
+            j,
+            k,
+            self.num_x - 1,
+            self.num_y - 1,
+            self.num_z - 1,
+        )
+    }
+
+    pub fn get_cell_index3d(&self, index: usize) -> (usize, usize, usize) {
+        DenseFieldF32::index3d_from_index1d(index, self.num_x - 1, self.num_y - 1, self.num_z - 1)
+    }
+
+    pub fn index1d_from_index3d(
+        i: usize,
+        j: usize,
+        k: usize,
+        num_x: usize,
+        num_y: usize,
+        num_z: usize,
+    ) -> usize {
         assert!(
-            i < self.num_x && j < self.num_y && k < self.num_z,
+            i < num_x && j < num_y && k < num_z,
             "Coordinates out of bounds"
         );
-        (k * self.num_x * self.num_y) + (j * self.num_x) + i
+        (k * num_x * num_y) + (j * num_x) + i
     }
 
-    pub fn get_point_coord(&self, index: usize) -> (usize, usize, usize) {
-        assert!(index < self.get_num_points(), "Index out of bounds");
-        let k = index / (self.num_x * self.num_y);
-        let temp = index - (k * self.num_x * self.num_y);
-        let j = temp / self.num_x;
-        let i = temp % (self.num_x);
-
-        (i, j, k)
-    }
-
-    pub fn get_cell_index(&self, i: usize, j: usize, k: usize) -> usize {
-        assert!(
-            i < self.num_x && j < self.num_y && k < self.num_z,
-            "Coordinates out of bounds"
-        );
-        (k * (self.num_x - 1) * (self.num_y - 1)) + (j * (self.num_x - 1)) + i
-    }
-
-    pub fn get_cell_coord(&self, index: usize) -> (usize, usize, usize) {
-        assert!(index < self.get_num_points(), "Index out of bounds");
-        let k = index / ((self.num_x - 1) * (self.num_y - 1));
-        let temp = index - (k * (self.num_x - 1) * (self.num_y - 1));
-        let j = temp / (self.num_x - 1);
-        let i = temp % (self.num_x - 1);
-
-        (i, j, k)
-    }
-
-    pub fn get_coord_from_size(index: usize, num_x: usize, num_y: usize, num_z: usize) -> (usize, usize, usize) {
+    pub fn index3d_from_index1d(
+        index: usize,
+        num_x: usize,
+        num_y: usize,
+        num_z: usize,
+    ) -> (usize, usize, usize) {
         assert!(index < num_x * num_y * num_z, "Index out of bounds");
         let k = index / (num_x * num_y);
         let temp = index - (k * num_x * num_y);
         let j = temp / num_x;
-        let i = temp % num_x ;
+        let i = temp % num_x;
 
         (i, j, k)
     }
