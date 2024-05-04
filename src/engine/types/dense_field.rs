@@ -1,9 +1,7 @@
 use std::time::Instant;
 
-use itertools::iproduct;
-
 use rayon::iter::IndexedParallelIterator;
-use rayon::iter::IntoParallelIterator;
+use rayon::iter::IntoParallelRefMutIterator;
 use rayon::iter::ParallelIterator;
 
 use super::XYZ;
@@ -34,7 +32,7 @@ impl DenseFieldF32 {
             num_x: size_x,
             num_y: sixe_y,
             num_z: size_z,
-            buffer: Vec::with_capacity(size_x * sixe_y * size_z),
+            buffer: vec![0.0; size_x * sixe_y * size_z],
         }
     }
 
@@ -71,26 +69,18 @@ impl DenseFieldF32 {
 
     pub fn evaluate_parallel<T: ImplicitFunction + Sync>(&mut self, function: &T) {
         let before = Instant::now();
-        let coordinates: Vec<(usize, usize, usize)> =
-            iproduct!(0..self.num_x, 0..self.num_y, 0..self.num_z).collect();
-
-        let local_buffer: Vec<(usize, f32)> = coordinates
-            .into_par_iter()
-            .map(|(i, j, k)| {
-                let x = self.origin.x + self.cell_size * i as f32;
-                let y = self.origin.y + self.cell_size * j as f32;
-                let z = self.origin.z + self.cell_size * k as f32;
-                let value = function.eval(x, y, z);
-
-                (self.get_point_index(i, j, k), value)
-            })
-            .collect();
-
-        self.buffer.clear();
-        self.buffer.resize(self.get_num_points(), 0.0);
-        for (index, value) in local_buffer {
-            self.buffer[index] = value;
-        }
+        let (num_x, num_y, num_z) = (self.num_x, self.num_y, self.num_z);
+        self.buffer
+            .par_iter_mut()
+            .enumerate()
+            .for_each(|(index, value)| {
+                let (i, j, k) = DenseFieldF32::get_coord_from_size(index, num_x, num_y, num_z);
+                *value = function.eval(
+                    self.origin.x + self.cell_size * i as f32,
+                    self.origin.y + self.cell_size * j as f32,
+                    self.origin.z + self.cell_size * k as f32,
+                );
+            });
 
         log::info!(
             "Dense value buffer for {} points generated in {:.2?}",
@@ -101,26 +91,23 @@ impl DenseFieldF32 {
 
     pub fn smooth(&mut self, factor: f32, iterations: u32) {
         let before = Instant::now();
+        let mut smoothed = vec![0.0; self.get_num_points()];
         for _ in 0..iterations {
-            let smoothed_values: Vec<_> = self.buffer.clone()
-                .into_par_iter()
+            smoothed
+                .par_iter_mut()
                 .enumerate()
-                .map(|(index, val)| {
-                    let smoothed_val = if let Some(sum) = self.get_neighbours_sum(index) {
+                .for_each(|(index, val)| {
+                    if let Some(sum) = self.get_neighbours_sum(index) {
                         let laplacian = sum / 6.0;
-                        (1.0 - factor) * val + factor * laplacian
+                        *val = (1.0 - factor) * self.buffer[index] + factor * laplacian;
                     } else {
-                        val
+                        *val = self.buffer[index];
                     };
-                    (index, smoothed_val)
-                })
-                .collect();
-    
-            for (index, smoothed_val) in smoothed_values {
-                self.buffer[index] = smoothed_val;
-            }
+                });
+
+            std::mem::swap(&mut self.buffer, &mut smoothed);
         }
-        
+
         log::info!(
             "Dense value buffer for {} points smoothed in {:.2?} for {} iterations",
             self.get_num_points(),
@@ -129,27 +116,35 @@ impl DenseFieldF32 {
         );
     }
 
-    pub fn threshold(&mut self, limit: f32){
-        for value in self.buffer.iter_mut() {
+    pub fn threshold(&mut self, limit: f32) {
+        self.buffer
+        .iter_mut()
+        .for_each( |value| {
             if *value < limit {
                 *value = 0.0;
             }
-        }
+        });
     }
 
     fn get_neighbours_sum(&self, index: usize) -> Option<f32> {
         let (i, j, k) = self.get_point_coord(index);
 
-        if i < 1 || j < 1 || k < 1 || i == self.num_x -1 || j == self.num_y -1 || k == self.num_z -1 {
+        if i < 1
+            || j < 1
+            || k < 1
+            || i == self.num_x - 1
+            || j == self.num_y - 1
+            || k == self.num_z - 1
+        {
             return None;
         }
         Some(
-            self.buffer[self.get_point_index(i + 1, j, k)] +
-            self.buffer[self.get_point_index(i - 1, j, k)] +
-            self.buffer[self.get_point_index(i, j + 1, k)] +
-            self.buffer[self.get_point_index(i, j - 1, k)] +
-            self.buffer[self.get_point_index(i, j, k + 1)] +
-            self.buffer[self.get_point_index(i, j, k - 1)]
+            self.buffer[self.get_point_index(i + 1, j, k)]
+                + self.buffer[self.get_point_index(i - 1, j, k)]
+                + self.buffer[self.get_point_index(i, j + 1, k)]
+                + self.buffer[self.get_point_index(i, j - 1, k)]
+                + self.buffer[self.get_point_index(i, j, k + 1)]
+                + self.buffer[self.get_point_index(i, j, k - 1)],
         )
     }
 
@@ -250,7 +245,7 @@ impl DenseFieldF32 {
         let k = index / (self.num_x * self.num_y);
         let temp = index - (k * self.num_x * self.num_y);
         let j = temp / self.num_x;
-        let i = temp % (self.num_x );
+        let i = temp % (self.num_x);
 
         (i, j, k)
     }
@@ -269,6 +264,16 @@ impl DenseFieldF32 {
         let temp = index - (k * (self.num_x - 1) * (self.num_y - 1));
         let j = temp / (self.num_x - 1);
         let i = temp % (self.num_x - 1);
+
+        (i, j, k)
+    }
+
+    pub fn get_coord_from_size(index: usize, num_x: usize, num_y: usize, num_z: usize) -> (usize, usize, usize) {
+        assert!(index < num_x * num_y * num_z, "Index out of bounds");
+        let k = index / (num_x * num_y);
+        let temp = index - (k * num_x * num_y);
+        let j = temp / num_x;
+        let i = temp % num_x ;
 
         (i, j, k)
     }
