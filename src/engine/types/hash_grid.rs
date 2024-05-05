@@ -1,7 +1,7 @@
 use super::XYZ;
 use std::{collections::HashMap, usize};
 
-const DEFAULT_SPATIAL_TOL: f32 = 1E-5;
+const DEFAULT_SPATIAL_TOL: f32 = 1E-7;
 
 pub struct SpatialHashGrid {
     map: HashMap<usize, Vec<usize>>,
@@ -18,7 +18,7 @@ impl SpatialHashGrid {
             tolerance: DEFAULT_SPATIAL_TOL,
         }
     }
-
+    #[allow(dead_code)]
     pub fn with_tolerance(tolerance: f32) -> Self {
         SpatialHashGrid {
             map: HashMap::new(),
