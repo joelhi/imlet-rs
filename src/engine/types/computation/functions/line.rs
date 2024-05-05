@@ -1,6 +1,4 @@
-use crate::engine::types::XYZ;
-
-use super::ImplicitFunction;
+use crate::engine::types::{computation::component::ImplicitFunction, XYZ};
 
 pub struct Line{
     start: XYZ,

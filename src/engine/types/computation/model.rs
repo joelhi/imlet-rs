@@ -1,43 +1,75 @@
-use crate::engine::types::functions::ImplicitFunction;
+use std::time::Instant;
 
-use super::node::Node;
+use rayon::iter::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
 
-pub struct Model<'a> {
-    functions: Vec<Node<'a>>,
-    outputs: Vec<Option<f32>>,
+use crate::engine::types::{DenseFieldF32, XYZ};
+
+use super::component::{Component, ImplicitFunction, ImplicitOperation};
+
+pub struct Model {
+    components: Vec<Component>,
 }
 
-impl<'a> Model<'a> {
-    pub fn add_function(
-        &mut self,
-        function: &'a dyn ImplicitFunction,
-        inputs: Vec<usize>,
-    ) -> usize {
-        self.verify_inputs(function, &inputs);
-        self.functions.push(Node::new(function, inputs));
-        0
-    }
-
-    fn verify_inputs(&self, function: &'a dyn ImplicitFunction, inputs: &Vec<usize>) {
-        assert!(
-            function.num_params() == inputs.len(),
-            "Incorrect number of inputs for function"
-        );
-        for index in inputs {
-            assert!(
-                *index < self.functions.len(),
-                "Node index {index} not found in model."
-            );
+impl Model {
+    pub fn new() -> Self {
+        Model {
+            components: Vec::new(),
         }
     }
 
-    pub fn evaluate(&mut self, x: f32, y: f32, z: f32) {
-        // Build connectivity graph
-
-        // Traverse graph and compute outputs
+    pub fn add_function<T: ImplicitFunction + 'static>(&mut self, function: T) -> usize {
+        self.components
+            .push(Component::Function(Box::new(function)));
+        self.components.len() - 1
     }
 
-    pub fn get_value(&self, node: usize) -> Option<f32> {
-        self.outputs[node]
-    }   
+    pub fn add_operation<T: ImplicitOperation + 'static>(&mut self, operation: T) -> usize {
+        self.components
+            .push(Component::Operation(Box::new(operation)));
+        self.components.len() - 1
+    }
+
+    pub fn add_constant(&mut self, value: f32) -> usize {
+        self.components.push(Component::Constant(value));
+        self.components.len() - 1
+    }
+
+    fn compute(&self, x: f32, y: f32, z: f32, output: usize) -> f32 {
+        let mut values: Vec<f32> = vec![0.0; self.components.len()];
+        for (index, component) in self.components.iter().enumerate() {
+            values[index] = component.compute(x, y, z, &values)
+        }
+
+        values[output]
+    }
+
+    pub fn evaluate(
+        &self,
+        origin: XYZ,
+        size_x: usize,
+        size_y: usize,
+        size_z: usize,
+        cell_size: f32,
+        output: usize,
+    ) -> DenseFieldF32 {
+        let before = Instant::now();
+        let mut data: Vec<f32> = vec![0.0; size_x * size_y * size_z];
+        data.par_iter_mut().enumerate().for_each(|(index, value)| {
+            let (i, j, k) = DenseFieldF32::index3d_from_index1d(index, size_x, size_y, size_z);
+            *value = self.compute(
+                cell_size * i as f32,
+                cell_size * j as f32,
+                cell_size * k as f32,
+                output,
+            );
+        });
+
+        log::info!(
+            "Dense value buffer for {} points generated in {:.2?}",
+            size_x*size_y*size_z,
+            before.elapsed()
+        );
+
+        DenseFieldF32::new(origin, cell_size, size_x, size_y, size_z, data)
+    }
 }

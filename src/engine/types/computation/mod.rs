@@ -1,2 +1,4 @@
 pub mod model;
-pub mod node;
+pub mod component;
+pub mod functions;
+pub mod operations;

@@ -6,12 +6,10 @@ pub mod engine{
     pub mod types {
         mod dense_field;
         mod hash_grid;
-        mod implicit_func;
         mod mesh;
         mod xyz;
         mod plane;
         pub mod computation;
-        pub mod functions;
     
         pub use dense_field::*;
         pub use mesh::*;
