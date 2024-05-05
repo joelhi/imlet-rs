@@ -2,7 +2,7 @@ use implicit::{
     engine::{
         algorithms::marching_cubes::generate_iso_surface,
         types::{
-            computation::{functions::Sphere, model::Model, operations::arithmetic::Subtract},
+            computation::{functions::Sphere, model::Model},
             Mesh, XYZ,
         },
         utils,
@@ -14,7 +14,7 @@ pub fn main() {
     utils::logging::init();
 
     // Inputs
-    let num_pts = 10;
+    let num_pts = 200;
     let size = 10.0;
 
     // Function
@@ -24,17 +24,13 @@ pub fn main() {
         size * 0.45,
     ));
 
-    let value = model.add_constant(-1.0);
-
-    let offset = model.add_operation(Subtract::new(sphere, value));
-
     let mut field = model.evaluate(
         XYZ::origin(),
         num_pts,
         num_pts,
         num_pts,
         size / ((num_pts - 1) as f32),
-        offset,
+        sphere,
     );
 
     field.smooth(0.5, 1);
