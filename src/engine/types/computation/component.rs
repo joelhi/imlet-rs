@@ -1,3 +1,19 @@
+
+#[derive(Debug, Copy, Clone)]
+pub struct ComponentId(usize);
+
+impl ComponentId{
+    pub fn value(&self)->usize{
+        self.0
+    }
+}
+
+impl From<usize> for ComponentId {
+    fn from(value: usize) -> Self {
+        ComponentId(value)
+    }
+}
+
 pub enum Component {
     Constant(f32),
     Function(Box<dyn ImplicitFunction>),
@@ -15,8 +31,8 @@ impl Component {
         }
     }
 
-    pub fn get_input_data(inputs: &[&usize], values: &[f32]) -> Vec<f32> {
-        inputs.iter().map(|&i| values[*i]).collect()
+    pub fn get_input_data(inputs: &[ComponentId], values: &[f32]) -> Vec<f32> {
+        inputs.iter().map(|&i| values[i.0]).collect()
     }
 }
 
@@ -27,5 +43,5 @@ pub trait ImplicitFunction: Sync + Send {
 pub trait ImplicitOperation: Sync + Send {
     fn eval(&self, inputs: &Vec<f32>) -> f32;
 
-    fn get_inputs(&self) -> Vec<&usize>;
+    fn get_inputs(&self) -> &Vec<ComponentId>;
 }

@@ -1,8 +1,15 @@
-use crate::engine::types::computation::component::ImplicitOperation;
+use crate::engine::types::computation::component::{ComponentId, ImplicitOperation};
 
 pub struct Union {
-    a: usize,
-    b: usize,
+    inputs: Vec<ComponentId>
+}
+
+impl Union{
+    pub fn new(a: ComponentId, b: ComponentId)->Self{
+        Union{
+            inputs: vec![a, b]
+        }
+    }
 }
 
 impl ImplicitOperation for Union {
@@ -10,14 +17,21 @@ impl ImplicitOperation for Union {
         inputs[0].min(inputs[1])
     }
 
-    fn get_inputs(&self) -> Vec<&usize> {
-        vec![&self.a, &self.b]
+    fn get_inputs(&self) -> &Vec<ComponentId> {
+        &self.inputs
     }
 }
 
 pub struct Intersection {
-    a: usize,
-    b: usize,
+    inputs: Vec<ComponentId>
+}
+
+impl Intersection{
+    pub fn new(a: ComponentId, b: ComponentId)->Self{
+        Intersection{
+            inputs: vec![a, b]
+        }
+    }
 }
 
 impl ImplicitOperation for Intersection {
@@ -25,14 +39,21 @@ impl ImplicitOperation for Intersection {
         inputs[0].max(inputs[1])
     }
 
-    fn get_inputs(&self) -> Vec<&usize> {
-        vec![&self.a, &self.b]
+    fn get_inputs(&self) -> &Vec<ComponentId> {
+        &self.inputs
     }
 }
 
 pub struct Difference {
-    a: usize,
-    b: usize,
+    inputs: Vec<ComponentId>
+}
+
+impl Difference{
+    pub fn new(a: ComponentId, b: ComponentId)->Self{
+        Difference{
+            inputs: vec![a, b]
+        }
+    }
 }
 
 impl ImplicitOperation for Difference {
@@ -40,7 +61,7 @@ impl ImplicitOperation for Difference {
         inputs[0].max(-inputs[1])
     }
 
-    fn get_inputs(&self) -> Vec<&usize> {
-        vec![&self.a, &self.b]
+    fn get_inputs(&self) -> &Vec<ComponentId> {
+        &self.inputs
     }
 }

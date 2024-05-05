@@ -1,8 +1,15 @@
-use crate::engine::types::computation::component::ImplicitOperation;
+use crate::engine::types::computation::component::{ComponentId, ImplicitOperation};
 
 pub struct Multiply {
-    a: usize,
-    b: usize,
+    inputs: Vec<ComponentId>
+}
+
+impl Multiply{
+    pub fn new(a: ComponentId, b: ComponentId)->Self{
+        Multiply{
+            inputs: vec![a, b],
+        }
+    }
 }
 
 impl ImplicitOperation for Multiply {
@@ -10,14 +17,21 @@ impl ImplicitOperation for Multiply {
         inputs[0] * inputs[1]
     }
 
-    fn get_inputs(&self) -> Vec<&usize> {
-        vec![&self.a, &self.b]
+    fn get_inputs(&self) -> &Vec<ComponentId> {
+        &self.inputs
     }
 }
 
 pub struct Add {
-    a: usize,
-    b: usize,
+    inputs: Vec<ComponentId>
+}
+
+impl Add{
+    pub fn new(a: ComponentId, b: ComponentId)->Self{
+        Add{
+            inputs: vec![a, b],
+        }
+    }
 }
 
 impl ImplicitOperation for Add {
@@ -25,20 +39,18 @@ impl ImplicitOperation for Add {
         inputs[0] + inputs[1]
     }
 
-    fn get_inputs(&self) -> Vec<&usize> {
-        vec![&self.a, &self.b]
+    fn get_inputs(&self) -> &Vec<ComponentId> {
+        &self.inputs
     }
 }
 pub struct Subtract {
-    a: usize,
-    b: usize,
+    inputs: Vec<ComponentId>
 }
 
 impl Subtract{
-    pub fn new(a: usize, b: usize)->Self{
+    pub fn new(a: ComponentId, b: ComponentId)->Self{
         Subtract{
-            a,
-            b
+            inputs: vec![a, b],
         }
     }
 }
@@ -48,23 +60,30 @@ impl ImplicitOperation for Subtract {
         inputs[0] - inputs[1]
     }
 
-    fn get_inputs(&self) -> Vec<&usize> {
-        vec![&self.a, &self.b]
+    fn get_inputs(&self) -> &Vec<ComponentId> {
+        &self.inputs
     }
 }
 
 pub struct Divide {
-    a: usize,
-    b: usize,
+    inputs: Vec<ComponentId>
+}
+
+impl Divide{
+    pub fn new(a: ComponentId, b: ComponentId)->Self{
+        Divide{
+            inputs: vec![a, b],
+        }
+    }
 }
 
 impl ImplicitOperation for Divide {
     fn eval(&self, inputs: &Vec<f32>) -> f32 {
-        assert!(inputs[1] > 0.0, "Cannot divide by zero.");
+        assert!(inputs[1] > 0.0, "Cannot divide by zeros");
         inputs[0] / inputs[1]
     }
 
-    fn get_inputs(&self) -> Vec<&usize> {
-        vec![&self.a, &self.b]
+    fn get_inputs(&self) -> &Vec<ComponentId> {
+        &self.inputs
     }
 }

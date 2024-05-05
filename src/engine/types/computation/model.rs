@@ -4,7 +4,7 @@ use rayon::iter::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelI
 
 use crate::engine::types::{DenseFieldF32, XYZ};
 
-use super::component::{Component, ImplicitFunction, ImplicitOperation};
+use super::component::{Component, ComponentId, ImplicitFunction, ImplicitOperation};
 
 pub struct Model {
     components: Vec<Component>,
@@ -17,30 +17,30 @@ impl Model {
         }
     }
 
-    pub fn add_function<T: ImplicitFunction + 'static>(&mut self, function: T) -> usize {
+    pub fn add_function<T: ImplicitFunction + 'static>(&mut self, function: T) -> ComponentId {
         self.components
             .push(Component::Function(Box::new(function)));
-        self.components.len() - 1
+        (self.components.len() - 1).into()
     }
 
-    pub fn add_operation<T: ImplicitOperation + 'static>(&mut self, operation: T) -> usize {
+    pub fn add_operation<T: ImplicitOperation + 'static>(&mut self, operation: T) -> ComponentId {
         self.components
             .push(Component::Operation(Box::new(operation)));
-        self.components.len() - 1
+        (self.components.len() - 1).into()
     }
 
-    pub fn add_constant(&mut self, value: f32) -> usize {
+    pub fn add_constant(&mut self, value: f32) -> ComponentId {
         self.components.push(Component::Constant(value));
-        self.components.len() - 1
+        (self.components.len() - 1).into()
     }
 
-    fn compute(&self, x: f32, y: f32, z: f32, output: usize) -> f32 {
+    fn compute(&self, x: f32, y: f32, z: f32, output: ComponentId) -> f32 {
         let mut values: Vec<f32> = vec![0.0; self.components.len()];
         for (index, component) in self.components.iter().enumerate() {
             values[index] = component.compute(x, y, z, &values)
         }
 
-        values[output]
+        values[output.value()]
     }
 
     pub fn evaluate(
@@ -50,7 +50,7 @@ impl Model {
         size_y: usize,
         size_z: usize,
         cell_size: f32,
-        output: usize,
+        output: ComponentId,
     ) -> DenseFieldF32 {
         let before = Instant::now();
         let mut data: Vec<f32> = vec![0.0; size_x * size_y * size_z];
@@ -66,7 +66,7 @@ impl Model {
 
         log::info!(
             "Dense value buffer for {} points generated in {:.2?}",
-            size_x*size_y*size_z,
+            size_x * size_y * size_z,
             before.elapsed()
         );
 
