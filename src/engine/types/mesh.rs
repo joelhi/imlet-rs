@@ -106,7 +106,6 @@ impl Mesh {
     }
 
     pub fn compute_vertex_faces(&self)->Vec<Vec<usize>>{
-        let before = Instant::now();
         let mut vertex_faces = vec![Vec::with_capacity(16); self.num_vertices()];
         self.faces.iter().enumerate().for_each(|(id, f)| {
             vertex_faces[f[0]].push(id);
