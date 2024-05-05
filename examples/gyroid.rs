@@ -35,6 +35,7 @@ pub fn main() {
     let union = Intersection::new(sphere, diff);
 
     grid.evaluate(&union, true);
+    grid.threshold(0.1);
     grid.smooth(0.75, 10);
 
     // Generate output
