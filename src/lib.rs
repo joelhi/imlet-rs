@@ -9,12 +9,14 @@ pub mod engine{
         mod mesh;
         mod xyz;
         mod plane;
+        mod bounding_box;
         pub mod computation;
     
         pub use dense_field::*;
         pub use mesh::*;
         pub use xyz::*;
         pub use plane::*;
+        pub use bounding_box::*;
 
         use hash_grid::SpatialHashGrid;
     }

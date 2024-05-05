@@ -1,9 +1,8 @@
-
 #[derive(Debug, Copy, Clone)]
 pub struct ComponentId(usize);
 
-impl ComponentId{
-    pub fn value(&self)->usize{
+impl ComponentId {
+    pub fn value(&self) -> usize {
         self.0
     }
 }

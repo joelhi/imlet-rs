@@ -23,7 +23,7 @@ impl DenseFieldF32 {
         size_x: usize,
         size_y: usize,
         size_z: usize,
-        data: Vec<f32>
+        data: Vec<f32>,
     ) -> DenseFieldF32 {
         DenseFieldF32 {
             origin: origin,
@@ -118,46 +118,54 @@ impl DenseFieldF32 {
         let j_val = j as f32;
         let k_val = k as f32;
         [
-            self.origin + XYZ {
-                x: i_val * size,
-                y: j_val * size,
-                z: k_val * size,
-            },
-            self.origin + XYZ {
-                x: (i_val + 1.0) * size,
-                y: j_val * size,
-                z: k_val * size,
-            },
-            self.origin + XYZ {
-                x: (i_val + 1.0) * size,
-                y: (j_val + 1.0) * size,
-                z: k_val * size,
-            },
-            self.origin + XYZ {
-                x: i_val * size,
-                y: (j_val + 1.0) * size,
-                z: k_val * size,
-            },
-            self.origin + XYZ {
-                x: i_val * size,
-                y: j_val * size,
-                z: (k_val + 1.0) * size,
-            },
-            self.origin + XYZ {
-                x: (i_val + 1.0) * size,
-                y: j_val * size,
-                z: (k_val + 1.0) * size,
-            },
-            self.origin + XYZ {
-                x: (i_val + 1.0) * size,
-                y: (j_val + 1.0) * size,
-                z: (k_val + 1.0) * size,
-            },
-            self.origin + XYZ {
-                x: i_val * size,
-                y: (j_val + 1.0) * size,
-                z: (k_val + 1.0) * size,
-            },
+            self.origin
+                + XYZ {
+                    x: i_val * size,
+                    y: j_val * size,
+                    z: k_val * size,
+                },
+            self.origin
+                + XYZ {
+                    x: (i_val + 1.0) * size,
+                    y: j_val * size,
+                    z: k_val * size,
+                },
+            self.origin
+                + XYZ {
+                    x: (i_val + 1.0) * size,
+                    y: (j_val + 1.0) * size,
+                    z: k_val * size,
+                },
+            self.origin
+                + XYZ {
+                    x: i_val * size,
+                    y: (j_val + 1.0) * size,
+                    z: k_val * size,
+                },
+            self.origin
+                + XYZ {
+                    x: i_val * size,
+                    y: j_val * size,
+                    z: (k_val + 1.0) * size,
+                },
+            self.origin
+                + XYZ {
+                    x: (i_val + 1.0) * size,
+                    y: j_val * size,
+                    z: (k_val + 1.0) * size,
+                },
+            self.origin
+                + XYZ {
+                    x: (i_val + 1.0) * size,
+                    y: (j_val + 1.0) * size,
+                    z: (k_val + 1.0) * size,
+                },
+            self.origin
+                + XYZ {
+                    x: i_val * size,
+                    y: (j_val + 1.0) * size,
+                    z: (k_val + 1.0) * size,
+                },
         ]
     }
 
@@ -184,14 +192,7 @@ impl DenseFieldF32 {
     }
 
     pub fn get_cell_index1d(&self, i: usize, j: usize, k: usize) -> usize {
-        DenseFieldF32::index1d_from_index3d(
-            i,
-            j,
-            k,
-            self.num_x - 1,
-            self.num_y - 1,
-            self.num_z - 1,
-        )
+        DenseFieldF32::index1d_from_index3d(i, j, k, self.num_x - 1, self.num_y - 1, self.num_z - 1)
     }
 
     pub fn get_cell_index3d(&self, index: usize) -> (usize, usize, usize) {

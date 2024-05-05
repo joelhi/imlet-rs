@@ -14,7 +14,7 @@ pub fn main() {
     utils::logging::init();
 
     // Inputs
-    let num_pts = 200;
+    let num_pts = 50;
     let size = 10.0;
 
     // Function
