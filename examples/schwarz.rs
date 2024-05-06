@@ -1,14 +1,10 @@
-
-
 use implicit::{
     engine::{
         algorithms::marching_cubes::generate_iso_surface,
         types::{
             computation::{
-                functions::{SchwarzP, Sphere},
-                operations::{
-                    boolean::Intersection, shape::Thickness
-                },
+                functions::{OrthoBox, SchwarzP, Sphere},
+                operations::{boolean::Intersection, shape::Thickness},
                 Model,
             },
             geometry::{BoundingBox, Mesh, Vec3f},
@@ -24,21 +20,22 @@ pub fn main() {
     // Inputs
     let size = 10.0;
     let cell_size = 0.03;
-    let bounds = BoundingBox::new(Vec3f::origin(), Vec3f::new(size, size, size));
+    let model_space = BoundingBox::new(Vec3f::origin(), Vec3f::new(size, size, size));
 
     // Build model
     let mut model = Model::new();
 
-    let sphere = model.add_function(Sphere::new(
-        Vec3f::new(size / 2.0, size / 2.0, size / 2.0),
-        size * 0.45,
+    let bounds = model.add_function(Sphere::new(
+        Vec3f::new(0.5*size, 0.5*size, 0.5*size),
+        0.45*size,
     ));
+
     let shape = model.add_function(SchwarzP::with_equal_spacing(2.0));
     let thick_shape = model.add_operation(Thickness::new(shape, 0.75));
-    let union = model.add_operation(Intersection::new(sphere, thick_shape));
+    let union = model.add_operation(Intersection::new(bounds, thick_shape));
 
     // Discretize
-    let mut field = model.evaluate(bounds, cell_size, union);
+    let mut field = model.evaluate(model_space, cell_size, union);
 
     field.smooth(0.75, 10);
 
