@@ -15,6 +15,6 @@ impl Slice {
 
 impl ImplicitFunction for Slice {
     fn eval(&self, x: f32, y: f32, z: f32) -> f32 {
-        self.plane.signed_distance(Vec3f::new(x, y, z))
+        self.plane.signed_distance_coord(x,y,z)
     }
 }

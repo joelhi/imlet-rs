@@ -26,4 +26,8 @@ impl Plane{
         let v = pt-self.origin;
         self.normal.dot(v)
     }
+
+    pub fn signed_distance_coord(&self, x: f32, y: f32, z: f32)->f32{
+        self.normal.dot_vec3f(x-self.origin.x, y-self.origin.y, z-self.origin.z)
+    }
 }

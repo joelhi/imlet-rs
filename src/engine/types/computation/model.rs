@@ -37,8 +37,9 @@ impl Model {
         (self.components.len() - 1).into()
     }
 
-    fn compute(&self, x: f32, y: f32, z: f32, output: ComponentId) -> f32 {
+    fn evaluate_at_coord(&self, x: f32, y: f32, z: f32, output: ComponentId) -> f32 {
         let mut values: Vec<f32> = vec![0.0; self.components.len()];
+        // Evaluate all components linearly
         for (index, component) in self.components.iter().enumerate() {
             values[index] = component.compute(x, y, z, &values)
         }
@@ -57,7 +58,7 @@ impl Model {
         let mut data: Vec<f32> = vec![0.0; n.x * n.y * n.z];
         data.par_iter_mut().enumerate().for_each(|(index, value)| {
             let (i, j, k) = DenseFieldF32::index3d_from_index1d(index, n.x, n.y, n.z);
-            *value = self.compute(
+            *value = self.evaluate_at_coord(
                 cell_size * i as f32,
                 cell_size * j as f32,
                 cell_size * k as f32,

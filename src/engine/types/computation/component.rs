@@ -20,7 +20,7 @@ pub enum Component {
 }
 
 impl Component {
-    pub fn compute(&self, x: f32, y: f32, z: f32, values: &Vec<f32>) -> f32 {
+    pub fn compute(&self, x: f32, y: f32, z: f32, values: &[f32]) -> f32 {
         match self {
             Component::Constant(value) => *value,
             Component::Function(function) => function.eval(x, y, z),
@@ -40,7 +40,7 @@ pub trait ImplicitFunction: Sync + Send {
 }
 
 pub trait ImplicitOperation: Sync + Send {
-    fn eval(&self, inputs: &Vec<f32>) -> f32;
+    fn eval(&self, inputs: &[f32]) -> f32;
 
-    fn get_inputs(&self) -> &Vec<ComponentId>;
+    fn get_inputs(&self) -> &[ComponentId];
 }
