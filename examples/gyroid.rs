@@ -1,3 +1,5 @@
+
+
 use implicit::{
     engine::{
         algorithms::marching_cubes::generate_iso_surface,
@@ -5,7 +7,7 @@ use implicit::{
             computation::{
                 functions::{Gyroid, Sphere},
                 operations::{
-                    arithmetic::Subtract,
+                    shape::Offset,
                     boolean::{Difference, Intersection},
                 },
                 Model,
@@ -22,7 +24,7 @@ pub fn main() {
 
     // Inputs
     let size = 10.0;
-    let cell_size = 0.025;
+    let cell_size = 0.05;
     let bounds = BoundingBox::new(Vec3f::origin(), Vec3f::new(size, size, size));
 
     // Build model
@@ -33,8 +35,7 @@ pub fn main() {
         size * 0.45,
     ));
     let gyroid = model.add_function(Gyroid::with_equal_spacing(2.5));
-    let constant = model.add_constant(-0.8);
-    let offset_gyroid = model.add_operation(Subtract::new(gyroid, constant));
+    let offset_gyroid = model.add_operation(Offset::new(gyroid, -0.8));
     let subtracted_gyroid = model.add_operation(Difference::new(gyroid, offset_gyroid));
     let union = model.add_operation(Intersection::new(sphere, subtracted_gyroid));
 
