@@ -5,6 +5,7 @@ mod line;
 mod slice;
 mod domains;
 mod schwarz;
+mod neovius;
 
 
 pub use gyroid::*;
@@ -14,3 +15,4 @@ pub use line::*;
 pub use slice::*;
 pub use domains::*;
 pub use schwarz::*;
+pub use neovius::*;

@@ -3,7 +3,7 @@ use implicit::{
         algorithms::marching_cubes::generate_iso_surface,
         types::{
             computation::{
-                functions::{Gyroid, SchwarzP, Sphere, YDomain, ZDomain},
+                functions::{Gyroid, Neovius, SchwarzP, Sphere, YDomain, ZDomain},
                 operations::{
                     arithmetic::Subtract,
                     boolean::{Difference, Intersection, Union},
@@ -34,10 +34,10 @@ pub fn main() {
         Vec3f::new(size / 2.0, size / 2.0, size / 2.0),
         size * 0.45,
     ));
-    let gyroid = model.add_function(Gyroid::with_equal_spacing(3.0));
-    let schwarz = model.add_function(SchwarzP::with_equal_spacing(2.0));
+    let shape1 = model.add_function(Gyroid::with_equal_spacing(3.0));
+    let shape2 = model.add_function(Neovius::with_equal_spacing(2.0));
     let y_param = model.add_function(YDomain::remapped(0.0, size));
-    let blend = model.add_operation(LinearInterpolation::new(gyroid, schwarz, y_param));
+    let blend = model.add_operation(LinearInterpolation::new(shape1, shape2, y_param));
     let thick_blend = model.add_operation(Thickness::new(blend, 0.75));
     let union = model.add_operation(Intersection::new(sphere, thick_blend));
 
@@ -50,5 +50,5 @@ pub fn main() {
     let triangles = generate_iso_surface(&field, 0.0);
     let mesh = Mesh::from_triangles(&triangles);
 
-    pollster::block_on(run(&mesh, Material::Normal));
+    pollster::block_on(run(&mesh, Material::Arctic));
 }

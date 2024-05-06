@@ -1,4 +1,4 @@
-use crate::engine::types::{computation::component::ImplicitFunction, geometry::{Plane, Vec3f}};
+use crate::engine::types::{computation::component::ImplicitFunction, geometry::Plane};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Slice {
