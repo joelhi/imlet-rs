@@ -1,14 +1,14 @@
-use crate::engine::types::{computation::component::ImplicitFunction, XYZ};
+use crate::engine::types::{computation::component::ImplicitFunction, geometry::Vec3f};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Torus {
-    pub center: XYZ,
+    pub center: Vec3f,
     pub r: f32,
     pub t: f32,
 }
 
 impl Torus {
-    pub fn new(center: XYZ, r: f32, t: f32) -> Self {
+    pub fn new(center: Vec3f, r: f32, t: f32) -> Self {
         Torus { center, r, t }
     }
 }

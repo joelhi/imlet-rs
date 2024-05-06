@@ -1,4 +1,4 @@
-use std::{iter};
+use std::iter;
 
 use cgmath::Point3;
 use wgpu::util::DeviceExt;
@@ -8,7 +8,7 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-use crate::engine::types::{Mesh, XYZ};
+use crate::engine::types::geometry::{Mesh, Vec3f};
 
 use super::{
     camera::{Camera, CameraUniform},
@@ -42,8 +42,8 @@ impl State {
         window: Window,
         vertices: &[Vertex],
         indices: &[u32],
-        centroid: XYZ,
-        max: XYZ,
+        centroid: Vec3f,
+        max: Vec3f,
         material: Material,
     ) -> Self {
         let size = window.inner_size();
@@ -408,7 +408,7 @@ pub async fn run(mesh: &Mesh, material: Material) {
 pub fn to_buffers(mesh: &Mesh) -> (Vec<Vertex>, Vec<u32>) {
     let mut vertices: Vec<Vertex> = Vec::with_capacity(mesh.num_vertices());
     let default = vec![
-        XYZ {
+        Vec3f {
             x: 1.0,
             y: 1.0,
             z: 1.0

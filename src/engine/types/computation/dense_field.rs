@@ -4,33 +4,28 @@ use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelRefMutIterator;
 use rayon::iter::ParallelIterator;
 
-use super::XYZ;
+use crate::engine::types::geometry::Vec3f;
+use crate::engine::types::geometry::Vec3i;
 
 #[derive(Debug, Clone)]
 pub struct DenseFieldF32 {
-    origin: XYZ,
+    origin: Vec3f,
     cell_size: f32,
-    num_x: usize,
-    num_y: usize,
-    num_z: usize,
+    cell_n: Vec3i,
     data: Vec<f32>,
 }
 
 impl DenseFieldF32 {
     pub fn new(
-        origin: XYZ,
+        origin: Vec3f,
         cell_size: f32,
-        size_x: usize,
-        size_y: usize,
-        size_z: usize,
+        cell_n: Vec3i,
         data: Vec<f32>,
     ) -> DenseFieldF32 {
         DenseFieldF32 {
             origin: origin,
             cell_size: cell_size,
-            num_x: size_x,
-            num_y: size_y,
-            num_z: size_z,
+            cell_n: cell_n,
             data: data,
         }
     }
@@ -75,9 +70,9 @@ impl DenseFieldF32 {
         if i < 1
             || j < 1
             || k < 1
-            || i == self.num_x - 1
-            || j == self.num_y - 1
-            || k == self.num_z - 1
+            || i == self.cell_n.x - 1
+            || j == self.cell_n.y - 1
+            || k == self.cell_n.z - 1
         {
             return None;
         }
@@ -93,7 +88,7 @@ impl DenseFieldF32 {
 
     pub fn get_cell_ids(&self, i: usize, j: usize, k: usize) -> [usize; 8] {
         // Get the ids of the vertices at a certain cell
-        if !i < self.num_x - 1 || !j < self.num_y - 1 || !k < self.num_z - 1 {
+        if !i < self.cell_n.x - 1 || !j < self.cell_n.y - 1 || !k < self.cell_n.z - 1 {
             panic!("Index out of bounds");
         }
         [
@@ -108,60 +103,60 @@ impl DenseFieldF32 {
         ]
     }
 
-    pub fn get_cell_data(&self, i: usize, j: usize, k: usize) -> ([XYZ; 8], [f32; 8]) {
-        (self.get_cell_xyz(i, j, k), self.get_cell_values(i, j, k))
+    pub fn get_cell_data(&self, i: usize, j: usize, k: usize) -> ([Vec3f; 8], [f32; 8]) {
+        (self.get_cell_vec3f(i, j, k), self.get_cell_values(i, j, k))
     }
 
-    pub fn get_cell_xyz(&self, i: usize, j: usize, k: usize) -> [XYZ; 8] {
+    pub fn get_cell_vec3f(&self, i: usize, j: usize, k: usize) -> [Vec3f; 8] {
         let size = self.cell_size;
         let i_val = i as f32;
         let j_val = j as f32;
         let k_val = k as f32;
         [
             self.origin
-                + XYZ {
+                + Vec3f {
                     x: i_val * size,
                     y: j_val * size,
                     z: k_val * size,
                 },
             self.origin
-                + XYZ {
+                + Vec3f {
                     x: (i_val + 1.0) * size,
                     y: j_val * size,
                     z: k_val * size,
                 },
             self.origin
-                + XYZ {
+                + Vec3f {
                     x: (i_val + 1.0) * size,
                     y: (j_val + 1.0) * size,
                     z: k_val * size,
                 },
             self.origin
-                + XYZ {
+                + Vec3f {
                     x: i_val * size,
                     y: (j_val + 1.0) * size,
                     z: k_val * size,
                 },
             self.origin
-                + XYZ {
+                + Vec3f {
                     x: i_val * size,
                     y: j_val * size,
                     z: (k_val + 1.0) * size,
                 },
             self.origin
-                + XYZ {
+                + Vec3f {
                     x: (i_val + 1.0) * size,
                     y: j_val * size,
                     z: (k_val + 1.0) * size,
                 },
             self.origin
-                + XYZ {
+                + Vec3f {
                     x: (i_val + 1.0) * size,
                     y: (j_val + 1.0) * size,
                     z: (k_val + 1.0) * size,
                 },
             self.origin
-                + XYZ {
+                + Vec3f {
                     x: i_val * size,
                     y: (j_val + 1.0) * size,
                     z: (k_val + 1.0) * size,
@@ -184,19 +179,19 @@ impl DenseFieldF32 {
     }
 
     pub fn get_point_index1d(&self, i: usize, j: usize, k: usize) -> usize {
-        DenseFieldF32::index1d_from_index3d(i, j, k, self.num_x, self.num_y, self.num_z)
+        DenseFieldF32::index1d_from_index3d(i, j, k, self.cell_n.x, self.cell_n.y, self.cell_n.z)
     }
 
     pub fn get_point_index3d(&self, index: usize) -> (usize, usize, usize) {
-        DenseFieldF32::index3d_from_index1d(index, self.num_x, self.num_y, self.num_z)
+        DenseFieldF32::index3d_from_index1d(index, self.cell_n.x, self.cell_n.y, self.cell_n.z)
     }
 
     pub fn get_cell_index1d(&self, i: usize, j: usize, k: usize) -> usize {
-        DenseFieldF32::index1d_from_index3d(i, j, k, self.num_x - 1, self.num_y - 1, self.num_z - 1)
+        DenseFieldF32::index1d_from_index3d(i, j, k, self.cell_n.x - 1, self.cell_n.y - 1, self.cell_n.z - 1)
     }
 
     pub fn get_cell_index3d(&self, index: usize) -> (usize, usize, usize) {
-        DenseFieldF32::index3d_from_index1d(index, self.num_x - 1, self.num_y - 1, self.num_z - 1)
+        DenseFieldF32::index3d_from_index1d(index, self.cell_n.x - 1, self.cell_n.y - 1, self.cell_n.z - 1)
     }
 
     pub fn index1d_from_index3d(
@@ -230,10 +225,10 @@ impl DenseFieldF32 {
     }
 
     pub fn get_num_points(&self) -> usize {
-        self.num_x * self.num_y * self.num_z
+        self.cell_n.x * self.cell_n.y * self.cell_n.z
     }
 
     pub fn get_num_cells(&self) -> usize {
-        (self.num_x - 1) * (self.num_y - 1) * (self.num_z - 1)
+        (self.cell_n.x - 1) * (self.cell_n.y - 1) * (self.cell_n.z - 1)
     }
 }

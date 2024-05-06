@@ -4,13 +4,13 @@ use implicit::{
         types::{
             computation::{
                 functions::{Gyroid, Sphere},
-                model::Model,
                 operations::{
                     arithmetic::Subtract,
                     boolean::{Difference, Intersection},
                 },
+                Model,
             },
-            Mesh, XYZ,
+            geometry::{BoundingBox, Mesh, Vec3f},
         },
         utils,
     },
@@ -21,14 +21,15 @@ pub fn main() {
     utils::logging::init();
 
     // Inputs
-    let num_pts = 300;
     let size = 10.0;
+    let cell_size = 0.025;
+    let bounds = BoundingBox::new(Vec3f::origin(), Vec3f::new(size, size, size));
 
     // Build model
     let mut model = Model::new();
 
     let sphere = model.add_function(Sphere::new(
-        XYZ::new(size / 2.0, size / 2.0, size / 2.0),
+        Vec3f::new(size / 2.0, size / 2.0, size / 2.0),
         size * 0.45,
     ));
     let gyroid = model.add_function(Gyroid::with_equal_spacing(2.5));
@@ -38,17 +39,9 @@ pub fn main() {
     let union = model.add_operation(Intersection::new(sphere, subtracted_gyroid));
 
     // Discretize
-    let mut field = model.evaluate(
-        XYZ::origin(),
-        num_pts,
-        num_pts,
-        num_pts,
-        size / ((num_pts - 1) as f32),
-        union,
-    );
+    let mut field = model.evaluate(bounds, cell_size, union);
 
     field.smooth(0.75, 10);
-
 
     // Generate mesh
     let triangles = generate_iso_surface(&field, 0.0);
