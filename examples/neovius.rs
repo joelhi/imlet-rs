@@ -1,10 +1,14 @@
+
+
 use implicit::{
     engine::{
         algorithms::marching_cubes::generate_iso_surface,
         types::{
             computation::{
-                functions::{Gyroid, Sphere},
-                operations::{boolean::Intersection, shape::Thickness},
+                functions::{Neovius, Sphere},
+                operations::{
+                    boolean::Intersection, shape::Thickness
+                },
                 Model,
             },
             geometry::{BoundingBox, Mesh, Vec3f},
@@ -19,7 +23,7 @@ pub fn main() {
 
     // Inputs
     let size = 10.0;
-    let cell_size = 0.05;
+    let cell_size = 0.025;
     let model_space = BoundingBox::new(Vec3f::origin(), Vec3f::new(size, size, size));
 
     // Build model
@@ -29,13 +33,12 @@ pub fn main() {
         Vec3f::new(0.5*size, 0.5*size, 0.5*size),
         0.45*size,
     ));
-
-    let shape = model.add_function(Gyroid::with_equal_spacing(2.5));
-    let thick_shape = model.add_operation(Thickness::new(shape, 0.75));
-    let intersection = model.add_operation(Intersection::new(bounds, thick_shape));
+    let shape = model.add_function(Neovius::with_equal_spacing(2.0));
+    let thick_shape = model.add_operation(Thickness::new(shape, 2.0));
+    let union = model.add_operation(Intersection::new(bounds, thick_shape));
 
     // Discretize
-    let mut field = model.evaluate(model_space, cell_size, intersection);
+    let mut field = model.evaluate(model_space, cell_size, union);
     field.smooth(0.75, 10);
 
     // Generate mesh

@@ -1,6 +1,5 @@
+use crate::engine::types::computation::component::ImplicitFunction;
 use std::f32::consts::PI;
-
-use super::ImplicitFunction;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Gyroid {
@@ -10,7 +9,7 @@ pub struct Gyroid {
 }
 
 impl Gyroid {
-    pub fn new(length_x: f32, length_y: f32, length_z: f32)->Self{
+    pub fn new(length_x: f32, length_y: f32, length_z: f32) -> Self {
         Gyroid {
             length_x: length_x,
             length_y: length_y,
@@ -18,7 +17,7 @@ impl Gyroid {
         }
     }
 
-    pub fn with_equal_spacing(length: f32)->Self{
+    pub fn with_equal_spacing(length: f32) -> Self {
         Gyroid {
             length_x: length,
             length_y: length,

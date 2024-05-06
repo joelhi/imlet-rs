@@ -4,20 +4,8 @@ pub mod engine{
         mod tables;
     }
     pub mod types {
-        mod dense_field;
-        mod hash_grid;
-        mod implicit_func;
-        mod mesh;
-        mod xyz;
-        mod plane;
-        pub mod functions;
-    
-        pub use dense_field::*;
-        pub use mesh::*;
-        pub use xyz::*;
-        pub use plane::*;
-
-        use hash_grid::SpatialHashGrid;
+        pub mod geometry;
+        pub mod computation;
     }
     pub mod utils {
         pub mod io;

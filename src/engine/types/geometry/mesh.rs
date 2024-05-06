@@ -4,14 +4,14 @@ use rayon::iter::IntoParallelRefMutIterator;
 use rayon::iter::ParallelIterator;
 
 use super::SpatialHashGrid;
-use super::XYZ;
+use super::Vec3f;
 use std::time::Instant;
 use std::usize;
 
 pub struct Mesh {
-    vertices: Vec<XYZ>,
+    vertices: Vec<Vec3f>,
     faces: Vec<[usize; 3]>,
-    normals: Option<Vec<XYZ>>,
+    normals: Option<Vec<Vec3f>>,
 }
 
 impl Mesh {
@@ -23,7 +23,7 @@ impl Mesh {
         }
     }
 
-    pub fn add_vertices(&mut self, vertices: &[XYZ]) {
+    pub fn add_vertices(&mut self, vertices: &[Vec3f]) {
         self.vertices.extend_from_slice(vertices);
     }
 
@@ -31,7 +31,7 @@ impl Mesh {
         self.faces.extend_from_slice(faces);
     }
 
-    pub fn get_vertices(&self) -> &Vec<XYZ> {
+    pub fn get_vertices(&self) -> &Vec<Vec3f> {
         &self.vertices
     }
 
@@ -39,7 +39,7 @@ impl Mesh {
         &self.faces
     }
 
-    pub fn get_normals(&self) -> Option<&Vec<XYZ>> {
+    pub fn get_normals(&self) -> Option<&Vec<Vec3f>> {
         self.normals.as_ref()
     }
 
@@ -51,8 +51,8 @@ impl Mesh {
         self.faces.len()
     }
 
-    pub fn get_centroid(&self) -> XYZ {
-        let mut centroid: XYZ = XYZ::origin();
+    pub fn get_centroid(&self) -> Vec3f {
+        let mut centroid: Vec3f = Vec3f::origin();
 
         for &v in self.get_vertices() {
             centroid = centroid + v;
@@ -61,9 +61,9 @@ impl Mesh {
         centroid * (1.0 / self.num_vertices() as f32)
     }
 
-    pub fn get_bounds(&self) -> (XYZ, XYZ) {
-        let mut min = XYZ::origin();
-        let mut max = XYZ::origin();
+    pub fn get_bounds(&self) -> (Vec3f, Vec3f) {
+        let mut min = Vec3f::origin();
+        let mut max = Vec3f::origin();
 
         for v in self.get_vertices() {
             min.x = min.x.min(v.x);
@@ -79,9 +79,9 @@ impl Mesh {
     }
 
     pub fn compute_vertex_normals(&mut self) {
-        let face_normals: Vec<XYZ> = self.compute_face_normals();
+        let face_normals: Vec<Vec3f> = self.compute_face_normals();
         let vertex_faces: Vec<Vec<usize>> = self.compute_vertex_faces();
-        let mut vertex_normals = vec![XYZ::origin(); self.num_vertices()];
+        let mut vertex_normals = vec![Vec3f::origin(); self.num_vertices()];
         vertex_normals
             .par_iter_mut()
             .enumerate()
@@ -94,7 +94,7 @@ impl Mesh {
         self.normals = Some(vertex_normals);
     }
 
-    pub fn compute_face_normals(&self) -> Vec<XYZ> {
+    pub fn compute_face_normals(&self) -> Vec<Vec3f> {
         self.faces
             .par_iter()
             .map(|f| {
@@ -161,7 +161,7 @@ impl Mesh {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Triangle {
-    pub p1: XYZ,
-    pub p2: XYZ,
-    pub p3: XYZ,
+    pub p1: Vec3f,
+    pub p2: Vec3f,
+    pub p3: Vec3f,
 }

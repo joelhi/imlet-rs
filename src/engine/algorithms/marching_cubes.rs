@@ -3,10 +3,11 @@ use std::time::Instant;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 
+use crate::engine::types::computation::DenseFieldF32;
+use crate::engine::types::geometry::Triangle;
+use crate::engine::types::geometry::Vec3f;
+
 use super::tables::*;
-use crate::engine::types::DenseFieldF32;
-use crate::engine::types::Triangle;
-use crate::engine::types::XYZ;
 
 pub fn generate_iso_surface(grid: &DenseFieldF32, iso_val: f32) -> Vec<Triangle> {
     let before = Instant::now();
@@ -19,9 +20,9 @@ pub fn generate_iso_surface(grid: &DenseFieldF32, iso_val: f32) -> Vec<Triangle>
             .into_par_iter()
             .map(|cell_index| {
                 let (i, j, k) = grid.get_cell_index3d(cell_index);
-                let cell_xyz = grid.get_cell_xyz(i, j, k);
+                let cell_vec3f = grid.get_cell_vec3f(i, j, k);
                 let cell_values = grid.get_cell_values(i, j, k);
-                polygonize_cell(iso_val, &cell_xyz, &cell_values)
+                polygonize_cell(iso_val, &cell_vec3f, &cell_values)
             })
             .reduce(Vec::new, |mut acc, triangles| {
                 acc.extend(triangles);
@@ -38,7 +39,7 @@ pub fn generate_iso_surface(grid: &DenseFieldF32, iso_val: f32) -> Vec<Triangle>
     triangles
 }
 
-fn polygonize_cell(iso_val: f32, cell_coord: &[XYZ; 8], cell_values: &[f32; 8]) -> Vec<Triangle> {
+fn polygonize_cell(iso_val: f32, cell_coord: &[Vec3f; 8], cell_values: &[f32; 8]) -> Vec<Triangle> {
     let cube_index = get_cube_index(cell_values, iso_val);
     get_triangles(cube_index, &cell_coord, &cell_values, iso_val)
 }
@@ -76,7 +77,7 @@ fn get_cube_index(cell_values: &[f32; 8], iso_val: f32) -> usize {
 
 fn get_triangles(
     cube_index: usize,
-    cell_coord: &[XYZ; 8],
+    cell_coord: &[Vec3f; 8],
     cell_values: &[f32; 8],
     iso_val: f32,
 ) -> Vec<Triangle> {
@@ -101,11 +102,11 @@ fn get_triangles(
 
 fn get_vertices(
     cube_index: usize,
-    cell_coord: &[XYZ; 8],
+    cell_coord: &[Vec3f; 8],
     cell_values: &[f32; 8],
     iso_val: f32,
-) -> [XYZ; 12] {
-    let mut vertices = [XYZ::origin(); 12];
+) -> [Vec3f; 12] {
+    let mut vertices = [Vec3f::origin(); 12];
 
     if EDGE_TABLE[cube_index] == 0 {
         return vertices;
@@ -235,11 +236,11 @@ fn get_vertices(
 
 fn interpolate_vertex(
     iso_val: f32,
-    first_coord: XYZ,
-    second_coord: XYZ,
+    first_coord: Vec3f,
+    second_coord: Vec3f,
     first_value: f32,
     second_value: f32,
-) -> XYZ {
+) -> Vec3f {
     const ISO_THRESHOLD: f32 = 0.00001;
 
     if (iso_val - first_value).abs() < ISO_THRESHOLD
@@ -251,5 +252,5 @@ fn interpolate_vertex(
     }
 
     let parameter = (iso_val - first_value) / (second_value - first_value);
-    XYZ::interpolate(&first_coord, &second_coord, parameter)
+    Vec3f::interpolate(&first_coord, &second_coord, parameter)
 }

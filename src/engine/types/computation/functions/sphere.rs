@@ -1,15 +1,13 @@
-use crate::engine::types::XYZ;
-
-use super::ImplicitFunction;
+use crate::engine::types::{computation::component::ImplicitFunction, geometry::Vec3f};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Sphere {
-    pub source: XYZ,
+    pub source: Vec3f,
     pub radius: f32,
 }
 
 impl Sphere {
-    pub fn new(source: XYZ, radius: f32)->Self{
+    pub fn new(source: Vec3f, radius: f32)->Self{
         Sphere {
             source,
             radius,
