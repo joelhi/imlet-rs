@@ -3,7 +3,7 @@ use implicit::{
         algorithms::marching_cubes::generate_iso_surface,
         types::{
             computation::{
-                functions::{Gyroid, Neovius, OrthoBox, Sphere},
+                functions::{Gyroid, Sphere},
                 operations::{boolean::Intersection, shape::Thickness},
                 Model,
             },
@@ -36,7 +36,6 @@ pub fn main() {
 
     // Discretize
     let mut field = model.evaluate(model_space, cell_size, intersection);
-
     field.smooth(0.75, 10);
 
     // Generate mesh

@@ -3,7 +3,7 @@ use implicit::{
         algorithms::marching_cubes::generate_iso_surface,
         types::{
             computation::{
-                functions::{OrthoBox, SchwarzP, Sphere},
+                functions::{SchwarzP, Sphere},
                 operations::{boolean::Intersection, shape::Thickness},
                 Model,
             },

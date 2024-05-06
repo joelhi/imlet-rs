@@ -5,9 +5,9 @@ use implicit::{
         algorithms::marching_cubes::generate_iso_surface,
         types::{
             computation::{
-                functions::{Gyroid, Neovius, OrthoBox, Sphere},
+                functions::{Neovius, Sphere},
                 operations::{
-                    boolean::{Difference, Intersection}, shape::{Offset, Thickness}
+                    boolean::Intersection, shape::Thickness
                 },
                 Model,
             },

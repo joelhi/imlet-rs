@@ -3,12 +3,11 @@ use implicit::{
         algorithms::marching_cubes::generate_iso_surface,
         types::{
             computation::{
-                functions::{Gyroid, Neovius, OrthoBox, SchwarzP, Sphere, YDomain, ZDomain},
+                functions::{Gyroid, OrthoBox, SchwarzP, YDomain},
                 operations::{
-                    arithmetic::Subtract,
-                    boolean::{Difference, Intersection, Union},
+                    boolean::Intersection,
                     interpolation::LinearInterpolation,
-                    shape::{Offset, Thickness},
+                    shape::Thickness,
                 },
                 Model,
             },

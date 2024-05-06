@@ -1,11 +1,12 @@
-use cgmath::InnerSpace;
 use implicit::{
     engine::{
         algorithms::marching_cubes::generate_iso_surface,
         types::{
             computation::{
-                functions::{Gyroid, Neovius, OrthoBox, Sphere, YDomain, ZDomain},
-                operations::{boolean::Intersection, interpolation::LinearInterpolation, shape::{Offset, Thickness}},
+                functions::{Gyroid, Sphere, YDomain},
+                operations::{
+                    boolean::Intersection, interpolation::LinearInterpolation, shape::Thickness,
+                },
                 Model,
             },
             geometry::{BoundingBox, Mesh, Vec3f},
@@ -27,8 +28,8 @@ pub fn main() {
     let mut model = Model::new();
 
     let bounds = model.add_function(Sphere::new(
-        Vec3f::new(0.5*size, 0.5*size, 0.5*size),
-        0.45*size,
+        Vec3f::new(0.5 * size, 0.5 * size, 0.5 * size),
+        0.45 * size,
     ));
 
     let shape1 = model.add_function(Gyroid::with_equal_spacing(1.5));
