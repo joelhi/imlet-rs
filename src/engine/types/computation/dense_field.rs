@@ -16,17 +16,24 @@ pub struct DenseFieldF32 {
 }
 
 impl DenseFieldF32 {
-    pub fn new(
-        origin: Vec3f,
-        cell_size: f32,
-        cell_n: Vec3i,
-        data: Vec<f32>,
-    ) -> DenseFieldF32 {
+    pub fn new(origin: Vec3f, cell_size: f32, cell_n: Vec3i, data: Vec<f32>) -> DenseFieldF32 {
+        if cell_n.product() != data.len() {
+            panic!("Incorrect size of data buffer");
+        }
         DenseFieldF32 {
             origin: origin,
             cell_size: cell_size,
             cell_n: cell_n,
             data: data,
+        }
+    }
+
+    pub fn empty(origin: Vec3f, cell_size: f32, cell_n: Vec3i) -> DenseFieldF32 {
+        DenseFieldF32 {
+            origin: origin,
+            cell_size: cell_size,
+            cell_n: cell_n,
+            data: vec![0.0; cell_n.product()],
         }
     }
 
@@ -187,11 +194,23 @@ impl DenseFieldF32 {
     }
 
     pub fn get_cell_index1d(&self, i: usize, j: usize, k: usize) -> usize {
-        DenseFieldF32::index1d_from_index3d(i, j, k, self.cell_n.x - 1, self.cell_n.y - 1, self.cell_n.z - 1)
+        DenseFieldF32::index1d_from_index3d(
+            i,
+            j,
+            k,
+            self.cell_n.x - 1,
+            self.cell_n.y - 1,
+            self.cell_n.z - 1,
+        )
     }
 
     pub fn get_cell_index3d(&self, index: usize) -> (usize, usize, usize) {
-        DenseFieldF32::index3d_from_index1d(index, self.cell_n.x - 1, self.cell_n.y - 1, self.cell_n.z - 1)
+        DenseFieldF32::index3d_from_index1d(
+            index,
+            self.cell_n.x - 1,
+            self.cell_n.y - 1,
+            self.cell_n.z - 1,
+        )
     }
 
     pub fn index1d_from_index3d(
