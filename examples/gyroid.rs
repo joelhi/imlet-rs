@@ -35,5 +35,5 @@ pub fn main() {
     let triangles = generate_iso_surface(&field, 0.0);
     let mesh = Mesh::from_triangles(&triangles);
 
-    viewer::run_viewer(&mesh, Material::Arctic);
+    viewer::run_viewer(&mesh, Material::Normal);
 }
