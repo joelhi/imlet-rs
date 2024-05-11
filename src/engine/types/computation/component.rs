@@ -1,3 +1,6 @@
+
+const MAX_INPUTS: usize = 8;
+
 #[derive(Debug, Copy, Clone)]
 pub struct ComponentId(usize);
 
@@ -16,7 +19,7 @@ impl From<usize> for ComponentId {
 pub enum Component {
     Constant(f32),
     Function(Box<dyn ImplicitFunction>),
-    Operation(Box<dyn ImplicitOperation>),
+    Operation(Box<dyn ImplicitOperation>)
 }
 
 impl Component {
@@ -30,11 +33,15 @@ impl Component {
         }
     }
 
-    pub fn get_input_data(inputs: &[ComponentId], values: &[f32]) -> Vec<f32> {
-        inputs.iter().map(|&i| values[i.0]).collect()
+    pub fn get_input_data(inputs: &[ComponentId], values: &[f32]) -> [f32; MAX_INPUTS] {
+        let mut result = [0.0; MAX_INPUTS];
+        for (i, &id) in inputs.iter().enumerate() {
+            result[i] = values[id.0];
+        }
+        result
     }
 }
-
+ 
 pub trait ImplicitFunction: Sync + Send {
     fn eval(&self, x: f32, y: f32, z: f32) -> f32;
 }

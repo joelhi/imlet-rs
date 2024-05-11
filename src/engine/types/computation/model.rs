@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::{cell::RefCell, time::Instant};
 
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
 
@@ -8,6 +8,8 @@ use super::{
     component::{Component, ComponentId, ImplicitFunction, ImplicitOperation},
     DenseFieldF32,
 };
+
+const MAX_TOTAL_COMPONENTS: usize = 512;
 
 pub struct Model {
     components: Vec<Component>,
@@ -37,16 +39,22 @@ impl Model {
         (self.components.len() - 1).into()
     }
     
+    thread_local! {
+        static COMPONENT_VALUES: RefCell<[f32; MAX_TOTAL_COMPONENTS]> = RefCell::new([0.0; MAX_TOTAL_COMPONENTS]);
+    }
+
     fn evaluate_at_coord(&self, x: f32, y: f32, z: f32, output: ComponentId) -> f32 {
-        let mut values = vec![0.0; self.components.len()];
+        Self::COMPONENT_VALUES.with(|values| {
+            let mut values = values.borrow_mut();
             for (index, component) in self.components.iter().enumerate() {
-                values[index] = component.compute(x, y, z, &values);
-                if index == output.value(){
+                values[index] = component.compute(x, y, z, &values.as_slice());
+                if index == output.value() {
                     break;
                 }
             }
             values[output.value()]
-        }
+        })
+    }
 
     pub fn evaluate(
         &self,
