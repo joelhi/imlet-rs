@@ -9,19 +9,19 @@ use crate::engine::types::geometry::Vec3f;
 
 use super::tables::*;
 
-pub fn generate_iso_surface(grid: &DenseFieldF32, iso_val: f32) -> Vec<Triangle> {
+pub fn generate_iso_surface(field: &DenseFieldF32, iso_val: f32) -> Vec<Triangle> {
     let before = Instant::now();
     // Generate triangles for cell
-    let mut triangles: Vec<Triangle> = Vec::with_capacity(grid.get_num_cells() * 1);
+    let mut triangles: Vec<Triangle> = Vec::with_capacity(field.get_num_cells() * 1);
 
     // Iterate over cell indices in parallel and collect triangles
     triangles.extend(
-        (0..grid.get_num_cells())
+        (0..field.get_num_cells())
             .into_par_iter()
             .map(|cell_index| {
-                let (i, j, k) = grid.get_cell_index3d(cell_index);
-                let cell_vec3f = grid.get_cell_vec3f(i, j, k);
-                let cell_values = grid.get_cell_values(i, j, k);
+                let (i, j, k) = field.get_cell_index3d(cell_index);
+                let cell_vec3f = field.get_cell_vec3f(i, j, k);
+                let cell_values = field.get_cell_values(i, j, k);
                 polygonize_cell(iso_val, &cell_vec3f, &cell_values)
             })
             .reduce(Vec::new, |mut acc, triangles| {
@@ -253,4 +253,22 @@ fn interpolate_vertex(
 
     let parameter = (iso_val - first_value) / (second_value - first_value);
     Vec3f::interpolate(&first_coord, &second_coord, parameter)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn generate_iso_surface_2x2x2() {
+        let field = DenseFieldF32::new(Vec3f::origin(), 1.0, (2, 2, 2).into(), vec![2.0, 1.0, 1.0, 0.0, 2.0, 1.0, 1.0, 0.0]);
+        let triangles = generate_iso_surface(&field, 0.5);
+
+        assert_eq!(2, triangles.len());
+    }
+
+    #[test]
+    fn generate_iso_surface_3x2x2() {
+       //TODO
+    }
 }
