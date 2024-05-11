@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, io::Write, path::Path};
 
 use crate::engine::types::geometry::Mesh;
 
@@ -18,6 +18,16 @@ pub fn mesh_to_obj(mesh: &Mesh) -> String {
     data
 }
 
-pub fn write_as_obj(mesh: &Mesh, name: &str) -> bool {
-    fs::write(name.to_owned() + ".obj", mesh_to_obj(&mesh)).is_ok()
+pub fn write_as_obj(mesh: &Mesh, file_name: &str) -> bool {
+    let output_folder = "output";
+    let file_path = Path::new(output_folder).join(file_name).with_extension("obj");
+    if let Ok(mut file) = fs::File::create(file_path) {
+        if let Err(err) = file.write_all(mesh_to_obj(&mesh).as_bytes()) {
+            eprintln!("Error writing OBJ file: {}", err);
+            return false;
+        }
+        true
+    } else {
+        false
+    }
 }

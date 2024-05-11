@@ -1,9 +1,9 @@
 use implicit::{
-    engine::{
+    display::viewer, engine::{
         algorithms::marching_cubes::generate_iso_surface,
         types::{
             computation::{
-                functions::{Gyroid, OrthoBox, SchwarzP, YDomain},
+                distance_functions::{Gyroid, OrthoBox, SchwarzP, YDomain},
                 operations::{
                     boolean::Intersection,
                     interpolation::LinearInterpolation,
@@ -14,8 +14,7 @@ use implicit::{
             geometry::{BoundingBox, Mesh, Vec3f},
         },
         utils,
-    },
-    viewer::{material::Material, window::run},
+    }, display::material::Material
 };
 
 pub fn main() {
@@ -49,5 +48,5 @@ pub fn main() {
     let triangles = generate_iso_surface(&field, 0.0);
     let mesh = Mesh::from_triangles(&triangles);
 
-    pollster::block_on(run(&mesh, Material::Arctic));
+    viewer::run_viewer(&mesh, Material::Arctic);
 }

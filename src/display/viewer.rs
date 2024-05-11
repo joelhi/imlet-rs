@@ -11,12 +11,13 @@ use winit::{
 use crate::engine::types::geometry::{Mesh, Vec3f};
 
 use super::{
-    camera::{Camera, CameraUniform},
-    camera_controller::CameraController,
-    texture::{self, Texture},
-    vertex::Vertex,
-    material::Material
+    camera::{Camera, CameraUniform}, camera_controller::CameraController, material::Material, texture::{self, Texture}, util::mesh_to_buffers, vertex::Vertex
 };
+
+pub fn run_viewer(mesh: &Mesh, material: Material){
+    pollster::block_on(run(&mesh, material));
+}
+
 
 struct State {
     surface: wgpu::Surface,
@@ -337,8 +338,8 @@ impl State {
 }
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
-pub async fn run(mesh: &Mesh, material: Material) {
-    let (vertices, indices) = to_buffers(mesh);
+async fn run(mesh: &Mesh, material: Material) {
+    let (vertices, indices) = mesh_to_buffers(mesh);
 
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new()
@@ -403,32 +404,4 @@ pub async fn run(mesh: &Mesh, material: Material) {
             _ => {}
         }
     });
-}
-
-pub fn to_buffers(mesh: &Mesh) -> (Vec<Vertex>, Vec<u32>) {
-    let mut vertices: Vec<Vertex> = Vec::with_capacity(mesh.num_vertices());
-    let default = vec![
-        Vec3f {
-            x: 1.0,
-            y: 1.0,
-            z: 1.0
-        };
-        mesh.num_vertices()
-    ];
-    let normals = mesh.get_normals().unwrap_or(&default);
-    for (v, n) in mesh.get_vertices().iter().zip(normals) {
-        vertices.push(Vertex {
-            position: [v.x, v.y, v.z],
-            normal: [n.x, n.y, n.z],
-        })
-    }
-
-    let mut indices: Vec<u32> = Vec::with_capacity(mesh.num_faces() * 3);
-    for face in mesh.get_faces() {
-        indices.push(face[0] as u32);
-        indices.push(face[1] as u32);
-        indices.push(face[2] as u32);
-    }
-
-    (vertices, indices)
 }

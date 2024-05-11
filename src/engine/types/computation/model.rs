@@ -36,16 +36,17 @@ impl Model {
         self.components.push(Component::Constant(value));
         (self.components.len() - 1).into()
     }
-
+    
     fn evaluate_at_coord(&self, x: f32, y: f32, z: f32, output: ComponentId) -> f32 {
-        let mut values: Vec<f32> = vec![0.0; self.components.len()];
-        // Evaluate all components linearly
-        for (index, component) in self.components.iter().enumerate() {
-            values[index] = component.compute(x, y, z, &values)
+        let mut values = vec![0.0; self.components.len()];
+            for (index, component) in self.components.iter().enumerate() {
+                values[index] = component.compute(x, y, z, &values);
+                if index == output.value(){
+                    break;
+                }
+            }
+            values[output.value()]
         }
-
-        values[output.value()]
-    }
 
     pub fn evaluate(
         &self,

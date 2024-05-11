@@ -1,11 +1,11 @@
 
 
 use implicit::{
-    engine::{
+    display::{material::Material, viewer}, engine::{
         algorithms::marching_cubes::generate_iso_surface,
         types::{
             computation::{
-                functions::{Neovius, Sphere},
+                distance_functions::{Neovius, Sphere},
                 operations::{
                     boolean::Intersection, shape::Thickness
                 },
@@ -14,8 +14,7 @@ use implicit::{
             geometry::{BoundingBox, Mesh, Vec3f},
         },
         utils,
-    },
-    viewer::{material::Material, window::run},
+    }
 };
 
 pub fn main() {
@@ -45,5 +44,5 @@ pub fn main() {
     let triangles = generate_iso_surface(&field, 0.0);
     let mesh = Mesh::from_triangles(&triangles);
 
-    pollster::block_on(run(&mesh, Material::Normal));
+    viewer::run_viewer(&mesh, Material::Arctic);
 }
