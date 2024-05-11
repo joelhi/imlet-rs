@@ -1,5 +1,5 @@
 mod component;
-pub mod functions;
+pub mod distance_functions;
 mod model;
 pub mod operations;
 mod dense_field;

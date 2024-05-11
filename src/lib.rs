@@ -12,11 +12,12 @@ pub mod engine{
         pub mod logging;
     }
 }
-pub mod viewer{
-    pub mod window;
+pub mod display{
+    pub mod viewer;
     pub mod material;
     mod vertex;
     mod camera;
     mod camera_controller;
     mod texture;
+    mod util;
 }
