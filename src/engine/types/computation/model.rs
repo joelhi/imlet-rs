@@ -93,3 +93,23 @@ impl Model {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn correctly_create_and_evaluate_model_with_function() {
+
+    }
+
+    #[test]
+    fn correctly_create_and_evaluate_model_with_function_operation() {
+
+    }
+
+    #[test]
+    fn correctly_create_and_evaluate_model_with_constant_operation() {
+
+    }
+}

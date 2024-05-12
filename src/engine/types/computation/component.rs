@@ -51,3 +51,23 @@ pub trait ImplicitOperation: Sync + Send {
 
     fn get_inputs(&self) -> &[ComponentId];
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn correctly_creates_and_computes_constant() {
+
+    }
+
+    #[test]
+    fn correctly_creates_and_computes_function() {
+
+    }
+
+    #[test]
+    fn correctly_creates_and_computes_operation() {
+
+    }
+}

@@ -251,3 +251,28 @@ impl DenseFieldF32 {
         (self.cell_n.x - 1) * (self.cell_n.y - 1) * (self.cell_n.z - 1)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn correctly_create_and_smooth_field() {
+
+    }
+
+    #[test]
+    fn correctly_create_and_threshold_field() {
+
+    }
+
+    #[test]
+    fn correctly_get_cell_data_from_index3() {
+
+    }
+
+    #[test]
+    fn correctly_get_value_from_index3() {
+
+    }
+}
