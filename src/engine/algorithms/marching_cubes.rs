@@ -261,14 +261,39 @@ mod tests {
 
     #[test]
     fn generate_iso_surface_2x2x2() {
-        let field = DenseFieldF32::new(Vec3f::origin(), 1.0, (2, 2, 2).into(), vec![2.0, 1.0, 1.0, 0.0, 2.0, 1.0, 1.0, 0.0]);
-        let triangles = generate_iso_surface(&field, 0.5);
+        let field = DenseFieldF32::new(
+            Vec3f::origin(),
+            1.0,
+            (2, 2, 2).into(),
+            vec![1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0],
+        );
+        let triangles = generate_iso_surface(&field, 0.0);
 
         assert_eq!(2, triangles.len());
+        for tri in triangles{
+            assert!(tri.p1.z - 0.5 < 0.0001);
+            assert!(tri.p2.z - 0.5 < 0.0001);
+            assert!(tri.p3.z - 0.5 < 0.0001);
+            assert!(tri.compute_area() - 0.5 < 0.0001);
+        }
     }
 
     #[test]
     fn generate_iso_surface_3x2x2() {
-       //TODO
+        let field = DenseFieldF32::new(
+            Vec3f::origin(),
+            1.0,
+            (3, 2, 2).into(),
+            vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0],
+        );
+        let triangles = generate_iso_surface(&field, 0.0);
+
+        assert_eq!(4, triangles.len());
+        for tri in triangles{
+            assert!(tri.p1.z - 0.5 < 0.0001);
+            assert!(tri.p2.z - 0.5 < 0.0001);
+            assert!(tri.p3.z - 0.5 < 0.0001);
+            assert!(tri.compute_area() - 0.5 < 0.0001);
+        }
     }
 }
