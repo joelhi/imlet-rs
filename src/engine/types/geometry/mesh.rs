@@ -105,7 +105,7 @@ impl Mesh {
             .collect()
     }
 
-    pub fn compute_vertex_faces(&self)->Vec<Vec<usize>>{
+    pub fn compute_vertex_faces(&self) -> Vec<Vec<usize>> {
         let mut vertex_faces = vec![Vec::with_capacity(16); self.num_vertices()];
         self.faces.iter().enumerate().for_each(|(id, f)| {
             vertex_faces[f[0]].push(id);
@@ -164,4 +164,20 @@ pub struct Triangle {
     pub p1: Vec3f,
     pub p2: Vec3f,
     pub p3: Vec3f,
+}
+
+impl Triangle {
+    pub fn compute_area(&self) -> f32 {
+        let a = ((self.p2.y - self.p1.y) * (self.p3.z - self.p1.z)
+            - (self.p2.z - self.p1.z) * (self.p3.y - self.p1.y))
+            .abs();
+        let b = ((self.p2.z - self.p1.z) * (self.p3.x - self.p1.x)
+            - (self.p2.x - self.p1.x) * (self.p3.z - self.p1.z))
+            .abs();
+        let c = ((self.p2.x - self.p1.x) * (self.p3.y - self.p1.y)
+            - (self.p2.y - self.p1.y) * (self.p3.x - self.p1.x))
+            .abs();
+
+        0.5 * (a + b + c)
+    }
 }
