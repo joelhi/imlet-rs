@@ -8,13 +8,8 @@ pub struct Vec3f {
 }
 
 impl Vec3f {
-
-    pub fn new(x: f32, y: f32, z: f32)->Self{
-        Vec3f {
-            x: x,
-            y: y,
-            z: z,
-        }
+    pub fn new(x: f32, y: f32, z: f32) -> Self {
+        Vec3f { x: x, y: y, z: z }
     }
 
     pub fn distance_to_vec3f(&self, pt: Vec3f) -> f32 {
@@ -26,7 +21,7 @@ impl Vec3f {
     }
 
     pub fn distance_to_vec3f_squared(&self, pt: Vec3f) -> f32 {
-        (self.x - pt.x).powi(2) + (self.y - pt.y).powi(2) + (self.z - pt.z).powi(2)
+        self.distance_to_coord_squared(pt.x, pt.y, pt.z)
     }
 
     pub fn distance_to_coord_squared(&self, x: f32, y: f32, z: f32) -> f32 {
@@ -89,12 +84,12 @@ impl Vec3f {
         }
     }
 
-    pub fn magnitude(&self)->f32{
+    pub fn magnitude(&self) -> f32 {
         self.distance_to_coord(0.0, 0.0, 0.0)
     }
 
-    pub fn normalize(&self)->Vec3f{
-        *self/self.magnitude()
+    pub fn normalize(&self) -> Vec3f {
+        *self / self.magnitude()
     }
 }
 
@@ -151,7 +146,7 @@ impl ops::Mul<Vec3f> for Vec3f {
     }
 }
 
-impl ops::Div<f32> for Vec3f{
+impl ops::Div<f32> for Vec3f {
     type Output = Vec3f;
     fn div(self, rhs: f32) -> Self::Output {
         Vec3f {
