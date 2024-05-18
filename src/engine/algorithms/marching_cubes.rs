@@ -9,19 +9,19 @@ use crate::engine::types::geometry::Vec3f;
 
 use super::tables::*;
 
-pub fn generate_iso_surface(grid: &DenseFieldF32, iso_val: f32) -> Vec<Triangle> {
+pub fn generate_iso_surface(field: &DenseFieldF32, iso_val: f32) -> Vec<Triangle> {
     let before = Instant::now();
     // Generate triangles for cell
-    let mut triangles: Vec<Triangle> = Vec::with_capacity(grid.get_num_cells() * 1);
+    let mut triangles: Vec<Triangle> = Vec::with_capacity(field.get_num_cells() * 1);
 
     // Iterate over cell indices in parallel and collect triangles
     triangles.extend(
-        (0..grid.get_num_cells())
+        (0..field.get_num_cells())
             .into_par_iter()
             .map(|cell_index| {
-                let (i, j, k) = grid.get_cell_index3d(cell_index);
-                let cell_vec3f = grid.get_cell_vec3f(i, j, k);
-                let cell_values = grid.get_cell_values(i, j, k);
+                let (i, j, k) = field.get_cell_index3d(cell_index);
+                let cell_vec3f = field.get_cell_corners(i, j, k);
+                let cell_values = field.get_cell_values(i, j, k);
                 polygonize_cell(iso_val, &cell_vec3f, &cell_values)
             })
             .reduce(Vec::new, |mut acc, triangles| {
@@ -253,4 +253,78 @@ fn interpolate_vertex(
 
     let parameter = (iso_val - first_value) / (second_value - first_value);
     Vec3f::interpolate(&first_coord, &second_coord, parameter)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::engine::types::{
+        computation::{distance_functions::Sphere, Model},
+        geometry::BoundingBox,
+    };
+
+    use super::*;
+
+    #[test]
+    fn test_generate_iso_surface_2x2x2() {
+        let field = DenseFieldF32::new(
+            Vec3f::origin(),
+            1.0,
+            (2, 2, 2).into(),
+            vec![1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0],
+        );
+        let triangles = generate_iso_surface(&field, 0.0);
+
+        assert_eq!(2, triangles.len());
+        for tri in triangles {
+            assert!(tri.p1.z - 0.5 < 0.0001);
+            assert!(tri.p2.z - 0.5 < 0.0001);
+            assert!(tri.p3.z - 0.5 < 0.0001);
+            assert!(tri.compute_area() - 0.5 < 0.0001);
+        }
+    }
+
+    #[test]
+    fn test_generate_iso_surface_3x2x2() {
+        let field = DenseFieldF32::new(
+            Vec3f::origin(),
+            1.0,
+            (3, 2, 2).into(),
+            vec![
+                1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0,
+            ],
+        );
+        let triangles = generate_iso_surface(&field, 0.0);
+
+        assert_eq!(4, triangles.len());
+        for tri in triangles {
+            assert!(tri.p1.z - 0.5 < 0.0001);
+            assert!(tri.p2.z - 0.5 < 0.0001);
+            assert!(tri.p3.z - 0.5 < 0.0001);
+            assert!(tri.compute_area() - 0.5 < 0.0001);
+        }
+    }
+
+    #[test]
+    fn test_generate_iso_surface_sphere() {
+        let size = 10.0;
+        let cell_size = 0.5;
+        let bounds = BoundingBox::new(Vec3f::origin(), Vec3f::new(size, size, size));
+
+        // Function
+        let mut model = Model::new();
+        let sphere = model.add_function(Sphere::new(
+            Vec3f::new(size / 2.0, size / 2.0, size / 2.0),
+            size * 0.4,
+        ));
+
+        let field = model.evaluate(bounds, cell_size, sphere);
+
+        // Generate mesh
+        let triangles = generate_iso_surface(&field, 0.0);
+
+        let area: f32 = triangles.iter().map(|tri| tri.compute_area()).sum();
+
+        assert!(200.079 - area < 0.1);
+        assert_eq!(2312, triangles.len());
+    }
 }

@@ -3,6 +3,7 @@ use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::IntoParallelRefMutIterator;
 use rayon::iter::ParallelIterator;
 
+use super::BoundingBox;
 use super::SpatialHashGrid;
 use super::Vec3f;
 use std::time::Instant;
@@ -21,98 +22,6 @@ impl Mesh {
             faces: Vec::new(),
             normals: None,
         }
-    }
-
-    pub fn add_vertices(&mut self, vertices: &[Vec3f]) {
-        self.vertices.extend_from_slice(vertices);
-    }
-
-    pub fn add_faces(&mut self, faces: &[[usize; 3]]) {
-        self.faces.extend_from_slice(faces);
-    }
-
-    pub fn get_vertices(&self) -> &Vec<Vec3f> {
-        &self.vertices
-    }
-
-    pub fn get_faces(&self) -> &Vec<[usize; 3]> {
-        &self.faces
-    }
-
-    pub fn get_normals(&self) -> Option<&Vec<Vec3f>> {
-        self.normals.as_ref()
-    }
-
-    pub fn num_vertices(&self) -> usize {
-        self.vertices.len()
-    }
-
-    pub fn num_faces(&self) -> usize {
-        self.faces.len()
-    }
-
-    pub fn get_centroid(&self) -> Vec3f {
-        let mut centroid: Vec3f = Vec3f::origin();
-
-        for &v in self.get_vertices() {
-            centroid = centroid + v;
-        }
-
-        centroid * (1.0 / self.num_vertices() as f32)
-    }
-
-    pub fn get_bounds(&self) -> (Vec3f, Vec3f) {
-        let mut min = Vec3f::origin();
-        let mut max = Vec3f::origin();
-
-        for v in self.get_vertices() {
-            min.x = min.x.min(v.x);
-            min.y = min.y.min(v.y);
-            min.z = min.z.min(v.z);
-
-            max.x = max.x.max(v.x);
-            max.y = max.y.max(v.y);
-            max.z = max.z.max(v.z);
-        }
-
-        (min, max)
-    }
-
-    pub fn compute_vertex_normals(&mut self) {
-        let face_normals: Vec<Vec3f> = self.compute_face_normals();
-        let vertex_faces: Vec<Vec<usize>> = self.compute_vertex_faces();
-        let mut vertex_normals = vec![Vec3f::origin(); self.num_vertices()];
-        vertex_normals
-            .par_iter_mut()
-            .enumerate()
-            .for_each(|(id, n)| {
-                for &f in &vertex_faces[id] {
-                    *n = *n + face_normals[f];
-                }
-                *n = *n / (vertex_faces[id].len() as f32)
-            });
-        self.normals = Some(vertex_normals);
-    }
-
-    pub fn compute_face_normals(&self) -> Vec<Vec3f> {
-        self.faces
-            .par_iter()
-            .map(|f| {
-                let v1 = self.vertices[f[1]] - self.vertices[f[0]];
-                let v2 = self.vertices[f[2]] - self.vertices[f[0]];
-                v1.cross(v2).normalize()
-            })
-            .collect()
-    }
-
-    pub fn compute_vertex_faces(&self)->Vec<Vec<usize>>{
-        let mut vertex_faces = vec![Vec::with_capacity(16); self.num_vertices()];
-        self.faces.iter().enumerate().for_each(|(id, f)| {
-            vertex_faces[f[0]].push(id);
-            vertex_faces[f[1]].push(id);
-            vertex_faces[f[2]].push(id);
-        });
-        vertex_faces
     }
 
     pub fn from_triangles(triangles: &[Triangle]) -> Mesh {
@@ -157,6 +66,98 @@ impl Mesh {
 
         mesh
     }
+
+    pub fn add_vertices(&mut self, vertices: &[Vec3f]) {
+        self.vertices.extend_from_slice(vertices);
+    }
+
+    pub fn add_faces(&mut self, faces: &[[usize; 3]]) {
+        self.faces.extend_from_slice(faces);
+    }
+
+    pub fn get_vertices(&self) -> &Vec<Vec3f> {
+        &self.vertices
+    }
+
+    pub fn get_faces(&self) -> &Vec<[usize; 3]> {
+        &self.faces
+    }
+
+    pub fn get_normals(&self) -> Option<&Vec<Vec3f>> {
+        self.normals.as_ref()
+    }
+
+    pub fn num_vertices(&self) -> usize {
+        self.vertices.len()
+    }
+
+    pub fn num_faces(&self) -> usize {
+        self.faces.len()
+    }
+
+    pub fn get_centroid(&self) -> Vec3f {
+        let mut centroid: Vec3f = Vec3f::origin();
+
+        for &v in self.get_vertices() {
+            centroid = centroid + v;
+        }
+
+        centroid * (1.0 / self.num_vertices() as f32)
+    }
+
+    pub fn get_bounds(&self) -> BoundingBox {
+        let mut max = Vec3f::new(-f32::MAX, -f32::MAX, -f32::MAX);
+        let mut min = Vec3f::new(f32::MAX, f32::MAX, f32::MAX);
+
+        for v in self.get_vertices() {
+            min.x = min.x.min(v.x);
+            min.y = min.y.min(v.y);
+            min.z = min.z.min(v.z);
+
+            max.x = max.x.max(v.x);
+            max.y = max.y.max(v.y);
+            max.z = max.z.max(v.z);
+        }
+
+        BoundingBox::new(min, max)
+    }
+
+    pub fn compute_vertex_normals(&mut self) {
+        let face_normals: Vec<Vec3f> = self.compute_face_normals();
+        let vertex_faces: Vec<Vec<usize>> = self.compute_vertex_faces();
+        let mut vertex_normals = vec![Vec3f::origin(); self.num_vertices()];
+        vertex_normals
+            .par_iter_mut()
+            .enumerate()
+            .for_each(|(id, n)| {
+                for &f in &vertex_faces[id] {
+                    *n = *n + face_normals[f];
+                }
+                *n = *n / (vertex_faces[id].len() as f32)
+            });
+        self.normals = Some(vertex_normals);
+    }
+
+    pub fn compute_face_normals(&self) -> Vec<Vec3f> {
+        self.faces
+            .par_iter()
+            .map(|f| {
+                let v1 = self.vertices[f[1]] - self.vertices[f[0]];
+                let v2 = self.vertices[f[2]] - self.vertices[f[0]];
+                v1.cross(v2).normalize()
+            })
+            .collect()
+    }
+
+    pub fn compute_vertex_faces(&self) -> Vec<Vec<usize>> {
+        let mut vertex_faces = vec![Vec::with_capacity(16); self.num_vertices()];
+        self.faces.iter().enumerate().for_each(|(id, f)| {
+            vertex_faces[f[0]].push(id);
+            vertex_faces[f[1]].push(id);
+            vertex_faces[f[2]].push(id);
+        });
+        vertex_faces
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -164,4 +165,14 @@ pub struct Triangle {
     pub p1: Vec3f,
     pub p2: Vec3f,
     pub p3: Vec3f,
+}
+
+impl Triangle {
+    pub fn compute_area(&self) -> f32 {
+        let a = self.p1.distance_to_vec3f(self.p2);
+        let b = self.p2.distance_to_vec3f(self.p3);
+        let c = self.p3.distance_to_vec3f(self.p1);
+        let s = (a + b + c) / 2.0;
+        (s * (s - a) * (s - b) * (s - c)).sqrt()
+    }
 }
