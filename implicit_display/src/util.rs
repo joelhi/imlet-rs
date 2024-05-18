@@ -1,4 +1,4 @@
-use crate::engine::types::geometry::{Mesh, Vec3f};
+use implicit_engine::types::geometry::{Mesh, Vec3f};
 
 use super::vertex::Vertex;
 

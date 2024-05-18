@@ -2,7 +2,7 @@ use std::{cell::RefCell, time::Instant};
 
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
 
-use crate::engine::types::geometry::{BoundingBox, Vec3i};
+use crate::types::geometry::{BoundingBox, Vec3i};
 
 use super::{
     component::{Component, ComponentId, ImplicitFunction, ImplicitOperation},
@@ -96,7 +96,7 @@ impl Model {
 
 #[cfg(test)]
 mod tests {
-    use crate::engine::types::{
+    use crate::types::{
         computation::{
             distance_functions::Sphere,
             operations::{arithmetic::Add, boolean::Difference},

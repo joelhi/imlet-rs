@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, path::Path};
 
 pub enum Material{
     Normal,
@@ -7,15 +7,18 @@ pub enum Material{
 }
 
 impl Material {
-    pub fn path(&self)->&'static str{
+    pub fn path(&self) -> &'static str {
         match self {
-            Material::Normal =>"src/display/shaders/normal.wgsl",
-            Material::Arctic =>"src/display/shaders/arctic.wgsl",
-            Material::InsideOutside =>"src/display/shaders/inside_outside.wgsl"
+            Material::Normal => "normal.wgsl",
+            Material::Arctic => "arctic.wgsl",
+            Material::InsideOutside => "inside_outside.wgsl"
         }
     }
+    
     pub fn load_shader_source(&self) -> String {
-        fs::read_to_string(self.path())
+        let path = Path::new(file!()).parent().unwrap().join("shaders").join(self.path());
+        println!("{}", path.to_str().unwrap());
+        fs::read_to_string(path)
             .expect("Failed to read shader source file")
     }
 }

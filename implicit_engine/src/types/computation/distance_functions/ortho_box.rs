@@ -1,4 +1,4 @@
-use crate::engine::types::{
+use crate::types::{
     computation::ImplicitFunction,
     geometry::{BoundingBox, Vec3f},
 };

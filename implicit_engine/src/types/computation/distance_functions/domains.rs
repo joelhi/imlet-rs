@@ -1,4 +1,4 @@
-use crate::engine::types::computation::ImplicitFunction;
+use crate::types::computation::ImplicitFunction;
 
 #[derive(Debug, Clone, Copy)]
 pub struct ZDomain {

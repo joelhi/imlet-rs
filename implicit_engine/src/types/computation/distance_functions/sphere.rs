@@ -1,4 +1,4 @@
-use crate::engine::types::{computation::component::ImplicitFunction, geometry::Vec3f};
+use crate::types::{computation::component::ImplicitFunction, geometry::Vec3f};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Sphere {

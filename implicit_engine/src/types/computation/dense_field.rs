@@ -4,8 +4,8 @@ use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelRefMutIterator;
 use rayon::iter::ParallelIterator;
 
-use crate::engine::types::geometry::Vec3f;
-use crate::engine::types::geometry::Vec3i;
+use crate::types::geometry::Vec3f;
+use crate::types::geometry::Vec3i;
 
 #[derive(Debug, Clone)]
 pub struct DenseFieldF32 {

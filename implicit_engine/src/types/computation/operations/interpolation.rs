@@ -1,4 +1,4 @@
-use crate::engine::types::computation::{ComponentId, ImplicitOperation};
+use crate::types::computation::{ComponentId, ImplicitOperation};
 
 pub struct LinearInterpolation {
     inputs: [ComponentId; 3]

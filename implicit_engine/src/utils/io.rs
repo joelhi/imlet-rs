@@ -1,6 +1,6 @@
 use std::{fs, io::{self, Write}, path::Path};
 
-use crate::engine::types::geometry::Mesh;
+use crate::types::geometry::Mesh;
 
 pub fn mesh_to_obj(mesh: &Mesh) -> String {
     let mut data = String::new();

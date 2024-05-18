@@ -1,4 +1,4 @@
-use crate::engine::types::computation::component::ImplicitFunction;
+use crate::types::computation::component::ImplicitFunction;
 
 #[derive(Debug, Clone, Copy)]
 pub struct CustomFunction {

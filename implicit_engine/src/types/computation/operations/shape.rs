@@ -1,4 +1,4 @@
-use crate::engine::types::computation::component::{ComponentId, ImplicitOperation};
+use crate::types::computation::component::{ComponentId, ImplicitOperation};
 
 pub struct Offset {
     inputs: [ComponentId; 1],

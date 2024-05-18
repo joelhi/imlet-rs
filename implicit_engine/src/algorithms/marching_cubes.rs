@@ -3,9 +3,9 @@ use std::time::Instant;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 
-use crate::engine::types::computation::DenseFieldF32;
-use crate::engine::types::geometry::Triangle;
-use crate::engine::types::geometry::Vec3f;
+use crate::types::computation::DenseFieldF32;
+use crate::types::geometry::Triangle;
+use crate::types::geometry::Vec3f;
 
 use super::tables::*;
 
@@ -257,10 +257,8 @@ fn interpolate_vertex(
 
 #[cfg(test)]
 mod tests {
-    use crate::engine::types::{
-        computation::{distance_functions::Sphere, Model},
-        geometry::BoundingBox,
-    };
+
+    use crate::types::{computation::{distance_functions::Sphere, Model}, geometry::BoundingBox};
 
     use super::*;
 

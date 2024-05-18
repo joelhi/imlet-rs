@@ -1,4 +1,4 @@
-use crate::engine::types::computation::component::ImplicitFunction;
+use crate::types::computation::component::ImplicitFunction;
 use std::f32::consts::PI;
 
 #[derive(Debug, Clone, Copy)]

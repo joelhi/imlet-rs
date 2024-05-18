@@ -1,5 +1,5 @@
-use implicit::{
-    display::viewer, engine::{
+use {
+    implicit_display::viewer, implicit_engine::{
         algorithms::marching_cubes::generate_iso_surface,
         types::{
             computation::{
@@ -14,7 +14,7 @@ use implicit::{
             geometry::{BoundingBox, Mesh, Vec3f},
         },
         utils,
-    }, display::material::Material
+    }, implicit_display::material::Material
 };
 
 pub fn main() {

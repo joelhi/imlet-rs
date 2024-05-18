@@ -8,7 +8,7 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-use crate::engine::types::geometry::{Mesh, Vec3f};
+use implicit_engine::types::geometry::{Mesh, Vec3f};
 
 use super::{
     camera::{Camera, CameraUniform}, camera_controller::CameraController, material::Material, texture::{self, Texture}, util::mesh_to_buffers, vertex::Vertex

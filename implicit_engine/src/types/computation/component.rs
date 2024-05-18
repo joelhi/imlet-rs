@@ -53,7 +53,7 @@ pub trait ImplicitOperation: Sync + Send {
 
 #[cfg(test)]
 mod tests {
-    use crate::engine::types::{
+    use crate::types::{
         computation::{distance_functions::Sphere, operations::arithmetic::Add},
         geometry::Vec3f,
     };

@@ -1,4 +1,4 @@
-use implicit::{display::{material::Material, viewer}, engine::{
+use {implicit_display::{material::Material, viewer}, implicit_engine::{
         algorithms::marching_cubes::generate_iso_surface, types::{
             computation::{
                 distance_functions::{Gyroid, Sphere}, operations::{boolean::Intersection, shape::Thickness}, Model
