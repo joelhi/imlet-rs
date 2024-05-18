@@ -353,7 +353,7 @@ async fn run(mesh: &Mesh, material: Material) {
         &vertices,
         &indices,
         mesh.get_centroid(),
-        mesh.get_bounds().1,
+        mesh.get_bounds().max,
         material
     )
     .await;
