@@ -1,4 +1,3 @@
-
 const MAX_INPUTS: usize = 8;
 
 #[derive(Debug, Copy, Clone)]
@@ -19,7 +18,7 @@ impl From<usize> for ComponentId {
 pub enum Component {
     Constant(f32),
     Function(Box<dyn ImplicitFunction>),
-    Operation(Box<dyn ImplicitOperation>)
+    Operation(Box<dyn ImplicitOperation>),
 }
 
 impl Component {
@@ -41,7 +40,7 @@ impl Component {
         result
     }
 }
- 
+
 pub trait ImplicitFunction: Sync + Send {
     fn eval(&self, x: f32, y: f32, z: f32) -> f32;
 }
@@ -54,20 +53,37 @@ pub trait ImplicitOperation: Sync + Send {
 
 #[cfg(test)]
 mod tests {
+    use crate::engine::types::{
+        computation::{distance_functions::Sphere, operations::arithmetic::Add},
+        geometry::Vec3f,
+    };
+
     use super::*;
 
     #[test]
-    fn correctly_creates_and_computes_constant() {
+    fn test_compute_constant() {
+        let component = Component::Constant(1.0);
 
+        let values = [0.0; 0];
+        assert!((1.0 - component.compute(0.0, 0.0, 0.0, &values)).abs() < 0.001);
     }
 
     #[test]
-    fn correctly_creates_and_computes_function() {
+    fn test_compute_function() {
+        let function = Sphere::new(Vec3f::origin(), 1.0);
+        let component = Component::Function(Box::new(function));
 
+        let values = [0.0; 0];
+        assert!((-0.5 - component.compute(0.0, 0.5, 0.0, &values)).abs() < 0.001);
+        assert!((0.5 - component.compute(0.0, 1.5, 0.0, &values)).abs() < 0.001);
     }
 
     #[test]
-    fn correctly_creates_and_computes_operation() {
+    fn test_compute_operation() {
+        let operation = Add::new(0.into(), 1.into());
+        let component = Component::Operation(Box::new(operation));
 
+        let values = [1.0; 2];
+        assert!((2.0 - component.compute(0.0, 0.0, 0.0, &values)).abs() < 0.001);
     }
 }
