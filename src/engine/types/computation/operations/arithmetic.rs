@@ -1,14 +1,12 @@
 use crate::engine::types::computation::component::{ComponentId, ImplicitOperation};
 
 pub struct Multiply {
-    inputs: [ComponentId; 2]
+    inputs: [ComponentId; 2],
 }
 
-impl Multiply{
-    pub fn new(a: ComponentId, b: ComponentId)->Self{
-        Multiply{
-            inputs: [a, b],
-        }
+impl Multiply {
+    pub fn new(a: ComponentId, b: ComponentId) -> Self {
+        Multiply { inputs: [a, b] }
     }
 }
 
@@ -23,14 +21,12 @@ impl ImplicitOperation for Multiply {
 }
 
 pub struct Add {
-    inputs: [ComponentId; 2]
+    inputs: [ComponentId; 2],
 }
 
-impl Add{
-    pub fn new(a: ComponentId, b: ComponentId)->Self{
-        Add{
-            inputs: [a, b],
-        }
+impl Add {
+    pub fn new(a: ComponentId, b: ComponentId) -> Self {
+        Add { inputs: [a, b] }
     }
 }
 
@@ -44,14 +40,12 @@ impl ImplicitOperation for Add {
     }
 }
 pub struct Subtract {
-    inputs: [ComponentId; 2]
+    inputs: [ComponentId; 2],
 }
 
-impl Subtract{
-    pub fn new(a: ComponentId, b: ComponentId)->Self{
-        Subtract{
-            inputs: [a, b],
-        }
+impl Subtract {
+    pub fn new(a: ComponentId, b: ComponentId) -> Self {
+        Subtract { inputs: [a, b] }
     }
 }
 
@@ -66,20 +60,18 @@ impl ImplicitOperation for Subtract {
 }
 
 pub struct Divide {
-    inputs: [ComponentId; 2]
+    inputs: [ComponentId; 2],
 }
 
-impl Divide{
-    pub fn new(a: ComponentId, b: ComponentId)->Self{
-        Divide{
-            inputs: [a, b],
-        }
+impl Divide {
+    pub fn new(a: ComponentId, b: ComponentId) -> Self {
+        Divide { inputs: [a, b] }
     }
 }
 
 impl ImplicitOperation for Divide {
     fn eval(&self, inputs: &[f32]) -> f32 {
-        assert!(inputs[1] > 0.0, "Cannot divide by zeros");
+        assert!(inputs[1] > 0.0, "Cannot divide by zero");
         inputs[0] / inputs[1]
     }
 
