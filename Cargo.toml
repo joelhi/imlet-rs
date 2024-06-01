@@ -1,1 +1,1 @@
-workspace = { members = ["imlet_display", "imlet_engine"] }
+workspace = { members = ["imlet_viewer", "imlet_engine"], resolver = "2"}

@@ -1,4 +1,4 @@
-use implicit_engine::types::geometry::{Mesh, Vec3f};
+use imlet_engine::types::geometry::{Mesh, Vec3f};
 
 use super::vertex::Vertex;
 

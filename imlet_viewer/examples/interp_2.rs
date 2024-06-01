@@ -1,5 +1,5 @@
 use {
-    implicit_display::{material::Material, viewer}, implicit_engine::{
+    imlet_viewer::{material::Material, viewer}, imlet_engine::{
         algorithms::marching_cubes::generate_iso_surface,
         types::{
             computation::{
@@ -16,7 +16,7 @@ use {
 };
 
 pub fn main() {
-    utils::logging::init();
+    utils::logging::init_info();
 
     // Inputs
     let size = 10.0;

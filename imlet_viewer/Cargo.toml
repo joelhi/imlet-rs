@@ -1,12 +1,12 @@
 [package]
-name = "implicit_display"
+name = "imlet_viewer"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-implicit_engine = { path = "../implicit_engine" }
+imlet_engine = { path = "../imlet_engine" }
 cgmath = "0.18.0"
 wgpu = "0.18"
 winit = "0.28"
