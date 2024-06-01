@@ -1,22 +1,3 @@
-[package]
-name = "implicit"
-version = "0.1.0"
-edition = "2021"
-
-[lib]
-name = "implicit"
-path = "src/lib.rs"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-winit = "0.28"
-env_logger = "0.10"
-log = "0.4"
-wgpu = "0.18"
-pollster = "0.3"
-bytemuck = { version = "1.12", features = [ "derive" ] }
-cgmath = "0.18"
-futures-intrusive = "0.5.0"
-rayon = "1.10.0"
-itertools = "0.12.1"
+[workspace]
+members = ["imlet_viewer", "imlet_engine"]
+resolver = "2"
