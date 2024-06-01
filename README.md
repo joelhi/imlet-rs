@@ -8,5 +8,5 @@ Based on [this](https://paulbourke.net/geometry/polygonise/) logic by Paul Bourk
 
 Todo:
 - [x] Improve graph computation performance
-- [ ] Unit tests
+- [x] Unit tests
 - [ ] Some UI

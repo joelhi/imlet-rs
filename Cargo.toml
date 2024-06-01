@@ -1,1 +1,1 @@
-workspace = { members = ["implicit_display", "implicit_engine"] }
+workspace = { members = ["imlet_display", "imlet_engine"] }
