@@ -264,7 +264,7 @@ mod tests {
 
     #[test]
     fn test_generate_iso_surface_2x2x2() {
-        let field = DenseFieldF32::new(
+        let field = DenseFieldF32::with_data(
             Vec3f::origin(),
             1.0,
             (2, 2, 2).into(),
@@ -283,7 +283,7 @@ mod tests {
 
     #[test]
     fn test_generate_iso_surface_3x2x2() {
-        let field = DenseFieldF32::new(
+        let field = DenseFieldF32::with_data(
             Vec3f::origin(),
             1.0,
             (3, 2, 2).into(),

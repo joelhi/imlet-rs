@@ -81,7 +81,7 @@ impl Model {
             before.elapsed()
         );
 
-        DenseFieldF32::new(bounds.min, cell_size, n, data)
+        DenseFieldF32::with_data(bounds.min, cell_size, n, data)
     }
 
     fn get_point_count(bounds: &BoundingBox, cell_size: f32) -> Vec3i {

@@ -16,7 +16,7 @@ pub struct DenseFieldF32 {
 }
 
 impl DenseFieldF32 {
-    pub fn new(origin: Vec3f, cell_size: f32, num_pts: Vec3i, data: Vec<f32>) -> DenseFieldF32 {
+    pub fn with_data(origin: Vec3f, cell_size: f32, num_pts: Vec3i, data: Vec<f32>) -> DenseFieldF32 {
         if num_pts.product() != data.len() {
             panic!("Incorrect size of data buffer");
         }
@@ -28,7 +28,7 @@ impl DenseFieldF32 {
         }
     }
 
-    pub fn empty(origin: Vec3f, cell_size: f32, num_pts: Vec3i) -> DenseFieldF32 {
+    pub fn new(origin: Vec3f, cell_size: f32, num_pts: Vec3i) -> DenseFieldF32 {
         DenseFieldF32 {
             origin: origin,
             cell_size: cell_size,
@@ -242,7 +242,7 @@ mod tests {
     fn test_smooth_field_half() {
         let mut data = vec![1.0; 27];
         data[13] = 2.0;
-        let mut field = DenseFieldF32::new(Vec3f::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field = DenseFieldF32::with_data(Vec3f::origin(), 1.0, (3, 3, 3).into(), data);
         field.smooth(0.5, 1);
 
         let field_data = field.copy_data();
@@ -260,7 +260,7 @@ mod tests {
     fn test_smooth_field_full() {
         let mut data = vec![1.0; 27];
         data[13] = 2.0;
-        let mut field = DenseFieldF32::new(Vec3f::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field = DenseFieldF32::with_data(Vec3f::origin(), 1.0, (3, 3, 3).into(), data);
         field.smooth(1.0, 1);
 
         let field_data = field.copy_data();
@@ -279,7 +279,7 @@ mod tests {
         data[14] = 20.0;
         data[16] = 15.0;
         data[22] = 20.0;
-        let mut field = DenseFieldF32::new(Vec3f::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field = DenseFieldF32::with_data(Vec3f::origin(), 1.0, (3, 3, 3).into(), data);
         field.smooth(1.0, 1);
 
         let field_data = field.copy_data();
@@ -295,7 +295,7 @@ mod tests {
         data[14] = 20.0;
         data[16] = 15.0;
         data[22] = 20.0;
-        let mut field = DenseFieldF32::new(Vec3f::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field = DenseFieldF32::with_data(Vec3f::origin(), 1.0, (3, 3, 3).into(), data);
         field.smooth(0.5, 1);
 
         let field_data = field.copy_data();
@@ -309,7 +309,7 @@ mod tests {
         data[20] = 1.0;
         data[21] = 1.5;
 
-        let mut field = DenseFieldF32::new(Vec3f::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field = DenseFieldF32::with_data(Vec3f::origin(), 1.0, (3, 3, 3).into(), data);
         field.threshold(0.1);
 
         let field_data = field.copy_data();
@@ -321,8 +321,26 @@ mod tests {
     }
 
     #[test]
-    fn test_map_cell_index() {}
+    fn test_map_cell_index_cube() {
+        let field = DenseFieldF32::new(Vec3f::origin(), 1.0, (10, 10, 10).into());
+
+        assert_eq!(1, field.get_cell_index1d(1, 0, 0));
+        assert_eq!(9, field.get_cell_index1d(0, 1, 0));
+        assert_eq!(10, field.get_cell_index1d(1, 1, 0));
+        assert_eq!(81, field.get_cell_index1d(0, 0, 1));
+        assert_eq!(90, field.get_cell_index1d(0, 1, 1));
+        assert_eq!(91, field.get_cell_index1d(1, 1, 1));
+    }
 
     #[test]
-    fn test_map_point_index() {}
+    fn test_map_point_index() {
+        let field = DenseFieldF32::new(Vec3f::origin(), 1.0, (10, 10, 10).into());
+
+        assert_eq!(1, field.get_point_index1d(1, 0, 0));
+        assert_eq!(10, field.get_point_index1d(0, 1, 0));
+        assert_eq!(11, field.get_point_index1d(1, 1, 0));
+        assert_eq!(100, field.get_point_index1d(0, 0, 1));
+        assert_eq!(110, field.get_point_index1d(0, 1, 1));
+        assert_eq!(111, field.get_point_index1d(1, 1, 1));
+    }
 }
