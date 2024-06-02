@@ -1,89 +1,90 @@
+use std::fmt::Debug;
+
+use num_traits::Float;
+
 use crate::types::computation::ImplicitFunction;
+use crate::utils::math_helper::normalize;
 
 #[derive(Debug, Clone, Copy)]
-pub struct ZDomain {
-    min: f32,
-    max: f32
+pub struct ZDomain<T: Float + Debug> {
+    min: T,
+    max: T
  }
 
-impl ZDomain {
-    pub fn remapped(min: f32, max: f32) -> Self {
-        ZDomain {
+impl<T: Float + Debug> ZDomain<T> {
+    pub fn remapped(min: T, max: T) -> Self {
+        Self {
             min,
             max
         }
     }
 
     pub fn natural()->Self{
-        ZDomain{
-            min: 0.0,
-            max: 1.0,
+        Self{
+            min: T::from(0.0).unwrap(),
+            max: T::from(1.0).unwrap(),
         }
     }
 }
 
-impl ImplicitFunction for ZDomain {
-    fn eval(&self, _: f32, _: f32, z: f32) -> f32 {
+impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for ZDomain<T> {
+    fn eval(&self, _: T, _: T, z: T) -> T {
         normalize(z, self.min, self.max)
     }
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct YDomain {
-    min: f32,
-    max: f32
+pub struct YDomain<T: Float + Debug> {
+    min: T,
+    max: T
  }
 
-impl YDomain {
-    pub fn remapped(min: f32, max: f32) -> Self {
-        YDomain {
+impl<T: Float + Debug> YDomain<T> {
+    pub fn remapped(min: T, max: T) -> Self {
+        Self {
             min,
             max
         }
     }
 
     pub fn natural()->Self{
-        YDomain{
-            min: 0.0,
-            max: 1.0,
+        Self{
+            min: T::from(0.0).unwrap(),
+            max: T::from(1.0).unwrap(),
         }
     }
 }
 
-impl ImplicitFunction for YDomain {
-    fn eval(&self, _: f32, y: f32, _: f32) -> f32 {
+impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for YDomain<T> {
+    fn eval(&self, _: T, y: T, _: T) -> T {
         normalize(y, self.min, self.max)
     }
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct XDomain {
-    min: f32,
-    max: f32
+pub struct XDomain<T: Float + Debug> {
+    min: T,
+    max: T
  }
 
-impl XDomain {
-    pub fn remapped(min: f32, max: f32) -> Self {
-        XDomain {
+impl<T: Float + Debug> XDomain<T> {
+    pub fn remapped(min: T, max: T) -> Self {
+        Self {
             min,
             max
         }
     }
 
     pub fn natural()->Self{
-        XDomain{
-            min: 0.0,
-            max: 1.0,
+        Self{
+            min: T::from(0.0).unwrap(),
+            max: T::from(1.0).unwrap(),
         }
     }
 }
 
-impl ImplicitFunction for XDomain {
-    fn eval(&self, x: f32, _: f32, _: f32) -> f32 {
+impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for XDomain<T> {
+    fn eval(&self, x: T, _: T, _: T) -> T {
         normalize(x, self.min, self.max)
     }
-}
-
-fn normalize(value: f32, min: f32, max: f32) -> f32 {
-    (value - min) / (max - min)
 }

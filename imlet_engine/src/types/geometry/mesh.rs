@@ -1,3 +1,4 @@
+use num_traits::Float;
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::IntoParallelRefMutIterator;
@@ -5,18 +6,19 @@ use rayon::iter::ParallelIterator;
 
 use super::BoundingBox;
 use super::SpatialHashGrid;
-use super::Vec3f;
+use super::Vec3;
+use std::fmt::Debug;
 use std::time::Instant;
 use std::usize;
 
-pub struct Mesh {
-    vertices: Vec<Vec3f>,
+pub struct Mesh<T: Float + Debug> {
+    vertices: Vec<Vec3<T>>,
     faces: Vec<[usize; 3]>,
-    normals: Option<Vec<Vec3f>>,
+    normals: Option<Vec<Vec3<T>>>,
 }
 
-impl Mesh {
-    pub fn new() -> Mesh {
+impl<T: Float + Debug> Mesh<T> {
+    pub fn new() -> Mesh<T> {
         Mesh {
             vertices: Vec::new(),
             faces: Vec::new(),
@@ -24,7 +26,7 @@ impl Mesh {
         }
     }
 
-    pub fn from_triangles(triangles: &[Triangle]) -> Mesh {
+    pub fn from_triangles(triangles: &[Triangle<T>]) -> Mesh<T> {
         let before = Instant::now();
         // Contruct vertex buffer using a hash grid for coordinates to index mapping
         let mut faces: Vec<[usize; 3]> = Vec::new();
@@ -67,7 +69,7 @@ impl Mesh {
         mesh
     }
 
-    pub fn add_vertices(&mut self, vertices: &[Vec3f]) {
+    pub fn add_vertices(&mut self, vertices: &[Vec3<T>]) {
         self.vertices.extend_from_slice(vertices);
     }
 
@@ -75,7 +77,7 @@ impl Mesh {
         self.faces.extend_from_slice(faces);
     }
 
-    pub fn get_vertices(&self) -> &Vec<Vec3f> {
+    pub fn get_vertices(&self) -> &Vec<Vec3<T>> {
         &self.vertices
     }
 
@@ -83,7 +85,7 @@ impl Mesh {
         &self.faces
     }
 
-    pub fn get_normals(&self) -> Option<&Vec<Vec3f>> {
+    pub fn get_normals(&self) -> Option<&Vec<Vec3<T>>> {
         self.normals.as_ref()
     }
 
@@ -95,19 +97,19 @@ impl Mesh {
         self.faces.len()
     }
 
-    pub fn get_centroid(&self) -> Vec3f {
-        let mut centroid: Vec3f = Vec3f::origin();
+    pub fn get_centroid(&self) -> Vec3<T> {
+        let mut centroid: Vec3<T> = Vec3::origin();
 
         for &v in self.get_vertices() {
             centroid = centroid + v;
         }
 
-        centroid * (1.0 / self.num_vertices() as f32)
+        centroid * (1.0 / self.num_vertices() as T)
     }
 
-    pub fn get_bounds(&self) -> BoundingBox {
-        let mut max = Vec3f::new(-f32::MAX, -f32::MAX, -f32::MAX);
-        let mut min = Vec3f::new(f32::MAX, f32::MAX, f32::MAX);
+    pub fn get_bounds(&self) -> BoundingBox<T> {
+        let mut max = Vec3::new(-Float::max_value(), -Float::max_value(), -Float::max_value());
+        let mut min = Vec3::new(Float::max_value(), Float::max_value(), Float::max_value());
 
         for v in self.get_vertices() {
             min.x = min.x.min(v.x);
@@ -123,9 +125,9 @@ impl Mesh {
     }
 
     pub fn compute_vertex_normals(&mut self) {
-        let face_normals: Vec<Vec3f> = self.compute_face_normals();
+        let face_normals: Vec<Vec3<T>> = self.compute_face_normals();
         let vertex_faces: Vec<Vec<usize>> = self.compute_vertex_faces();
-        let mut vertex_normals = vec![Vec3f::origin(); self.num_vertices()];
+        let mut vertex_normals = vec![Vec3::origin(); self.num_vertices()];
         vertex_normals
             .par_iter_mut()
             .enumerate()
@@ -133,12 +135,12 @@ impl Mesh {
                 for &f in &vertex_faces[id] {
                     *n = *n + face_normals[f];
                 }
-                *n = *n / (vertex_faces[id].len() as f32)
+                *n = *n / (vertex_faces[id].len() as T)
             });
         self.normals = Some(vertex_normals);
     }
 
-    pub fn compute_face_normals(&self) -> Vec<Vec3f> {
+    pub fn compute_face_normals(&self) -> Vec<Vec3<T>> {
         self.faces
             .par_iter()
             .map(|f| {
@@ -161,14 +163,14 @@ impl Mesh {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct Triangle {
-    pub p1: Vec3f,
-    pub p2: Vec3f,
-    pub p3: Vec3f,
+pub struct Triangle<T: Float + Debug> {
+    pub p1: Vec3<T>,
+    pub p2: Vec3<T>,
+    pub p3: Vec3<T>,
 }
 
-impl Triangle {
-    pub fn compute_area(&self) -> f32 {
+impl<T: Float + Debug> Triangle<T> {
+    pub fn compute_area(&self) -> T {
         let a = self.p1.distance_to_vec3f(self.p2);
         let b = self.p2.distance_to_vec3f(self.p3);
         let c = self.p3.distance_to_vec3f(self.p1);

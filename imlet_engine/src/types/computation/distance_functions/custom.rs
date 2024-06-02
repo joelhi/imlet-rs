@@ -1,18 +1,22 @@
+use std::fmt::Debug;
+
+use num_traits::Float;
+
 use crate::types::computation::component::ImplicitFunction;
 
 #[derive(Debug, Clone, Copy)]
-pub struct CustomFunction {
-    pub func: fn(f32, f32, f32) -> f32,
+pub struct CustomFunction<T: Float + Debug> {
+    pub func: fn(T, T, T) -> T,
 }
 
-impl CustomFunction {
-    pub fn new(func: fn(f32, f32, f32) -> f32) -> Self {
-        CustomFunction { func }
+impl<T: Float + Debug> CustomFunction<T> {
+    pub fn new(func: fn(T, T, T) -> T) -> Self {
+        Self { func }
     }
 }
 
-impl ImplicitFunction for CustomFunction {
-    fn eval(&self, x: f32, y: f32, z: f32) -> f32 {
+impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for CustomFunction<T> {
+    fn eval(&self, x: T, y: T, z: T) -> T {
         (self.func)(x, y, z)
     }
 }

@@ -1,3 +1,7 @@
+use std::fmt::Debug;
+
+use num_traits::Float;
+
 const MAX_INPUTS: usize = 8;
 
 #[derive(Debug, Copy, Clone)]
@@ -15,14 +19,14 @@ impl From<usize> for ComponentId {
     }
 }
 
-pub enum Component {
-    Constant(f32),
-    Function(Box<dyn ImplicitFunction>),
-    Operation(Box<dyn ImplicitOperation>),
+pub enum Component<T: Float + Debug> {
+    Constant(T),
+    Function(Box<dyn ImplicitFunction<T>>),
+    Operation(Box<dyn ImplicitOperation<T>>),
 }
 
-impl Component {
-    pub fn compute(&self, x: f32, y: f32, z: f32, values: &[f32]) -> f32 {
+impl<T: Float + Debug + Send + Sync> Component<T> {
+    pub fn compute(&self, x: T, y: T, z: T, values: &[T]) -> T {
         match self {
             Component::Constant(value) => *value,
             Component::Function(function) => function.eval(x, y, z),
@@ -32,8 +36,8 @@ impl Component {
         }
     }
 
-    pub fn get_input_data(inputs: &[ComponentId], values: &[f32]) -> [f32; MAX_INPUTS] {
-        let mut result = [0.0; MAX_INPUTS];
+    pub fn get_input_data(inputs: &[ComponentId], values: &[T]) -> [T; MAX_INPUTS] {
+        let mut result = [T::from(0.0).expect("Failed to convert number to T"); MAX_INPUTS];
         for (i, &id) in inputs.iter().enumerate() {
             result[i] = values[id.0];
         }
@@ -41,12 +45,12 @@ impl Component {
     }
 }
 
-pub trait ImplicitFunction: Sync + Send {
-    fn eval(&self, x: f32, y: f32, z: f32) -> f32;
+pub trait ImplicitFunction<T: Float + Debug + Send + Sync>: Sync + Send {
+    fn eval(&self, x: T, y: T, z: T) -> T;
 }
 
-pub trait ImplicitOperation: Sync + Send {
-    fn eval(&self, inputs: &[f32]) -> f32;
+pub trait ImplicitOperation<T: Float + Debug + Send + Sync>: Sync + Send {
+    fn eval(&self, inputs: &[T]) -> T;
 
     fn get_inputs(&self) -> &[ComponentId];
 }
@@ -55,7 +59,7 @@ pub trait ImplicitOperation: Sync + Send {
 mod tests {
     use crate::types::{
         computation::{distance_functions::Sphere, operations::arithmetic::Add},
-        geometry::Vec3f,
+        geometry::Vec3,
     };
 
     use super::*;
@@ -70,7 +74,7 @@ mod tests {
 
     #[test]
     fn test_compute_function() {
-        let function = Sphere::new(Vec3f::origin(), 1.0);
+        let function = Sphere::new(Vec3::origin(), 1.0);
         let component = Component::Function(Box::new(function));
 
         let values = [0.0; 0];

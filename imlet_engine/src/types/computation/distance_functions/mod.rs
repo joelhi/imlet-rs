@@ -6,7 +6,7 @@ mod slice;
 mod domains;
 mod schwarz;
 mod neovius;
-mod ortho_box;
+mod aabb;
 mod custom;
 
 pub use gyroid::*;
@@ -17,5 +17,5 @@ pub use slice::*;
 pub use domains::*;
 pub use schwarz::*;
 pub use neovius::*;
-pub use ortho_box::*;
+pub use aabb::*;
 pub use custom::*;

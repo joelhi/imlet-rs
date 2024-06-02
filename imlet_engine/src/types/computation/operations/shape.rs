@@ -1,21 +1,25 @@
+use std::fmt::Debug;
+
+use num_traits::Float;
+
 use crate::types::computation::component::{ComponentId, ImplicitOperation};
 
-pub struct Offset {
+pub struct Offset<T> {
     inputs: [ComponentId; 1],
-    distance: f32
+    distance: T
 }
 
-impl Offset{
-    pub fn new(value: ComponentId, offset_distance: f32)->Self{
-        Offset{
+impl<T: Float + Debug> Offset<T>{
+    pub fn new(value: ComponentId, offset_distance: T)->Self{
+        Self{
             inputs: [value],
             distance: offset_distance,
         }
     }
 }
 
-impl ImplicitOperation for Offset {
-    fn eval(&self, inputs: &[f32]) -> f32 {
+impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Offset<T> {
+    fn eval(&self, inputs: &[T]) -> T {
         inputs[0] - self.distance
     }
 
@@ -24,22 +28,22 @@ impl ImplicitOperation for Offset {
     }
 }
 
-pub struct Thickness {
+pub struct Thickness<T: Float + Debug> {
     inputs: [ComponentId; 1],
-    t: f32
+    t: T
 }
 
-impl Thickness{
-    pub fn new(value: ComponentId, thickness: f32)->Self{
-        Thickness{
+impl<T: Float + Debug> Thickness<T>{
+    pub fn new(value: ComponentId, thickness: T)->Self{
+        Self{
             inputs: [value],
             t: thickness,
         }
     }
 }
 
-impl ImplicitOperation for Thickness {
-    fn eval(&self, inputs: &[f32]) -> f32 {
+impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Thickness<T> {
+    fn eval(&self, inputs: &[T]) -> T {
         (inputs[0] - self.t).max(-inputs[0])
     }
 

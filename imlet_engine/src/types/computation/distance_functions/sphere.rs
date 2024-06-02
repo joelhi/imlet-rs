@@ -1,22 +1,26 @@
-use crate::types::{computation::component::ImplicitFunction, geometry::Vec3f};
+use std::fmt::Debug;
+
+use num_traits::Float;
+
+use crate::types::{computation::component::ImplicitFunction, geometry::Vec3};
 
 #[derive(Debug, Clone, Copy)]
-pub struct Sphere {
-    pub source: Vec3f,
-    pub radius: f32,
+pub struct Sphere<T: Float + Debug> {
+    pub source: Vec3<T>,
+    pub radius: T,
 }
 
-impl Sphere {
-    pub fn new(source: Vec3f, radius: f32)->Self{
-        Sphere {
+impl<T: Float + Debug> Sphere<T> {
+    pub fn new(source: Vec3<T>, radius: T)->Self{
+        Self {
             source,
             radius,
         }
     }
 }
 
-impl ImplicitFunction for Sphere {
-    fn eval(&self, x: f32, y: f32, z: f32) -> f32 {
+impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for Sphere<T> {
+    fn eval(&self, x: T, y: T, z: T) -> T {
         self.source.distance_to_coord(x, y, z) - self.radius
     }
 }

@@ -1,3 +1,7 @@
+use std::fmt::Debug;
+
+use num_traits::Float;
+
 use crate::types::computation::component::{ComponentId, ImplicitOperation};
 
 pub struct Multiply {
@@ -6,12 +10,12 @@ pub struct Multiply {
 
 impl Multiply {
     pub fn new(a: ComponentId, b: ComponentId) -> Self {
-        Multiply { inputs: [a, b] }
+        Self { inputs: [a, b] }
     }
 }
 
-impl ImplicitOperation for Multiply {
-    fn eval(&self, inputs: &[f32]) -> f32 {
+impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Multiply {
+    fn eval(&self, inputs: &[T]) -> T {
         inputs[0] * inputs[1]
     }
 
@@ -20,18 +24,18 @@ impl ImplicitOperation for Multiply {
     }
 }
 
-pub struct Add {
+pub struct Add  {
     inputs: [ComponentId; 2],
 }
 
 impl Add {
     pub fn new(a: ComponentId, b: ComponentId) -> Self {
-        Add { inputs: [a, b] }
+        Self { inputs: [a, b] }
     }
 }
 
-impl ImplicitOperation for Add {
-    fn eval(&self, inputs: &[f32]) -> f32 {
+impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Add {
+    fn eval(&self, inputs: &[T]) -> T {
         inputs[0] + inputs[1]
     }
 
@@ -45,12 +49,12 @@ pub struct Subtract {
 
 impl Subtract {
     pub fn new(a: ComponentId, b: ComponentId) -> Self {
-        Subtract { inputs: [a, b] }
+        Self { inputs: [a, b] }
     }
 }
 
-impl ImplicitOperation for Subtract {
-    fn eval(&self, inputs: &[f32]) -> f32 {
+impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Subtract {
+    fn eval(&self, inputs: &[T]) -> T {
         inputs[0] - inputs[1]
     }
 
@@ -65,13 +69,13 @@ pub struct Divide {
 
 impl Divide {
     pub fn new(a: ComponentId, b: ComponentId) -> Self {
-        Divide { inputs: [a, b] }
+        Self { inputs: [a, b] }
     }
 }
 
-impl ImplicitOperation for Divide {
-    fn eval(&self, inputs: &[f32]) -> f32 {
-        assert!(inputs[1] > 0.0, "Cannot divide by zero");
+impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Divide {
+    fn eval(&self, inputs: &[T]) -> T {
+        assert!(inputs[1] > T::from(0.0).expect("Failed to convert number to T"), "Cannot divide by zero");
         inputs[0] / inputs[1]
     }
 

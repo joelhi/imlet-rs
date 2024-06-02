@@ -1,3 +1,7 @@
+use std::fmt::Debug;
+
+use num_traits::Float;
+
 use crate::types::computation::component::{ComponentId, ImplicitOperation};
 
 pub struct Union {
@@ -6,14 +10,14 @@ pub struct Union {
 
 impl Union{
     pub fn new(a: ComponentId, b: ComponentId)->Self{
-        Union{
+        Self{
             inputs: [a, b]
         }
     }
 }
 
-impl ImplicitOperation for Union {
-    fn eval(&self, inputs: &[f32]) -> f32 {
+impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Union {
+    fn eval(&self, inputs: &[T]) -> T {
         inputs[0].min(inputs[1])
     }
 
@@ -22,20 +26,20 @@ impl ImplicitOperation for Union {
     }
 }
 
-pub struct Intersection {
+pub struct Intersection{
     inputs: [ComponentId; 2]
 }
 
 impl Intersection{
     pub fn new(a: ComponentId, b: ComponentId)->Self{
-        Intersection{
+        Self{
             inputs: [a, b]
         }
     }
 }
 
-impl ImplicitOperation for Intersection {
-    fn eval(&self, inputs: &[f32]) -> f32 {
+impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Intersection {
+    fn eval(&self, inputs: &[T]) -> T {
         inputs[0].max(inputs[1])
     }
 
@@ -48,16 +52,16 @@ pub struct Difference {
     inputs: [ComponentId; 2]
 }
 
-impl Difference{
+impl Difference {
     pub fn new(a: ComponentId, b: ComponentId)->Self{
-        Difference{
+        Self{
             inputs: [a, b]
         }
     }
 }
 
-impl ImplicitOperation for Difference {
-    fn eval(&self, inputs: &[f32]) -> f32 {
+impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Difference {
+    fn eval(&self, inputs: &[T]) -> T {
         inputs[0].max(-inputs[1])
     }
 

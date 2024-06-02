@@ -1,37 +1,39 @@
-use super::Vec3f;
-use std::{collections::HashMap, usize};
+use num_traits::Float;
+
+use super::Vec3;
+use std::{collections::HashMap, fmt::Debug, usize};
 
 const DEFAULT_SPATIAL_TOL: f32 = 1E-7;
 
-pub struct SpatialHashGrid {
+pub struct SpatialHashGrid<T: Float + Debug> {
     map: HashMap<usize, Vec<usize>>,
-    vertices: Vec<Vec3f>,
-    tolerance: f32,
+    vertices: Vec<Vec3<T>>,
+    tolerance: T,
 }
 
-impl SpatialHashGrid {
+impl<T: Float + Debug> SpatialHashGrid<T> {
     #[allow(dead_code)]
     pub fn new() -> Self {
-        SpatialHashGrid {
+        Self {
             map: HashMap::new(),
             vertices: Vec::new(),
-            tolerance: DEFAULT_SPATIAL_TOL,
+            tolerance: DEFAULT_SPATIAL_TOL as T,
         }
     }
     #[allow(dead_code)]
-    pub fn with_tolerance(tolerance: f32) -> Self {
-        SpatialHashGrid {
+    pub fn with_tolerance(tolerance: T) -> Self {
+        Self {
             map: HashMap::new(),
             vertices: Vec::new(),
             tolerance: tolerance,
         }
     }
 
-    pub fn vertices(&self) -> &Vec<Vec3f> {
+    pub fn vertices(&self) -> &Vec<Vec3<T>> {
         &self.vertices
     }
 
-    pub fn add_point(&mut self, v: Vec3f) -> usize {
+    pub fn add_point(&mut self, v: Vec3<T>) -> usize {
         let hash = self.spatial_hash(v);
         match self.map.get_mut(&hash) {
             Some(index) => {
@@ -54,14 +56,14 @@ impl SpatialHashGrid {
         }
     }
 
-    fn get_new_id(&mut self, hash: usize, v: Vec3f) -> usize {
+    fn get_new_id(&mut self, hash: usize, v: Vec3<T>) -> usize {
         let id = self.vertices.len();
         self.map.insert(hash, vec![id]);
         self.vertices.push(v);
         id
     }
 
-    pub fn spatial_hash(&self, v: Vec3f) -> usize {
+    pub fn spatial_hash(&self, v: Vec3<T>) -> usize {
         let multiplier = 1.0 / self.tolerance;
         let mut s_hash = 23;
 

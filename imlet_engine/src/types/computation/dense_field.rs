@@ -1,26 +1,30 @@
+use std::fmt::Debug;
 use std::time::Instant;
 
+use num_traits::Float;
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelRefMutIterator;
 use rayon::iter::ParallelIterator;
 
-use crate::types::geometry::Vec3f;
+use crate::types::geometry::Vec3;
 use crate::types::geometry::Vec3i;
+use crate::utils::math_helper::index1d_from_index3d;
+use crate::utils::math_helper::index3d_from_index1d;
 
 #[derive(Debug, Clone)]
-pub struct DenseFieldF32 {
-    origin: Vec3f,
-    cell_size: f32,
+pub struct DenseField<T: Float + Debug> {
+    origin: Vec3<T>,
+    cell_size: T,
     n: Vec3i,
-    data: Vec<f32>,
+    data: Vec<T>,
 }
 
-impl DenseFieldF32 {
-    pub fn with_data(origin: Vec3f, cell_size: f32, num_pts: Vec3i, data: Vec<f32>) -> DenseFieldF32 {
+impl<T: Float + Debug + Send + Sync> DenseField<T> {
+    pub fn with_data(origin: Vec3<T>, cell_size: T, num_pts: Vec3i, data: Vec<T>) -> Self {
         if num_pts.product() != data.len() {
             panic!("Incorrect size of data buffer");
         }
-        DenseFieldF32 {
+        Self {
             origin: origin,
             cell_size: cell_size,
             n: num_pts,
@@ -28,26 +32,26 @@ impl DenseFieldF32 {
         }
     }
 
-    pub fn new(origin: Vec3f, cell_size: f32, num_pts: Vec3i) -> DenseFieldF32 {
-        DenseFieldF32 {
+    pub fn new(origin: Vec3<T>, cell_size: T, num_pts: Vec3i) -> Self {
+        Self {
             origin: origin,
             cell_size: cell_size,
             n: num_pts,
-            data: vec![0.0; num_pts.product()],
+            data: vec![T::from(0.0).expect("Failed to convert number to T"); num_pts.product()],
         }
     }
 
-    pub fn smooth(&mut self, factor: f32, iterations: u32) {
+    pub fn smooth(&mut self, factor: T, iterations: u32) {
         let before = Instant::now();
-        let mut smoothed = vec![0.0; self.get_num_points()];
+        let mut smoothed = vec![T::from(0.0).expect("Failed to convert number to T"); self.get_num_points()];
         for _ in 0..iterations {
             smoothed
                 .par_iter_mut()
                 .enumerate()
                 .for_each(|(index, val)| {
                     if let Some(sum) = self.get_neighbours_sum(index) {
-                        let laplacian = sum / 6.0;
-                        *val = (1.0 - factor) * self.data[index] + factor * laplacian;
+                        let laplacian = sum / T::from(6.0).expect("Failed to convert number to T");
+                        *val = (T::from(1.0).expect("Failed to convert number to T") - factor) * self.data[index] + factor * laplacian;
                     } else {
                         *val = self.data[index];
                     };
@@ -63,15 +67,15 @@ impl DenseFieldF32 {
         );
     }
 
-    pub fn threshold(&mut self, limit: f32) {
+    pub fn threshold(&mut self, limit: T) {
         self.data.iter_mut().for_each(|value| {
             if *value < limit {
-                *value = 0.0;
+                *value = T::from(0.0).expect("Failed to convert number to T");
             }
         });
     }
 
-    fn get_neighbours_sum(&self, index: usize) -> Option<f32> {
+    fn get_neighbours_sum(&self, index: usize) -> Option<T> {
         let (i, j, k) = self.get_point_index3d(index);
 
         if i < 1 || j < 1 || k < 1 || i == self.n.x - 1 || j == self.n.y - 1 || k == self.n.z - 1 {
@@ -104,64 +108,65 @@ impl DenseFieldF32 {
         ]
     }
 
-    pub fn get_cell_corners(&self, i: usize, j: usize, k: usize) -> [Vec3f; 8] {
+    pub fn get_cell_corners(&self, i: usize, j: usize, k: usize) -> [Vec3<T>; 8] {
         let size = self.cell_size;
-        let i_val = i as f32;
-        let j_val = j as f32;
-        let k_val = k as f32;
+        let i_val = T::from(i).expect("Failed to convert number to T");
+        let j_val = T::from(j).expect("Failed to convert number to T");
+        let k_val = T::from(k).expect("Failed to convert number to T");
+        let one = T::from(1.0).expect("Failed to convert number to T");
         [
             self.origin
-                + Vec3f {
+                + Vec3 {
                     x: i_val * size,
                     y: j_val * size,
                     z: k_val * size,
                 },
             self.origin
-                + Vec3f {
-                    x: (i_val + 1.0) * size,
+                + Vec3 {
+                    x: (i_val + one) * size,
                     y: j_val * size,
                     z: k_val * size,
                 },
             self.origin
-                + Vec3f {
-                    x: (i_val + 1.0) * size,
-                    y: (j_val + 1.0) * size,
+                + Vec3 {
+                    x: (i_val + one) * size,
+                    y: (j_val + one) * size,
                     z: k_val * size,
                 },
             self.origin
-                + Vec3f {
+                + Vec3 {
                     x: i_val * size,
-                    y: (j_val + 1.0) * size,
+                    y: (j_val + one) * size,
                     z: k_val * size,
                 },
             self.origin
-                + Vec3f {
+                + Vec3 {
                     x: i_val * size,
                     y: j_val * size,
-                    z: (k_val + 1.0) * size,
+                    z: (k_val + one) * size,
                 },
             self.origin
-                + Vec3f {
-                    x: (i_val + 1.0) * size,
+                + Vec3 {
+                    x: (i_val + one) * size,
                     y: j_val * size,
-                    z: (k_val + 1.0) * size,
+                    z: (k_val + one) * size,
                 },
             self.origin
-                + Vec3f {
-                    x: (i_val + 1.0) * size,
-                    y: (j_val + 1.0) * size,
-                    z: (k_val + 1.0) * size,
+                + Vec3 {
+                    x: (i_val + one) * size,
+                    y: (j_val + one) * size,
+                    z: (k_val + one) * size,
                 },
             self.origin
-                + Vec3f {
+                + Vec3 {
                     x: i_val * size,
-                    y: (j_val + 1.0) * size,
-                    z: (k_val + 1.0) * size,
+                    y: (j_val + one) * size,
+                    z: (k_val + one) * size,
                 },
         ]
     }
 
-    pub fn get_cell_values(&self, i: usize, j: usize, k: usize) -> [f32; 8] {
+    pub fn get_cell_values(&self, i: usize, j: usize, k: usize) -> [T; 8] {
         let cell_ids = self.get_cell_ids(i, j, k);
         [
             self.data[cell_ids[0]],
@@ -176,49 +181,19 @@ impl DenseFieldF32 {
     }
 
     pub fn get_point_index1d(&self, i: usize, j: usize, k: usize) -> usize {
-        DenseFieldF32::index1d_from_index3d(i, j, k, self.n.x, self.n.y, self.n.z)
+        index1d_from_index3d(i, j, k, self.n.x, self.n.y, self.n.z)
     }
 
     pub fn get_point_index3d(&self, index: usize) -> (usize, usize, usize) {
-        DenseFieldF32::index3d_from_index1d(index, self.n.x, self.n.y, self.n.z)
+        index3d_from_index1d(index, self.n.x, self.n.y, self.n.z)
     }
 
     pub fn get_cell_index1d(&self, i: usize, j: usize, k: usize) -> usize {
-        DenseFieldF32::index1d_from_index3d(i, j, k, self.n.x - 1, self.n.y - 1, self.n.z - 1)
+        index1d_from_index3d(i, j, k, self.n.x - 1, self.n.y - 1, self.n.z - 1)
     }
 
     pub fn get_cell_index3d(&self, index: usize) -> (usize, usize, usize) {
-        DenseFieldF32::index3d_from_index1d(index, self.n.x - 1, self.n.y - 1, self.n.z - 1)
-    }
-
-    pub fn index1d_from_index3d(
-        i: usize,
-        j: usize,
-        k: usize,
-        num_x: usize,
-        num_y: usize,
-        num_z: usize,
-    ) -> usize {
-        assert!(
-            i < num_x && j < num_y && k < num_z,
-            "Coordinates out of bounds"
-        );
-        (k * num_x * num_y) + (j * num_x) + i
-    }
-
-    pub fn index3d_from_index1d(
-        index: usize,
-        num_x: usize,
-        num_y: usize,
-        num_z: usize,
-    ) -> (usize, usize, usize) {
-        assert!(index < num_x * num_y * num_z, "Index out of bounds");
-        let k = index / (num_x * num_y);
-        let temp = index - (k * num_x * num_y);
-        let j = temp / num_x;
-        let i = temp % num_x;
-
-        (i, j, k)
+        index3d_from_index1d(index, self.n.x - 1, self.n.y - 1, self.n.z - 1)
     }
 
     pub fn get_num_points(&self) -> usize {
@@ -229,7 +204,7 @@ impl DenseFieldF32 {
         (self.n.x - 1) * (self.n.y - 1) * (self.n.z - 1)
     }
 
-    pub fn copy_data(&self) -> Vec<f32> {
+    pub fn copy_data(&self) -> Vec<T> {
         self.data.clone()
     }
 }
@@ -242,7 +217,7 @@ mod tests {
     fn test_smooth_field_half() {
         let mut data = vec![1.0; 27];
         data[13] = 2.0;
-        let mut field = DenseFieldF32::with_data(Vec3f::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field = DenseField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
         field.smooth(0.5, 1);
 
         let field_data = field.copy_data();
@@ -260,7 +235,7 @@ mod tests {
     fn test_smooth_field_full() {
         let mut data = vec![1.0; 27];
         data[13] = 2.0;
-        let mut field = DenseFieldF32::with_data(Vec3f::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field = DenseField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
         field.smooth(1.0, 1);
 
         let field_data = field.copy_data();
@@ -279,7 +254,7 @@ mod tests {
         data[14] = 20.0;
         data[16] = 15.0;
         data[22] = 20.0;
-        let mut field = DenseFieldF32::with_data(Vec3f::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field = DenseField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
         field.smooth(1.0, 1);
 
         let field_data = field.copy_data();
@@ -295,7 +270,7 @@ mod tests {
         data[14] = 20.0;
         data[16] = 15.0;
         data[22] = 20.0;
-        let mut field = DenseFieldF32::with_data(Vec3f::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field = DenseField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
         field.smooth(0.5, 1);
 
         let field_data = field.copy_data();
@@ -309,7 +284,7 @@ mod tests {
         data[20] = 1.0;
         data[21] = 1.5;
 
-        let mut field = DenseFieldF32::with_data(Vec3f::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field = DenseField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
         field.threshold(0.1);
 
         let field_data = field.copy_data();
@@ -322,7 +297,7 @@ mod tests {
 
     #[test]
     fn test_map_cell_index_cube() {
-        let field = DenseFieldF32::new(Vec3f::origin(), 1.0, (10, 10, 10).into());
+        let field = DenseField::new(Vec3::origin(), 1.0, (10, 10, 10).into());
 
         assert_eq!(1, field.get_cell_index1d(1, 0, 0));
         assert_eq!(9, field.get_cell_index1d(0, 1, 0));
@@ -334,7 +309,7 @@ mod tests {
 
     #[test]
     fn test_map_point_index() {
-        let field = DenseFieldF32::new(Vec3f::origin(), 1.0, (10, 10, 10).into());
+        let field = DenseField::new(Vec3::origin(), 1.0, (10, 10, 10).into());
 
         assert_eq!(1, field.get_point_index1d(1, 0, 0));
         assert_eq!(10, field.get_point_index1d(0, 1, 0));
