@@ -17,7 +17,7 @@ impl<T: Float + Debug> SpatialHashGrid<T> {
         Self {
             map: HashMap::new(),
             vertices: Vec::new(),
-            tolerance: DEFAULT_SPATIAL_TOL as T,
+            tolerance: T::from(DEFAULT_SPATIAL_TOL).expect("Failed to convert default tolerance to T"),
         }
     }
     #[allow(dead_code)]
@@ -39,7 +39,7 @@ impl<T: Float + Debug> SpatialHashGrid<T> {
             Some(index) => {
                 // Find closest point based on indices in list
                 for &id in index.iter() {
-                    if v.distance_to_vec3f(self.vertices[id]) < self.tolerance {
+                    if v.distance_to_vec3(self.vertices[id]) < self.tolerance {
                         return id;
                     }
                 }
@@ -64,12 +64,12 @@ impl<T: Float + Debug> SpatialHashGrid<T> {
     }
 
     pub fn spatial_hash(&self, v: Vec3<T>) -> usize {
-        let multiplier = 1.0 / self.tolerance;
+        let multiplier = T::from(1.0).expect("Failed to convert number to T") / self.tolerance;
         let mut s_hash = 23;
 
-        s_hash = s_hash * 37 + (v.x * multiplier) as usize;
-        s_hash = s_hash * 37 + (v.y * multiplier) as usize;
-        s_hash = s_hash * 37 + (v.z * multiplier) as usize;
+        s_hash = s_hash * 37 + (v.x * multiplier).to_usize().expect("Failed to convert T to usize");
+        s_hash = s_hash * 37 + (v.y * multiplier).to_usize().expect("Failed to convert T to usize");
+        s_hash = s_hash * 37 + (v.z * multiplier).to_usize().expect("Failed to convert T to usize");
 
         return s_hash;
     }

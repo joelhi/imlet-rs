@@ -32,6 +32,6 @@ impl<T> Plane<T> where T: Float + Debug {
     }
 
     pub fn signed_distance_coord(&self, x: T, y: T, z: T)->T{
-        self.normal.dot_vec3f(x-self.origin.x, y-self.origin.y, z-self.origin.z)
+        self.normal.dot_vec3(x-self.origin.x, y-self.origin.y, z-self.origin.z)
     }
 }

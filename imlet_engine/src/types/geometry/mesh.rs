@@ -17,7 +17,7 @@ pub struct Mesh<T: Float + Debug> {
     normals: Option<Vec<Vec3<T>>>,
 }
 
-impl<T: Float + Debug> Mesh<T> {
+impl<T: Float + Debug + Send + Sync> Mesh<T> {
     pub fn new() -> Mesh<T> {
         Mesh {
             vertices: Vec::new(),
@@ -104,12 +104,12 @@ impl<T: Float + Debug> Mesh<T> {
             centroid = centroid + v;
         }
 
-        centroid * (1.0 / self.num_vertices() as T)
+        centroid * T::from(1.0 / self.num_vertices() as f64).expect("Failed to convert number to T")
     }
 
     pub fn get_bounds(&self) -> BoundingBox<T> {
-        let mut max = Vec3::new(-Float::max_value(), -Float::max_value(), -Float::max_value());
-        let mut min = Vec3::new(Float::max_value(), Float::max_value(), Float::max_value());
+        let mut max = Vec3::new(-T::max_value(), -T::max_value(), -T::max_value());
+        let mut min = Vec3::new(T::max_value(), T::max_value(), T::max_value());
 
         for v in self.get_vertices() {
             min.x = min.x.min(v.x);
@@ -135,7 +135,7 @@ impl<T: Float + Debug> Mesh<T> {
                 for &f in &vertex_faces[id] {
                     *n = *n + face_normals[f];
                 }
-                *n = *n / (vertex_faces[id].len() as T)
+                *n = *n * T::from(1.0 / vertex_faces[id].len() as f64).expect("Failed to convert number to T");
             });
         self.normals = Some(vertex_normals);
     }
@@ -171,10 +171,10 @@ pub struct Triangle<T: Float + Debug> {
 
 impl<T: Float + Debug> Triangle<T> {
     pub fn compute_area(&self) -> T {
-        let a = self.p1.distance_to_vec3f(self.p2);
-        let b = self.p2.distance_to_vec3f(self.p3);
-        let c = self.p3.distance_to_vec3f(self.p1);
-        let s = (a + b + c) / 2.0;
+        let a = self.p1.distance_to_vec3(self.p2);
+        let b = self.p2.distance_to_vec3(self.p3);
+        let c = self.p3.distance_to_vec3(self.p1);
+        let s = (a + b + c) / T::from(2.0).expect("Failed to convert number to T");
         (s * (s - a) * (s - b) * (s - c)).sqrt()
     }
 }
