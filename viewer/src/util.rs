@@ -1,23 +1,23 @@
-use imlet_engine::types::geometry::{Mesh, Vec3f};
+use std::fmt::Debug;
+
+use cgmath::num_traits::Float;
+use imlet_engine::types::geometry::{Mesh, Vec3};
 
 use super::vertex::Vertex;
 
-pub fn mesh_to_buffers(mesh: &Mesh) -> (Vec<Vertex>, Vec<u32>) {
+pub fn mesh_to_buffers<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> (Vec<Vertex>, Vec<u32>) {
     let mut vertices: Vec<Vertex> = Vec::with_capacity(mesh.num_vertices());
-    let default = vec![
-        Vec3f {
-            x: 1.0,
-            y: 1.0,
-            z: 1.0
+    let default = &vec![
+        Vec3 {
+            x: T::one(),
+            y: T::one(),
+            z: T::one()
         };
         mesh.num_vertices()
     ];
-    let normals = mesh.get_normals().unwrap_or(&default);
+    let normals = mesh.get_normals().unwrap_or(default);
     for (v, n) in mesh.get_vertices().iter().zip(normals) {
-        vertices.push(Vertex {
-            position: [v.x, v.y, v.z],
-            normal: [n.x, n.y, n.z],
-        })
+        vertices.push(Vertex::from_vec3(v, n))
     }
 
     let mut indices: Vec<u32> = Vec::with_capacity(mesh.num_faces() * 3);

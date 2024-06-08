@@ -1,5 +1,6 @@
-use std::iter;
+use std::{fmt::Debug, iter};
 
+use num_traits::Float;
 use cgmath::Point3;
 use wgpu::util::DeviceExt;
 use winit::{
@@ -8,13 +9,13 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-use imlet_engine::types::geometry::{Mesh, Vec3f};
+use imlet_engine::types::geometry::{Mesh, Vec3};
 
 use super::{
     camera::{Camera, CameraUniform}, camera_controller::CameraController, material::Material, texture::{self, Texture}, util::mesh_to_buffers, vertex::Vertex
 };
 
-pub fn run_viewer(mesh: &Mesh, material: Material){
+pub fn run_viewer<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>, material: Material){
     pollster::block_on(run(&mesh, material));
 }
 
@@ -43,8 +44,8 @@ impl State {
         window: Window,
         vertices: &[Vertex],
         indices: &[u32],
-        centroid: Vec3f,
-        max: Vec3f,
+        centroid: Vec3<f32>,
+        max: Vec3<f32>,
         material: Material,
     ) -> Self {
         let size = window.inner_size();
@@ -338,7 +339,7 @@ impl State {
 }
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
-async fn run(mesh: &Mesh, material: Material) {
+async fn run<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>, material: Material) {
     let (vertices, indices) = mesh_to_buffers(mesh);
 
     let event_loop = EventLoop::new();
@@ -352,8 +353,8 @@ async fn run(mesh: &Mesh, material: Material) {
         window,
         &vertices,
         &indices,
-        mesh.get_centroid(),
-        mesh.get_bounds().max,
+        mesh.get_centroid().to_f32(),
+        mesh.get_bounds().max.to_f32(),
         material
     )
     .await;

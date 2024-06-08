@@ -726,6 +726,7 @@ dependencies = [
  "env_logger",
  "imlet_engine",
  "log",
+ "num-traits",
  "pollster",
  "wgpu",
  "winit",

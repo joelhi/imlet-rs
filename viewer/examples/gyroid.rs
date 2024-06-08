@@ -1,26 +1,33 @@
-use {imlet_viewer::{material::Material, viewer}, imlet_engine::{
-        algorithms::marching_cubes::generate_iso_surface, types::{
+use {
+    imlet_engine::{
+        algorithms::marching_cubes::generate_iso_surface,
+        types::{
             computation::{
-                distance_functions::{Gyroid, Sphere}, operations::{boolean::Intersection, shape::Thickness}, Model
+                distance_functions::{Gyroid, Sphere},
+                operations::{boolean::Intersection, shape::Thickness},
+                Model,
             },
-            geometry::{BoundingBox, Mesh, Vec3f},
-        }, utils
-    }};
+            geometry::{BoundingBox, Mesh, Vec3},
+        },
+        utils,
+    },
+    imlet_viewer::{material::Material, viewer},
+};
 
 pub fn main() {
     utils::logging::init_info();
 
     // Inputs
-    let size = 10.0;
+    let size: f32 = 10.0;
     let cell_size = 0.05;
-    let model_space = BoundingBox::new(Vec3f::origin(), Vec3f::new(size, size, size));
+    let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
     // Build model
     let mut model = Model::new();
 
     let bounds = model.add_function(Sphere::new(
-        Vec3f::new(0.5*size, 0.5*size, 0.5*size),
-        0.45*size,
+        Vec3::new(0.5 * size, 0.5 * size, 0.5 * size),
+        0.45 * size,
     ));
 
     let shape = model.add_function(Gyroid::with_equal_spacing(2.5));

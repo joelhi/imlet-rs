@@ -1,3 +1,8 @@
+use std::fmt::Debug;
+
+use imlet_engine::types::geometry::Vec3;
+use num_traits::Float;
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Vertex {
@@ -6,6 +11,22 @@ pub struct Vertex {
 }
 
 impl Vertex {
+
+    pub fn from_vec3<T: Float + Debug>(position: &Vec3<T>, normal: &Vec3<T>)->Self{
+        Self {
+            position: [
+                position.x.to_f32().unwrap(),
+                position.y.to_f32().unwrap(),
+                position.z.to_f32().unwrap(),
+            ],
+            normal: [
+                normal.x.to_f32().unwrap(),
+                normal.y.to_f32().unwrap(),
+                normal.z.to_f32().unwrap(),
+            ],
+        }
+    }
+
     const ATTRIBS: [wgpu::VertexAttribute; 2] =
         wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x3];
 

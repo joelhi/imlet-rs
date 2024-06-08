@@ -12,8 +12,8 @@ pub struct CameraController {
     is_left_pressed: bool,
     is_right_pressed: bool,
     is_reset: bool,
-    default_position:Point3<f32>,
-    default_target:Point3<f32>,
+    default_position: Point3<f32>,
+    default_target: Point3<f32>,
 }
 
 impl CameraController {
@@ -45,7 +45,7 @@ impl CameraController {
             } => {
                 let is_pressed = *state == ElementState::Pressed;
                 match keycode {
-                    VirtualKeyCode::Space=> {
+                    VirtualKeyCode::Space => {
                         self.is_reset = is_pressed;
                         true
                     }
@@ -112,13 +112,15 @@ impl CameraController {
         }
 
         if self.is_up_pressed {
-            camera.eye = camera.target - (forward + camera.up * self.speed).normalize() * forward_mag;
+            camera.eye =
+                camera.target - (forward + camera.up * self.speed).normalize() * forward_mag;
         }
 
         if self.is_down_pressed {
-            camera.eye = camera.target - (forward - camera.up * self.speed).normalize() * forward_mag;
+            camera.eye =
+                camera.target - (forward - camera.up * self.speed).normalize() * forward_mag;
         }
-        if self.is_reset{
+        if self.is_reset {
             camera.eye = self.default_position;
             camera.target = self.default_target;
         }
