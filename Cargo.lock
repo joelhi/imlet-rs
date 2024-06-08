@@ -713,6 +713,7 @@ version = "0.1.0"
 dependencies = [
  "env_logger",
  "log",
+ "num-traits",
  "rayon",
 ]
 
@@ -725,6 +726,7 @@ dependencies = [
  "env_logger",
  "imlet_engine",
  "log",
+ "num-traits",
  "pollster",
  "wgpu",
  "winit",
