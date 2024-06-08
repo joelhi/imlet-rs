@@ -28,13 +28,16 @@ pub enum Component<T: Float + Debug> {
 
 impl<T: Float + Debug + Send + Sync> Component<T> {
     pub fn compute(&self, x: T, y: T, z: T, values: &mut ComponentValues, index: usize) {
-        values.set(index, match self {
-            Component::Constant(value) => *value,
-            Component::Function(function) => function.eval(x, y, z),
-            Component::Operation(operation) => {
-                operation.eval(&Self::get_input_data(&operation.get_inputs(), values))
-            }
-        })
+        values.set(
+            index,
+            match self {
+                Component::Constant(value) => *value,
+                Component::Function(function) => function.eval(x, y, z),
+                Component::Operation(operation) => {
+                    operation.eval(&Self::get_input_data(&operation.get_inputs(), values))
+                }
+            },
+        )
     }
 
     pub fn get_input_data(inputs: &[ComponentId], values: &ComponentValues) -> [T; MAX_INPUTS] {
@@ -57,11 +60,11 @@ impl ComponentValues {
         }
     }
 
-    pub fn get<T: Float>(&self, component_id: ComponentId)-> T{
+    pub fn get<T: Float>(&self, component_id: ComponentId) -> T {
         T::from(self.values[component_id.0]).expect("Failed to convert component output to T")
     }
 
-    pub fn set<T: Float + Debug + Send + Sync>(&mut self, index: usize, value: T){
+    pub fn set<T: Float + Debug + Send + Sync>(&mut self, index: usize, value: T) {
         self.values[index] = value.to_f64().expect("Failed to convert value to f64");
     }
 }

@@ -3,7 +3,10 @@ use std::{cell::RefCell, fmt::Debug, time::Instant};
 use num_traits::Float;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
 
-use crate::{types::geometry::{BoundingBox, Vec3i}, utils::math_helper::index3d_from_index1d};
+use crate::{
+    types::geometry::{BoundingBox, Vec3i},
+    utils::math_helper::index3d_from_index1d,
+};
 
 use super::{
     component::{Component, ComponentId, ComponentValues, ImplicitFunction, ImplicitOperation},
@@ -27,7 +30,10 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
         (self.components.len() - 1).into()
     }
 
-    pub fn add_operation<F: ImplicitOperation<T> + 'static>(&mut self, operation: F) -> ComponentId {
+    pub fn add_operation<F: ImplicitOperation<T> + 'static>(
+        &mut self,
+        operation: F,
+    ) -> ComponentId {
         self.components
             .push(Component::Operation(Box::new(operation)));
         (self.components.len() - 1).into()
@@ -55,7 +61,6 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
         })
     }
 
-
     pub fn evaluate(
         &self,
         bounds: BoundingBox<T>,
@@ -64,7 +69,8 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
     ) -> DenseField<T> {
         let before = Instant::now();
         let n = Self::get_point_count(&bounds, cell_size);
-        let mut data: Vec<T> = vec![T::from(0.0).expect("Failed to convert number to T"); n.x * n.y * n.z];
+        let mut data: Vec<T> =
+            vec![T::from(0.0).expect("Failed to convert number to T"); n.x * n.y * n.z];
         data.par_iter_mut().enumerate().for_each(|(index, value)| {
             let (i, j, k) = index3d_from_index1d(index, n.x, n.y, n.z);
             *value = self.evaluate_at_coord(
@@ -87,9 +93,21 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
     fn get_point_count(bounds: &BoundingBox<T>, cell_size: T) -> Vec3i {
         let (x_dim, y_dim, z_dim) = bounds.get_dimensions();
         Vec3i::new(
-            (x_dim / cell_size).floor().to_usize().expect("Failed to convert T to usize")  + 1,
-            (y_dim / cell_size).floor().to_usize().expect("Failed to convert T to usize")  + 1,
-            (z_dim / cell_size).floor().to_usize().expect("Failed to convert T to usize") + 1,
+            (x_dim / cell_size)
+                .floor()
+                .to_usize()
+                .expect("Failed to convert T to usize")
+                + 1,
+            (y_dim / cell_size)
+                .floor()
+                .to_usize()
+                .expect("Failed to convert T to usize")
+                + 1,
+            (z_dim / cell_size)
+                .floor()
+                .to_usize()
+                .expect("Failed to convert T to usize")
+                + 1,
         )
     }
 }

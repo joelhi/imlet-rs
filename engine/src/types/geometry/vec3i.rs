@@ -6,15 +6,11 @@ pub struct Vec3i {
 }
 
 impl Vec3i {
-    pub fn new(x: usize, y: usize, z: usize)->Self{
-        Vec3i {
-            x: x,
-            y: y,
-            z: z,
-        }
+    pub fn new(x: usize, y: usize, z: usize) -> Self {
+        Vec3i { x: x, y: y, z: z }
     }
 
-    pub fn product(&self)->usize{
+    pub fn product(&self) -> usize {
         self.x * self.y * self.z
     }
 }

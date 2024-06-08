@@ -45,9 +45,9 @@ impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for AABB<T> {
             ),
         );
 
-        if self.bounds.is_coord_inside(x, y, z){
+        if self.bounds.is_coord_inside(x, y, z) {
             -dist
-        }else{
+        } else {
             dist
         }
     }

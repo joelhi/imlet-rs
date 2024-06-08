@@ -3,7 +3,10 @@ use std::{fmt::Debug, ops};
 use num_traits::Float;
 
 #[derive(Debug, Clone, Copy)]
-pub struct Vec3<T> where T: Float + Debug {
+pub struct Vec3<T>
+where
+    T: Float + Debug,
+{
     pub x: T,
     pub y: T,
     pub z: T,
@@ -63,7 +66,7 @@ impl<T: Float + Debug> Vec3<T> {
     }
 
     pub fn interpolate(first: &Vec3<T>, second: &Vec3<T>, parameter: T) -> Vec3<T> {
-        Self{
+        Self {
             x: first.x + parameter * (second.x - first.x),
             y: first.y + parameter * (second.y - first.y),
             z: first.z + parameter * (second.z - first.z),
@@ -91,11 +94,15 @@ impl<T: Float + Debug> Vec3<T> {
     }
 
     pub fn normalize(&self) -> Vec3<T> {
-        *self * (T::one()/self.magnitude())
+        *self * (T::one() / self.magnitude())
     }
 
-    pub fn to_f32(&self)->Vec3<f32>{
-        Vec3 { x: self.x.to_f32().expect("Failed to convert to f32"), y: self.y.to_f32().expect("Failed to convert to f32"), z: self.z.to_f32().expect("Failed to convert to f32") }
+    pub fn to_f32(&self) -> Vec3<f32> {
+        Vec3 {
+            x: self.x.to_f32().expect("Failed to convert to f32"),
+            y: self.y.to_f32().expect("Failed to convert to f32"),
+            z: self.z.to_f32().expect("Failed to convert to f32"),
+        }
     }
 }
 

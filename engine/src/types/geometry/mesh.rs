@@ -135,7 +135,9 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
                 for &f in &vertex_faces[id] {
                     *n = *n + face_normals[f];
                 }
-                *n = *n * T::from(1.0 / vertex_faces[id].len() as f64).expect("Failed to convert number to T");
+                *n = *n
+                    * T::from(1.0 / vertex_faces[id].len() as f64)
+                        .expect("Failed to convert number to T");
             });
         self.normals = Some(vertex_normals);
     }

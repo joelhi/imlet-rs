@@ -43,7 +43,8 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
 
     pub fn smooth(&mut self, factor: T, iterations: u32) {
         let before = Instant::now();
-        let mut smoothed = vec![T::from(0.0).expect("Failed to convert number to T"); self.get_num_points()];
+        let mut smoothed =
+            vec![T::from(0.0).expect("Failed to convert number to T"); self.get_num_points()];
         for _ in 0..iterations {
             smoothed
                 .par_iter_mut()
@@ -51,7 +52,9 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
                 .for_each(|(index, val)| {
                     if let Some(sum) = self.get_neighbours_sum(index) {
                         let laplacian = sum / T::from(6.0).expect("Failed to convert number to T");
-                        *val = (T::from(1.0).expect("Failed to convert number to T") - factor) * self.data[index] + factor * laplacian;
+                        *val = (T::from(1.0).expect("Failed to convert number to T") - factor)
+                            * self.data[index]
+                            + factor * laplacian;
                     } else {
                         *val = self.data[index];
                     };

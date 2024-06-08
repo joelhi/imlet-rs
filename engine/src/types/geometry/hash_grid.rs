@@ -17,7 +17,8 @@ impl<T: Float + Debug> SpatialHashGrid<T> {
         Self {
             map: HashMap::new(),
             vertices: Vec::new(),
-            tolerance: T::from(DEFAULT_SPATIAL_TOL).expect("Failed to convert default tolerance to T"),
+            tolerance: T::from(DEFAULT_SPATIAL_TOL)
+                .expect("Failed to convert default tolerance to T"),
         }
     }
     #[allow(dead_code)]
@@ -67,9 +68,18 @@ impl<T: Float + Debug> SpatialHashGrid<T> {
         let multiplier = T::from(1.0).expect("Failed to convert number to T") / self.tolerance;
         let mut s_hash = 23;
 
-        s_hash = s_hash * 37 + (v.x * multiplier).to_usize().expect("Failed to convert T to usize");
-        s_hash = s_hash * 37 + (v.y * multiplier).to_usize().expect("Failed to convert T to usize");
-        s_hash = s_hash * 37 + (v.z * multiplier).to_usize().expect("Failed to convert T to usize");
+        s_hash = s_hash * 37
+            + (v.x * multiplier)
+                .to_usize()
+                .expect("Failed to convert T to usize");
+        s_hash = s_hash * 37
+            + (v.y * multiplier)
+                .to_usize()
+                .expect("Failed to convert T to usize");
+        s_hash = s_hash * 37
+            + (v.z * multiplier)
+                .to_usize()
+                .expect("Failed to convert T to usize");
 
         return s_hash;
     }
