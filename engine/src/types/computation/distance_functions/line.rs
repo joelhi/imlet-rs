@@ -18,7 +18,7 @@ impl<T: Float + Debug> Line<T> {
 
 impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for Line<T>{
     fn eval(&self, x: T, y: T, z: T) -> T {
-        let zero = T::from(0.0).expect("Failed to convert number to T");
+        let zero = T::zero();
         let pt = Vec3::new(x, y, z);
         let v1 = pt - self.start;
         let v2 = (self.end - self.start).normalize();

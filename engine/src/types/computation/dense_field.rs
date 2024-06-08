@@ -37,14 +37,14 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
             origin: origin,
             cell_size: cell_size,
             n: num_pts,
-            data: vec![T::from(0.0).expect("Failed to convert number to T"); num_pts.product()],
+            data: vec![T::zero(); num_pts.product()],
         }
     }
 
     pub fn smooth(&mut self, factor: T, iterations: u32) {
         let before = Instant::now();
         let mut smoothed =
-            vec![T::from(0.0).expect("Failed to convert number to T"); self.get_num_points()];
+            vec![T::zero(); self.get_num_points()];
         for _ in 0..iterations {
             smoothed
                 .par_iter_mut()
@@ -52,7 +52,7 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
                 .for_each(|(index, val)| {
                     if let Some(sum) = self.get_neighbours_sum(index) {
                         let laplacian = sum / T::from(6.0).expect("Failed to convert number to T");
-                        *val = (T::from(1.0).expect("Failed to convert number to T") - factor)
+                        *val = (T::one() - factor)
                             * self.data[index]
                             + factor * laplacian;
                     } else {
@@ -73,7 +73,7 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
     pub fn threshold(&mut self, limit: T) {
         self.data.iter_mut().for_each(|value| {
             if *value < limit {
-                *value = T::from(0.0).expect("Failed to convert number to T");
+                *value = T::zero();
             }
         });
     }
@@ -116,7 +116,7 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
         let i_val = T::from(i).expect("Failed to convert number to T");
         let j_val = T::from(j).expect("Failed to convert number to T");
         let k_val = T::from(k).expect("Failed to convert number to T");
-        let one = T::from(1.0).expect("Failed to convert number to T");
+        let one = T::one();
         [
             self.origin
                 + Vec3 {

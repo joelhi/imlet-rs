@@ -41,7 +41,7 @@ impl<T: Float + Debug + Send + Sync> Component<T> {
     }
 
     pub fn get_input_data(inputs: &[ComponentId], values: &ComponentValues) -> [T; MAX_INPUTS] {
-        let mut result = [T::from(0.0).expect("Failed to convert number to T"); MAX_INPUTS];
+        let mut result = [T::zero(); MAX_INPUTS];
         for (i, &id) in inputs.iter().enumerate() {
             result[i] = values.get(id);
         }

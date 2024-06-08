@@ -65,7 +65,7 @@ impl<T: Float + Debug> SpatialHashGrid<T> {
     }
 
     pub fn spatial_hash(&self, v: Vec3<T>) -> usize {
-        let multiplier = T::from(1.0).expect("Failed to convert number to T") / self.tolerance;
+        let multiplier = T::one() / self.tolerance;
         let mut s_hash = 23;
 
         s_hash = s_hash * 37

@@ -21,8 +21,8 @@ impl<T: Float + Debug> ZDomain<T> {
 
     pub fn natural()->Self{
         Self{
-            min: T::from(0.0).unwrap(),
-            max: T::from(1.0).unwrap(),
+            min: T::zero(),
+            max: T::one(),
         }
     }
 }
@@ -49,8 +49,8 @@ impl<T: Float + Debug> YDomain<T> {
 
     pub fn natural()->Self{
         Self{
-            min: T::from(0.0).unwrap(),
-            max: T::from(1.0).unwrap(),
+            min: T::zero(),
+            max: T::one(),
         }
     }
 }
@@ -77,8 +77,8 @@ impl<T: Float + Debug> XDomain<T> {
 
     pub fn natural()->Self{
         Self{
-            min: T::from(0.0).unwrap(),
-            max: T::from(1.0).unwrap(),
+            min: T::zero(),
+            max: T::one(),
         }
     }
 }

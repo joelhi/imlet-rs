@@ -75,7 +75,7 @@ impl Divide {
 
 impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Divide {
     fn eval(&self, inputs: &[T]) -> T {
-        assert!(inputs[1] > T::from(0.0).expect("Failed to convert number to T"), "Cannot divide by zero");
+        assert!(inputs[1] != T::zero(), "Cannot divide by zero");
         inputs[0] / inputs[1]
     }
 

@@ -18,8 +18,8 @@ impl LinearInterpolation{
 
 impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for LinearInterpolation {
     fn eval(&self, inputs: &[T]) -> T {
-        let zero = T::from(0.0).expect("Failed to convert number to T");
-        let one = T::from(1.0).expect("Failed to convert number to T");
+        let zero = T::zero();
+        let one = T::one();
         let t = inputs[2].clamp(zero, one);
         inputs[0] + t * (inputs[1] - inputs[0])
     }
