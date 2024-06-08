@@ -17,7 +17,6 @@ impl Material {
     
     pub fn load_shader_source(&self) -> String {
         let path = Path::new(file!()).parent().unwrap().join("shaders").join(self.path());
-        println!("{}", path.to_str().unwrap());
         fs::read_to_string(path)
             .expect("Failed to read shader source file")
     }
