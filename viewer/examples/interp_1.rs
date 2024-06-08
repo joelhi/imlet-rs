@@ -1,9 +1,9 @@
 use {
-    imlet_viewer::viewer, imlet_engine::{
+    imlet_engine::{
         algorithms::marching_cubes::generate_iso_surface,
         types::{
             computation::{
-                distance_functions::{Gyroid, OrthoBox, SchwarzP, YDomain},
+                distance_functions::{Gyroid, SchwarzP, YDomain, AABB},
                 operations::{
                     boolean::Intersection,
                     interpolation::LinearInterpolation,
@@ -11,10 +11,10 @@ use {
                 },
                 Model,
             },
-            geometry::{BoundingBox, Mesh, Vec3f},
+            geometry::{BoundingBox, Mesh, Vec3},
         },
         utils,
-    }, imlet_viewer::material::Material
+    }, imlet_viewer::{material::Material, viewer}
 };
 
 pub fn main() {
@@ -23,13 +23,13 @@ pub fn main() {
     // Inputs
     let size = 10.0;
     let cell_size = 0.03;
-    let model_space = BoundingBox::new(Vec3f::origin(), Vec3f::new(size, size, size));
+    let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
     // Build model
     let mut model = Model::new();
 
-    let bounds = model.add_function(OrthoBox::from_size(
-        Vec3f::new(2.0*cell_size, 2.0*cell_size, 2.0*cell_size),
+    let bounds = model.add_function(AABB::from_size(
+        Vec3::new(2.0*cell_size, 2.0*cell_size, 2.0*cell_size),
         size-4.0*cell_size,
     ));
     let shape1 = model.add_function(Gyroid::with_equal_spacing(1.5));

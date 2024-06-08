@@ -11,7 +11,7 @@ use {
                 },
                 Model,
             },
-            geometry::{BoundingBox, Mesh, Vec3f},
+            geometry::{BoundingBox, Mesh, Vec3},
         },
         utils,
     }
@@ -23,13 +23,13 @@ pub fn main() {
     // Inputs
     let size = 10.0;
     let cell_size = 0.025;
-    let model_space = BoundingBox::new(Vec3f::origin(), Vec3f::new(size, size, size));
+    let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
     // Build model
     let mut model = Model::new();
 
     let bounds = model.add_function(Sphere::new(
-        Vec3f::new(0.5*size, 0.5*size, 0.5*size),
+        Vec3::new(0.5*size, 0.5*size, 0.5*size),
         0.45*size,
     ));
     let shape = model.add_function(Neovius::with_equal_spacing(2.0));
