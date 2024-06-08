@@ -7,3 +7,4 @@ pub mod operations;
 use component::*;
 pub use dense_field::*;
 pub use model::*;
+pub use component::ComponentId;
