@@ -44,7 +44,8 @@ impl<T: Float + Debug> Thickness<T>{
 
 impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Thickness<T> {
     fn eval(&self, inputs: &[T]) -> T {
-        (inputs[0] - self.t).max(-inputs[0])
+        let two = T::from(2.0).unwrap();
+        (inputs[0] - self.t / two).max(-(inputs[0] + self.t / two))
     }
 
     fn get_inputs(&self) -> &[ComponentId] {

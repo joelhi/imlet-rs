@@ -3,8 +3,8 @@ use {
         algorithms::marching_cubes::generate_iso_surface,
         types::{
             computation::{
-                distance_functions::{Gyroid, Sphere},
-                operations::{boolean::Intersection, shape::Thickness},
+                distance_functions::{Gyroid, Sphere, ZDomain},
+                operations::{boolean::Intersection, interpolation::LinearInterpolation, shape::Thickness},
                 Model,
             },
             geometry::{BoundingBox, Mesh, Vec3},
@@ -30,13 +30,16 @@ pub fn main() {
         0.45 * size,
     ));
 
-    let shape = model.add_function(Gyroid::with_equal_spacing(1.75));
-    let thick_shape = model.add_operation(Thickness::new(shape, 1.75));
-    let intersection = model.add_operation(Intersection::new(bounds, thick_shape));
+    let shape = model.add_function(Gyroid::with_equal_spacing(2.5));
+    let thick_shape = model.add_operation(Thickness::new(shape, 2.5));
+    let slender_shape = model.add_operation(Thickness::new(shape, 1.0));
+    let t = model.add_function(ZDomain::remapped(0.0, 10.0));
+    let interpolation = model.add_operation(LinearInterpolation::new(thick_shape, slender_shape, t));
+    let intersection = model.add_operation(Intersection::new(bounds, interpolation));
 
     // Discretize
     let mut field = model.evaluate(model_space, cell_size, intersection);
-    field.smooth(0.75, 10);
+    field.smooth(0.5, 10);
 
     // Generate mesh
     let triangles = generate_iso_surface(&field, 0.0);
