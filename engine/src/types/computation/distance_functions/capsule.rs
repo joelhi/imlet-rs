@@ -4,19 +4,19 @@ use num_traits::Float;
 
 use crate::types::{computation::component::ImplicitFunction, geometry::Vec3};
 
-pub struct Line<T: Float + Debug>{
+pub struct Capsule<T: Float + Debug>{
     start: Vec3<T>,
     end: Vec3<T>,
     radius: T,
 }
 
-impl<T: Float + Debug> Line<T> {
+impl<T: Float + Debug> Capsule<T> {
     pub fn new(start: Vec3<T>, end: Vec3<T>, radius: T)->Self{
-        Line { start: start, end: end, radius: radius }
+        Capsule { start: start, end: end, radius: radius }
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for Line<T>{
+impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for Capsule<T>{
     fn eval(&self, x: T, y: T, z: T) -> T {
         let zero = T::zero();
         let pt = Vec3::new(x, y, z);

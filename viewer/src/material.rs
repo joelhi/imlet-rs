@@ -4,6 +4,7 @@ pub enum Material{
     Normal,
     Arctic,
     InsideOutside,
+    Line,
 }
 
 impl Material {
@@ -11,7 +12,8 @@ impl Material {
         match self {
             Material::Normal => "normal.wgsl",
             Material::Arctic => "arctic.wgsl",
-            Material::InsideOutside => "inside_outside.wgsl"
+            Material::InsideOutside => "inside_outside.wgsl",
+            Material::Line => "line.wgsl"
         }
     }
     

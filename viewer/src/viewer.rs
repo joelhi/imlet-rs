@@ -1,7 +1,8 @@
 use std::{fmt::Debug, iter};
 
-use num_traits::Float;
 use cgmath::Point3;
+use num_traits::Float;
+use pollster::block_on;
 use wgpu::util::DeviceExt;
 use winit::{
     event::*,
@@ -9,16 +10,25 @@ use winit::{
     window::{Window, WindowBuilder},
 };
 
-use imlet_engine::types::geometry::{Mesh, Vec3};
-
-use super::{
-    camera::{Camera, CameraUniform}, camera_controller::CameraController, material::Material, texture::{self, Texture}, util::mesh_to_buffers, vertex::Vertex
+use imlet_engine::types::{
+    computation::operations::interpolation::LinearInterpolation,
+    geometry::{BoundingBox, Mesh, Vec3},
 };
 
-pub fn run_viewer<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>, material: Material){
+use crate::util;
+
+use super::{
+    camera::{Camera, CameraUniform},
+    camera_controller::CameraController,
+    material::Material,
+    texture::{self, Texture},
+    util::mesh_to_buffers,
+    vertex::Vertex,
+};
+
+pub fn run_viewer<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>, material: Material) {
     pollster::block_on(run(&mesh, material));
 }
-
 
 struct State {
     surface: wgpu::Surface,
@@ -27,8 +37,10 @@ struct State {
     config: wgpu::SurfaceConfiguration,
     size: winit::dpi::PhysicalSize<u32>,
     render_pipeline: wgpu::RenderPipeline,
+    line_pipeline: wgpu::RenderPipeline,
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
+    lines_vertex_buffer: wgpu::Buffer,
     num_indices: u32,
     camera: Camera,
     camera_controller: CameraController,
@@ -45,11 +57,12 @@ impl State {
         vertices: &[Vertex],
         indices: &[u32],
         centroid: Vec3<f32>,
-        max: Vec3<f32>,
+        bounds: BoundingBox<f32>,
         material: Material,
     ) -> Self {
         let size = window.inner_size();
-
+        let max = bounds.max;
+        let lines = bounds.wireframe();
         // The instance is a handle to our GPU
         // BackendBit::PRIMARY => Vulkan + Metal + DX12 + Browser WebGPU
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
@@ -90,9 +103,6 @@ impl State {
             .unwrap();
 
         let surface_caps = surface.get_capabilities(&adapter);
-        // Shader code in this tutorial assumes an Srgb surface texture. Using a different
-        // one will result all the colors comming out darker. If you want to support non
-        // Srgb surfaces, you'll need to account for that when drawing to the frame.
         let surface_format = surface_caps
             .formats
             .iter()
@@ -109,14 +119,14 @@ impl State {
             view_formats: vec![],
         };
         surface.configure(&device, &config);
-        let default_position: Point3<f32> = (1.5 * max.x, 1.5 * max.y, 1.5 * max.z).into();
+        let default_position: Point3<f32> = (3.0 * max.x, 3.0 * max.y, 3.0 * max.z).into();
         let default_target: Point3<f32> = (centroid.x, centroid.y, centroid.z).into();
         let camera = Camera {
             eye: default_position,
             target: default_target,
             up: cgmath::Vector3::unit_y(),
             aspect: config.width as f32 / config.height as f32,
-            fovy: 45.0,
+            fovy: 20.0,
             znear: 0.1,
             zfar: 1000.0,
         };
@@ -162,9 +172,21 @@ impl State {
         let depth_texture =
             texture::Texture::create_depth_texture(&device, &config, "depth_texture");
 
+        let lines_vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Line Vertex Buffer"),
+            contents: bytemuck::cast_slice(&util::lines_to_buffer(&lines)),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
+
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
             source: wgpu::ShaderSource::Wgsl(material.load_shader_source().into()),
+        });
+
+        let line_material = Material::Line;
+        let line_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("Line Shader"),
+            source: wgpu::ShaderSource::Wgsl(line_material.load_shader_source().into()),
         });
 
         let render_pipeline_layout =
@@ -222,6 +244,43 @@ impl State {
             multiview: None,
         });
 
+        let line_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("Line Pipeline"),
+            layout: Some(&render_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &line_shader,
+                entry_point: "vs_main",
+                buffers: &[Vertex::desc()],
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &line_shader,
+                entry_point: "fs_main",
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: wgpu::TextureFormat::Bgra8UnormSrgb,
+                    blend: Some(wgpu::BlendState::REPLACE),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::LineList,
+                strip_index_format: None,
+                front_face: wgpu::FrontFace::Cw,
+                cull_mode: None,
+                polygon_mode: wgpu::PolygonMode::Fill,
+                unclipped_depth: false,
+                conservative: false,
+            },
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: texture::Texture::DEPTH_FORMAT,
+                depth_write_enabled: true,
+                depth_compare: wgpu::CompareFunction::Less,
+                stencil: wgpu::StencilState::default(),
+                bias: wgpu::DepthBiasState::default(),
+            }),
+            multisample: wgpu::MultisampleState::default(),
+            multiview: None,
+        });
+
         let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Vertex Buffer"),
             contents: bytemuck::cast_slice(vertices),
@@ -232,6 +291,7 @@ impl State {
             contents: bytemuck::cast_slice(indices),
             usage: wgpu::BufferUsages::INDEX,
         });
+
         let num_indices = indices.len() as u32;
 
         Self {
@@ -241,8 +301,10 @@ impl State {
             config,
             size,
             render_pipeline,
+            line_pipeline,
             vertex_buffer,
             index_buffer,
+            lines_vertex_buffer,
             num_indices,
             camera,
             camera_controller,
@@ -323,12 +385,18 @@ impl State {
                 occlusion_query_set: None,
                 timestamp_writes: None,
             });
+            let lines_vertex_count =
+                (self.lines_vertex_buffer.size() / std::mem::size_of::<Vertex>() as u64) as u32;
 
             render_pass.set_pipeline(&self.render_pipeline);
             render_pass.set_bind_group(0, &self.camera_bind_group, &[]);
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
             render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
+
+            render_pass.set_pipeline(&self.line_pipeline);
+            render_pass.set_vertex_buffer(0, self.lines_vertex_buffer.slice(..));
+            render_pass.draw(0..lines_vertex_count as u32, 0..1);
         }
 
         self.queue.submit(iter::once(encoder.finish()));
@@ -344,18 +412,18 @@ async fn run<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>, material: Material)
 
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new()
-        .with_title("Implicit Viewer")
+        .with_title("ImLET viewer")
         .build(&event_loop)
         .unwrap();
 
-    // State::new uses async code, so we're going to wait for it to finish
+    let bounds = mesh.get_bounds();
     let mut state = State::new(
         window,
         &vertices,
         &indices,
         mesh.get_centroid().to_f32(),
-        mesh.get_bounds().max.to_f32(),
-        material
+        BoundingBox::new(bounds.min.to_f32(), bounds.max.to_f32()),
+        material,
     )
     .await;
 
