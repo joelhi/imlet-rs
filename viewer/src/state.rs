@@ -1,33 +1,24 @@
 use std::{fmt::Debug, iter};
 
 use cgmath::Point3;
-use num_traits::Float;
 
-use wgpu::util::DeviceExt;
-use winit::{
-    event::*,
-    event_loop::{ControlFlow, EventLoop},
-    window::{Icon, Window, WindowBuilder},
-};
+use num_traits::Float;
+use wgpu::{util::DeviceExt, Buffer};
+use winit::{dpi::{PhysicalSize, Size}, event::*, window::Window};
 
 use imlet_engine::types::geometry::{BoundingBox, Line, Mesh};
 
-use crate::util;
+use crate::util::{self, lines_to_buffer, mesh_to_buffers};
 
 use super::{
     camera::{Camera, CameraUniform},
     camera_controller::CameraController,
     material::Material,
     texture::{self, Texture},
-    util::mesh_to_buffers,
     vertex::Vertex,
 };
 
-pub fn run_viewer<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>, material: Material) {
-    pollster::block_on(run(&mesh, material));
-}
-
-struct State {
+pub struct State {
     surface: wgpu::Surface,
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -35,10 +26,11 @@ struct State {
     size: winit::dpi::PhysicalSize<u32>,
     render_pipeline: wgpu::RenderPipeline,
     line_pipeline: wgpu::RenderPipeline,
-    vertex_buffer: wgpu::Buffer,
-    index_buffer: wgpu::Buffer,
-    lines_vertex_buffer: wgpu::Buffer,
-    num_indices: u32,
+    vertex_buffers: Vec<Buffer>,
+    index_buffers: Vec<Buffer>,
+    num_indices: Vec<u32>,
+    line_vertex_buffers: Vec<Buffer>,
+    num_lines: Vec<u32>,
     camera: Camera,
     camera_controller: CameraController,
     camera_uniform: CameraUniform,
@@ -49,14 +41,7 @@ struct State {
 }
 
 impl State {
-    async fn new(
-        window: Window,
-        vertices: &[Vertex],
-        indices: &[u32],
-        lines: &[Line<f32>],
-        bounds: BoundingBox<f32>,
-        material: Material,
-    ) -> Self {
+    pub async fn new(window: Window, bounds: BoundingBox<f32>, material: &Material) -> Self {
         let size = window.inner_size();
         let max = bounds.max;
         let centroid = bounds.centroid();
@@ -67,10 +52,6 @@ impl State {
             ..Default::default()
         });
 
-        // # Safety
-        //
-        // The surface needs to live as long as the window that created it.
-        // State owns the window so this should be safe.
         let surface = unsafe { instance.create_surface(&window) }.unwrap();
 
         let adapter = instance
@@ -116,7 +97,7 @@ impl State {
             view_formats: vec![],
         };
         surface.configure(&device, &config);
-        let default_position: Point3<f32> = (3.0 * max.x, 3.0 * max.y, 3.0 * max.z).into();
+        let default_position: Point3<f32> = (2.0 * max.x, 2.0 * max.y, 2.0 * max.z).into();
         let default_target: Point3<f32> = (centroid.x, centroid.y, centroid.z).into();
         let camera = Camera {
             eye: default_position,
@@ -168,12 +149,6 @@ impl State {
 
         let depth_texture =
             texture::Texture::create_depth_texture(&device, &config, "depth_texture");
-
-        let lines_vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Line Vertex Buffer"),
-            contents: bytemuck::cast_slice(&util::lines_to_buffer(&lines)),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
 
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
@@ -240,8 +215,6 @@ impl State {
                 mask: !0,
                 alpha_to_coverage_enabled: false,
             },
-            // If the pipeline will be used with a multiview render pass, this
-            // indicates how many array layers the attachments will have.
             multiview: None,
         });
 
@@ -286,19 +259,6 @@ impl State {
             multiview: None,
         });
 
-        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Vertex Buffer"),
-            contents: bytemuck::cast_slice(vertices),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
-        let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Index Buffer"),
-            contents: bytemuck::cast_slice(indices),
-            usage: wgpu::BufferUsages::INDEX,
-        });
-
-        let num_indices = indices.len() as u32;
-
         Self {
             surface,
             device,
@@ -307,10 +267,11 @@ impl State {
             size,
             render_pipeline,
             line_pipeline,
-            vertex_buffer,
-            index_buffer,
-            lines_vertex_buffer,
-            num_indices,
+            vertex_buffers: Vec::new(),
+            index_buffers: Vec::new(),
+            num_indices: Vec::new(),
+            line_vertex_buffers: Vec::new(),
+            num_lines: Vec::new(),
             camera,
             camera_controller,
             camera_buffer,
@@ -321,11 +282,61 @@ impl State {
         }
     }
 
+    pub fn set_meshes<T: Float + Debug + Send + Sync>(&mut self, meshes: &[Mesh<T>], append: bool){
+        if !append{
+            self.vertex_buffers.clear();
+            self.index_buffers.clear();
+            self.num_indices.clear();
+        }
+        for mesh in meshes{
+            let (vertices, indices) = mesh_to_buffers(mesh);
+
+            let vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Vertex Buffer"),
+                contents: bytemuck::cast_slice(&vertices),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+            let index_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Index Buffer"),
+                contents: bytemuck::cast_slice(&indices),
+                usage: wgpu::BufferUsages::INDEX,
+            });
+    
+            self.vertex_buffers.push(vertex_buffer);
+            self.index_buffers.push(index_buffer);
+            self.num_indices.push(indices.len() as u32);
+        }
+    }
+
+    pub fn size(&self)->PhysicalSize<u32>{
+        self.size
+    }
+
+    pub fn set_lines<T: Float + Debug + Send + Sync>(&mut self, lines: &[Line<T>], append: bool){
+        if !append{
+            self.line_vertex_buffers.clear();
+            self.num_lines.clear();
+        }
+
+        let line_buffers = lines_to_buffer(lines);
+
+        for line_buffer in line_buffers{
+            let vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Vertex Buffer"),
+                contents: bytemuck::cast_slice(&line_buffer),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+    
+            self.line_vertex_buffers.push(vertex_buffer);
+            self.num_lines.push(line_buffer.len() as u32);
+        }
+    }
+
     pub fn window(&self) -> &Window {
         &self.window
     }
 
-    fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
+    pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
             self.size = new_size;
             self.config.width = new_size.width;
@@ -337,11 +348,11 @@ impl State {
         }
     }
 
-    fn input(&mut self, event: &WindowEvent) -> bool {
+    pub fn input(&mut self, event: &WindowEvent) -> bool {
         self.camera_controller.process_events(event)
     }
 
-    fn update(&mut self) {
+    pub fn update(&mut self) {
         self.camera_controller.update_camera(&mut self.camera);
         self.camera_uniform.update_view_proj(&self.camera);
         self.queue.write_buffer(
@@ -351,7 +362,7 @@ impl State {
         );
     }
 
-    fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
+    pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         let output = self.surface.get_current_texture()?;
         let view = output
             .texture
@@ -390,18 +401,29 @@ impl State {
                 occlusion_query_set: None,
                 timestamp_writes: None,
             });
-            let lines_vertex_count =
-                (self.lines_vertex_buffer.size() / std::mem::size_of::<Vertex>() as u64) as u32;
 
-            render_pass.set_pipeline(&self.render_pipeline);
-            render_pass.set_bind_group(0, &self.camera_bind_group, &[]);
-            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
-            render_pass.draw_indexed(0..self.num_indices, 0, 0..1);
+            for (index, vertex_buffer) in self.vertex_buffers.iter().enumerate() {
+                let index_buffer = &self.index_buffers[index];
+                let num_indices = self.num_indices[index];
 
-            render_pass.set_pipeline(&self.line_pipeline);
-            render_pass.set_vertex_buffer(0, self.lines_vertex_buffer.slice(..));
-            render_pass.draw(0..lines_vertex_count as u32, 0..1);
+                render_pass.set_pipeline(&self.render_pipeline);
+                render_pass.set_bind_group(0, &self.camera_bind_group, &[]);
+                render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+                render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+
+                render_pass.draw_indexed(0..num_indices, 0, 0..1);
+            }
+
+            for (index, line_vertex_buffer) in self.line_vertex_buffers.iter().enumerate() {
+                let index_buffer = &self.index_buffers[index];
+                let num_indices = self.num_indices[index];
+
+                render_pass.set_pipeline(&self.render_pipeline);
+                render_pass.set_bind_group(0, &self.camera_bind_group, &[]);
+                render_pass.set_vertex_buffer(0, line_vertex_buffer.slice(..));
+
+                render_pass.draw(0..num_indices, 0..1);
+            }
         }
 
         self.queue.submit(iter::once(encoder.finish()));
@@ -409,76 +431,4 @@ impl State {
 
         Ok(())
     }
-}
-
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
-async fn run<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>, material: Material) {
-    let mesh_f32 = mesh.to_f32();
-    let (vertices, indices) = mesh_to_buffers(&mesh_f32);
-
-    let window_icon = None;
-    let event_loop = EventLoop::new();
-    let window = WindowBuilder::new()
-        .with_title("ImLET viewer")
-        .with_window_icon(window_icon)
-        .build(&event_loop)
-        .unwrap();
-
-    let bounds = mesh.get_bounds();
-    let mut state = State::new(
-        window,
-        &vertices,
-        &indices,
-        &mesh_f32.edges(),
-        BoundingBox::new(bounds.min.to_f32(), bounds.max.to_f32()),
-        material,
-    )
-    .await;
-
-    event_loop.run(move |event, _, control_flow| {
-        match event {
-            Event::WindowEvent {
-                ref event,
-                window_id,
-            } if window_id == state.window().id() => {
-                if !state.input(event) {
-                    match event {
-                        WindowEvent::CloseRequested
-                        | WindowEvent::KeyboardInput {
-                            input:
-                                KeyboardInput {
-                                    state: ElementState::Pressed,
-                                    virtual_keycode: Some(VirtualKeyCode::Escape),
-                                    ..
-                                },
-                            ..
-                        } => *control_flow = ControlFlow::Exit,
-                        WindowEvent::Resized(physical_size) => {
-                            state.resize(*physical_size);
-                        }
-                        WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                            // new_inner_size is &mut so w have to dereference it twice
-                            state.resize(**new_inner_size);
-                        }
-                        _ => {}
-                    }
-                }
-            }
-            Event::RedrawRequested(window_id) if window_id == state.window().id() => {
-                state.update();
-                match state.render() {
-                    Ok(_) => {}
-                    Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
-                        state.resize(state.size)
-                    }
-                    Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
-                    Err(wgpu::SurfaceError::Timeout) => log::warn!("Surface timeout"),
-                }
-            }
-            Event::MainEventsCleared => {
-                state.window().request_redraw();
-            }
-            _ => {}
-        }
-    });
 }
