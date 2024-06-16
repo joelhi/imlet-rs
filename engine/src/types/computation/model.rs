@@ -48,24 +48,25 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
         static COMPONENT_VALUES: RefCell<ComponentValues> = RefCell::new(ComponentValues::new());
     }
 
-    fn evaluate_at_coord(&self, x: T, y: T, z: T, output: ComponentId) -> T {
+    fn evaluate_at_coord(&self, x: T, y: T, z: T, output: Option<ComponentId>) -> T {
         Self::COMPONENT_VALUES.with(|values| {
             let mut values = values.borrow_mut();
+            let output_index = output.unwrap_or_else(|| ComponentId(self.components.len() - 1));
             for (index, component) in self.components.iter().enumerate() {
                 component.compute(x, y, z, &mut values, index);
-                if index == output.value() {
+                if index == output_index.value() {
                     break;
                 }
             }
-            values.get(output)
+            values.get(output_index)
         })
     }
 
     pub fn evaluate(
         &self,
-        bounds: BoundingBox<T>,
+        bounds: &BoundingBox<T>,
         cell_size: T,
-        output: ComponentId,
+        output: Option<ComponentId>,
     ) -> DenseField<T> {
         let before = Instant::now();
         let n = Self::get_point_count(&bounds, cell_size);
@@ -137,7 +138,7 @@ mod tests {
         ));
 
         // Discretize
-        let field = model.evaluate(bounds, cell_size, sphere);
+        let field = model.evaluate(&bounds, cell_size, Some(sphere));
 
         assert_eq!(64, field.get_num_cells());
         assert_eq!(125, field.get_num_points());
@@ -162,7 +163,7 @@ mod tests {
         ));
 
         // Discretize
-        let field = model.evaluate(bounds, cell_size, sphere);
+        let field = model.evaluate(&bounds, cell_size, Some(sphere));
 
         assert_eq!(8 * 6 * 4, field.get_num_cells());
         assert_eq!(9 * 7 * 5, field.get_num_points());
@@ -184,7 +185,7 @@ mod tests {
         let sphere_component_2: ComponentId = model.add_function(Sphere::new(Vec3::origin(), 0.5));
 
         let difference_component =
-            model.add_operation(Difference::new(sphere_component, sphere_component_2));
+            Some(model.add_operation(Difference::new(sphere_component, sphere_component_2)));
 
         assert!(0.5 - model.evaluate_at_coord(0.0, 0.0, 0.0, difference_component) < 0.001);
         assert!(model.evaluate_at_coord(0.5, 0.0, 0.0, difference_component) < 0.001);
@@ -206,7 +207,7 @@ mod tests {
         let value_component = model.add_constant(1.0);
         let addition_component = model.add_operation(Add::new(value_component, value_component));
 
-        let result = model.evaluate_at_coord(0.0, 0.0, 0.0, addition_component);
+        let result = model.evaluate_at_coord(0.0, 0.0, 0.0, Some(addition_component));
         assert!((2.0 - result).abs() < 0.0001);
     }
 }

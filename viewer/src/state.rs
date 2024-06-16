@@ -4,11 +4,15 @@ use cgmath::Point3;
 
 use num_traits::Float;
 use wgpu::{util::DeviceExt, Buffer};
-use winit::{dpi::{PhysicalSize, Size}, event::*, window::Window};
+use winit::{
+    dpi::PhysicalSize,
+    event::*,
+    window::Window,
+};
 
-use imlet_engine::types::geometry::{BoundingBox, Line, Mesh};
+use imlet_engine::{algorithms::marching_cubes::generate_iso_surface, types::{computation::Model, geometry::{BoundingBox, Line, Mesh}}};
 
-use crate::util::{self, lines_to_buffer, mesh_to_buffers};
+use crate::{scene::{ModelData, Scene}, util::{lines_to_buffer, mesh_to_buffers}};
 
 use super::{
     camera::{Camera, CameraUniform},
@@ -18,12 +22,14 @@ use super::{
     vertex::Vertex,
 };
 
-pub struct State {
+pub struct State<T: Float + Debug + Send + Sync> {
     surface: wgpu::Surface,
     device: wgpu::Device,
     queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
     size: winit::dpi::PhysicalSize<u32>,
+    scene: Scene<T>,
+    model_data: ModelData<T>,
     render_pipeline: wgpu::RenderPipeline,
     line_pipeline: wgpu::RenderPipeline,
     vertex_buffers: Vec<Buffer>,
@@ -40,13 +46,12 @@ pub struct State {
     window: Window,
 }
 
-impl State {
-    pub async fn new(window: Window, bounds: BoundingBox<f32>, material: &Material) -> Self {
+impl<T: Float + Debug + Send + Sync> State<T> {
+    pub async fn new(window: Window, model_data: ModelData<T>, scene: Scene<T>) -> Self {
         let size = window.inner_size();
-        let max = bounds.max;
-        let centroid = bounds.centroid();
-        // The instance is a handle to our GPU
-        // BackendBit::PRIMARY => Vulkan + Metal + DX12 + Browser WebGPU
+        let max = model_data.bounds().max.to_f32();
+        let centroid = model_data.bounds().centroid().to_f32();
+
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::all(),
             ..Default::default()
@@ -152,7 +157,7 @@ impl State {
 
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
-            source: wgpu::ShaderSource::Wgsl(material.load_shader_source().into()),
+            source: wgpu::ShaderSource::Wgsl(scene.settings().mesh_material.load_shader_source().into()),
         });
 
         let line_material = Material::Line;
@@ -265,6 +270,8 @@ impl State {
             queue,
             config,
             size,
+            scene,
+            model_data,
             render_pipeline,
             line_pipeline,
             vertex_buffers: Vec::new(),
@@ -282,51 +289,95 @@ impl State {
         }
     }
 
-    pub fn set_meshes<T: Float + Debug + Send + Sync>(&mut self, meshes: &[Mesh<T>], append: bool){
-        if !append{
-            self.vertex_buffers.clear();
-            self.index_buffers.clear();
-            self.num_indices.clear();
-        }
-        for mesh in meshes{
-            let (vertices, indices) = mesh_to_buffers(mesh);
-
-            let vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Vertex Buffer"),
-                contents: bytemuck::cast_slice(&vertices),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
-            let index_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Index Buffer"),
-                contents: bytemuck::cast_slice(&indices),
-                usage: wgpu::BufferUsages::INDEX,
-            });
-    
-            self.vertex_buffers.push(vertex_buffer);
-            self.index_buffers.push(index_buffer);
-            self.num_indices.push(indices.len() as u32);
-        }
+    pub fn compute_field(&mut self, cell_size: T){
+        self.model_data.compute(cell_size);
     }
 
-    pub fn size(&self)->PhysicalSize<u32>{
+    pub fn update_scene(&mut self){
+        self.scene.clear();
+        let m = self.model_data.generate_mesh();
+        let show_bounds = self.scene().settings().show_bounds;
+        let show_edges = self.scene().settings().show_edges;
+        if show_bounds {
+            self.scene.add_lines(&self.model_data.bounds().wireframe());
+        }
+
+        if show_edges {
+            self.scene.add_lines(&m.edges());
+        }
+        
+        self.scene.add_mesh(m);
+    }
+
+    pub fn smooth_geometry(&mut self, iterations: u32, factor: T){
+        self.model_data.smooth(iterations, factor);
+    }
+
+    pub fn write_geometry(&mut self) {
+        self.clear_geometry();
+
+        self.write_mesh_buffers();
+        self.write_line_buffers();
+    }
+
+    fn clear_geometry(&mut self) {
+        self.vertex_buffers.clear();
+        self.index_buffers.clear();
+        self.num_indices.clear();
+        self.line_vertex_buffers.clear();
+        self.num_lines.clear();
+    }
+
+    fn write_mesh_buffers(&mut self) {
+        let buffers: Vec<(Buffer, Buffer, usize)> = self.scene().meshes().iter().map(|mesh| {
+            let (vertices, indices) = mesh_to_buffers(mesh);
+
+            let vertex_buffer = self
+                .device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("Vertex Buffer"),
+                    contents: bytemuck::cast_slice(&vertices),
+                    usage: wgpu::BufferUsages::VERTEX,
+                });
+            let index_buffer = self
+                .device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("Index Buffer"),
+                    contents: bytemuck::cast_slice(&indices),
+                    usage: wgpu::BufferUsages::INDEX,
+                });
+
+                (vertex_buffer, index_buffer, indices.len())
+        }).collect();
+
+        for (vertex_buffer, index_buffer, n) in buffers{
+            self.vertex_buffers.push(vertex_buffer);
+            self.index_buffers.push(index_buffer);
+            self.num_indices.push(n as u32);
+        }
+    
+    }
+
+    pub fn size(&self) -> PhysicalSize<u32> {
         self.size
     }
 
-    pub fn set_lines<T: Float + Debug + Send + Sync>(&mut self, lines: &[Line<T>], append: bool){
-        if !append{
-            self.line_vertex_buffers.clear();
-            self.num_lines.clear();
-        }
+    pub fn scene(&self) -> &Scene<T>{
+        &self.scene
+    }
 
-        let line_buffers = lines_to_buffer(lines);
+    fn write_line_buffers(&mut self) {
+        let line_buffers = lines_to_buffer(self.scene().lines());
 
-        for line_buffer in line_buffers{
-            let vertex_buffer = self.device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Vertex Buffer"),
-                contents: bytemuck::cast_slice(&line_buffer),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
-    
+        for line_buffer in line_buffers {
+            let vertex_buffer = self
+                .device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("Vertex Buffer"),
+                    contents: bytemuck::cast_slice(&line_buffer),
+                    usage: wgpu::BufferUsages::VERTEX,
+                });
+
             self.line_vertex_buffers.push(vertex_buffer);
             self.num_lines.push(line_buffer.len() as u32);
         }
@@ -415,10 +466,9 @@ impl State {
             }
 
             for (index, line_vertex_buffer) in self.line_vertex_buffers.iter().enumerate() {
-                let index_buffer = &self.index_buffers[index];
-                let num_indices = self.num_indices[index];
+                let num_indices = self.num_lines[index];
 
-                render_pass.set_pipeline(&self.render_pipeline);
+                render_pass.set_pipeline(&self.line_pipeline);
                 render_pass.set_bind_group(0, &self.camera_bind_group, &[]);
                 render_pass.set_vertex_buffer(0, line_vertex_buffer.slice(..));
 

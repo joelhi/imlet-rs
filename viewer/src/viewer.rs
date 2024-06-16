@@ -1,9 +1,9 @@
 use std::fmt::Debug;
 
 use imlet_engine::types::{
-    computation::Model,
-    geometry::{BoundingBox, Line, Mesh},
-};
+        computation::Model,
+        geometry::BoundingBox,
+    };
 use num_traits::Float;
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
@@ -11,49 +11,25 @@ use winit::{
     window::WindowBuilder,
 };
 
-use crate::{material::Material, state::State};
+use crate::{scene::{ModelData, Scene}, state::State};
 
-pub struct Viewer<T: Float + Debug + Send + Sync> {
-    model: Option<Model<T>>,
-    bounds: Option<BoundingBox<T>>,
-    meshes: Vec<Mesh<T>>,
-    lines: Vec<Line<T>>,
-    settings: ViewerSettings,
+pub struct Viewer {
 }
 
-impl<T: Float + Debug + Send + Sync> Viewer<T> {
+impl Viewer {
     pub fn new() -> Self {
-        Self {
-            model: None,
-            bounds: None,
-            meshes: Vec::new(),
-            lines: Vec::new(),
-            settings: ViewerSettings::new(),
-        }
+        Self {}
     }
 
-    pub fn with_model(model: Model<T>) -> Self {
-        Self {
-            model: Some(model),
-            bounds: None,
-            meshes: Vec::new(),
-            lines: Vec::new(),
-            settings: ViewerSettings::new(),
-        }
-    }
-
-    pub fn with_settings(settings: ViewerSettings) -> Self {
-        Self {
-            model: None,
-            bounds: None,
-            meshes: Vec::new(),
-            lines: Vec::new(),
-            settings: settings,
-        }
+    pub fn run<T: Float + Debug + Send + Sync + 'static>(model: Model<T>, bounds: BoundingBox<T>) {
+        pollster::block_on(Viewer::run_internal(model, bounds));
     }
 
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
-    async fn run(&self) {
+    async fn run_internal<T: Float + Debug + Send + Sync + 'static>(
+        model: Model<T>,
+        bounds: BoundingBox<T>,
+    ) {
         let window_icon = None;
         let event_loop = EventLoop::new();
         let window = WindowBuilder::new()
@@ -62,19 +38,16 @@ impl<T: Float + Debug + Send + Sync> Viewer<T> {
             .build(&event_loop)
             .unwrap();
 
-        let bounds = if self.bounds.is_some() {
-            self.bounds.unwrap()
-        } else {
-            BoundingBox::from_meshes(&self.meshes)
-        };
+        let model_data = ModelData::new(model, bounds);
+
+        let scene = Scene::new();
+
         let mut state = State::new(
             window,
-            BoundingBox::new(bounds.min.to_f32(), bounds.max.to_f32()),
-            &self.settings.mesh_material,
+            model_data,
+            scene
         )
         .await;
-
-        state.set_meshes(&self.meshes, false);
 
         event_loop.run(move |event, _, control_flow| {
             match event {
@@ -94,6 +67,32 @@ impl<T: Float + Debug + Send + Sync> Viewer<T> {
                                     },
                                 ..
                             } => *control_flow = ControlFlow::Exit,
+                            WindowEvent::KeyboardInput {
+                                input:
+                                    KeyboardInput {
+                                        state: ElementState::Pressed,
+                                        virtual_keycode: Some(VirtualKeyCode::P),
+                                        ..
+                                    },
+                                ..
+                            } => { 
+                                state.smooth_geometry(1, T::one());
+                                state.update_scene();
+                                state.write_geometry();
+                            }
+                            WindowEvent::KeyboardInput {
+                                input:
+                                    KeyboardInput {
+                                        state: ElementState::Pressed,
+                                        virtual_keycode: Some(VirtualKeyCode::G),
+                                        ..
+                                    },
+                                ..
+                            } => { 
+                                state.compute_field(T::from(0.15).unwrap());
+                                state.update_scene();
+                                state.write_geometry();
+                            }
                             WindowEvent::Resized(physical_size) => {
                                 state.resize(*physical_size);
                             }
@@ -122,21 +121,5 @@ impl<T: Float + Debug + Send + Sync> Viewer<T> {
                 _ => {}
             }
         });
-    }
-}
-
-pub struct ViewerSettings {
-    mesh_material: Material,
-    show_bounds: bool,
-    show_edges: bool,
-}
-
-impl ViewerSettings {
-    pub fn new() -> Self {
-        Self {
-            mesh_material: Material::Normal,
-            show_bounds: true,
-            show_edges: false,
-        }
     }
 }

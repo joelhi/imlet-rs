@@ -11,7 +11,7 @@ use {
         },
         utils,
     },
-    imlet_viewer::{material::Material, state},
+    imlet_viewer::{material::Material, viewer::{self, ViewerSettings}},
 };
 
 pub fn main() {
@@ -34,13 +34,16 @@ pub fn main() {
     let thick_shape = model.add_operation(Thickness::new(shape, 1.75));
     let intersection = model.add_operation(Intersection::new(bounds, thick_shape));
 
-    // Discretize
-    let mut field = model.evaluate(model_space, cell_size, intersection);
-    field.smooth(0.75, 10);
+    let settings = ViewerSettings{
+        mesh_material: Material::Normal,
+        show_bounds: true,
+        show_edges: true,
+    };
 
-    // Generate mesh
-    let triangles = generate_iso_surface(&field, 0.0);
-    let mesh = Mesh::from_triangles(&triangles);
+    let mut viewer = viewer::Viewer::with_settings(settings);
 
-    state::run_viewer(&mesh, Material::Normal);
+    viewer.add_model(model);
+    viewer.create_mesh_from_model(model_space, cell_size, 5, 0.75);
+
+    viewer.run();
 }

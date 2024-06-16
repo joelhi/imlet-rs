@@ -6,3 +6,4 @@ mod state;
 mod texture;
 mod util;
 mod vertex;
+mod scene;

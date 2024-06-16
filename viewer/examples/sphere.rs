@@ -7,7 +7,7 @@ use {
         },
         utils,
     },
-    imlet_viewer::{material::Material, state},
+    imlet_viewer::{material::Material, viewer::Viewer},
 };
 
 pub fn main() {
@@ -25,14 +25,5 @@ pub fn main() {
         size * 0.45,
     ));
 
-    // Discretize
-    let mut field = model.evaluate(bounds, cell_size, sphere);
-
-    field.smooth(0.75, 10);
-
-    // Generate mesh
-    let triangles = generate_iso_surface(&field, 0.0);
-    let mesh = Mesh::from_triangles(&triangles);
-
-    state::run_viewer(&mesh, Material::InsideOutside);
+    Viewer::run(model, bounds);
 }

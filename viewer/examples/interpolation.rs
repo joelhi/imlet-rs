@@ -13,7 +13,7 @@ use {
         },
         utils,
     },
-    imlet_viewer::{material::Material, state},
+    imlet_viewer::{material::Material, viewer},
 };
 
 pub fn main() {

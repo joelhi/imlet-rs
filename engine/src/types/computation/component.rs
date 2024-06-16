@@ -6,7 +6,7 @@ const MAX_INPUTS: usize = 8;
 const MAX_TOTAL_COMPONENTS: usize = 512;
 
 #[derive(Debug, Copy, Clone)]
-pub struct ComponentId(usize);
+pub struct ComponentId(pub usize);
 
 impl ComponentId {
     pub fn value(&self) -> usize {
