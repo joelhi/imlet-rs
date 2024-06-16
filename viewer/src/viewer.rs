@@ -49,6 +49,9 @@ impl Viewer {
         )
         .await;
 
+        state.update_scene();
+        state.write_geometry();
+
         event_loop.run(move |event, _, control_flow| {
             match event {
                 Event::WindowEvent {
@@ -76,7 +79,7 @@ impl Viewer {
                                     },
                                 ..
                             } => { 
-                                state.smooth_geometry(1, T::one());
+                                state.smooth_geometry(1, T::from(0.5).unwrap());
                                 state.update_scene();
                                 state.write_geometry();
                             }
@@ -89,7 +92,7 @@ impl Viewer {
                                     },
                                 ..
                             } => { 
-                                state.compute_field(T::from(0.15).unwrap());
+                                state.compute_field(T::from(0.05).unwrap());
                                 state.update_scene();
                                 state.write_geometry();
                             }

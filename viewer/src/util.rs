@@ -36,7 +36,7 @@ pub fn lines_to_buffer<T: Float + Debug + Send + Sync>(lines: &[Line<T>]) -> Vec
     let mut output: Vec<Vec<Vertex>> = Vec::new();
     let mut vertices: Vec<Vertex> = Vec::with_capacity(MAX_LINE_BUFFER_SIZE);
     for line in lines {
-        if (vertices.len() >= MAX_LINE_BUFFER_SIZE) {
+        if vertices.len() >= MAX_LINE_BUFFER_SIZE {
             output.push(vertices);
             vertices = Vec::with_capacity(MAX_LINE_BUFFER_SIZE);
         }

@@ -88,7 +88,7 @@ impl<T: Float + Debug + Send + Sync> ModelData<T> {
     pub fn smooth(&mut self, iterations: u32, factor: T){
         match &mut self.data {
             Some(values) => values.smooth(factor, iterations),
-            None => (),
+            None => log::info!("No smoothing computed as field is not computed."),
         }
     }
 
@@ -96,9 +96,16 @@ impl<T: Float + Debug + Send + Sync> ModelData<T> {
         self.data = Some(self.model.evaluate(&self.bounds, cell_size, None));
     }
 
-    pub fn generate_mesh(&mut self)->Mesh<T> {
-        let values = self.data().as_ref().expect("Cannot generate geometry as no data is present in model");
-        let triangles = generate_iso_surface(&values, T::zero());
-        Mesh::from_triangles(&triangles)
+    pub fn generate_mesh(&mut self)->Option<Mesh<T>> {
+        match self.data(){
+            Some(data) => {
+                let triangles = generate_iso_surface(data, T::zero());
+                Some(Mesh::from_triangles(&triangles))
+            },
+            None => {
+                log::info!("No mesh generated as field is not computed.");
+                None
+            },
+        }
     }
 }

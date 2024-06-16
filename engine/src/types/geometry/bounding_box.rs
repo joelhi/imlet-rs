@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use num_traits::Float;
 
-use super::{Line, Mesh, Vec3};
+use super::{Line, Vec3};
 
 #[derive(Debug, Clone, Copy)]
 pub struct BoundingBox<T: Float + Debug> {
@@ -13,10 +13,6 @@ pub struct BoundingBox<T: Float + Debug> {
 impl<T: Float + Debug> BoundingBox<T> {
     pub fn new(min: Vec3<T>, max: Vec3<T>) -> Self {
         BoundingBox { min, max }
-    }
-
-    pub fn from_meshes(meshes: &[Mesh<T>])->Self{
-        panic!["Not implemented"];
     }
 
     pub fn get_dimensions(&self) -> (T, T, T) {

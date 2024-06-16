@@ -3,12 +3,10 @@ use num_traits::Float;
 use super::Vec3;
 use std::{collections::HashMap, fmt::Debug, usize};
 
-const DEFAULT_SPATIAL_TOL: f32 = 1E-3;
-
-const MAX_BIN_SIZE: usize = 4;
+const DEFAULT_SPATIAL_TOL: f32 = 1E-7;
 
 pub struct SpatialHashGrid<T: Float + Debug> {
-    map: HashMap<usize, [Option<usize>; MAX_BIN_SIZE]>,
+    map: HashMap<usize, Vec<usize>>,
     vertices: Vec<Vec3<T>>,
     tolerance: T,
 }
@@ -41,29 +39,16 @@ impl<T: Float + Debug> SpatialHashGrid<T> {
         match self.map.get_mut(&hash) {
             Some(index) => {
                 // Find closest point based on indices in list
-                let mut last_pos = Option::None;
-                for (pos, &id) in index.iter().enumerate() {
-                    match id {
-                        Some(value) => {
-                            if v.distance_to_vec3(&self.vertices[value]) < self.tolerance {
-                                return value;
-                            }
-                            last_pos = Some(pos);
-                        },
-                        None => {
-                            break;
-                        },
+                for &id in index.iter() {
+                    if v.distance_to_vec3(&self.vertices[id]) < self.tolerance {
+                        return id;
                     }
                 }
+                // Add vertex to list and return current count
                 let new_index = self.vertices.len();
+                index.push(new_index);
                 self.vertices.push(v);
-                match last_pos {
-                    Some(value) => index[value + 1] = Option::Some(new_index),
-                    None => panic!("More than allowed max values in a bin reached. Please lower spatial tolerance to decrease bin size."),
-                }
-
-                return new_index;
-                
+                new_index
             }
             None => {
                 // Add new entry and return current count
@@ -74,9 +59,7 @@ impl<T: Float + Debug> SpatialHashGrid<T> {
 
     fn get_new_id(&mut self, hash: usize, v: Vec3<T>) -> usize {
         let id = self.vertices.len();
-        let mut bin_ids = [Option::None; MAX_BIN_SIZE];
-        bin_ids[0] = Some(id);
-        self.map.insert(hash, bin_ids);
+        self.map.insert(hash, vec![id]);
         self.vertices.push(v);
         id
     }
