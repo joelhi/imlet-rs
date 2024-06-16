@@ -5,14 +5,12 @@ use num_traits::Float;
 use crate::types::computation::component::{ComponentId, ImplicitOperation};
 
 pub struct Union {
-    inputs: [ComponentId; 2]
+    inputs: [ComponentId; 2],
 }
 
-impl Union{
-    pub fn new(a: ComponentId, b: ComponentId)->Self{
-        Self{
-            inputs: [a, b]
-        }
+impl Union {
+    pub fn new(a: ComponentId, b: ComponentId) -> Self {
+        Self { inputs: [a, b] }
     }
 }
 
@@ -26,15 +24,13 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Union {
     }
 }
 
-pub struct Intersection{
-    inputs: [ComponentId; 2]
+pub struct Intersection {
+    inputs: [ComponentId; 2],
 }
 
-impl Intersection{
-    pub fn new(a: ComponentId, b: ComponentId)->Self{
-        Self{
-            inputs: [a, b]
-        }
+impl Intersection {
+    pub fn new(a: ComponentId, b: ComponentId) -> Self {
+        Self { inputs: [a, b] }
     }
 }
 
@@ -49,14 +45,12 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Intersection {
 }
 
 pub struct Difference {
-    inputs: [ComponentId; 2]
+    inputs: [ComponentId; 2],
 }
 
 impl Difference {
-    pub fn new(a: ComponentId, b: ComponentId)->Self{
-        Self{
-            inputs: [a, b]
-        }
+    pub fn new(a: ComponentId, b: ComponentId) -> Self {
+        Self { inputs: [a, b] }
     }
 }
 

@@ -4,14 +4,16 @@ use {
         types::{
             computation::{
                 distance_functions::{Gyroid, Sphere, ZDomain},
-                operations::{boolean::Intersection, interpolation::LinearInterpolation, shape::Thickness},
+                operations::{
+                    boolean::Intersection, interpolation::LinearInterpolation, shape::Thickness,
+                },
                 Model,
             },
             geometry::{BoundingBox, Mesh, Vec3},
         },
         utils,
     },
-    imlet_viewer::{material::Material, viewer},
+    imlet_viewer::{material::Material, state},
 };
 
 pub fn main() {
@@ -34,7 +36,8 @@ pub fn main() {
     let thick_shape = model.add_operation(Thickness::new(shape, 2.5));
     let slender_shape = model.add_operation(Thickness::new(shape, 1.0));
     let t = model.add_function(ZDomain::remapped(0.0, 10.0));
-    let interpolation = model.add_operation(LinearInterpolation::new(thick_shape, slender_shape, t));
+    let interpolation =
+        model.add_operation(LinearInterpolation::new(thick_shape, slender_shape, t));
     let intersection = model.add_operation(Intersection::new(bounds, interpolation));
 
     // Discretize
@@ -45,5 +48,5 @@ pub fn main() {
     let triangles = generate_iso_surface(&field, 0.0);
     let mesh = Mesh::from_triangles(&triangles);
 
-    viewer::run_viewer(&mesh, Material::Normal);
+    state::run_viewer(&mesh, Material::Normal);
 }

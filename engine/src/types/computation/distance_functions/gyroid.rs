@@ -10,7 +10,7 @@ pub struct Gyroid<T: Pi + Float + Debug> {
     pub length_z: T,
 }
 
-impl<T:Pi + Float + Debug> Gyroid<T> {
+impl<T: Pi + Float + Debug> Gyroid<T> {
     pub fn new(length_x: T, length_y: T, length_z: T) -> Self {
         Self {
             length_x: length_x,

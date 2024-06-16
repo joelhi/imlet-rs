@@ -1,5 +1,5 @@
 use {
-    imlet_viewer::{material::Material, viewer}, imlet_engine::{
+    imlet_engine::{
         algorithms::marching_cubes::generate_iso_surface,
         types::{
             computation::{
@@ -10,7 +10,8 @@ use {
             geometry::{BoundingBox, Mesh, Vec3},
         },
         utils,
-    }
+    },
+    imlet_viewer::{material::Material, state},
 };
 
 pub fn main() {
@@ -25,8 +26,8 @@ pub fn main() {
     let mut model = Model::new();
 
     let bounds = model.add_function(Sphere::new(
-        Vec3::new(0.5*size, 0.5*size, 0.5*size),
-        0.45*size,
+        Vec3::new(0.5 * size, 0.5 * size, 0.5 * size),
+        0.45 * size,
     ));
 
     let shape = model.add_function(SchwarzP::with_equal_spacing(2.0));
@@ -42,5 +43,5 @@ pub fn main() {
     let triangles = generate_iso_surface(&field, 0.0);
     let mesh = Mesh::from_triangles(&triangles);
 
-    viewer::run_viewer(&mesh, Material::Arctic);
+    state::run_viewer(&mesh, Material::Arctic);
 }

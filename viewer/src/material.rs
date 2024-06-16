@@ -1,6 +1,6 @@
 use std::{fs, path::Path};
 
-pub enum Material{
+pub enum Material {
     Normal,
     Arctic,
     InsideOutside,
@@ -13,13 +13,16 @@ impl Material {
             Material::Normal => "normal.wgsl",
             Material::Arctic => "arctic.wgsl",
             Material::InsideOutside => "inside_outside.wgsl",
-            Material::Line => "line.wgsl"
+            Material::Line => "line.wgsl",
         }
     }
-    
+
     pub fn load_shader_source(&self) -> String {
-        let path = Path::new(file!()).parent().unwrap().join("shaders").join(self.path());
-        fs::read_to_string(path)
-            .expect("Failed to read shader source file")
+        let path = Path::new(file!())
+            .parent()
+            .unwrap()
+            .join("shaders")
+            .join(self.path());
+        fs::read_to_string(path).expect("Failed to read shader source file")
     }
 }

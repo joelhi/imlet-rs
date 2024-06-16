@@ -1,11 +1,11 @@
 use num_traits::Float;
 
 use crate::types::computation::component::ImplicitFunction;
-use std::fmt::Debug;
 use crate::utils::math_helper::Pi;
+use std::fmt::Debug;
 
 #[derive(Debug, Clone, Copy)]
-pub struct SchwarzP<T: Pi + Float + Debug>  {
+pub struct SchwarzP<T: Pi + Float + Debug> {
     pub length_x: T,
     pub length_y: T,
     pub length_z: T,

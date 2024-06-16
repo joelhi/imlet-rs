@@ -11,7 +11,7 @@ use {
         },
         utils,
     },
-    imlet_viewer::{material::Material, viewer},
+    imlet_viewer::{material::Material, state},
 };
 
 pub fn main() {
@@ -30,7 +30,7 @@ pub fn main() {
         0.45 * size,
     ));
 
-    let shape = model.add_function(Gyroid::with_equal_spacing(1.75));
+    let shape = model.add_function(Gyroid::with_equal_spacing(2.5));
     let thick_shape = model.add_operation(Thickness::new(shape, 1.75));
     let intersection = model.add_operation(Intersection::new(bounds, thick_shape));
 
@@ -42,5 +42,5 @@ pub fn main() {
     let triangles = generate_iso_surface(&field, 0.0);
     let mesh = Mesh::from_triangles(&triangles);
 
-    viewer::run_viewer(&mesh, Material::Normal);
+    state::run_viewer(&mesh, Material::Normal);
 }

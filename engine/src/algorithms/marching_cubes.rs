@@ -11,7 +11,10 @@ use crate::types::geometry::Vec3;
 
 use super::tables::*;
 
-pub fn generate_iso_surface<T: Float + Debug + Send + Sync>(field: &DenseField<T>, iso_val: T) -> Vec<Triangle<T>> {
+pub fn generate_iso_surface<T: Float + Debug + Send + Sync>(
+    field: &DenseField<T>,
+    iso_val: T,
+) -> Vec<Triangle<T>> {
     let before = Instant::now();
     // Generate triangles for cell
     let mut triangles: Vec<Triangle<T>> = Vec::with_capacity(field.get_num_cells() * 1);
@@ -41,7 +44,11 @@ pub fn generate_iso_surface<T: Float + Debug + Send + Sync>(field: &DenseField<T
     triangles
 }
 
-fn polygonize_cell<T: Float + Debug>(iso_val: T, cell_coord: &[Vec3<T>; 8], cell_values: &[T; 8]) -> Vec<Triangle<T>> {
+fn polygonize_cell<T: Float + Debug>(
+    iso_val: T,
+    cell_coord: &[Vec3<T>; 8],
+    cell_values: &[T; 8],
+) -> Vec<Triangle<T>> {
     let cube_index = get_cube_index(cell_values, iso_val);
     get_triangles(cube_index, &cell_coord, &cell_values, iso_val)
 }
@@ -260,7 +267,10 @@ fn interpolate_vertex<T: Float + Debug>(
 #[cfg(test)]
 mod tests {
 
-    use crate::types::{computation::{distance_functions::Sphere, Model}, geometry::BoundingBox};
+    use crate::types::{
+        computation::{distance_functions::Sphere, Model},
+        geometry::BoundingBox,
+    };
 
     use super::*;
 

@@ -72,6 +72,10 @@ impl<T: Float + Debug> BoundingBox<T> {
             Line::new(corners[3], corners[7]),
         ]
     }
+
+    pub fn centroid(&self) -> Vec3<T> {
+        return (self.max + self.min) * T::from(0.5).expect("Failed to convert number to T");
+    }
 }
 
 #[cfg(test)]

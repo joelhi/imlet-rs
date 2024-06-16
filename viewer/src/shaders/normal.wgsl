@@ -54,7 +54,7 @@ fn fs_main(in: VertexOutput, @builtin(front_facing) front_face: bool) -> @locati
     }
 
     // Output the color
-    return vec4<f32>(shade * 0.5*(1.0 + in.normal[0]), shade * 0.5*(1.0 + in.normal[1]), shade * 0.5*(1.0 + in.normal[2]), 1.0);
+    return vec4<f32>(shade * 0.5*(1.0 + in.normal[0]), shade * 0.5*(1.0 + in.normal[1]), shade * 0.5*(1.0 + in.normal[2]), 0.85);
 }
 
 fn remap(value: f32, from_min: f32, from_max: f32, to_min: f32, to_max: f32) -> f32 {

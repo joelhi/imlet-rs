@@ -17,15 +17,15 @@ impl<T: Float + Debug> Vec3<T> {
         Self { x: x, y: y, z: z }
     }
 
-    pub fn distance_to_vec3(&self, pt: Vec3<T>) -> T {
-        self.distance_to_vec3_squared(pt).sqrt()
+    pub fn distance_to_vec3(&self, pt: &Vec3<T>) -> T {
+        self.distance_to_vec3_squared(&pt).sqrt()
     }
 
     pub fn distance_to_coord(&self, x: T, y: T, z: T) -> T {
         self.distance_to_coord_squared(x, y, z).sqrt()
     }
 
-    pub fn distance_to_vec3_squared(&self, pt: Vec3<T>) -> T {
+    pub fn distance_to_vec3_squared(&self, pt: &Vec3<T>) -> T {
         self.distance_to_coord_squared(pt.x, pt.y, pt.z)
     }
 
@@ -103,6 +103,10 @@ impl<T: Float + Debug> Vec3<T> {
             y: self.y.to_f32().expect("Failed to convert to f32"),
             z: self.z.to_f32().expect("Failed to convert to f32"),
         }
+    }
+
+    pub fn default_tolerance() -> T{
+        T::from(1E-7).expect("Fail")
     }
 }
 

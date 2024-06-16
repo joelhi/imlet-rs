@@ -30,9 +30,9 @@ pub fn mesh_to_buffers<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> (Vec<V
     (vertices, indices)
 }
 
-pub fn lines_to_buffer<T: Float + Debug + Send + Sync>(lines: &[Line<T>])->Vec<Vertex>{
-    let mut vertices: Vec<Vertex> = Vec::with_capacity(2*lines.len());
-    for line in lines{
+pub fn lines_to_buffer<T: Float + Debug + Send + Sync>(lines: &[Line<T>]) -> Vec<Vertex> {
+    let mut vertices: Vec<Vertex> = Vec::with_capacity(2 * lines.len());
+    for line in lines {
         vertices.push(Vertex::from_vec3(&line.start, &Vec3::origin()));
         vertices.push(Vertex::from_vec3(&line.end, &Vec3::origin()));
     }

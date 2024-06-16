@@ -1,4 +1,9 @@
-use std::{fmt::Debug, fs, io::{self, Write}, path::Path};
+use std::{
+    fmt::Debug,
+    fs,
+    io::{self, Write},
+    path::Path,
+};
 
 use num_traits::Float;
 
@@ -8,7 +13,12 @@ pub fn mesh_to_obj<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> String {
     let mut data = String::new();
 
     for &v in mesh.get_vertices() {
-        let v_string = format!("v {} {} {}\n", v.x.to_f32().expect("error"), v.y.to_f32().expect("error"), v.z.to_f32().expect("error"));
+        let v_string = format!(
+            "v {} {} {}\n",
+            v.x.to_f32().expect("error"),
+            v.y.to_f32().expect("error"),
+            v.z.to_f32().expect("error")
+        );
         data.push_str(&v_string);
     }
 
@@ -20,11 +30,14 @@ pub fn mesh_to_obj<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> String {
     data
 }
 
-pub fn write_as_obj<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>, file_name: &str) -> io::Result<()> {
+pub fn write_as_obj<T: Float + Debug + Send + Sync>(
+    mesh: &Mesh<T>,
+    file_name: &str,
+) -> io::Result<()> {
     let file_path = Path::new(file_name).with_extension("obj");
-    
+
     let mut file = fs::File::create(file_path)?;
     file.write_all(mesh_to_obj(&mesh).as_bytes())?;
-    
+
     Ok(())
 }

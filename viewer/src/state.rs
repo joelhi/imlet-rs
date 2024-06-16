@@ -2,18 +2,15 @@ use std::{fmt::Debug, iter};
 
 use cgmath::Point3;
 use num_traits::Float;
-use pollster::block_on;
+
 use wgpu::util::DeviceExt;
 use winit::{
     event::*,
     event_loop::{ControlFlow, EventLoop},
-    window::{Window, WindowBuilder},
+    window::{Icon, Window, WindowBuilder},
 };
 
-use imlet_engine::types::{
-    computation::operations::interpolation::LinearInterpolation,
-    geometry::{BoundingBox, Mesh, Vec3},
-};
+use imlet_engine::types::geometry::{BoundingBox, Line, Mesh};
 
 use crate::util;
 
@@ -56,13 +53,13 @@ impl State {
         window: Window,
         vertices: &[Vertex],
         indices: &[u32],
-        centroid: Vec3<f32>,
+        lines: &[Line<f32>],
         bounds: BoundingBox<f32>,
         material: Material,
     ) -> Self {
         let size = window.inner_size();
         let max = bounds.max;
-        let lines = bounds.wireframe();
+        let centroid = bounds.centroid();
         // The instance is a handle to our GPU
         // BackendBit::PRIMARY => Vulkan + Metal + DX12 + Browser WebGPU
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
@@ -230,9 +227,13 @@ impl State {
             depth_stencil: Some(wgpu::DepthStencilState {
                 format: texture::Texture::DEPTH_FORMAT,
                 depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::Less,
+                depth_compare: wgpu::CompareFunction::LessEqual,
                 stencil: wgpu::StencilState::default(),
-                bias: wgpu::DepthBiasState::default(),
+                bias: wgpu::DepthBiasState {
+                    constant: 1,
+                    slope_scale: 1.0,
+                    clamp: 0.0,
+                },
             }),
             multisample: wgpu::MultisampleState {
                 count: 1,
@@ -273,9 +274,13 @@ impl State {
             depth_stencil: Some(wgpu::DepthStencilState {
                 format: texture::Texture::DEPTH_FORMAT,
                 depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::Less,
+                depth_compare: wgpu::CompareFunction::LessEqual,
                 stencil: wgpu::StencilState::default(),
-                bias: wgpu::DepthBiasState::default(),
+                bias: wgpu::DepthBiasState {
+                    constant: -1,
+                    slope_scale: 1.0,
+                    clamp: 0.0,
+                },
             }),
             multisample: wgpu::MultisampleState::default(),
             multiview: None,
@@ -408,11 +413,14 @@ impl State {
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 async fn run<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>, material: Material) {
-    let (vertices, indices) = mesh_to_buffers(mesh);
+    let mesh_f32 = mesh.to_f32();
+    let (vertices, indices) = mesh_to_buffers(&mesh_f32);
 
+    let window_icon = None;
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new()
         .with_title("ImLET viewer")
+        .with_window_icon(window_icon)
         .build(&event_loop)
         .unwrap();
 
@@ -421,7 +429,7 @@ async fn run<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>, material: Material)
         window,
         &vertices,
         &indices,
-        mesh.get_centroid().to_f32(),
+        &mesh_f32.edges(),
         BoundingBox::new(bounds.min.to_f32(), bounds.max.to_f32()),
         material,
     )

@@ -69,8 +69,7 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
     ) -> DenseField<T> {
         let before = Instant::now();
         let n = Self::get_point_count(&bounds, cell_size);
-        let mut data: Vec<T> =
-            vec![T::zero(); n.x * n.y * n.z];
+        let mut data: Vec<T> = vec![T::zero(); n.x * n.y * n.z];
         data.par_iter_mut().enumerate().for_each(|(index, value)| {
             let (i, j, k) = index3d_from_index1d(index, n.x, n.y, n.z);
             *value = self.evaluate_at_coord(
