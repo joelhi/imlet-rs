@@ -1,6 +1,5 @@
 use {
     imlet_engine::{
-        algorithms::marching_cubes::generate_iso_surface,
         types::{
             computation::{
                 distance_functions::{Gyroid, Sphere, ZDomain},
@@ -9,11 +8,11 @@ use {
                 },
                 Model,
             },
-            geometry::{BoundingBox, Mesh, Vec3},
+            geometry::{BoundingBox, Vec3},
         },
         utils,
     },
-    imlet_viewer::{material::Material, viewer},
+    imlet_viewer::viewer::Viewer,
 };
 
 pub fn main() {
@@ -38,15 +37,7 @@ pub fn main() {
     let t = model.add_function(ZDomain::remapped(0.0, 10.0));
     let interpolation =
         model.add_operation(LinearInterpolation::new(thick_shape, slender_shape, t));
-    let intersection = model.add_operation(Intersection::new(bounds, interpolation));
+    let _ = model.add_operation(Intersection::new(bounds, interpolation));
 
-    // Discretize
-    let mut field = model.evaluate(model_space, cell_size, intersection);
-    field.smooth(0.5, 10);
-
-    // Generate mesh
-    let triangles = generate_iso_surface(&field, 0.0);
-    let mesh = Mesh::from_triangles(&triangles);
-
-    state::run_viewer(&mesh, Material::Normal);
+    Viewer::run(model, model_space, cell_size);
 }

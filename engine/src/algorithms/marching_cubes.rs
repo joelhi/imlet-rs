@@ -327,7 +327,7 @@ mod tests {
             size * 0.4,
         ));
 
-        let field = model.evaluate(bounds, cell_size, sphere);
+        let field = model.evaluate(&bounds, cell_size, Option::Some(sphere));
 
         // Generate mesh
         let triangles = generate_iso_surface(&field, 0.0);

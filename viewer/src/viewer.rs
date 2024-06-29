@@ -21,14 +21,15 @@ impl Viewer {
         Self {}
     }
 
-    pub fn run<T: Float + Debug + Send + Sync + 'static>(model: Model<T>, bounds: BoundingBox<T>) {
-        pollster::block_on(Viewer::run_internal(model, bounds));
+    pub fn run<T: Float + Debug + Send + Sync + 'static>(model: Model<T>, bounds: BoundingBox<T>, cell_size: T) {
+        pollster::block_on(Viewer::run_internal(model, bounds, cell_size));
     }
 
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
     async fn run_internal<T: Float + Debug + Send + Sync + 'static>(
         model: Model<T>,
         bounds: BoundingBox<T>,
+        cell_size: T
     ) {
         let window_icon = None;
         let event_loop = EventLoop::new();
@@ -79,7 +80,7 @@ impl Viewer {
                                     },
                                 ..
                             } => { 
-                                state.smooth_geometry(1, T::from(0.5).unwrap());
+                                state.smooth_geometry(1, T::from(0.75).unwrap());
                                 state.update_scene();
                                 state.write_geometry();
                             }
@@ -92,7 +93,7 @@ impl Viewer {
                                     },
                                 ..
                             } => { 
-                                state.compute_field(T::from(0.05).unwrap());
+                                state.compute_field(T::from(cell_size).unwrap());
                                 state.update_scene();
                                 state.write_geometry();
                             }

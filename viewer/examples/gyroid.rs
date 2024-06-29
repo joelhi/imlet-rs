@@ -30,7 +30,7 @@ pub fn main() {
 
     let shape = model.add_function(Gyroid::with_equal_spacing(2.5));
     let thick_shape = model.add_operation(Thickness::new(shape, 1.75));
-    let intersection = model.add_operation(Intersection::new(bounds, thick_shape));
+    let _ = model.add_operation(Intersection::new(bounds, thick_shape));
 
-    Viewer::run(model, model_space);
+    Viewer::run(model, model_space, cell_size);
 }

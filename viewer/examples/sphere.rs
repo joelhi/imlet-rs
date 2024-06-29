@@ -1,13 +1,12 @@
 use {
     imlet_engine::{
-        algorithms::marching_cubes::generate_iso_surface,
         types::{
             computation::{distance_functions::Sphere, Model},
-            geometry::{BoundingBox, Mesh, Vec3},
+            geometry::{BoundingBox, Vec3},
         },
         utils,
     },
-    imlet_viewer::{material::Material, viewer::Viewer},
+    imlet_viewer::viewer::Viewer,
 };
 
 pub fn main() {
@@ -20,10 +19,10 @@ pub fn main() {
 
     // Function
     let mut model = Model::new();
-    let sphere = model.add_function(Sphere::new(
+    let _ = model.add_function(Sphere::new(
         Vec3::new(size / 2.0, size / 2.0, size / 2.0),
         size * 0.45,
     ));
 
-    Viewer::run(model, bounds);
+    Viewer::run(model, bounds, cell_size);
 }
