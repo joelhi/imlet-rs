@@ -3,8 +3,8 @@ pub mod algorithms {
     mod tables;
 }
 pub mod types {
-    pub mod geometry;
     pub mod computation;
+    pub mod geometry;
 }
 pub mod utils {
     pub mod io;

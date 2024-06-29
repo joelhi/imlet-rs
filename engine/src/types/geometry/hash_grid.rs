@@ -40,7 +40,7 @@ impl<T: Float + Debug> SpatialHashGrid<T> {
             Some(index) => {
                 // Find closest point based on indices in list
                 for &id in index.iter() {
-                    if v.distance_to_vec3(self.vertices[id]) < self.tolerance {
+                    if v.distance_to_vec3(&self.vertices[id]) < self.tolerance {
                         return id;
                     }
                 }

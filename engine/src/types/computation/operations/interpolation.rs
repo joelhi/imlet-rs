@@ -4,13 +4,13 @@ use num_traits::Float;
 
 use crate::types::computation::{ComponentId, ImplicitOperation};
 
-pub struct LinearInterpolation{
-    inputs: [ComponentId; 3]
+pub struct LinearInterpolation {
+    inputs: [ComponentId; 3],
 }
 
-impl LinearInterpolation{
-    pub fn new(value_a: ComponentId, value_b: ComponentId, t: ComponentId)->Self{
-        Self{
+impl LinearInterpolation {
+    pub fn new(value_a: ComponentId, value_b: ComponentId, t: ComponentId) -> Self {
+        Self {
             inputs: [value_a, value_b, t],
         }
     }

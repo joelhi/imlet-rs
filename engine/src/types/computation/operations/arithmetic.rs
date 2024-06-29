@@ -24,7 +24,7 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Multiply {
     }
 }
 
-pub struct Add  {
+pub struct Add {
     inputs: [ComponentId; 2],
 }
 
