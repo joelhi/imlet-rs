@@ -1,9 +1,9 @@
 mod camera;
 mod camera_controller;
 pub mod material;
-pub mod viewer;
+mod scene;
 mod state;
 mod texture;
 mod util;
 mod vertex;
-mod scene;
+pub mod viewer;

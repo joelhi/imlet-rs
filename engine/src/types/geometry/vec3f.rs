@@ -105,7 +105,7 @@ impl<T: Float + Debug> Vec3<T> {
         }
     }
 
-    pub fn default_tolerance() -> T{
+    pub fn default_tolerance() -> T {
         T::from(1E-7).expect("Fail")
     }
 }

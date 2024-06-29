@@ -1,9 +1,6 @@
 use std::fmt::Debug;
 
-use imlet_engine::types::{
-        computation::Model,
-        geometry::BoundingBox,
-    };
+use imlet_engine::types::{computation::Model, geometry::BoundingBox};
 use num_traits::Float;
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
@@ -11,17 +8,23 @@ use winit::{
     window::WindowBuilder,
 };
 
-use crate::{scene::{ModelData, Scene}, state::State};
+use crate::{
+    scene::{ModelData, Scene},
+    state::State,
+};
 
-pub struct Viewer {
-}
+pub struct Viewer {}
 
 impl Viewer {
     pub fn new() -> Self {
         Self {}
     }
 
-    pub fn run<T: Float + Debug + Send + Sync + 'static>(model: Model<T>, bounds: BoundingBox<T>, cell_size: T) {
+    pub fn run<T: Float + Debug + Send + Sync + 'static>(
+        model: Model<T>,
+        bounds: BoundingBox<T>,
+        cell_size: T,
+    ) {
         pollster::block_on(Viewer::run_internal(model, bounds, cell_size));
     }
 
@@ -29,7 +32,7 @@ impl Viewer {
     async fn run_internal<T: Float + Debug + Send + Sync + 'static>(
         model: Model<T>,
         bounds: BoundingBox<T>,
-        cell_size: T
+        cell_size: T,
     ) {
         let window_icon = None;
         let event_loop = EventLoop::new();
@@ -43,12 +46,7 @@ impl Viewer {
 
         let scene = Scene::new();
 
-        let mut state = State::new(
-            window,
-            model_data,
-            scene
-        )
-        .await;
+        let mut state = State::new(window, model_data, scene).await;
 
         state.update_scene();
         state.write_geometry();
@@ -79,7 +77,7 @@ impl Viewer {
                                         ..
                                     },
                                 ..
-                            } => { 
+                            } => {
                                 state.smooth_geometry(1, T::from(0.75).unwrap());
                                 state.update_scene();
                                 state.write_geometry();
@@ -92,7 +90,7 @@ impl Viewer {
                                         ..
                                     },
                                 ..
-                            } => { 
+                            } => {
                                 state.compute_field(T::from(cell_size).unwrap());
                                 state.update_scene();
                                 state.write_geometry();

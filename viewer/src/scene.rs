@@ -1,6 +1,12 @@
 use std::fmt::Debug;
 
-use imlet_engine::{algorithms::marching_cubes::generate_iso_surface, types::{computation::{DenseField, Model}, geometry::{BoundingBox, Line, Mesh}}};
+use imlet_engine::{
+    algorithms::marching_cubes::generate_iso_surface,
+    types::{
+        computation::{DenseField, Model},
+        geometry::{BoundingBox, Line, Mesh},
+    },
+};
 use num_traits::Float;
 
 use crate::material::Material;
@@ -8,7 +14,7 @@ use crate::material::Material;
 pub struct Scene<T: Float + Debug + Send + Sync> {
     meshes: Vec<Mesh<T>>,
     lines: Vec<Line<T>>,
-    settings: SceneSettings
+    settings: SceneSettings,
 }
 
 impl<T: Float + Debug + Send + Sync> Scene<T> {
@@ -16,7 +22,7 @@ impl<T: Float + Debug + Send + Sync> Scene<T> {
         Self {
             meshes: Vec::new(),
             lines: Vec::new(),
-            settings: SceneSettings::new()
+            settings: SceneSettings::new(),
         }
     }
 
@@ -37,11 +43,11 @@ impl<T: Float + Debug + Send + Sync> Scene<T> {
         &self.meshes
     }
 
-    pub fn lines(&self)->&[Line<T>]{
+    pub fn lines(&self) -> &[Line<T>] {
         &self.lines
     }
 
-    pub fn settings(&self)->&SceneSettings{
+    pub fn settings(&self) -> &SceneSettings {
         &self.settings
     }
 }
@@ -62,10 +68,10 @@ impl SceneSettings {
     }
 }
 
-pub struct ModelData<T: Float + Debug + Send + Sync>{
+pub struct ModelData<T: Float + Debug + Send + Sync> {
     model: Model<T>,
     bounds: BoundingBox<T>,
-    data: Option<DenseField<T>>
+    data: Option<DenseField<T>>,
 }
 
 impl<T: Float + Debug + Send + Sync> ModelData<T> {
@@ -77,35 +83,35 @@ impl<T: Float + Debug + Send + Sync> ModelData<T> {
         }
     }
 
-    pub fn bounds(&self)->&BoundingBox<T>{
+    pub fn bounds(&self) -> &BoundingBox<T> {
         &self.bounds
     }
 
-    pub fn data(&self)->&Option<DenseField<T>>{
+    pub fn data(&self) -> &Option<DenseField<T>> {
         &self.data
     }
 
-    pub fn smooth(&mut self, iterations: u32, factor: T){
+    pub fn smooth(&mut self, iterations: u32, factor: T) {
         match &mut self.data {
             Some(values) => values.smooth(factor, iterations),
             None => log::info!("No smoothing computed as field is not computed."),
         }
     }
 
-    pub fn compute(&mut self, cell_size: T){
+    pub fn compute(&mut self, cell_size: T) {
         self.data = Some(self.model.evaluate(&self.bounds, cell_size, None));
     }
 
-    pub fn generate_mesh(&mut self)->Option<Mesh<T>> {
-        match self.data(){
+    pub fn generate_mesh(&mut self) -> Option<Mesh<T>> {
+        match self.data() {
             Some(data) => {
                 let triangles = generate_iso_surface(data, T::zero());
                 Some(Mesh::from_triangles(&triangles))
-            },
+            }
             None => {
                 log::info!("No mesh generated as field is not computed.");
                 None
-            },
+            }
         }
     }
 }
