@@ -12,10 +12,14 @@ pub struct BoundingBox<T: Float + Debug> {
 
 impl<T: Float + Debug> BoundingBox<T> {
     pub fn new(min: Vec3<T>, max: Vec3<T>) -> Self {
-        BoundingBox { min, max }
+        Self { min, max }
     }
 
-    pub fn get_dimensions(&self) -> (T, T, T) {
+    pub fn ZERO()-> Self{
+        Self {min: Vec3::origin(), max: Vec3::origin()}
+    }
+
+    pub fn dimensions(&self) -> (T, T, T) {
         (
             self.max.x - self.min.x,
             self.max.y - self.min.y,
@@ -23,7 +27,7 @@ impl<T: Float + Debug> BoundingBox<T> {
         )
     }
 
-    pub fn is_inside(&self, pt: Vec3<T>) -> bool {
+    pub fn contains(&self, pt: Vec3<T>) -> bool {
         pt.x > self.min.x
             && pt.y > self.min.y
             && pt.z > self.min.z
@@ -32,12 +36,18 @@ impl<T: Float + Debug> BoundingBox<T> {
             && pt.z < self.max.z
     }
 
-    pub fn is_coord_inside(&self, x: T, y: T, z: T) -> bool {
+    pub fn contains_coord(&self, x: T, y: T, z: T) -> bool {
         x > self.min.x
             && y > self.min.y
             && z > self.min.z
             && x < self.max.x
             && y < self.max.y
             && z < self.max.z
+    }
+
+    pub fn intersects(&self, other: &BoundingBox<T>) -> bool {
+        self.min.x <= other.max.x && self.max.x >= other.min.x &&
+        self.min.y <= other.max.y && self.max.y >= other.min.y &&
+        self.min.z <= other.max.z && self.max.z >= other.min.z
     }
 }

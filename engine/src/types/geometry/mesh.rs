@@ -172,11 +172,32 @@ pub struct Triangle<T: Float + Debug> {
 }
 
 impl<T: Float + Debug> Triangle<T> {
+    pub fn new(p1: Vec3<T>, p2: Vec3<T>, p3: Vec3<T>)->Self{
+        Self{p1, p2, p3}
+    }
+
+    pub fn ZERO()->Self{
+        Self{p1: Vec3::origin(), p2: Vec3::origin(), p3: Vec3::origin()}
+    }
+
     pub fn compute_area(&self) -> T {
         let a = self.p1.distance_to_vec3(self.p2);
         let b = self.p2.distance_to_vec3(self.p3);
         let c = self.p3.distance_to_vec3(self.p1);
         let s = (a + b + c) / T::from(2.0).expect("Failed to convert number to T");
         (s * (s - a) * (s - b) * (s - c)).sqrt()
+    }
+
+    pub fn bounds(&self)-> BoundingBox<T>{
+        BoundingBox::new(
+            Vec3::new(
+                self.p1.x.min(self.p2.x).min(self.p3.x), 
+                self.p1.y.min(self.p2.y).min(self.p3.y), 
+                self.p1.z.min(self.p2.z).min(self.p3.z)), 
+            Vec3::new(
+                self.p1.x.max(self.p2.x).max(self.p3.x), 
+                self.p1.y.max(self.p2.y).max(self.p3.y), 
+                self.p1.z.max(self.p2.z).max(self.p3.z)), 
+        )
     }
 }

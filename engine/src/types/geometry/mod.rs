@@ -1,5 +1,6 @@
 mod bounding_box;
 mod hash_grid;
+mod octree;
 mod mesh;
 mod plane;
 mod vec3f;
@@ -11,3 +12,4 @@ pub use mesh::*;
 pub use plane::*;
 pub use vec3f::*;
 pub use vec3i::*;
+pub use octree::*;

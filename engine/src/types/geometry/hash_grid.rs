@@ -5,6 +5,8 @@ use std::{collections::HashMap, fmt::Debug, usize};
 
 const DEFAULT_SPATIAL_TOL: f32 = 1E-7;
 
+// Simple implementation of a spatial hash grid, not properly checking adjacent bins.
+// So tolerance may not be guaranteed to be satisfied in the event of close points in adjacent bins.
 pub struct SpatialHashGrid<T: Float + Debug> {
     map: HashMap<usize, Vec<usize>>,
     vertices: Vec<Vec3<T>>,
@@ -71,15 +73,15 @@ impl<T: Float + Debug> SpatialHashGrid<T> {
         s_hash = s_hash * 37
             + (v.x * multiplier)
                 .to_usize()
-                .expect("Failed to convert T to usize");
+                .unwrap();
         s_hash = s_hash * 37
             + (v.y * multiplier)
                 .to_usize()
-                .expect("Failed to convert T to usize");
+                .unwrap();
         s_hash = s_hash * 37
             + (v.z * multiplier)
                 .to_usize()
-                .expect("Failed to convert T to usize");
+                .unwrap();
 
         return s_hash;
     }
