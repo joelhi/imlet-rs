@@ -1,9 +1,12 @@
 use {
     imlet_engine::{
-        algorithms::marching_cubes::generate_iso_surface,
-        types::{computation::{distance_functions::Sphere, Model}, geometry::{BoundingBox, Mesh, OctreeNode, Vec3}},
-        utils::{self, io},
-    }, imlet_viewer::{material::Material, viewer}
+        types::{
+            computation::{distance_functions::Sphere, Model},
+            geometry::{BoundingBox, Vec3},
+        },
+        utils,
+    },
+    imlet_viewer::viewer::Viewer,
 };
 
 pub fn main() {
@@ -16,21 +19,10 @@ pub fn main() {
 
     // Function
     let mut model = Model::new();
-    let sphere = model.add_function(Sphere::new(
+    let _ = model.add_function(Sphere::new(
         Vec3::new(size / 2.0, size / 2.0, size / 2.0),
         size * 0.45,
     ));
 
-    // Discretize
-    let mut field = model.evaluate(bounds, cell_size, sphere);
-
-    field.smooth(0.75, 10);
-
-    // Generate mesh
-    let triangles = generate_iso_surface(&field, 0.0);
-    let mesh = Mesh::from_triangles(&triangles);
-
-    let _ = io::write_obj_file(&mesh, "sphere");
-
-    viewer::run_viewer(&mesh, Material::Normal);
+    Viewer::run(model, bounds, cell_size);
 }

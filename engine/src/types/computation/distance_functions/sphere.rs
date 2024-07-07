@@ -11,11 +11,8 @@ pub struct Sphere<T: Float + Debug> {
 }
 
 impl<T: Float + Debug> Sphere<T> {
-    pub fn new(source: Vec3<T>, radius: T)->Self{
-        Self {
-            source,
-            radius,
-        }
+    pub fn new(source: Vec3<T>, radius: T) -> Self {
+        Self { source, radius }
     }
 }
 

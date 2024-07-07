@@ -5,6 +5,7 @@ use rayon::iter::IntoParallelRefMutIterator;
 use rayon::iter::ParallelIterator;
 
 use super::BoundingBox;
+use super::Line;
 use super::SpatialHashGrid;
 use super::Vec3;
 use std::fmt::Debug;
@@ -89,6 +90,16 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         self.normals.as_ref()
     }
 
+    pub fn edges(&self) -> Vec<Line<T>> {
+        let mut edges: Vec<Line<T>> = Vec::with_capacity(self.num_faces());
+        for f in self.faces.iter() {
+            edges.push(Line::new(self.vertices[f[0]], self.vertices[f[1]]));
+            edges.push(Line::new(self.vertices[f[1]], self.vertices[f[2]]));
+            edges.push(Line::new(self.vertices[f[2]], self.vertices[f[0]]));
+        }
+        edges
+    }
+
     pub fn num_vertices(&self) -> usize {
         self.vertices.len()
     }
@@ -163,6 +174,17 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         vertex_faces
     }
 
+    pub fn to_f32(&self) -> Mesh<f32> {
+        let converted_v: Vec<Vec3<f32>> = self.vertices.iter().map(|v| v.to_f32()).collect();
+        let mut m = Mesh::<f32>::new();
+
+        m.add_vertices(&converted_v);
+        m.add_faces(&self.faces);
+        m.compute_vertex_normals();
+
+        m
+    }
+
     pub fn as_triangles(&self) -> Vec<Triangle<T>> {
         let mut triangles: Vec<Triangle<T>> = Vec::with_capacity(self.num_faces());
         for face in self.faces.iter() {
@@ -197,9 +219,9 @@ impl<T: Float + Debug> Triangle<T> {
     }
 
     pub fn compute_area(&self) -> T {
-        let a = self.p1.distance_to_vec3(self.p2);
-        let b = self.p2.distance_to_vec3(self.p3);
-        let c = self.p3.distance_to_vec3(self.p1);
+        let a = self.p1.distance_to_vec3(&self.p2);
+        let b = self.p2.distance_to_vec3(&self.p3);
+        let c = self.p3.distance_to_vec3(&self.p1);
         let s = (a + b + c) / T::from(2.0).expect("Failed to convert number to T");
         (s * (s - a) * (s - b) * (s - c)).sqrt()
     }
