@@ -91,7 +91,7 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
     }
 
     fn get_point_count(bounds: &BoundingBox<T>, cell_size: T) -> Vec3i {
-        let (x_dim, y_dim, z_dim) = bounds.get_dimensions();
+        let (x_dim, y_dim, z_dim) = bounds.dimensions();
         Vec3i::new(
             (x_dim / cell_size)
                 .floor()

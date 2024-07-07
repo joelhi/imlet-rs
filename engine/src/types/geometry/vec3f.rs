@@ -73,7 +73,7 @@ impl<T: Float + Debug> Vec3<T> {
         }
     }
 
-    pub fn dot(&self, rhs: Vec3<T>) -> T {
+    pub fn dot(&self, rhs: &Vec3<T>) -> T {
         (self.x * rhs.x) + (self.y * rhs.y) + (self.z * rhs.z)
     }
 
@@ -81,7 +81,7 @@ impl<T: Float + Debug> Vec3<T> {
         (self.x * x) + (self.y * y) + (self.z * z)
     }
 
-    pub fn cross(&self, rhs: Vec3<T>) -> Vec3<T> {
+    pub fn cross(&self, rhs: &Vec3<T>) -> Vec3<T> {
         Self {
             x: self.y * rhs.z - self.z * rhs.y,
             y: self.z * rhs.x - self.x * rhs.z,
@@ -144,6 +144,6 @@ impl<T: Float + Debug> ops::Mul<T> for Vec3<T> {
 impl<T: Float + Debug> ops::Mul<Vec3<T>> for Vec3<T> {
     type Output = T;
     fn mul(self, rhs: Vec3<T>) -> Self::Output {
-        self.dot(rhs)
+        self.dot(&rhs)
     }
 }

@@ -148,7 +148,7 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
             .map(|f| {
                 let v1 = self.vertices[f[1]] - self.vertices[f[0]];
                 let v2 = self.vertices[f[2]] - self.vertices[f[0]];
-                v1.cross(v2).normalize()
+                v1.cross(&v2).normalize()
             })
             .collect()
     }
@@ -162,6 +162,18 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         });
         vertex_faces
     }
+
+    pub fn as_triangles(&self) -> Vec<Triangle<T>> {
+        let mut triangles: Vec<Triangle<T>> = Vec::with_capacity(self.num_faces());
+        for face in self.faces.iter() {
+            triangles.push(Triangle::new(
+                self.vertices[face[0]],
+                self.vertices[face[1]],
+                self.vertices[face[2]],
+            ))
+        }
+        triangles
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -172,12 +184,16 @@ pub struct Triangle<T: Float + Debug> {
 }
 
 impl<T: Float + Debug> Triangle<T> {
-    pub fn new(p1: Vec3<T>, p2: Vec3<T>, p3: Vec3<T>)->Self{
-        Self{p1, p2, p3}
+    pub fn new(p1: Vec3<T>, p2: Vec3<T>, p3: Vec3<T>) -> Self {
+        Self { p1, p2, p3 }
     }
 
-    pub fn ZERO()->Self{
-        Self{p1: Vec3::origin(), p2: Vec3::origin(), p3: Vec3::origin()}
+    pub fn ZERO() -> Self {
+        Self {
+            p1: Vec3::origin(),
+            p2: Vec3::origin(),
+            p3: Vec3::origin(),
+        }
     }
 
     pub fn compute_area(&self) -> T {
@@ -188,16 +204,80 @@ impl<T: Float + Debug> Triangle<T> {
         (s * (s - a) * (s - b) * (s - c)).sqrt()
     }
 
-    pub fn bounds(&self)-> BoundingBox<T>{
+    pub fn bounds(&self) -> BoundingBox<T> {
         BoundingBox::new(
             Vec3::new(
-                self.p1.x.min(self.p2.x).min(self.p3.x), 
-                self.p1.y.min(self.p2.y).min(self.p3.y), 
-                self.p1.z.min(self.p2.z).min(self.p3.z)), 
+                self.p1.x.min(self.p2.x).min(self.p3.x),
+                self.p1.y.min(self.p2.y).min(self.p3.y),
+                self.p1.z.min(self.p2.z).min(self.p3.z),
+            ),
             Vec3::new(
-                self.p1.x.max(self.p2.x).max(self.p3.x), 
-                self.p1.y.max(self.p2.y).max(self.p3.y), 
-                self.p1.z.max(self.p2.z).max(self.p3.z)), 
+                self.p1.x.max(self.p2.x).max(self.p3.x),
+                self.p1.y.max(self.p2.y).max(self.p3.y),
+                self.p1.z.max(self.p2.z).max(self.p3.z),
+            ),
         )
     }
+
+    pub fn closest_pt(&self, pt: &Vec3<T>) -> Vec3<T> {
+        let p1 = self.p1;
+        let p2 = self.p2;
+        let p3 = self.p3;
+    
+        // Compute vectors
+        let ab = p2 - p1;
+        let ac = p3 - p1;
+        let ap = *pt - p1;
+    
+        // Compute barycentric coordinates
+        let d1 = ab.dot(&ap);
+        let d2 = ac.dot(&ap);
+        if d1 <= T::zero() && d2 <= T::zero() {
+            return p1; // Barycentric coordinates (1,0,0)
+        }
+    
+        // Check if P in vertex region outside p2
+        let bp = *pt - p2;
+        let d3 = ab.dot(&bp);
+        let d4 = ac.dot(&bp);
+        if d3 >= T::zero() && d4 <= d3 {
+            return p2; // Barycentric coordinates (0,1,0)
+        }
+    
+        // Check if P in edge region of AB, if so return projection of P onto AB
+        let vc = d1 * d4 - d3 * d2;
+        if vc <= T::zero() && d1 >= T::zero() && d3 <= T::zero() {
+            let v = d1 / (d1 - d3);
+            return p1 + ab * v; // Barycentric coordinates (1-v,v,0)
+        }
+    
+        // Check if P in vertex region outside p3
+        let cp = *pt - p3;
+        let d5 = ab.dot(&cp);
+        let d6 = ac.dot(&cp);
+        if d6 >= T::zero() && d5 <= d6 {
+            return p3; // Barycentric coordinates (0,0,1)
+        }
+    
+        // Check if P in edge region of AC, if so return projection of P onto AC
+        let vb = d5 * d2 - d1 * d6;
+        if vb <= T::zero() && d2 >= T::zero() && d6 <= T::zero() {
+            let w = d2 / (d2 - d6);
+            return p1 + ac * w; // Barycentric coordinates (1-w,0,w)
+        }
+    
+        // Check if P in edge region of BC, if so return projection of P onto BC
+        let va = d3 * d6 - d5 * d4;
+        if va <= T::zero() && (d4 - d3) >= T::zero() && (d5 - d6) >= T::zero() {
+            let w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
+            return p2 + (p3 - p2) * w; // Barycentric coordinates (0,1-w,w)
+        }
+    
+        // P inside face region. Compute Q through its barycentric coordinates (u,v,w)
+        let denom = T::one() / (va + vb + vc);
+        let v = vb * denom;
+        let w = vc * denom;
+        p1 + ab * v + ac * w // Barycentric coordinates (1-v-w,v,w)
+    }
+    
 }

@@ -31,7 +31,7 @@ where
 
     pub fn signed_distance(&self, pt: Vec3<T>) -> T {
         let v = pt - self.origin;
-        self.normal.dot(v)
+        self.normal.dot(&v)
     }
 
     pub fn signed_distance_coord(&self, x: T, y: T, z: T) -> T {

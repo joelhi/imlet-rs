@@ -1,8 +1,8 @@
-use std::{fmt::Debug, fs, io::{self, Write}, path::Path};
+use std::{fmt::Debug, fs, io::{self, BufRead, Write}, path::Path};
 
 use num_traits::Float;
 
-use crate::types::geometry::Mesh;
+use crate::types::geometry::{Mesh, Vec3};
 
 pub fn mesh_to_obj<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> String {
     let mut data = String::new();
@@ -20,11 +20,64 @@ pub fn mesh_to_obj<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> String {
     data
 }
 
-pub fn write_as_obj<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>, file_name: &str) -> io::Result<()> {
+pub fn write_obj_file<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>, file_name: &str) -> io::Result<()> {
     let file_path = Path::new(file_name).with_extension("obj");
     
     let mut file = fs::File::create(file_path)?;
     file.write_all(mesh_to_obj(&mesh).as_bytes())?;
     
+    
     Ok(())
 }
+
+use std::fs::File;
+
+pub fn parse_obj_file<T: Float + Debug + Send + Sync>(file_path: &str) -> Result<(Mesh<T>), Box<dyn std::error::Error>> {
+    let path = Path::new(file_path);
+    let file = File::open(&path)?;
+
+    let mut vertices: Vec<Vec3<T>> = Vec::new();
+    let mut faces: Vec<[usize; 3]> = Vec::new();
+    let mut mesh = Mesh::new();
+
+    for line in io::BufReader::new(file).lines() {
+        let line = line?;
+        let parts: Vec<&str> = line.split_whitespace().collect();
+
+        if parts.is_empty() {
+            continue;
+        }
+
+        match parts[0] {
+            "v" => {
+                // Parse vertex position
+                if parts.len() != 4 {
+                    return Err("Invalid vertex format".into());
+                }
+                let x: f32 = parts[1].parse()?;
+                let y: f32 = parts[2].parse()?;
+                let z: f32 = parts[3].parse()?;
+                vertices.push(Vec3::new(T::from(x).unwrap(), T::from(y).unwrap(), T::from(z).unwrap()));
+            }
+            "f" => {
+                // Parse face indices
+                if parts.len() != 4 {
+                    return Err("Invalid face format".into());
+                }
+                let mut face: [usize; 3] = [0; 3];
+                for i in 0..3 {
+                    let indices: Vec<&str> = parts[i + 1].split("//").collect();
+                    let index: usize = (indices[0].parse().unwrap());
+                    face[i] = index - 1;
+                }
+                faces.push(face);
+            }
+            _ => continue,
+        }
+    }
+
+    mesh.add_vertices(&vertices);
+    mesh.add_faces(&faces);
+    Ok(mesh)
+}
+

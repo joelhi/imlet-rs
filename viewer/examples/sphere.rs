@@ -1,9 +1,9 @@
 use {
-    imlet_viewer::{material::Material, viewer}, imlet_engine::{
+    imlet_engine::{
         algorithms::marching_cubes::generate_iso_surface,
-        types::{computation::{distance_functions::Sphere, Model}, geometry::{BoundingBox, Mesh, Vec3}},
-        utils,
-    }
+        types::{computation::{distance_functions::Sphere, Model}, geometry::{BoundingBox, Mesh, OctreeNode, Vec3}},
+        utils::{self, io},
+    }, imlet_viewer::{material::Material, viewer}
 };
 
 pub fn main() {
@@ -30,5 +30,7 @@ pub fn main() {
     let triangles = generate_iso_surface(&field, 0.0);
     let mesh = Mesh::from_triangles(&triangles);
 
-    viewer::run_viewer(&mesh, Material::Arctic);
+    let _ = io::write_obj_file(&mesh, "sphere");
+
+    viewer::run_viewer(&mesh, Material::Normal);
 }

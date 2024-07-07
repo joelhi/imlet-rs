@@ -27,7 +27,7 @@ impl<T: Float + Debug> BoundingBox<T> {
         )
     }
 
-    pub fn contains(&self, pt: Vec3<T>) -> bool {
+    pub fn contains(&self, pt: &Vec3<T>) -> bool {
         pt.x > self.min.x
             && pt.y > self.min.y
             && pt.z > self.min.z
