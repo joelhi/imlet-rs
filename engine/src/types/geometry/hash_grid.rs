@@ -3,12 +3,12 @@ use num_traits::Float;
 use super::Vec3;
 use std::{collections::HashMap, fmt::Debug, usize};
 
-const DEFAULT_SPATIAL_TOL: f32 = 1E-7;
+const DEFAULT_SPATIAL_TOL: f32 = 1E-5;
 
 // Simple implementation of a spatial hash grid, not properly checking adjacent bins.
 // So tolerance may not be guaranteed to be satisfied in the event of close points in adjacent bins.
 pub struct SpatialHashGrid<T: Float + Debug> {
-    map: HashMap<usize, Vec<usize>>,
+    map: HashMap<i64, Vec<usize>>,
     vertices: Vec<Vec3<T>>,
     tolerance: T,
 }
@@ -59,28 +59,28 @@ impl<T: Float + Debug> SpatialHashGrid<T> {
         }
     }
 
-    fn get_new_id(&mut self, hash: usize, v: Vec3<T>) -> usize {
+    fn get_new_id(&mut self, hash: i64, v: Vec3<T>) -> usize {
         let id = self.vertices.len();
         self.map.insert(hash, vec![id]);
         self.vertices.push(v);
         id
     }
 
-    pub fn spatial_hash(&self, v: Vec3<T>) -> usize {
+    pub fn spatial_hash(&self, v: Vec3<T>) -> i64 {
         let multiplier = T::one() / self.tolerance;
-        let mut s_hash = 23;
+        let mut s_hash: i64 = 23;
 
         s_hash = s_hash * 37
             + (v.x * multiplier)
-                .to_usize()
+                .to_i64()
                 .unwrap();
         s_hash = s_hash * 37
             + (v.y * multiplier)
-                .to_usize()
+                .to_i64()
                 .unwrap();
         s_hash = s_hash * 37
             + (v.z * multiplier)
-                .to_usize()
+                .to_i64()
                 .unwrap();
 
         return s_hash;

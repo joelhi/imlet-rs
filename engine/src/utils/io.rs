@@ -7,7 +7,7 @@ use std::{
 
 use num_traits::Float;
 
-use crate::types::geometry::{Mesh, Vec3};
+use crate::types::{computation::DenseField, geometry::{Mesh, Vec3}};
 
 pub fn mesh_to_obj<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> String {
     let mut data = String::new();
@@ -40,7 +40,7 @@ pub fn write_obj_file<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>, file_name:
 
 use std::fs::File;
 
-pub fn parse_obj_file<T: Float + Debug + Send + Sync>(file_path: &str) -> Result<(Mesh<T>), Box<dyn std::error::Error>> {
+pub fn parse_obj_file<T: Float + Debug + Send + Sync>(file_path: &str) -> Result<Mesh<T>, Box<dyn std::error::Error>> {
     let path = Path::new(file_path);
     let file = File::open(&path)?;
 
@@ -74,8 +74,8 @@ pub fn parse_obj_file<T: Float + Debug + Send + Sync>(file_path: &str) -> Result
                 }
                 let mut face: [usize; 3] = [0; 3];
                 for i in 0..3 {
-                    let indices: Vec<&str> = parts[i + 1].split("//").collect();
-                    let index: usize = (indices[0].parse().unwrap());
+                    let indices: Vec<&str> = parts[i + 1].split("/").collect();
+                    let index: usize = indices[0].parse().unwrap();
                     face[i] = index - 1;
                 }
                 faces.push(face);
@@ -86,6 +86,37 @@ pub fn parse_obj_file<T: Float + Debug + Send + Sync>(file_path: &str) -> Result
 
     mesh.add_vertices(&vertices);
     mesh.add_faces(&faces);
+
+    log::info!(
+        "Obj file with {} vertices and {} faces successfully read.",
+        mesh.num_vertices(),
+        mesh.num_faces()
+    );
+
     Ok(mesh)
 }
 
+pub fn write_field_csv<T: Float + Debug + Send + Sync>(field: &DenseField<T>, file_name: &str) -> io::Result<()> {
+    let file_path = Path::new(file_name).with_extension("csv");
+    let mut file = fs::File::create(file_path)?;
+    file.write_all(get_field_as_data(&field).as_bytes())?;
+    Ok(())
+}
+
+fn get_field_as_data<T: Float + Debug + Send + Sync>(field: &DenseField<T>)->String{
+    let mut data = String::new();
+
+    for (idx, v) in field.data().iter().enumerate(){
+        let (i, j, k) = field.get_point_index3d(idx);
+        let v_string = format!(
+            "{:?},{:?},{:?},{:?}\n",
+            field.origin().x + field.cell_size() * T::from(i).expect("Failed to convert number to T"),
+            field.origin().x + field.cell_size() * T::from(j).expect("Failed to convert number to T"),
+            field.origin().x + field.cell_size() * T::from(k).expect("Failed to convert number to T"),
+            v
+        );
+        data.push_str(&v_string);
+    }
+
+    data
+}

@@ -1,4 +1,4 @@
-use std::{fmt::Debug, ops};
+use std::{fmt::{self, Debug}, ops};
 
 use num_traits::Float;
 
@@ -89,6 +89,18 @@ impl<T: Float + Debug> Vec3<T> {
         }
     }
 
+    pub fn angle(&self, other: &Vec3<T>) -> Option<T> {
+        let dot = self.dot(other);
+        let len_self = self.magnitude();
+        let len_other = other.magnitude();
+        if len_self.is_zero() || len_other.is_zero() {
+            None
+        } else {
+            let cosine = dot / (len_self * len_other);
+            Some(cosine.acos())
+        }
+    }
+
     pub fn magnitude(&self) -> T {
         self.distance_to_coord(T::zero(), T::zero(), T::zero())
     }
@@ -149,5 +161,11 @@ impl<T: Float + Debug> ops::Mul<Vec3<T>> for Vec3<T> {
     type Output = T;
     fn mul(self, rhs: Vec3<T>) -> Self::Output {
         self.dot(&rhs)
+    }
+}
+
+impl<T: Float + Debug> fmt::Display for Vec3<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{{{}, {}, {}}}", self.x.to_f32().unwrap(), self.y.to_f32().unwrap(), self.z.to_f32().unwrap())
     }
 }

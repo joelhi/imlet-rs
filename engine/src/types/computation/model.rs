@@ -74,9 +74,9 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
         data.par_iter_mut().enumerate().for_each(|(index, value)| {
             let (i, j, k) = index3d_from_index1d(index, n.x, n.y, n.z);
             *value = self.evaluate_at_coord(
-                cell_size * T::from(i).expect("Failed to convert number to T"),
-                cell_size * T::from(j).expect("Failed to convert number to T"),
-                cell_size * T::from(k).expect("Failed to convert number to T"),
+                bounds.min.x + cell_size * T::from(i).expect("Failed to convert number to T"),
+                bounds.min.x + cell_size * T::from(j).expect("Failed to convert number to T"),
+                bounds.min.x + cell_size * T::from(k).expect("Failed to convert number to T"),
                 output,
             );
         });

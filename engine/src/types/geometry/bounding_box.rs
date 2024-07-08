@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use num_traits::Float;
 
-use super::{Line, Vec3};
+use super::{Line, Triangle, Vec3};
 
 #[derive(Debug, Clone, Copy)]
 pub struct BoundingBox<T: Float + Debug> {
@@ -15,7 +15,7 @@ impl<T: Float + Debug> BoundingBox<T> {
         Self { min, max }
     }
 
-    pub fn ZERO()-> Self{
+    pub fn zero()-> Self{
         Self {min: Vec3::origin(), max: Vec3::origin()}
     }
 
@@ -77,6 +77,24 @@ impl<T: Float + Debug> BoundingBox<T> {
         ]
     }
 
+    pub fn triangles(&self) -> [Triangle<T>; 12] {
+        let corners = self.corners();
+        [
+            Triangle::new(corners[0], corners[1],corners[2]),
+            Triangle::new(corners[0], corners[2],corners[3]),
+            Triangle::new(corners[0], corners[1],corners[5]),
+            Triangle::new(corners[0], corners[5],corners[4]),
+            Triangle::new(corners[1], corners[6],corners[2]),
+            Triangle::new(corners[1], corners[5],corners[6]),
+            Triangle::new(corners[2], corners[6],corners[7]),
+            Triangle::new(corners[2], corners[7],corners[3]),
+            Triangle::new(corners[3], corners[0],corners[4]),
+            Triangle::new(corners[3], corners[4],corners[7]),
+            Triangle::new(corners[7], corners[4],corners[6]),
+            Triangle::new(corners[4], corners[5],corners[6]),
+        ]
+    }
+
     pub fn centroid(&self) -> Vec3<T> {
         return (self.max + self.min) * T::from(0.5).expect("Failed to convert number to T");
     }
@@ -85,6 +103,13 @@ impl<T: Float + Debug> BoundingBox<T> {
         self.min.x <= other.max.x && self.max.x >= other.min.x &&
         self.min.y <= other.max.y && self.max.y >= other.min.y &&
         self.min.z <= other.max.z && self.max.z >= other.min.z
+    }
+
+    pub fn closest_point(&self, point: &Vec3<T>) -> Vec3<T> {
+        let x = point.x.max(self.min.x).min(self.max.x);
+        let y = point.y.max(self.min.y).min(self.max.y);
+        let z = point.z.max(self.min.z).min(self.max.z);
+        Vec3 { x, y, z }
     }
 }
 

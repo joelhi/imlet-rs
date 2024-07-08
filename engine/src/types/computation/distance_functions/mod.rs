@@ -8,6 +8,7 @@ mod schwarz;
 mod slice;
 mod sphere;
 mod torus;
+mod mesh_sdf;
 
 pub use aabb::*;
 pub use capsule::*;
@@ -19,3 +20,4 @@ pub use schwarz::*;
 pub use slice::*;
 pub use sphere::*;
 pub use torus::*;
+pub use mesh_sdf::*;

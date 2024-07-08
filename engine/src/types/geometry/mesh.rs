@@ -8,6 +8,7 @@ use super::BoundingBox;
 use super::Line;
 use super::SpatialHashGrid;
 use super::Vec3;
+use std::fmt;
 use std::fmt::Debug;
 use std::time::Instant;
 use std::usize;
@@ -210,7 +211,7 @@ impl<T: Float + Debug> Triangle<T> {
         Self { p1, p2, p3 }
     }
 
-    pub fn ZERO() -> Self {
+    pub fn zero() -> Self {
         Self {
             p1: Vec3::origin(),
             p2: Vec3::origin(),
@@ -239,6 +240,32 @@ impl<T: Float + Debug> Triangle<T> {
                 self.p1.z.max(self.p2.z).max(self.p3.z),
             ),
         )
+    }
+
+    pub fn normal(&self)->Vec3<T>{
+        let v1 = self.p2 - self.p1;
+        let v2 = self.p3 - self.p1;
+        v1.cross(&v2).normalize()
+    }
+
+    pub fn angle_weighted_normal(&self, point: Vec3<T>) -> Vec3<T> {
+        let p1 = self.p1;
+        let p2 = self.p2;
+        let p3 = self.p3;
+
+        let v1 = p1 - point;
+        let v2 = p2 - point;
+        let v3 = p3 - point;
+
+        let n1 = (p2 - p1).cross(&(p3 - p1)).normalize();
+        let n2 = (p3 - p2).cross(&(p1 - p2)).normalize();
+        let n3 = (p1 - p3).cross(&(p2 - p3)).normalize();
+
+        let angle1 = v1.angle(&v2).unwrap_or(T::zero());
+        let angle2 = v2.angle(&v3).unwrap_or(T::zero());
+        let angle3 = v3.angle(&v1).unwrap_or(T::zero());
+
+        (n1 * angle1 + n2 * angle2 + n3 * angle3).normalize()
     }
 
     pub fn closest_pt(&self, pt: &Vec3<T>) -> Vec3<T> {
@@ -302,4 +329,10 @@ impl<T: Float + Debug> Triangle<T> {
         p1 + ab * v + ac * w // Barycentric coordinates (1-v-w,v,w)
     }
     
+}
+
+impl<T: Float + Debug> fmt::Display for Triangle<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "T: {}, {}, {}", self.p1, self.p2, self.p3)
+    }
 }
