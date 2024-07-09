@@ -23,7 +23,7 @@ pub fn main() {
     // Build model
     let mut model = Model::new();
     let mut tree = OctreeNode::new(model_space, mesh.as_triangles());
-    tree.build(10, 9);
+    tree.build(10, 4);
     let bounds = model.add_function(MeshSDF::new(tree));
     //let shape = model.add_function(Gyroid::with_equal_spacing(10.0));
     //let thick_shape = model.add_operation(Thickness::new(shape, 1.75));

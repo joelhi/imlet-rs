@@ -24,6 +24,6 @@ impl<'a, T: Float + Debug + Send + Sync> ImplicitFunction<T> for MeshSDF<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         let query = Vec3::new(x, y, z);
         
-        self.tree.signed_distance(query, false)
+        self.tree.signed_distance(query, true)
     }
 }

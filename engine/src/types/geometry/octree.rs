@@ -172,7 +172,7 @@ impl<T: Float + Debug> OctreeNode<T> {
             // Consider inside if inside all triangles
             for tri in triangles {
                 let plane = Plane::new(tri.p1, tri.normal());
-                if plane.signed_distance(point) > T::zero() {
+                if plane.signed_distance(point) > T::from(0.1).unwrap() {
                     // This normal is outside, consider outside
                     sign = T::one();
                     break;
