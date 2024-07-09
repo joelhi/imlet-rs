@@ -111,8 +111,8 @@ fn get_field_as_data<T: Float + Debug + Send + Sync>(field: &DenseField<T>)->Str
         let v_string = format!(
             "{:?},{:?},{:?},{:?}\n",
             field.origin().x + field.cell_size() * T::from(i).expect("Failed to convert number to T"),
-            field.origin().x + field.cell_size() * T::from(j).expect("Failed to convert number to T"),
-            field.origin().x + field.cell_size() * T::from(k).expect("Failed to convert number to T"),
+            field.origin().y + field.cell_size() * T::from(j).expect("Failed to convert number to T"),
+            field.origin().z + field.cell_size() * T::from(k).expect("Failed to convert number to T"),
             v
         );
         data.push_str(&v_string);

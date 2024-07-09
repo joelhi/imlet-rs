@@ -170,4 +170,19 @@ mod tests {
             assert!(line.length() - 1.0 < 0.001);
         }
     }
+
+    #[test]
+    fn test_intersects_triangle(){
+        let triangle = Triangle::new(
+            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(1.0, 1.0, 0.0), 
+            Vec3::new(0.0, 0.0, 1.0));
+
+        let bounds = BoundingBox::new(
+            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(1.0, 1.0, 1.0),
+        );
+
+        assert!(bounds.intersects(&triangle.bounds()));
+    }
 }

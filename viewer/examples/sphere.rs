@@ -14,13 +14,21 @@ pub fn main() {
 
     // Inputs
     let size = 10.0;
+    let offset = 5.0;
     let cell_size = 0.25;
-    let bounds = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
+    let bounds = BoundingBox::new(
+        Vec3::new(offset, offset, offset),
+        Vec3::new(offset + size, offset + size, offset + size),
+    );
 
     // Function
     let mut model = Model::new();
     let _ = model.add_function(Sphere::new(
-        Vec3::new(size / 2.0, size / 2.0, size / 2.0),
+        Vec3::new(
+            offset + size / 2.0,
+            offset + size / 2.0,
+            offset + size / 2.0,
+        ),
         size * 0.45,
     ));
 

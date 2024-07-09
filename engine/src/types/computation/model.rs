@@ -75,8 +75,8 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
             let (i, j, k) = index3d_from_index1d(index, n.x, n.y, n.z);
             *value = self.evaluate_at_coord(
                 bounds.min.x + cell_size * T::from(i).expect("Failed to convert number to T"),
-                bounds.min.x + cell_size * T::from(j).expect("Failed to convert number to T"),
-                bounds.min.x + cell_size * T::from(k).expect("Failed to convert number to T"),
+                bounds.min.y + cell_size * T::from(j).expect("Failed to convert number to T"),
+                bounds.min.z + cell_size * T::from(k).expect("Failed to convert number to T"),
                 output,
             );
         });
