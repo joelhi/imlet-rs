@@ -11,6 +11,6 @@ Based on [this](https://paulbourke.net/geometry/polygonise/) logic by Paul Bourk
 Todo:
 - [x] Improve graph computation performance
 - [x] Unit tests
-- [ ] Make data type not F32 but generic
+- [x] Make data type not F32 but generic
 - [ ] Make model serializable
 - [ ] Add point cloud visualization for field data
