@@ -7,7 +7,10 @@ use std::{
 
 use num_traits::Float;
 
-use crate::types::{computation::DenseField, geometry::{Mesh, Vec3}};
+use crate::types::{
+    computation::DenseField,
+    geometry::{Mesh, Vec3},
+};
 
 pub fn mesh_to_obj<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> String {
     let mut data = String::new();
@@ -30,7 +33,10 @@ pub fn mesh_to_obj<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> String {
     data
 }
 
-pub fn write_obj_file<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>, file_name: &str) -> io::Result<()> {
+pub fn write_obj_file<T: Float + Debug + Send + Sync>(
+    mesh: &Mesh<T>,
+    file_name: &str,
+) -> io::Result<()> {
     let file_path = Path::new(file_name).with_extension("obj");
 
     let mut file = fs::File::create(file_path)?;
@@ -40,7 +46,9 @@ pub fn write_obj_file<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>, file_name:
 
 use std::fs::File;
 
-pub fn parse_obj_file<T: Float + Debug + Send + Sync>(file_path: &str) -> Result<Mesh<T>, Box<dyn std::error::Error>> {
+pub fn parse_obj_file<T: Float + Debug + Send + Sync>(
+    file_path: &str,
+) -> Result<Mesh<T>, Box<dyn std::error::Error>> {
     let path = Path::new(file_path);
     let file = File::open(&path)?;
 
@@ -65,7 +73,11 @@ pub fn parse_obj_file<T: Float + Debug + Send + Sync>(file_path: &str) -> Result
                 let x: f32 = parts[1].parse()?;
                 let y: f32 = parts[2].parse()?;
                 let z: f32 = parts[3].parse()?;
-                vertices.push(Vec3::new(T::from(x).unwrap(), T::from(y).unwrap(), T::from(z).unwrap()));
+                vertices.push(Vec3::new(
+                    T::from(x).unwrap(),
+                    T::from(y).unwrap(),
+                    T::from(z).unwrap(),
+                ));
             }
             "f" => {
                 // Parse face indices
@@ -86,6 +98,7 @@ pub fn parse_obj_file<T: Float + Debug + Send + Sync>(file_path: &str) -> Result
 
     mesh.add_vertices(&vertices);
     mesh.add_faces(&faces);
+    mesh.compute_vertex_normals();
 
     log::info!(
         "Obj file with {} vertices and {} faces successfully read.",
@@ -96,23 +109,29 @@ pub fn parse_obj_file<T: Float + Debug + Send + Sync>(file_path: &str) -> Result
     Ok(mesh)
 }
 
-pub fn write_field_csv<T: Float + Debug + Send + Sync>(field: &DenseField<T>, file_name: &str) -> io::Result<()> {
+pub fn write_field_csv<T: Float + Debug + Send + Sync>(
+    field: &DenseField<T>,
+    file_name: &str,
+) -> io::Result<()> {
     let file_path = Path::new(file_name).with_extension("csv");
     let mut file = fs::File::create(file_path)?;
     file.write_all(get_field_as_data(&field).as_bytes())?;
     Ok(())
 }
 
-fn get_field_as_data<T: Float + Debug + Send + Sync>(field: &DenseField<T>)->String{
+fn get_field_as_data<T: Float + Debug + Send + Sync>(field: &DenseField<T>) -> String {
     let mut data = String::new();
 
-    for (idx, v) in field.data().iter().enumerate(){
+    for (idx, v) in field.data().iter().enumerate() {
         let (i, j, k) = field.get_point_index3d(idx);
         let v_string = format!(
             "{:?},{:?},{:?},{:?}\n",
-            field.origin().x + field.cell_size() * T::from(i).expect("Failed to convert number to T"),
-            field.origin().y + field.cell_size() * T::from(j).expect("Failed to convert number to T"),
-            field.origin().z + field.cell_size() * T::from(k).expect("Failed to convert number to T"),
+            field.origin().x
+                + field.cell_size() * T::from(i).expect("Failed to convert number to T"),
+            field.origin().y
+                + field.cell_size() * T::from(j).expect("Failed to convert number to T"),
+            field.origin().z
+                + field.cell_size() * T::from(k).expect("Failed to convert number to T"),
             v
         );
         data.push_str(&v_string);

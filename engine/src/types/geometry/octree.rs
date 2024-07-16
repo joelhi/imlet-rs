@@ -1,8 +1,8 @@
-use std::{collections::HashSet, fmt::Debug};
+use std::fmt::Debug;
 
 use num_traits::Float;
 
-use super::{BoundingBox, Plane, Triangle, Vec3};
+use super::{BoundingBox, Triangle, Vec3};
 
 #[derive(Debug, Clone)]
 pub struct OctreeNode<T: Float + Debug> {
@@ -21,15 +21,12 @@ impl<T: Float + Debug> OctreeNode<T> {
     }
 
     pub fn build(&mut self, max_depth: u32, max_triangles: usize) {
-        // Check if the current node needs to be subdivided
         if self.triangles.len() <= max_triangles || max_depth == 0 {
             return;
         }
 
-        let mut t: HashSet<usize> = HashSet::new();
-
         let center = self.bounds.min + (self.bounds.max - self.bounds.min) * T::from(0.5).unwrap();
-        let mut children: [Option<OctreeNode<T>>; 8] = Default::default(); // Initialize array with None
+        let mut children: [Option<OctreeNode<T>>; 8] = Default::default();
 
         for i in 0..8 {
             let offset = Vec3::<T>::new(
@@ -55,9 +52,8 @@ impl<T: Float + Debug> OctreeNode<T> {
             let child_bounds = BoundingBox::new(child_min, child_max);
 
             let mut child_triangles = Vec::new();
-            for (index, triangle) in self.triangles.iter().enumerate() {
+            for triangle in self.triangles.iter() {
                 if triangle.bounds().intersects(&child_bounds) {
-                    t.insert(index);
                     child_triangles.push(*triangle);
                 }
             }
@@ -157,54 +153,53 @@ impl<T: Float + Debug> OctreeNode<T> {
     }
 
     pub fn signed_distance(&self, point: Vec3<T>, use_pseudo_normal: bool) -> T {
-        let (closest_point, _) = self.closest_point(&point);
+        let (closest_point, closest_triangle) = self.closest_point(&point);
+
+        let direction = point - closest_point;
+        let normal = if use_pseudo_normal {
+            self.angle_weighted_pseudonormal(&closest_point)
+        } else {
+            closest_triangle.normal()
+        };
 
         let mut sign = T::one();
-        let direction = point - closest_point;
-        if use_pseudo_normal {
-            let pseudonormal = self.angle_weighted_pseudonormal(&closest_point);
-            if pseudonormal.dot(&direction) < T::zero() {
-                sign = -T::one();
-            }
-        } else {
-            let mut triangles = Vec::new();
-            self.gather_triangles_for_pseudonormal(&point, &mut triangles);
-            // Consider inside if inside all triangles
-            for tri in triangles {
-                let plane = Plane::new(tri.p1, tri.normal());
-                if plane.signed_distance(point) > T::from(0.1).unwrap() {
-                    // This normal is outside, consider outside
-                    sign = T::one();
-                    break;
-                }
-                else{
-                    sign = -T::one();
-                }
-            }
+        if normal.dot(&direction) < T::zero() {
+            sign = -sign;
         }
 
         sign * direction.magnitude()
     }
 
-    fn gather_triangles_for_pseudonormal(&self, point: &Vec3<T>, triangles: &mut Vec<Triangle<T>>) {
+    fn gather_triangles_for_pseudonormal(
+        &self,
+        point: &Vec3<T>,
+        triangles: &mut [Triangle<T>; 12],
+        num_triangles: &mut usize,
+    ) {
         if self.bounds.contains(point) {
-            triangles.extend_from_slice(&self.triangles);
+            for t in &self.triangles {
+                if t.closest_pt(point).distance_to_vec3(point) < T::from(0.01).unwrap() {
+                    triangles[*num_triangles] = *t;
+                    *num_triangles += 1;
+                }
+            }
 
             if let Some(ref children) = self.children {
                 for child in children.iter().filter_map(|c| c.as_ref()) {
-                    child.gather_triangles_for_pseudonormal(point, triangles);
+                    child.gather_triangles_for_pseudonormal(point, triangles, num_triangles);
                 }
             }
         }
     }
 
     fn angle_weighted_pseudonormal(&self, point: &Vec3<T>) -> Vec3<T> {
-        let mut triangles = Vec::new();
-        self.gather_triangles_for_pseudonormal(point, &mut triangles);
+        let mut triangles = [Triangle::zero(); 12];
+        let mut num_triangles = 0;
+        self.gather_triangles_for_pseudonormal(point, &mut triangles, &mut num_triangles);
 
         let mut pseudonormal = Vec3::origin();
-        for triangle in &triangles {
-            pseudonormal = pseudonormal + triangle.angle_weighted_normal(*point);
+        for index in 0..num_triangles {
+            pseudonormal = pseudonormal + triangles[index].angle_weighted_normal(&point);
         }
 
         pseudonormal.normalize()

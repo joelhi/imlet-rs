@@ -6,6 +6,7 @@ use rayon::iter::ParallelIterator;
 
 use super::BoundingBox;
 use super::Line;
+use super::OctreeNode;
 use super::SpatialHashGrid;
 use super::Vec3;
 use std::fmt;
@@ -189,13 +190,34 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
     pub fn as_triangles(&self) -> Vec<Triangle<T>> {
         let mut triangles: Vec<Triangle<T>> = Vec::with_capacity(self.num_faces());
         for face in self.faces.iter() {
-            triangles.push(Triangle::new(
+            let face_normals = if let Some(n) = &self.normals {
+                Some([n[face[0]], n[face[1]], n[face[2]]])
+            } else {
+                None
+            };
+            triangles.push(Triangle::with_normals_option(
                 self.vertices[face[0]],
                 self.vertices[face[1]],
                 self.vertices[face[2]],
-            ))
+                face_normals,
+            ));
         }
         triangles
+    }
+
+    pub fn compute_octree(&self, max_depth: u32, max_triangles: usize) -> OctreeNode<T> {
+        let before = Instant::now();
+
+        let mut tree = OctreeNode::new(self.get_bounds(), self.as_triangles());
+        tree.build(max_depth, max_triangles);
+
+        log::info!(
+            "Octree computed for mesh with {} triangles in {:.2?}",
+            self.num_faces(),
+            before.elapsed()
+        );
+
+        tree
     }
 }
 
@@ -204,11 +226,18 @@ pub struct Triangle<T: Float + Debug> {
     pub p1: Vec3<T>,
     pub p2: Vec3<T>,
     pub p3: Vec3<T>,
+
+    pub n: Option<[Vec3<T>; 3]>,
 }
 
 impl<T: Float + Debug> Triangle<T> {
     pub fn new(p1: Vec3<T>, p2: Vec3<T>, p3: Vec3<T>) -> Self {
-        Self { p1, p2, p3 }
+        Self {
+            p1,
+            p2,
+            p3,
+            n: None,
+        }
     }
 
     pub fn zero() -> Self {
@@ -216,6 +245,30 @@ impl<T: Float + Debug> Triangle<T> {
             p1: Vec3::origin(),
             p2: Vec3::origin(),
             p3: Vec3::origin(),
+            n: None,
+        }
+    }
+
+    pub fn with_normals(p1: Vec3<T>, p2: Vec3<T>, p3: Vec3<T>, n: [Vec3<T>; 3]) -> Self {
+        Self {
+            p1: p1,
+            p2: p2,
+            p3: p3,
+            n: Some(n),
+        }
+    }
+
+    pub fn with_normals_option(
+        p1: Vec3<T>,
+        p2: Vec3<T>,
+        p3: Vec3<T>,
+        n: Option<[Vec3<T>; 3]>,
+    ) -> Self {
+        Self {
+            p1: p1,
+            p2: p2,
+            p3: p3,
+            n: n,
         }
     }
 
@@ -242,93 +295,85 @@ impl<T: Float + Debug> Triangle<T> {
         )
     }
 
-    pub fn normal(&self)->Vec3<T>{
+    pub fn normal(&self) -> Vec3<T> {
         let v1 = self.p2 - self.p1;
         let v2 = self.p3 - self.p1;
         v1.cross(&v2).normalize()
     }
 
-    pub fn angle_weighted_normal(&self, point: Vec3<T>) -> Vec3<T> {
-        let p1 = self.p1;
-        let p2 = self.p2;
-        let p3 = self.p3;
+    pub fn angle_weighted_normal(&self, point: &Vec3<T>) -> Vec3<T> {
+        let v1 = self.p1 - *point;
+        let v2 = self.p2 - *point;
+        let v3 = self.p3 - *point;
 
-        let v1 = p1 - point;
-        let v2 = p2 - point;
-        let v3 = p3 - point;
-
-        let n1 = (p2 - p1).cross(&(p3 - p1)).normalize();
-        let n2 = (p3 - p2).cross(&(p1 - p2)).normalize();
-        let n3 = (p1 - p3).cross(&(p2 - p3)).normalize();
+        let normals = match self.n {
+            Some(normals) => normals,
+            None => {
+                let normal = self.normal();
+                [normal, normal, normal]
+            }
+        };
 
         let angle1 = v1.angle(&v2).unwrap_or(T::zero());
         let angle2 = v2.angle(&v3).unwrap_or(T::zero());
         let angle3 = v3.angle(&v1).unwrap_or(T::zero());
 
-        (n1 * angle1 + n2 * angle2 + n3 * angle3).normalize()
+        normals[0] * angle1 + normals[1] * angle2 + normals[2] * angle3
     }
 
     pub fn closest_pt(&self, pt: &Vec3<T>) -> Vec3<T> {
         let p1 = self.p1;
         let p2 = self.p2;
         let p3 = self.p3;
-    
+
         // Compute vectors
         let ab = p2 - p1;
         let ac = p3 - p1;
         let ap = *pt - p1;
-    
-        // Compute barycentric coordinates
+
         let d1 = ab.dot(&ap);
         let d2 = ac.dot(&ap);
         if d1 <= T::zero() && d2 <= T::zero() {
-            return p1; // Barycentric coordinates (1,0,0)
+            return p1;
         }
-    
-        // Check if P in vertex region outside p2
+
         let bp = *pt - p2;
         let d3 = ab.dot(&bp);
         let d4 = ac.dot(&bp);
         if d3 >= T::zero() && d4 <= d3 {
-            return p2; // Barycentric coordinates (0,1,0)
+            return p2;
         }
-    
-        // Check if P in edge region of AB, if so return projection of P onto AB
+
         let vc = d1 * d4 - d3 * d2;
         if vc <= T::zero() && d1 >= T::zero() && d3 <= T::zero() {
             let v = d1 / (d1 - d3);
-            return p1 + ab * v; // Barycentric coordinates (1-v,v,0)
+            return p1 + ab * v;
         }
-    
-        // Check if P in vertex region outside p3
+
         let cp = *pt - p3;
         let d5 = ab.dot(&cp);
         let d6 = ac.dot(&cp);
         if d6 >= T::zero() && d5 <= d6 {
-            return p3; // Barycentric coordinates (0,0,1)
+            return p3;
         }
-    
-        // Check if P in edge region of AC, if so return projection of P onto AC
+
         let vb = d5 * d2 - d1 * d6;
         if vb <= T::zero() && d2 >= T::zero() && d6 <= T::zero() {
             let w = d2 / (d2 - d6);
-            return p1 + ac * w; // Barycentric coordinates (1-w,0,w)
+            return p1 + ac * w;
         }
-    
-        // Check if P in edge region of BC, if so return projection of P onto BC
+
         let va = d3 * d6 - d5 * d4;
         if va <= T::zero() && (d4 - d3) >= T::zero() && (d5 - d6) >= T::zero() {
             let w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
-            return p2 + (p3 - p2) * w; // Barycentric coordinates (0,1-w,w)
+            return p2 + (p3 - p2) * w;
         }
-    
-        // P inside face region. Compute Q through its barycentric coordinates (u,v,w)
+
         let denom = T::one() / (va + vb + vc);
         let v = vb * denom;
         let w = vc * denom;
-        p1 + ab * v + ac * w // Barycentric coordinates (1-v-w,v,w)
+        p1 + ab * v + ac * w
     }
-    
 }
 
 impl<T: Float + Debug> fmt::Display for Triangle<T> {

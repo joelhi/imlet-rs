@@ -15,8 +15,11 @@ impl<T: Float + Debug> BoundingBox<T> {
         Self { min, max }
     }
 
-    pub fn zero()-> Self{
-        Self {min: Vec3::origin(), max: Vec3::origin()}
+    pub fn zero() -> Self {
+        Self {
+            min: Vec3::origin(),
+            max: Vec3::origin(),
+        }
     }
 
     pub fn dimensions(&self) -> (T, T, T) {
@@ -80,18 +83,18 @@ impl<T: Float + Debug> BoundingBox<T> {
     pub fn triangles(&self) -> [Triangle<T>; 12] {
         let corners = self.corners();
         [
-            Triangle::new(corners[0], corners[1],corners[2]),
-            Triangle::new(corners[0], corners[2],corners[3]),
-            Triangle::new(corners[0], corners[1],corners[5]),
-            Triangle::new(corners[0], corners[5],corners[4]),
-            Triangle::new(corners[1], corners[6],corners[2]),
-            Triangle::new(corners[1], corners[5],corners[6]),
-            Triangle::new(corners[2], corners[6],corners[7]),
-            Triangle::new(corners[2], corners[7],corners[3]),
-            Triangle::new(corners[3], corners[0],corners[4]),
-            Triangle::new(corners[3], corners[4],corners[7]),
-            Triangle::new(corners[7], corners[4],corners[6]),
-            Triangle::new(corners[4], corners[5],corners[6]),
+            Triangle::new(corners[0], corners[1], corners[2]),
+            Triangle::new(corners[0], corners[2], corners[3]),
+            Triangle::new(corners[0], corners[1], corners[5]),
+            Triangle::new(corners[0], corners[5], corners[4]),
+            Triangle::new(corners[1], corners[6], corners[2]),
+            Triangle::new(corners[1], corners[5], corners[6]),
+            Triangle::new(corners[2], corners[6], corners[7]),
+            Triangle::new(corners[2], corners[7], corners[3]),
+            Triangle::new(corners[3], corners[0], corners[4]),
+            Triangle::new(corners[3], corners[4], corners[7]),
+            Triangle::new(corners[7], corners[4], corners[6]),
+            Triangle::new(corners[4], corners[5], corners[6]),
         ]
     }
 
@@ -100,9 +103,12 @@ impl<T: Float + Debug> BoundingBox<T> {
     }
 
     pub fn intersects(&self, other: &BoundingBox<T>) -> bool {
-        self.min.x <= other.max.x && self.max.x >= other.min.x &&
-        self.min.y <= other.max.y && self.max.y >= other.min.y &&
-        self.min.z <= other.max.z && self.max.z >= other.min.z
+        self.min.x <= other.max.x
+            && self.max.x >= other.min.x
+            && self.min.y <= other.max.y
+            && self.max.y >= other.min.y
+            && self.min.z <= other.max.z
+            && self.max.z >= other.min.z
     }
 
     pub fn closest_point(&self, point: &Vec3<T>) -> Vec3<T> {
@@ -110,6 +116,14 @@ impl<T: Float + Debug> BoundingBox<T> {
         let y = point.y.max(self.min.y).min(self.max.y);
         let z = point.z.max(self.min.z).min(self.max.z);
         Vec3 { x, y, z }
+    }
+
+    pub fn offset(&self, distance: T) -> BoundingBox<T> {
+        let offset_vec = Vec3::new(distance, distance, distance);
+        Self {
+            min: self.min - offset_vec,
+            max: self.max + offset_vec,
+        }
     }
 }
 
@@ -172,16 +186,14 @@ mod tests {
     }
 
     #[test]
-    fn test_intersects_triangle(){
+    fn test_intersects_triangle() {
         let triangle = Triangle::new(
             Vec3::new(0.0, 0.0, 0.0),
-            Vec3::new(1.0, 1.0, 0.0), 
-            Vec3::new(0.0, 0.0, 1.0));
-
-        let bounds = BoundingBox::new(
-            Vec3::new(0.0, 0.0, 0.0),
-            Vec3::new(1.0, 1.0, 1.0),
+            Vec3::new(1.0, 1.0, 0.0),
+            Vec3::new(0.0, 0.0, 1.0),
         );
+
+        let bounds = BoundingBox::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0));
 
         assert!(bounds.intersects(&triangle.bounds()));
     }

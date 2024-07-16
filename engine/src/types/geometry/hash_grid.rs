@@ -70,18 +70,9 @@ impl<T: Float + Debug> SpatialHashGrid<T> {
         let multiplier = T::one() / self.tolerance;
         let mut s_hash: i64 = 23;
 
-        s_hash = s_hash * 37
-            + (v.x * multiplier)
-                .to_i64()
-                .unwrap();
-        s_hash = s_hash * 37
-            + (v.y * multiplier)
-                .to_i64()
-                .unwrap();
-        s_hash = s_hash * 37
-            + (v.z * multiplier)
-                .to_i64()
-                .unwrap();
+        s_hash = s_hash * 37 + (v.x * multiplier).to_i64().unwrap();
+        s_hash = s_hash * 37 + (v.y * multiplier).to_i64().unwrap();
+        s_hash = s_hash * 37 + (v.z * multiplier).to_i64().unwrap();
 
         return s_hash;
     }
