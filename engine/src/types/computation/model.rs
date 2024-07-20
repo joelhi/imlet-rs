@@ -9,7 +9,9 @@ use crate::{
 };
 
 use super::{
-    component::{Component, ComponentId, ComponentValues}, traits::implicit_functions::{ImplicitFunction, ImplicitOperation}, DenseField
+    component::{Component, ComponentId, ComponentValues},
+    traits::implicit_functions::{ImplicitFunction, ImplicitOperation},
+    DenseField,
 };
 
 pub struct Model<T: Float + Debug + Send + Sync> {

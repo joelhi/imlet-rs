@@ -2,7 +2,9 @@ use std::fmt::Debug;
 
 use num_traits::Float;
 
-use crate::types::computation::{component::ComponentId, traits::implicit_functions::ImplicitOperation};
+use crate::types::computation::{
+    component::ComponentId, traits::implicit_functions::ImplicitOperation,
+};
 
 pub struct Multiply {
     inputs: [ComponentId; 2],

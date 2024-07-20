@@ -205,7 +205,11 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         triangles
     }
 
-    pub fn compute_octree(&self, max_depth: u32, max_triangles: usize) -> OctreeNode<Triangle<T>, T> {
+    pub fn compute_octree(
+        &self,
+        max_depth: u32,
+        max_triangles: usize,
+    ) -> OctreeNode<Triangle<T>, T> {
         let before = Instant::now();
 
         let mut tree = OctreeNode::new(self.get_bounds(), self.as_triangles());
@@ -321,7 +325,7 @@ impl<T: Float + Debug> Triangle<T> {
         normals[0] * angle1 + normals[1] * angle2 + normals[2] * angle3
     }
 
-    fn closest_point(&self, query_point: &Vec3<T>)->Vec3<T> {
+    fn closest_point(&self, query_point: &Vec3<T>) -> Vec3<T> {
         let p1 = self.p1;
         let p2 = self.p2;
         let p3 = self.p3;
@@ -382,7 +386,7 @@ impl<T: Float + Debug + Send + Sync> fmt::Display for Triangle<T> {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> SpatialQuery<T> for Triangle<T>{
+impl<T: Float + Debug + Send + Sync> SpatialQuery<T> for Triangle<T> {
     fn bounds(&self) -> BoundingBox<T> {
         self.bounds()
     }
@@ -390,14 +394,13 @@ impl<T: Float + Debug + Send + Sync> SpatialQuery<T> for Triangle<T>{
     fn default() -> Self {
         Triangle::zero()
     }
-    
+
     fn closest_point(&self, query_point: &Vec3<T>) -> Vec3<T> {
         self.closest_point(query_point)
     }
 }
 
-
-impl<T: Float + Debug + Send + Sync> SignedQuery<T> for Triangle<T>{
+impl<T: Float + Debug + Send + Sync> SignedQuery<T> for Triangle<T> {
     fn normal_at(&self, query_point: &Vec3<T>) -> Vec3<T> {
         self.angle_weighted_normal(query_point)
     }

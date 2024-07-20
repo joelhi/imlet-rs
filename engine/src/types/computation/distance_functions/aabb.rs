@@ -3,7 +3,8 @@ use std::fmt::Debug;
 use num_traits::Float;
 
 use crate::types::{
-    computation::traits::implicit_functions::ImplicitFunction, geometry::{BoundingBox, Vec3}
+    computation::traits::implicit_functions::ImplicitFunction,
+    geometry::{BoundingBox, Vec3},
 };
 
 #[derive(Debug, Clone, Copy)]

@@ -226,7 +226,10 @@ impl<Q: SignedQuery<T>, T: Float + Debug + Send + Sync> OctreeNode<Q, T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{types::geometry::Mesh, utils::{self, io::parse_obj_file}};
+    use crate::{
+        types::geometry::Mesh,
+        utils::{self, io::parse_obj_file},
+    };
 
     use super::*;
 

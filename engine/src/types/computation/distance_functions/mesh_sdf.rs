@@ -14,11 +14,16 @@ pub struct MeshSDF<T: Float + Debug + Send + Sync> {
 }
 
 impl<'a, T: Float + Debug + Send + Sync> MeshSDF<T> {
-    pub fn new(mesh: &Mesh<T>, max_depth: u32, max_triangles: usize, proximity_tolerance: T) -> Self {
+    pub fn new(
+        mesh: &Mesh<T>,
+        max_depth: u32,
+        max_triangles: usize,
+        proximity_tolerance: T,
+    ) -> Self {
         let tree = mesh.compute_octree(max_depth, max_triangles);
         Self {
             tree: Box::new(tree),
-            proximity_tolerance
+            proximity_tolerance,
         }
     }
 }

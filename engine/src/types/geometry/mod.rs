@@ -4,9 +4,9 @@ mod line;
 mod mesh;
 mod octree;
 mod plane;
+pub mod traits;
 mod vec3f;
 mod vec3i;
-pub mod traits;
 
 pub use bounding_box::*;
 use hash_grid::*;
