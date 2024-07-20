@@ -104,6 +104,7 @@ fn get_triangles<T: Float + Debug>(
             p1: vertices[TRI_TABLE[cube_index][i] as usize],
             p2: vertices[TRI_TABLE[cube_index][i + 1] as usize],
             p3: vertices[TRI_TABLE[cube_index][i + 2] as usize],
+            n: None,
         });
     }
     triangles

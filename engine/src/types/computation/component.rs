@@ -2,6 +2,8 @@ use std::fmt::Debug;
 
 use num_traits::Float;
 
+use super::traits::implicit_functions::{ImplicitFunction, ImplicitOperation};
+
 const MAX_INPUTS: usize = 8;
 const MAX_TOTAL_COMPONENTS: usize = 512;
 
@@ -67,16 +69,6 @@ impl ComponentValues {
     pub fn set<T: Float + Debug + Send + Sync>(&mut self, index: usize, value: T) {
         self.values[index] = value.to_f64().expect("Failed to convert value to f64");
     }
-}
-
-pub trait ImplicitFunction<T: Float + Debug + Send + Sync>: Sync + Send {
-    fn eval(&self, x: T, y: T, z: T) -> T;
-}
-
-pub trait ImplicitOperation<T: Float + Debug + Send + Sync>: Sync + Send {
-    fn eval(&self, inputs: &[T]) -> T;
-
-    fn get_inputs(&self) -> &[ComponentId];
 }
 
 #[cfg(test)]

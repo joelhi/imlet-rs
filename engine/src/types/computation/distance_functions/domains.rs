@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use num_traits::Float;
 
-use crate::types::computation::ImplicitFunction;
+use crate::types::computation::traits::implicit_functions::ImplicitFunction;
 use crate::utils::math_helper::normalize;
 
 #[derive(Debug, Clone, Copy)]

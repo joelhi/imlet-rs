@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use num_traits::Float;
 
-use crate::types::{computation::component::ImplicitFunction, geometry::Plane};
+use crate::types::{computation::traits::implicit_functions::ImplicitFunction, geometry::Plane};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Slice<T: Float + Debug> {

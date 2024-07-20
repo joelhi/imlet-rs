@@ -15,13 +15,13 @@ impl Vertex {
         Self {
             position: [
                 position.x.to_f32().unwrap(),
-                position.y.to_f32().unwrap(),
                 position.z.to_f32().unwrap(),
+                position.y.to_f32().unwrap(),
             ],
             normal: [
                 normal.x.to_f32().unwrap(),
-                normal.y.to_f32().unwrap(),
                 normal.z.to_f32().unwrap(),
+                normal.y.to_f32().unwrap(),
             ],
         }
     }

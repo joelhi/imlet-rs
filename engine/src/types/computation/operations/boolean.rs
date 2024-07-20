@@ -2,7 +2,9 @@ use std::fmt::Debug;
 
 use num_traits::Float;
 
-use crate::types::computation::component::{ComponentId, ImplicitOperation};
+use crate::types::computation::{
+    component::ComponentId, traits::implicit_functions::ImplicitOperation,
+};
 
 pub struct Union {
     inputs: [ComponentId; 2],

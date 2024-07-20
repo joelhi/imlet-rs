@@ -207,6 +207,18 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
     pub fn copy_data(&self) -> Vec<T> {
         self.data.clone()
     }
+
+    pub fn data(&self) -> &[T] {
+        &self.data
+    }
+
+    pub fn origin(&self) -> &Vec3<T> {
+        &self.origin
+    }
+
+    pub fn cell_size(&self) -> T {
+        self.cell_size
+    }
 }
 
 #[cfg(test)]

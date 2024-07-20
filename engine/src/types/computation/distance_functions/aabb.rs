@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use num_traits::Float;
 
 use crate::types::{
-    computation::ImplicitFunction,
+    computation::traits::implicit_functions::ImplicitFunction,
     geometry::{BoundingBox, Vec3},
 };
 
@@ -31,24 +31,8 @@ impl<T: Float + Debug> AABB<T> {
 
 impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for AABB<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
-        let pt = Vec3::new(x, y, z);
+        let point = Vec3::new(x, y, z);
 
-        let diff1 = self.bounds.max - pt;
-        let diff2 = self.bounds.min - pt;
-
-        let dist = diff1.x.abs().min(
-            diff1.y.abs().min(
-                diff1
-                    .z
-                    .abs()
-                    .min(diff2.x.abs().min(diff2.y.abs().min(diff2.z.abs()))),
-            ),
-        );
-
-        if self.bounds.is_coord_inside(x, y, z) {
-            -dist
-        } else {
-            dist
-        }
+        self.bounds.signed_distance(&point)
     }
 }

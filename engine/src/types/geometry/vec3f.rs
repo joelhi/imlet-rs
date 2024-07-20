@@ -1,4 +1,7 @@
-use std::{fmt::Debug, ops};
+use std::{
+    fmt::{self, Debug},
+    ops,
+};
 
 use num_traits::Float;
 
@@ -73,7 +76,7 @@ impl<T: Float + Debug> Vec3<T> {
         }
     }
 
-    pub fn dot(&self, rhs: Vec3<T>) -> T {
+    pub fn dot(&self, rhs: &Vec3<T>) -> T {
         (self.x * rhs.x) + (self.y * rhs.y) + (self.z * rhs.z)
     }
 
@@ -81,11 +84,23 @@ impl<T: Float + Debug> Vec3<T> {
         (self.x * x) + (self.y * y) + (self.z * z)
     }
 
-    pub fn cross(&self, rhs: Vec3<T>) -> Vec3<T> {
+    pub fn cross(&self, rhs: &Vec3<T>) -> Vec3<T> {
         Self {
             x: self.y * rhs.z - self.z * rhs.y,
             y: self.z * rhs.x - self.x * rhs.z,
             z: self.x * rhs.y - self.y * rhs.x,
+        }
+    }
+
+    pub fn angle(&self, other: &Vec3<T>) -> Option<T> {
+        let dot = self.dot(other);
+        let len_self = self.magnitude();
+        let len_other = other.magnitude();
+        if len_self.is_zero() || len_other.is_zero() {
+            None
+        } else {
+            let cosine = (dot / (len_self * len_other)).clamp(-T::one(), T::one());
+            Some(cosine.acos())
         }
     }
 
@@ -148,6 +163,43 @@ impl<T: Float + Debug> ops::Mul<T> for Vec3<T> {
 impl<T: Float + Debug> ops::Mul<Vec3<T>> for Vec3<T> {
     type Output = T;
     fn mul(self, rhs: Vec3<T>) -> Self::Output {
-        self.dot(rhs)
+        self.dot(&rhs)
+    }
+}
+
+impl<T: Float + Debug> fmt::Display for Vec3<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{{{}, {}, {}}}",
+            self.x.to_f32().unwrap(),
+            self.y.to_f32().unwrap(),
+            self.z.to_f32().unwrap()
+        )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::f64::consts::PI;
+
+    use super::*;
+
+    #[test]
+    fn test_compute_angle_opposite() {
+        let v1 = Vec3::new(
+            1.3922510409397368,
+            0.44016218835974374,
+            -0.14818594990623979,
+        );
+
+        let v2 = Vec3::new(
+            -0.26339719056661082,
+            -0.083273404291623443,
+            0.028035003558268268,
+        );
+
+        let angle = v1.angle(&v2).unwrap();
+        assert!((angle - PI).abs() < 0.01);
     }
 }

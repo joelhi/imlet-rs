@@ -2,7 +2,9 @@ use std::fmt::Debug;
 
 use num_traits::Float;
 
-use crate::types::computation::component::{ComponentId, ImplicitOperation};
+use crate::types::computation::{
+    component::ComponentId, traits::implicit_functions::ImplicitOperation,
+};
 
 pub struct Offset<T> {
     inputs: [ComponentId; 1],

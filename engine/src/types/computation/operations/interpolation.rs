@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use num_traits::Float;
 
-use crate::types::computation::{ComponentId, ImplicitOperation};
+use crate::types::computation::{traits::implicit_functions::ImplicitOperation, ComponentId};
 
 pub struct LinearInterpolation {
     inputs: [ComponentId; 3],

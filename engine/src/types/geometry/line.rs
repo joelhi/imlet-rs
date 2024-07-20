@@ -22,7 +22,7 @@ impl<T: Float + Debug> Line<T> {
     pub fn closest_pt(&self, pt: Vec3<T>) -> Vec3<T> {
         let v1 = pt - self.start;
         let v2 = (self.end - self.start).normalize();
-        let t = (v1.dot(v2)).clamp(T::zero(), self.start.distance_to_vec3(&self.end));
+        let t = (v1.dot(&v2)).clamp(T::zero(), self.start.distance_to_vec3(&self.end));
         self.start + (v2 * t)
     }
 
