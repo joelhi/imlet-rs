@@ -4,6 +4,7 @@ use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::IntoParallelRefMutIterator;
 use rayon::iter::ParallelIterator;
 
+use super::traits::spatial_query::*;
 use super::BoundingBox;
 use super::Line;
 use super::OctreeNode;
@@ -31,7 +32,6 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
 
     pub fn from_triangles(triangles: &[Triangle<T>]) -> Mesh<T> {
         let before = Instant::now();
-        // Contruct vertex buffer using a hash grid for coordinates to index mapping
         let mut faces: Vec<[usize; 3]> = Vec::new();
         let mut grid = SpatialHashGrid::new();
 
@@ -205,7 +205,7 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         triangles
     }
 
-    pub fn compute_octree(&self, max_depth: u32, max_triangles: usize) -> OctreeNode<T> {
+    pub fn compute_octree(&self, max_depth: u32, max_triangles: usize) -> OctreeNode<Triangle<T>, T> {
         let before = Instant::now();
 
         let mut tree = OctreeNode::new(self.get_bounds(), self.as_triangles());
@@ -321,7 +321,7 @@ impl<T: Float + Debug> Triangle<T> {
         normals[0] * angle1 + normals[1] * angle2 + normals[2] * angle3
     }
 
-    pub fn closest_pt(&self, pt: &Vec3<T>) -> Vec3<T> {
+    fn closest_point(&self, query_point: &Vec3<T>)->Vec3<T> {
         let p1 = self.p1;
         let p2 = self.p2;
         let p3 = self.p3;
@@ -329,7 +329,7 @@ impl<T: Float + Debug> Triangle<T> {
         // Compute vectors
         let ab = p2 - p1;
         let ac = p3 - p1;
-        let ap = *pt - p1;
+        let ap = *query_point - p1;
 
         let d1 = ab.dot(&ap);
         let d2 = ac.dot(&ap);
@@ -337,7 +337,7 @@ impl<T: Float + Debug> Triangle<T> {
             return p1;
         }
 
-        let bp = *pt - p2;
+        let bp = *query_point - p2;
         let d3 = ab.dot(&bp);
         let d4 = ac.dot(&bp);
         if d3 >= T::zero() && d4 <= d3 {
@@ -350,7 +350,7 @@ impl<T: Float + Debug> Triangle<T> {
             return p1 + ab * v;
         }
 
-        let cp = *pt - p3;
+        let cp = *query_point - p3;
         let d5 = ab.dot(&cp);
         let d6 = ac.dot(&cp);
         if d6 >= T::zero() && d5 <= d6 {
@@ -376,8 +376,29 @@ impl<T: Float + Debug> Triangle<T> {
     }
 }
 
-impl<T: Float + Debug> fmt::Display for Triangle<T> {
+impl<T: Float + Debug + Send + Sync> fmt::Display for Triangle<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "T: {}, {}, {}", self.p1, self.p2, self.p3)
+    }
+}
+
+impl<T: Float + Debug + Send + Sync> SpatialQuery<T> for Triangle<T>{
+    fn bounds(&self) -> BoundingBox<T> {
+        self.bounds()
+    }
+
+    fn default() -> Self {
+        Triangle::zero()
+    }
+    
+    fn closest_point(&self, query_point: &Vec3<T>) -> Vec3<T> {
+        self.closest_point(query_point)
+    }
+}
+
+
+impl<T: Float + Debug + Send + Sync> SignedQuery<T> for Triangle<T>{
+    fn normal_at(&self, query_point: &Vec3<T>) -> Vec3<T> {
+        self.angle_weighted_normal(query_point)
     }
 }
