@@ -2,31 +2,34 @@ use std::fmt::Debug;
 
 use num_traits::Float;
 
-use super::{BoundingBox, Triangle, Vec3};
+use super::{
+    traits::spatial_query::{SignedQuery, SpatialQuery},
+    BoundingBox, Vec3,
+};
 
 #[derive(Debug, Clone)]
-pub struct OctreeNode<T: Float + Debug> {
+pub struct OctreeNode<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> {
     pub bounds: BoundingBox<T>,
-    pub triangles: Vec<Triangle<T>>,
-    pub children: Option<Box<[Option<OctreeNode<T>>; 8]>>,
+    pub objects: Vec<Q>,
+    pub children: Option<Box<[Option<OctreeNode<Q, T>>; 8]>>,
 }
 
-impl<T: Float + Debug> OctreeNode<T> {
-    pub fn new(bounds: BoundingBox<T>, triangles: Vec<Triangle<T>>) -> Self {
+impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> OctreeNode<Q, T> {
+    pub fn new(bounds: BoundingBox<T>, objects: Vec<Q>) -> Self {
         Self {
             bounds: bounds,
-            triangles: triangles,
+            objects: objects,
             children: None,
         }
     }
 
     pub fn build(&mut self, max_depth: u32, max_triangles: usize) {
-        if self.triangles.len() <= max_triangles || max_depth == 0 {
+        if self.objects.len() <= max_triangles || max_depth == 0 {
             return;
         }
 
         let center = self.bounds.min + (self.bounds.max - self.bounds.min) * T::from(0.5).unwrap();
-        let mut children: [Option<OctreeNode<T>>; 8] = Default::default();
+        let mut children: [Option<OctreeNode<Q, T>>; 8] = Default::default();
 
         for i in 0..8 {
             let offset = Vec3::<T>::new(
@@ -52,9 +55,9 @@ impl<T: Float + Debug> OctreeNode<T> {
             let child_bounds = BoundingBox::new(child_min, child_max);
 
             let mut child_triangles = Vec::new();
-            for triangle in self.triangles.iter() {
-                if triangle.bounds().intersects(&child_bounds) {
-                    child_triangles.push(*triangle);
+            for object in self.objects.iter() {
+                if object.bounds().intersects(&child_bounds) {
+                    child_triangles.push(*object);
                 }
             }
 
@@ -65,7 +68,7 @@ impl<T: Float + Debug> OctreeNode<T> {
             }
         }
         self.children = Some(Box::new(children));
-        self.triangles.clear();
+        self.objects.clear();
     }
 
     fn bounding_box_closer_than(&self, point: &Vec3<T>, dist_sq: T) -> bool {
@@ -83,20 +86,20 @@ impl<T: Float + Debug> OctreeNode<T> {
         point: &Vec3<T>,
         best_dist_sq: &mut T,
         best_point: &mut Vec3<T>,
-        best_triangle: &mut Triangle<T>,
+        best_object: &mut Q,
     ) {
-        for triangle in &self.triangles {
-            let closest_point = triangle.closest_pt(point);
+        for object in &self.objects {
+            let closest_point = object.closest_point(point);
             let dist_sq = point.distance_to_vec3_squared(&closest_point);
             if dist_sq < *best_dist_sq {
                 *best_dist_sq = dist_sq;
                 *best_point = closest_point;
-                *best_triangle = *triangle;
+                *best_object = *object;
             }
         }
 
         if let Some(ref children) = self.children {
-            let mut child_nodes: Vec<&OctreeNode<T>> =
+            let mut child_nodes: Vec<&OctreeNode<Q, T>> =
                 children.iter().filter_map(|c| c.as_ref()).collect();
 
             child_nodes.sort_by(|a, b| {
@@ -115,23 +118,18 @@ impl<T: Float + Debug> OctreeNode<T> {
 
             for child in child_nodes {
                 if child.bounding_box_closer_than(point, *best_dist_sq) {
-                    child.closest_point_recursive(point, best_dist_sq, best_point, best_triangle);
+                    child.closest_point_recursive(point, best_dist_sq, best_point, best_object);
                 }
             }
         }
     }
 
-    pub fn closest_point(&self, point: &Vec3<T>) -> (Vec3<T>, Triangle<T>) {
+    pub fn closest_point(&self, point: &Vec3<T>) -> (Vec3<T>, Q) {
         let mut best_dist_sq = T::max_value();
         let mut best_point = point.clone();
-        let mut best_triangle = Triangle::zero();
-        self.closest_point_recursive(
-            point,
-            &mut best_dist_sq,
-            &mut best_point,
-            &mut best_triangle,
-        );
-        (best_point, best_triangle)
+        let mut best_object = SpatialQuery::default();
+        self.closest_point_recursive(point, &mut best_dist_sq, &mut best_point, &mut best_object);
+        (best_point, best_object)
     }
 
     pub fn get_all_bounds(&self) -> Vec<BoundingBox<T>> {
@@ -151,16 +149,19 @@ impl<T: Float + Debug> OctreeNode<T> {
             }
         }
     }
+}
 
-    pub fn signed_distance(&self, point: Vec3<T>, use_pseudo_normal: bool) -> T {
-        let (closest_point, closest_triangle) = self.closest_point(&point);
+impl<Q: SignedQuery<T>, T: Float + Debug + Send + Sync> OctreeNode<Q, T> {
+    pub fn signed_distance(&self, point: Vec3<T>, proximity_tolerance: T) -> T {
+        let (closest_point, _) = self.closest_point(&point);
 
         let direction = point - closest_point;
-        let normal = if use_pseudo_normal {
-            self.angle_weighted_pseudonormal(&closest_point)
-        } else {
-            closest_triangle.normal()
-        };
+
+        assert!(
+            self.bounds.contains(&closest_point),
+            "Closest point not in bounds of octree."
+        );
+        let normal = self.pseudonormal_at(&closest_point, proximity_tolerance);
 
         let mut sign = T::one();
         if normal.dot(&direction) < T::zero() {
@@ -170,36 +171,53 @@ impl<T: Float + Debug> OctreeNode<T> {
         sign * direction.magnitude()
     }
 
-    fn gather_triangles_for_pseudonormal(
+    fn gather_objects_for_pseudonormal(
         &self,
         point: &Vec3<T>,
-        triangles: &mut [Triangle<T>; 12],
-        num_triangles: &mut usize,
+        proximity_tolerance: T,
+        objects: &mut Vec<Q>,
+        num_objects: &mut usize,
     ) {
         if self.bounds.contains(point) {
-            for t in &self.triangles {
-                if t.closest_pt(point).distance_to_vec3(point) < T::from(0.01).unwrap() {
-                    triangles[*num_triangles] = *t;
-                    *num_triangles += 1;
+            for t in &self.objects {
+                if t.closest_point(point).distance_to_vec3(point) < proximity_tolerance {
+                    objects.push(*t);
+                    *num_objects += 1;
                 }
             }
 
             if let Some(ref children) = self.children {
                 for child in children.iter().filter_map(|c| c.as_ref()) {
-                    child.gather_triangles_for_pseudonormal(point, triangles, num_triangles);
+                    child.gather_objects_for_pseudonormal(
+                        point,
+                        proximity_tolerance,
+                        objects,
+                        num_objects,
+                    );
                 }
             }
         }
     }
 
-    fn angle_weighted_pseudonormal(&self, point: &Vec3<T>) -> Vec3<T> {
-        let mut triangles = [Triangle::zero(); 12];
-        let mut num_triangles = 0;
-        self.gather_triangles_for_pseudonormal(point, &mut triangles, &mut num_triangles);
+    fn pseudonormal_at(&self, point: &Vec3<T>, proximity_tolerance: T) -> Vec3<T> {
+        let mut objects = Vec::new();
+        let mut num_objects = 0;
+
+        self.gather_objects_for_pseudonormal(
+            point,
+            proximity_tolerance,
+            &mut objects,
+            &mut num_objects,
+        );
+
+        assert!(
+            num_objects > 0,
+            "Failed to compute normal as no objects could be found at point within tolerance."
+        );
 
         let mut pseudonormal = Vec3::origin();
-        for index in 0..num_triangles {
-            pseudonormal = pseudonormal + triangles[index].angle_weighted_normal(&point);
+        for index in 0..num_objects {
+            pseudonormal = pseudonormal + objects[index].normal_at(&point);
         }
 
         pseudonormal.normalize()
@@ -208,27 +226,74 @@ impl<T: Float + Debug> OctreeNode<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        types::geometry::Mesh,
-        utils::{self},
-    };
+    use crate::{types::geometry::Mesh, utils::{self, io::parse_obj_file}};
 
     use super::*;
 
     #[test]
     fn test_build_octree() {
         utils::logging::init_info();
-        let m: Mesh<f64> =
-            crate::utils::io::parse_obj_file("../assets/geometry/bunny.obj").unwrap();
 
-        let mut octree = OctreeNode::new(
-            BoundingBox::new(Vec3::origin(), Vec3::new(10.0, 10.0, 10.0)),
-            m.as_triangles(),
-        );
-        octree.build(10, 15);
+        let m: Mesh<f64> = parse_obj_file("../assets/geometry/sphere.obj").unwrap();
 
-        let (closest_pt, _) = octree.closest_point(&Vec3::origin());
+        let octree = m.compute_octree(10, 12);
+        let bounds = octree.get_all_bounds();
 
-        log::info!("{}", closest_pt);
+        assert!(bounds.len() == 185);
+    }
+
+    #[test]
+    fn test_closest_pt() {
+        let m: Mesh<f64> = parse_obj_file("../assets/geometry/sphere.obj").unwrap();
+
+        let octree = m.compute_octree(10, 9);
+
+        let (closest_pt, closest_tri) = octree.closest_point(&Vec3::origin());
+
+        assert!(closest_pt.distance_to_coord(70.67, 97.26, 58.26) < 0.1);
+
+        assert!(closest_tri.p1.distance_to_coord(59.12, 107.93, 54.46) < 0.1);
+        assert!(closest_tri.p2.distance_to_coord(79.35, 93.23, 54.46) < 0.1);
+        assert!(closest_tri.p3.distance_to_coord(53.38, 103.75, 68.40) < 0.1);
+    }
+
+    #[test]
+    fn test_compute_signed_distance_box() {
+        let m: Mesh<f64> = parse_obj_file("../assets/geometry/box.obj").unwrap();
+
+        let octree = m.compute_octree(10, 9);
+
+        // Inside box
+        let signed_distance = octree.signed_distance(m.get_centroid(), 0.1);
+        assert!((signed_distance + 10.0).abs() < 0.001);
+
+        // Outside box
+        let signed_distance = octree.signed_distance(Vec3::new(30.0, 10.0, 10.0), 0.1);
+        assert!((signed_distance - 10.0).abs() < 0.001);
+
+        // On corner
+        let signed_distance = octree.signed_distance(Vec3::new(20.0, 20.0, 20.0), 0.1);
+        assert!(signed_distance.abs() < 0.001);
+    }
+
+    #[test]
+    fn test_compute_signed_distance_sphere() {
+        let m: Mesh<f64> = parse_obj_file("../assets/geometry/sphere.obj").unwrap();
+
+        let octree = m.compute_octree(10, 9);
+
+        // Inside sphere
+        let signed_distance = octree.signed_distance(m.get_centroid(), 0.1);
+        assert!((signed_distance + 47.022).abs() < 0.001);
+
+        // Outside sphere,
+        let signed_distance = octree.signed_distance(m.get_bounds().max, 0.1);
+        assert!((signed_distance - 35.896).abs() < 0.001);
+
+        let (dx, _, _) = m.get_bounds().dimensions();
+        // On corner
+        let signed_distance =
+            octree.signed_distance(m.get_centroid() + Vec3::new(dx / 2.0, 0.0, 0.0), 0.1);
+        assert!(signed_distance.abs() < 0.001);
     }
 }
