@@ -31,21 +31,21 @@ impl<T: Float + Debug> BoundingBox<T> {
     }
 
     pub fn contains(&self, pt: &Vec3<T>) -> bool {
-        pt.x > self.min.x
-            && pt.y > self.min.y
-            && pt.z > self.min.z
-            && pt.x < self.max.x
-            && pt.y < self.max.y
-            && pt.z < self.max.z
+        pt.x >= self.min.x
+            && pt.y >= self.min.y
+            && pt.z >= self.min.z
+            && pt.x <= self.max.x
+            && pt.y <= self.max.y
+            && pt.z <= self.max.z
     }
 
     pub fn contains_coord(&self, x: T, y: T, z: T) -> bool {
-        x > self.min.x
-            && y > self.min.y
-            && z > self.min.z
-            && x < self.max.x
-            && y < self.max.y
-            && z < self.max.z
+        x >= self.min.x
+            && y >= self.min.y
+            && z >= self.min.z
+            && x <= self.max.x
+            && y <= self.max.y
+            && z <= self.max.z
     }
 
     pub fn corners(&self) -> [Vec3<T>; 8] {
@@ -116,6 +116,26 @@ impl<T: Float + Debug> BoundingBox<T> {
         let y = point.y.max(self.min.y).min(self.max.y);
         let z = point.z.max(self.min.z).min(self.max.z);
         Vec3 { x, y, z }
+    }
+
+    pub fn signed_distance(&self, point: &Vec3<T>) -> T {
+        let diff1 = self.max - *point;
+        let diff2 = self.min - *point;
+
+        let dist = diff1.x.abs().min(
+            diff1.y.abs().min(
+                diff1
+                    .z
+                    .abs()
+                    .min(diff2.x.abs().min(diff2.y.abs().min(diff2.z.abs()))),
+            ),
+        );
+
+        if self.contains(point) {
+            -dist
+        } else {
+            dist
+        }
     }
 
     pub fn offset(&self, distance: T) -> BoundingBox<T> {
