@@ -121,7 +121,7 @@ pub fn write_field_csv<T: Float + Debug + Send + Sync>(
 
 fn get_field_as_data<T: Float + Debug + Send + Sync>(field: &DenseField<T>) -> String {
     let mut data = String::new();
-
+    data.push_str("x, y, z, v\n");
     for (idx, v) in field.data().iter().enumerate() {
         let (i, j, k) = field.get_point_index3d(idx);
         let v_string = format!(
