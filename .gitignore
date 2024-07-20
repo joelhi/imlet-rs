@@ -3,3 +3,4 @@
 .DS_Store
 *.obj
 *.csv
+!assets/geometry/*.obj
