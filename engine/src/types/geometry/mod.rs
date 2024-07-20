@@ -6,6 +6,7 @@ mod octree;
 mod plane;
 mod vec3f;
 mod vec3i;
+pub mod traits;
 
 pub use bounding_box::*;
 use hash_grid::*;
