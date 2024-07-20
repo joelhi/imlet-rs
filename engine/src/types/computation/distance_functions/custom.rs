@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use num_traits::Float;
 
-use crate::types::computation::component::ImplicitFunction;
+use crate::types::computation::traits::implicit_functions::ImplicitFunction;
 
 #[derive(Debug, Clone, Copy)]
 pub struct CustomFunction<T: Float + Debug> {

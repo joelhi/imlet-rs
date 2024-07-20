@@ -1,6 +1,6 @@
 use num_traits::Float;
 
-use crate::{types::computation::component::ImplicitFunction, utils::math_helper::Pi};
+use crate::{types::computation::traits::implicit_functions::ImplicitFunction, utils::math_helper::Pi};
 use std::fmt::Debug;
 
 #[derive(Debug, Clone, Copy)]

@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use num_traits::Float;
 
-use crate::types::{computation::component::ImplicitFunction, geometry::Vec3};
+use crate::types::{computation::traits::implicit_functions::ImplicitFunction, geometry::Vec3};
 
 pub struct Capsule<T: Float + Debug> {
     start: Vec3<T>,
