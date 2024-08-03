@@ -1,13 +1,14 @@
 use std::fmt::Debug;
 
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
 use super::traits::implicit_functions::{ImplicitFunction, ImplicitOperation};
 
 const MAX_INPUTS: usize = 8;
 const MAX_TOTAL_COMPONENTS: usize = 512;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct ComponentId(pub usize);
 
 impl ComponentId {
