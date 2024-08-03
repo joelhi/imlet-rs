@@ -1,11 +1,13 @@
 use std::fmt::Debug;
 
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
     component::ComponentId, traits::implicit_functions::ImplicitOperation,
 };
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Multiply {
     inputs: [ComponentId; 2],
 }
@@ -26,6 +28,7 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Multiply {
     }
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Add {
     inputs: [ComponentId; 2],
 }
@@ -45,6 +48,8 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Add {
         &self.inputs
     }
 }
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Subtract {
     inputs: [ComponentId; 2],
 }
@@ -65,6 +70,7 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Subtract {
     }
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Divide {
     inputs: [ComponentId; 2],
 }
