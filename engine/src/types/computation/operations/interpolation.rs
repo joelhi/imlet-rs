@@ -1,9 +1,11 @@
 use std::fmt::Debug;
 
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{traits::implicit_functions::ImplicitOperation, ComponentId};
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct LinearInterpolation {
     inputs: [ComponentId; 3],
 }
