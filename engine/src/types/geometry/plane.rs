@@ -1,10 +1,11 @@
 use std::fmt::Debug;
 
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
 use super::Vec3;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Plane<T: Float + Debug> {
     origin: Vec3<T>,
     normal: Vec3<T>,

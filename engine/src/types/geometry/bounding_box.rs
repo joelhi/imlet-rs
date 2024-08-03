@@ -1,10 +1,11 @@
 use std::fmt::Debug;
 
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
 use super::{Line, Triangle, Vec3};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct BoundingBox<T: Float + Debug> {
     pub min: Vec3<T>,
     pub max: Vec3<T>,

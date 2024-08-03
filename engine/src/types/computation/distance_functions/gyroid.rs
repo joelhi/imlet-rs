@@ -1,11 +1,12 @@
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     types::computation::traits::implicit_functions::ImplicitFunction, utils::math_helper::Pi,
 };
 use std::fmt::Debug;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Gyroid<T: Pi + Float + Debug> {
     pub length_x: T,
     pub length_y: T,

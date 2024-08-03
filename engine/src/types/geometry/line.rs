@@ -1,10 +1,11 @@
 use std::fmt::Debug;
 
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
 use super::Vec3;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Line<T: Float + Debug> {
     pub start: Vec3<T>,
     pub end: Vec3<T>,

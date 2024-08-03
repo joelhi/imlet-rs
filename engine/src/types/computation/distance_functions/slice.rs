@@ -1,10 +1,11 @@
 use std::fmt::Debug;
 
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
 use crate::types::{computation::traits::implicit_functions::ImplicitFunction, geometry::Plane};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Slice<T: Float + Debug> {
     pub plane: Plane<T>,
 }

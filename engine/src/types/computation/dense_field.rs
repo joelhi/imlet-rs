@@ -5,13 +5,15 @@ use num_traits::Float;
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelRefMutIterator;
 use rayon::iter::ParallelIterator;
+use serde::Deserialize;
+use serde::Serialize;
 
 use crate::types::geometry::Vec3;
 use crate::types::geometry::Vec3i;
 use crate::utils::math_helper::index1d_from_index3d;
 use crate::utils::math_helper::index3d_from_index1d;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DenseField<T: Float + Debug> {
     origin: Vec3<T>,
     cell_size: T,
