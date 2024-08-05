@@ -1,11 +1,12 @@
 use std::fmt::Debug;
 
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
 use crate::types::computation::traits::implicit_functions::ImplicitFunction;
 use crate::utils::math_helper::Pi;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Neovius<T: Pi + Float + Debug> {
     pub length_x: T,
     pub length_y: T,

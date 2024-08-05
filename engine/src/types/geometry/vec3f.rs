@@ -4,8 +4,9 @@ use std::{
 };
 
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Vec3<T>
 where
     T: Float + Debug,
@@ -201,5 +202,17 @@ mod tests {
 
         let angle = v1.angle(&v2).unwrap();
         assert!((angle - PI).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_serialize_vec3() {
+        let v1 = Vec3::new(1.0, 2.0, 3.0);
+
+        let json = serde_json::to_string_pretty(&v1).unwrap();
+        let deserialized: Vec3<f64> = serde_json::from_str(&json).unwrap();
+
+        assert!((v1.x - deserialized.x).abs() < 0.001);
+        assert!((v1.y - deserialized.y).abs() < 0.001);
+        assert!((v1.z - deserialized.z).abs() < 0.001);
     }
 }

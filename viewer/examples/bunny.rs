@@ -18,8 +18,8 @@ pub fn main() {
 
     let mesh: Mesh<f64> = parse_obj_file("assets/geometry/bunny.obj").unwrap();
 
-    let cell_size = 0.25;
-    let model_space = mesh.get_bounds().offset(1.0 * cell_size);
+    let cell_size = 0.5;
+    let model_space = mesh.get_bounds().offset(cell_size);
 
     // Build model
     let mut model = Model::new();

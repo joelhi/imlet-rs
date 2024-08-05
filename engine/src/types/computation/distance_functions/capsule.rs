@@ -1,9 +1,11 @@
 use std::fmt::Debug;
 
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
 use crate::types::{computation::traits::implicit_functions::ImplicitFunction, geometry::Vec3};
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Capsule<T: Float + Debug> {
     start: Vec3<T>,
     end: Vec3<T>,

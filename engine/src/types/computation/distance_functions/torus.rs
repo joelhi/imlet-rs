@@ -1,10 +1,11 @@
 use std::fmt::Debug;
 
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
 use crate::types::{computation::traits::implicit_functions::ImplicitFunction, geometry::Vec3};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Torus<T: Float + Debug> {
     pub center: Vec3<T>,
     pub r: T,

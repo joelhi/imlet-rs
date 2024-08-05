@@ -1,11 +1,13 @@
 use std::fmt::Debug;
 
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
     component::ComponentId, traits::implicit_functions::ImplicitOperation,
 };
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Offset<T> {
     inputs: [ComponentId; 1],
     distance: T,
@@ -30,6 +32,7 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Offset<T> {
     }
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Thickness<T: Float + Debug> {
     inputs: [ComponentId; 1],
     t: T,

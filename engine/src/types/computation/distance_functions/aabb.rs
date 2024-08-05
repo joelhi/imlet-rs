@@ -1,13 +1,14 @@
 use std::fmt::Debug;
 
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
 use crate::types::{
     computation::traits::implicit_functions::ImplicitFunction,
     geometry::{BoundingBox, Vec3},
 };
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct AABB<T: Float + Debug> {
     pub bounds: BoundingBox<T>,
 }
