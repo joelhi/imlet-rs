@@ -52,6 +52,7 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
     fn evaluate_at_coord(&self, x: T, y: T, z: T, output: Option<ComponentId>) -> T {
         Self::COMPONENT_VALUES.with(|values| {
             let mut values = values.borrow_mut();
+            values.resize(self.components.len());
             let output_index = output.unwrap_or_else(|| ComponentId(self.components.len() - 1));
             for (index, component) in self.components.iter().enumerate() {
                 component.compute(x, y, z, &mut values, index);

@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use super::traits::implicit_functions::{ImplicitFunction, ImplicitOperation};
 
 const MAX_INPUTS: usize = 8;
-const MAX_TOTAL_COMPONENTS: usize = 512;
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct ComponentId(pub usize);
@@ -53,14 +52,18 @@ impl<T: Float + Debug + Send + Sync> Component<T> {
 }
 
 pub struct ComponentValues {
-    values: [f64; MAX_TOTAL_COMPONENTS],
+    values: Vec<f64>,
 }
 
 impl ComponentValues {
     pub fn new() -> Self {
-        ComponentValues {
-            values: [0.0; MAX_TOTAL_COMPONENTS],
+        Self {
+            values: Vec::new(),
         }
+    }
+
+    pub fn resize(&mut self, size: usize){
+        self.values.resize(size, 0.0)
     }
 
     pub fn get<T: Float>(&self, component_id: ComponentId) -> T {
