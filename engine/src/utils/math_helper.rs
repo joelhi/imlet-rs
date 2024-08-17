@@ -1,3 +1,5 @@
+use core::num;
+
 use num_traits::Float;
 pub trait Pi {
     fn pi() -> Self;
@@ -27,7 +29,7 @@ pub fn index1d_from_index3d(
     num_y: usize,
     num_z: usize,
 ) -> usize {
-    assert!(
+    debug_assert!(
         i < num_x && j < num_y && k < num_z,
         "Coordinates out of bounds"
     );
@@ -40,7 +42,7 @@ pub fn index3d_from_index1d(
     num_y: usize,
     num_z: usize,
 ) -> (usize, usize, usize) {
-    assert!(index < num_x * num_y * num_z, "Index out of bounds");
+    debug_assert!(index < num_x * num_y * num_z, "Index out of bounds");
     let k = index / (num_x * num_y);
     let temp = index - (k * num_x * num_y);
     let j = temp / num_x;
