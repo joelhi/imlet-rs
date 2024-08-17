@@ -57,12 +57,10 @@ pub struct ComponentValues {
 
 impl ComponentValues {
     pub fn new() -> Self {
-        Self {
-            values: Vec::new(),
-        }
+        Self { values: Vec::new() }
     }
 
-    pub fn resize(&mut self, size: usize){
+    pub fn resize(&mut self, size: usize) {
         self.values.resize(size, 0.0)
     }
 
