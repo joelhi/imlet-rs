@@ -31,7 +31,7 @@ pub fn main() {
         0.45 * size,
     ));
 
-    let shape = model.add_function(Gyroid::with_equal_spacing(2.5));
+    let shape = model.add_function(Gyroid::with_equal_spacing(2.5, false));
     let thick_shape = model.add_operation(Thickness::new(shape, 2.5));
     let slender_shape = model.add_operation(Thickness::new(shape, 1.0));
     let t = model.add_function(ZDomain::remapped(0.0, 10.0));
