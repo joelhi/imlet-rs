@@ -17,7 +17,7 @@ pub fn generate_iso_surface<T: Float + Debug + Send + Sync>(
 ) -> Vec<Triangle<T>> {
     let before = Instant::now();
     // Generate triangles for cell
-    let mut triangles: Vec<Triangle<T>> = Vec::with_capacity(field.get_num_cells() * 1);
+    let mut triangles: Vec<Triangle<T>> = Vec::with_capacity(field.get_num_cells());
 
     // Iterate over cell indices in parallel and collect triangles
     triangles.extend(
