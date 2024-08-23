@@ -1,6 +1,7 @@
 /target
 .vscode
 .DS_Store
+.idea/*
 *.obj
 *.csv
 !assets/geometry/*.obj
