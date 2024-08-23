@@ -45,13 +45,6 @@ impl ComponentValues {
         Self { values: Vec::new() }
     }
 
-    #[allow(dead_code)]
-    fn with_size(size: usize) -> Self {
-        let mut values = Vec::new();
-        values.resize(size, 0.0);
-        Self { values }
-    }
-
     pub fn resize(&mut self, size: usize) {
         self.values.resize(size, 0.0)
     }
