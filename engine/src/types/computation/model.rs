@@ -213,8 +213,10 @@ mod tests {
 
         let sphere_component_2: ComponentId = model.add_function(Sphere::new(Vec3::origin(), 0.5));
 
-        let difference_component =
-            Some(model.add_operation(Difference::new(), vec![sphere_component, sphere_component_2]));
+        let difference_component = Some(model.add_operation(
+            Difference::new(),
+            vec![sphere_component, sphere_component_2],
+        ));
 
         assert!(0.5 - model.evaluate_at_coord(0.0, 0.0, 0.0, difference_component) < 0.001);
         assert!(model.evaluate_at_coord(0.5, 0.0, 0.0, difference_component) < 0.001);
@@ -234,7 +236,8 @@ mod tests {
         let mut model = Model::new();
 
         let value_component = model.add_constant(1.0);
-        let addition_component = model.add_operation(Add::new(), vec![value_component, value_component]);
+        let addition_component =
+            model.add_operation(Add::new(), vec![value_component, value_component]);
 
         let result = model.evaluate_at_coord(0.0, 0.0, 0.0, Some(addition_component));
         assert!((2.0 - result).abs() < 0.0001);

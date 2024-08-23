@@ -35,9 +35,7 @@ pub struct Thickness<T: Float + Debug> {
 
 impl<T: Float + Debug> Thickness<T> {
     pub fn new(thickness: T) -> Self {
-        Self {
-            t: thickness,
-        }
+        Self { t: thickness }
     }
 }
 

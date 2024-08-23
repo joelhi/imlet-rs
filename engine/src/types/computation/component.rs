@@ -27,14 +27,12 @@ pub enum Component<T: Float + Debug> {
 }
 
 impl<T: Float + Debug + Send + Sync> Component<T> {
-    pub fn compute(&self, x: T, y: T, z: T, inputs: &[T])->T {
-            match self {
-                Component::Constant(value) => *value,
-                Component::Function(function) => function.eval(x, y, z),
-                Component::Operation(operation) => {
-                    operation.eval(inputs)
-                }
-            }
+    pub fn compute(&self, x: T, y: T, z: T, inputs: &[T]) -> T {
+        match self {
+            Component::Constant(value) => *value,
+            Component::Function(function) => function.eval(x, y, z),
+            Component::Operation(operation) => operation.eval(inputs),
+        }
     }
 }
 

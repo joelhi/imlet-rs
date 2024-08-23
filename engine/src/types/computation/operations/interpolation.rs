@@ -6,8 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::types::computation::traits::implicit_functions::ImplicitOperation;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct LinearInterpolation {
-}
+pub struct LinearInterpolation {}
 
 impl LinearInterpolation {
     pub fn new() -> Self {

@@ -6,12 +6,11 @@ use serde::{Deserialize, Serialize};
 use crate::types::computation::traits::implicit_functions::ImplicitOperation;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Union {
-}
+pub struct Union {}
 
 impl Union {
     pub fn new() -> Self {
-        Self { }
+        Self {}
     }
 }
 
@@ -26,12 +25,11 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Union {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Intersection {
-}
+pub struct Intersection {}
 
 impl Intersection {
     pub fn new() -> Self {
-        Self { }
+        Self {}
     }
 }
 
@@ -46,12 +44,11 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Intersection {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Difference {
-}
+pub struct Difference {}
 
 impl Difference {
     pub fn new() -> Self {
-        Self { }
+        Self {}
     }
 }
 
