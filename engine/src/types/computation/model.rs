@@ -65,7 +65,9 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
                 self.get_inputs(index, &values, &mut inputs);
                 let val = component.compute(x, y, z, &inputs);
                 values.set(index, val);
-                if index == output_index.value() { break; }
+                if index == output_index.value() {
+                    break;
+                }
             }
             values.get(output_index)
         })
