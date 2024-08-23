@@ -29,8 +29,8 @@ pub fn main() {
         0.45 * size,
     ));
     let shape = model.add_function(Neovius::with_equal_spacing(2.0));
-    let thick_shape = model.add_operation(Thickness::new(shape, 2.0));
-    let _ = model.add_operation(Intersection::new(bounds, thick_shape));
+    let thick_shape = model.add_operation(Thickness::new(2.0), vec![shape]);
+    let _ = model.add_operation(Intersection::new(), vec![bounds, thick_shape]);
 
     Viewer::run(model, model_space, cell_size);
 }

@@ -8,7 +8,7 @@ use {
             },
             geometry::{BoundingBox, Vec3},
         },
-        utils::{self, io::write_field_csv},
+        utils::{self},
     },
     imlet_viewer::viewer::Viewer,
 };
@@ -17,7 +17,7 @@ pub fn main() {
     utils::logging::init_info();
 
     let size: f32 = 10.0;
-    let cell_size = 0.1;
+    let cell_size = 0.05;
     let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
     // Build model
@@ -29,8 +29,8 @@ pub fn main() {
     ));
 
     let shape = model.add_function(Gyroid::with_equal_spacing(2.5, true));
-    let thick_shape = model.add_operation(Thickness::new(shape, 1.5));
-    let _ = model.add_operation(Intersection::new(bounds, thick_shape));
+    let thick_shape = model.add_operation(Thickness::new(1.5), vec![shape]);
+    let _ = model.add_operation(Intersection::new(), vec![bounds, thick_shape]);
 
     Viewer::run(model, model_space, cell_size);
 }

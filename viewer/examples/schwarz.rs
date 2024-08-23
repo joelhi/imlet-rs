@@ -30,8 +30,8 @@ pub fn main() {
     ));
 
     let shape = model.add_function(SchwarzP::with_equal_spacing(2.0));
-    let thick_shape = model.add_operation(Thickness::new(shape, 0.75));
-    let _ = model.add_operation(Intersection::new(bounds, thick_shape));
+    let thick_shape = model.add_operation(Thickness::new(0.75), vec![shape]);
+    let _ = model.add_operation(Intersection::new(), vec![bounds, thick_shape]);
 
     // Discretize
     Viewer::run(model, model_space, cell_size);
