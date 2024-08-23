@@ -18,7 +18,7 @@ pub fn main() {
 
     // Inputs
     let size = 10.0;
-    let cell_size = 0.025;
+    let cell_size = 0.05;
     let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
     // Build model
@@ -28,8 +28,8 @@ pub fn main() {
         Vec3::new(0.5 * size, 0.5 * size, 0.5 * size),
         0.45 * size,
     ));
-    let shape = model.add_function(Neovius::with_equal_spacing(2.0));
-    let thick_shape = model.add_operation(Thickness::new(2.0), vec![shape]);
+    let shape = model.add_function(Neovius::with_equal_spacing(2.5, true));
+    let thick_shape = model.add_operation(Thickness::new(1.0), vec![shape]);
     let _ = model.add_operation(Intersection::new(), vec![bounds, thick_shape]);
 
     Viewer::run(model, model_space, cell_size);
