@@ -16,32 +16,38 @@ use super::{
 
 pub struct Model<T: Float + Debug + Send + Sync> {
     components: Vec<Component<T>>,
+    connections: Vec<Vec<ComponentId>>,
 }
 
 impl<T: Float + Debug + Send + Sync> Model<T> {
     pub fn new() -> Self {
         Self {
             components: Vec::new(),
+            connections: Vec::new(),
         }
     }
 
     pub fn add_function<F: ImplicitFunction<T> + 'static>(&mut self, function: F) -> ComponentId {
         self.components
             .push(Component::Function(Box::new(function)));
+        self.connections.push(Vec::new());
         (self.components.len() - 1).into()
     }
 
     pub fn add_operation<F: ImplicitOperation<T> + 'static>(
         &mut self,
         operation: F,
+        inputs: Vec<ComponentId>,
     ) -> ComponentId {
         self.components
             .push(Component::Operation(Box::new(operation)));
+        self.connections.push(inputs);
         (self.components.len() - 1).into()
     }
 
     pub fn add_constant(&mut self, value: T) -> ComponentId {
         self.components.push(Component::Constant(value));
+        self.connections.push(Vec::new());
         (self.components.len() - 1).into()
     }
 
@@ -52,9 +58,13 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
     fn evaluate_at_coord(&self, x: T, y: T, z: T, output: Option<ComponentId>) -> T {
         Self::COMPONENT_VALUES.with(|values| {
             let mut values = values.borrow_mut();
+            values.resize(self.components.len());
             let output_index = output.unwrap_or_else(|| ComponentId(self.components.len() - 1));
+            let mut inputs = Vec::with_capacity(4);
             for (index, component) in self.components.iter().enumerate() {
-                component.compute(x, y, z, &mut values, index);
+                self.get_inputs(index, &values, &mut inputs);
+                let val = component.compute(x, y, z, &inputs);
+                values.set(index, val);
                 if index == output_index.value() {
                     break;
                 }
@@ -72,7 +82,7 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
         let before = Instant::now();
         let n = Self::get_point_count(&bounds, cell_size);
 
-        log::info!(
+        log::debug!(
             "Evaluating model from {} to {} with {}x{}x{} points",
             bounds.min,
             bounds.max,
@@ -120,6 +130,15 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
                 .expect("Failed to convert T to usize")
                 + 1,
         )
+    }
+
+    #[inline]
+    pub fn get_inputs(&self, component_id: usize, values: &ComponentValues, inputs: &mut Vec<T>) {
+        inputs.clear();
+        inputs.resize(self.connections[component_id].len(), T::zero());
+        for (i, &id) in self.connections[component_id].iter().enumerate() {
+            inputs[i] = values.get(id);
+        }
     }
 }
 
@@ -195,8 +214,10 @@ mod tests {
 
         let sphere_component_2: ComponentId = model.add_function(Sphere::new(Vec3::origin(), 0.5));
 
-        let difference_component =
-            Some(model.add_operation(Difference::new(sphere_component, sphere_component_2)));
+        let difference_component = Some(model.add_operation(
+            Difference::new(),
+            vec![sphere_component, sphere_component_2],
+        ));
 
         assert!(0.5 - model.evaluate_at_coord(0.0, 0.0, 0.0, difference_component) < 0.001);
         assert!(model.evaluate_at_coord(0.5, 0.0, 0.0, difference_component) < 0.001);
@@ -216,7 +237,8 @@ mod tests {
         let mut model = Model::new();
 
         let value_component = model.add_constant(1.0);
-        let addition_component = model.add_operation(Add::new(value_component, value_component));
+        let addition_component =
+            model.add_operation(Add::new(), vec![value_component, value_component]);
 
         let result = model.evaluate_at_coord(0.0, 0.0, 0.0, Some(addition_component));
         assert!((2.0 - result).abs() < 0.0001);

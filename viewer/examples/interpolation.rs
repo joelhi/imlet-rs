@@ -31,13 +31,15 @@ pub fn main() {
         0.45 * size,
     ));
 
-    let shape = model.add_function(Gyroid::with_equal_spacing(2.5));
-    let thick_shape = model.add_operation(Thickness::new(shape, 2.5));
-    let slender_shape = model.add_operation(Thickness::new(shape, 1.0));
+    let shape = model.add_function(Gyroid::with_equal_spacing(1.5, true));
+    let thick_shape = model.add_operation(Thickness::new(1.5), vec![shape]);
+    let slender_shape = model.add_operation(Thickness::new(0.25), vec![shape]);
     let t = model.add_function(ZDomain::remapped(0.0, 10.0));
-    let interpolation =
-        model.add_operation(LinearInterpolation::new(thick_shape, slender_shape, t));
-    let _ = model.add_operation(Intersection::new(bounds, interpolation));
+    let interpolation = model.add_operation(
+        LinearInterpolation::new(),
+        vec![thick_shape, slender_shape, t],
+    );
+    let _ = model.add_operation(Intersection::new(), vec![bounds, interpolation]);
 
     Viewer::run(model, model_space, cell_size);
 }

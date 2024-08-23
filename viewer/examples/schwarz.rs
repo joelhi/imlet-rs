@@ -18,7 +18,7 @@ pub fn main() {
 
     // Inputs
     let size = 10.0;
-    let cell_size = 0.03;
+    let cell_size = 0.075;
     let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
     // Build model
@@ -29,9 +29,9 @@ pub fn main() {
         0.45 * size,
     ));
 
-    let shape = model.add_function(SchwarzP::with_equal_spacing(2.0));
-    let thick_shape = model.add_operation(Thickness::new(shape, 0.75));
-    let _ = model.add_operation(Intersection::new(bounds, thick_shape));
+    let shape = model.add_function(SchwarzP::with_equal_spacing(1.0, true));
+    let thick_shape = model.add_operation(Thickness::new(0.30), vec![shape]);
+    let _ = model.add_operation(Intersection::new(), vec![bounds, thick_shape]);
 
     // Discretize
     Viewer::run(model, model_space, cell_size);

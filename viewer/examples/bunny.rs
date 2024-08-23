@@ -24,9 +24,9 @@ pub fn main() {
     // Build model
     let mut model = Model::new();
     let bounds = model.add_function(MeshSDF::new(&mesh, 10, 12, 0.1));
-    let shape = model.add_function(Gyroid::with_equal_spacing(15.0));
-    let thick_shape = model.add_operation(Thickness::new(shape, 1.0));
-    let _ = model.add_operation(Intersection::new(bounds, thick_shape));
+    let shape = model.add_function(Gyroid::with_equal_spacing(7.5, true));
+    let thick_shape = model.add_operation(Thickness::new(5.0), vec![shape]);
+    let _ = model.add_operation(Intersection::new(), vec![bounds, thick_shape]);
 
     Viewer::run(model, model_space, cell_size);
 }

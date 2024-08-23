@@ -3,18 +3,14 @@ use std::fmt::Debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::{
-    component::ComponentId, traits::implicit_functions::ImplicitOperation,
-};
+use crate::types::computation::traits::implicit_functions::ImplicitOperation;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Union {
-    inputs: [ComponentId; 2],
-}
+pub struct Union {}
 
 impl Union {
-    pub fn new(a: ComponentId, b: ComponentId) -> Self {
-        Self { inputs: [a, b] }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
@@ -23,19 +19,17 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Union {
         inputs[0].min(inputs[1])
     }
 
-    fn get_inputs(&self) -> &[ComponentId] {
-        &self.inputs
+    fn num_inputs(&self) -> usize {
+        2
     }
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Intersection {
-    inputs: [ComponentId; 2],
-}
+pub struct Intersection {}
 
 impl Intersection {
-    pub fn new(a: ComponentId, b: ComponentId) -> Self {
-        Self { inputs: [a, b] }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
@@ -44,19 +38,17 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Intersection {
         inputs[0].max(inputs[1])
     }
 
-    fn get_inputs(&self) -> &[ComponentId] {
-        &self.inputs
+    fn num_inputs(&self) -> usize {
+        2
     }
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Difference {
-    inputs: [ComponentId; 2],
-}
+pub struct Difference {}
 
 impl Difference {
-    pub fn new(a: ComponentId, b: ComponentId) -> Self {
-        Self { inputs: [a, b] }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
@@ -65,7 +57,7 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Difference {
         inputs[0].max(-inputs[1])
     }
 
-    fn get_inputs(&self) -> &[ComponentId] {
-        &self.inputs
+    fn num_inputs(&self) -> usize {
+        2
     }
 }
