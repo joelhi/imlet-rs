@@ -3,18 +3,15 @@ use std::fmt::Debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::{traits::implicit_functions::ImplicitOperation, ComponentId};
+use crate::types::computation::traits::implicit_functions::ImplicitOperation;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct LinearInterpolation {
-    inputs: [ComponentId; 3],
 }
 
 impl LinearInterpolation {
-    pub fn new(value_a: ComponentId, value_b: ComponentId, t: ComponentId) -> Self {
-        Self {
-            inputs: [value_a, value_b, t],
-        }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
@@ -26,7 +23,7 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for LinearInterpolatio
         inputs[0] + t * (inputs[1] - inputs[0])
     }
 
-    fn get_inputs(&self) -> &[ComponentId] {
-        &self.inputs
+    fn num_inputs(&self) -> usize {
+        3
     }
 }

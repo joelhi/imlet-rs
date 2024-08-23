@@ -45,34 +45,34 @@ impl<T: Pi + Float + Debug + Send + Sync> ImplicitFunction<T> for Gyroid<T> {
         let scale = self.length_x.min(self.length_y).min(self.length_z) / two;
 
         if self.linear {
-            let linear_distance = normalized_distance.clamp(-T::one(), T::one()).asin() / (T::pi() / two);
+            let linear_distance =
+                normalized_distance.clamp(-T::one(), T::one()).asin() / (T::pi() / two);
             scale * linear_distance
-        } else { 
+        } else {
             scale * normalized_distance
         }
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    
+
     use super::*;
 
     #[test]
     fn test_compute_linearized() {
         let linear_gyroid: Gyroid<f64> = Gyroid::with_equal_spacing(1.5, true);
 
-       assert!(linear_gyroid.eval(0.0, 0.0, 0.0).abs() < 0.001);
-       assert!((linear_gyroid.eval(0.75, 0.0, 0.0) - 0.75).abs() < 0.001);
-       assert!((linear_gyroid.eval(1.5, 0.0, 0.0)).abs() < 0.001);
+        assert!(linear_gyroid.eval(0.0, 0.0, 0.0).abs() < 0.001);
+        assert!((linear_gyroid.eval(0.75, 0.0, 0.0) - 0.75).abs() < 0.001);
+        assert!((linear_gyroid.eval(1.5, 0.0, 0.0)).abs() < 0.001);
 
-       assert!((linear_gyroid.eval(0.0, 0.75, 0.0) - 0.75).abs() < 0.001);
-       assert!((linear_gyroid.eval(0.0, 1.5, 0.0)).abs() < 0.001);
+        assert!((linear_gyroid.eval(0.0, 0.75, 0.0) - 0.75).abs() < 0.001);
+        assert!((linear_gyroid.eval(0.0, 1.5, 0.0)).abs() < 0.001);
 
-       assert!((linear_gyroid.eval(0.0, 0.0, 0.75) - 0.75).abs() < 0.001);
-       assert!((linear_gyroid.eval(0.0, 0.0, 1.5)).abs() < 0.001);
+        assert!((linear_gyroid.eval(0.0, 0.0, 0.75) - 0.75).abs() < 0.001);
+        assert!((linear_gyroid.eval(0.0, 0.0, 1.5)).abs() < 0.001);
 
-       assert!((linear_gyroid.eval(1.5, 1.5, 1.5)).abs() < 0.001);
+        assert!((linear_gyroid.eval(1.5, 1.5, 1.5)).abs() < 0.001);
     }
 }

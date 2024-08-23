@@ -3,18 +3,14 @@ use std::fmt::Debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::{
-    component::ComponentId, traits::implicit_functions::ImplicitOperation,
-};
+use crate::types::computation::traits::implicit_functions::ImplicitOperation;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Multiply {
-    inputs: [ComponentId; 2],
-}
+pub struct Multiply {}
 
 impl Multiply {
-    pub fn new(a: ComponentId, b: ComponentId) -> Self {
-        Self { inputs: [a, b] }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
@@ -23,19 +19,17 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Multiply {
         inputs[0] * inputs[1]
     }
 
-    fn get_inputs(&self) -> &[ComponentId] {
-        &self.inputs
+    fn num_inputs(&self) -> usize {
+        2
     }
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Add {
-    inputs: [ComponentId; 2],
-}
+pub struct Add {}
 
 impl Add {
-    pub fn new(a: ComponentId, b: ComponentId) -> Self {
-        Self { inputs: [a, b] }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
@@ -44,19 +38,17 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Add {
         inputs[0] + inputs[1]
     }
 
-    fn get_inputs(&self) -> &[ComponentId] {
-        &self.inputs
+    fn num_inputs(&self) -> usize {
+        2
     }
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Subtract {
-    inputs: [ComponentId; 2],
-}
+pub struct Subtract {}
 
 impl Subtract {
-    pub fn new(a: ComponentId, b: ComponentId) -> Self {
-        Self { inputs: [a, b] }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
@@ -65,29 +57,27 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Subtract {
         inputs[0] - inputs[1]
     }
 
-    fn get_inputs(&self) -> &[ComponentId] {
-        &self.inputs
+    fn num_inputs(&self) -> usize {
+        2
     }
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Divide {
-    inputs: [ComponentId; 2],
-}
+pub struct Divide {}
 
 impl Divide {
-    pub fn new(a: ComponentId, b: ComponentId) -> Self {
-        Self { inputs: [a, b] }
+    pub fn new() -> Self {
+        Self {}
     }
 }
 
 impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Divide {
     fn eval(&self, inputs: &[T]) -> T {
-        assert!(inputs[1] != T::zero(), "Cannot divide by zero");
+        debug_assert!(inputs[1] != T::zero(), "Cannot divide by zero");
         inputs[0] / inputs[1]
     }
 
-    fn get_inputs(&self) -> &[ComponentId] {
-        &self.inputs
+    fn num_inputs(&self) -> usize {
+        2
     }
 }
