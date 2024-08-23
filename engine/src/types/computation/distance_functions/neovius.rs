@@ -42,7 +42,8 @@ impl<T: Pi + Float + Debug + Send + Sync> ImplicitFunction<T> for Neovius<T> {
         let x = two * T::pi() * x / self.length_x;
         let y = two * T::pi() * y / self.length_y;
         let z = two * T::pi() * z / self.length_z;
-        let normalized_distance = three * (x.cos() + y.cos() + z.cos()) + four * x.cos() * y.cos() * z.cos();
+        let normalized_distance =
+            three * (x.cos() + y.cos() + z.cos()) + four * x.cos() * y.cos() * z.cos();
 
         let scale = self.length_x.min(self.length_y).min(self.length_z) / two;
 
