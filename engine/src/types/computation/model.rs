@@ -14,8 +14,6 @@ use super::{
     DenseField,
 };
 
-const MAX_INPUTS: usize = 8;
-
 pub struct Model<T: Float + Debug + Send + Sync> {
     components: Vec<Component<T>>,
     connections: Vec<Vec<ComponentId>>,
@@ -62,12 +60,12 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
             let mut values = values.borrow_mut();
             values.resize(self.components.len());
             let output_index = output.unwrap_or_else(|| ComponentId(self.components.len() - 1));
+            let mut inputs = Vec::with_capacity(4);
             for (index, component) in self.components.iter().enumerate() {
-                let val = component.compute(x, y, z, &self.get_inputs(index, &values));
+                self.get_inputs(index, &values, &mut inputs);
+                let val = component.compute(x, y, z, &inputs);
                 values.set(index, val);
-                if index == output_index.value() {
-                    break;
-                }
+                if index == output_index.value() { break; }
             }
             values.get(output_index)
         })
@@ -132,12 +130,13 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
         )
     }
 
-    pub fn get_inputs(&self, component_id: usize, values: &ComponentValues) -> [T; 8] {
-        let mut result = [T::zero(); MAX_INPUTS];
+    #[inline]
+    pub fn get_inputs(&self, component_id: usize, values: &ComponentValues, inputs: &mut Vec<T>) {
+        inputs.clear();
+        inputs.resize(self.connections[component_id].len(), T::zero());
         for (i, &id) in self.connections[component_id].iter().enumerate() {
-            result[i] = values.get(id);
+            inputs[i] = values.get(id);
         }
-        result
     }
 }
 
