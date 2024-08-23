@@ -1,5 +1,3 @@
-use core::num;
-
 use num_traits::Float;
 pub trait Pi {
     fn pi() -> Self;
