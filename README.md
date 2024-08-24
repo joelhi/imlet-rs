@@ -1,4 +1,4 @@
-### Implicit geometry Lightweight Exploration Toolkit (ImLET)
+### Implicit Modeling Lightweight Exploration Toolkit (ImLET)
 
 ![Build & Test](https://github.com/joelhi/implicit-rs/actions/workflows/rust.yml/badge.svg)
 
