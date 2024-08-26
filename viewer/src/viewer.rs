@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use imlet_engine::types::{computation::implicit_model::ImplicitModel, geometry::BoundingBox};
+use imlet_engine::types::{computation::ImplicitModel, geometry::BoundingBox};
 use num_traits::Float;
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},

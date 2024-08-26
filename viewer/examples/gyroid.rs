@@ -3,7 +3,7 @@ use {
         types::{
             computation::{
                 distance_functions::{Gyroid, Sphere},
-                implicit_model::ImplicitModel,
+                ImplicitModel,
                 operations::{boolean::Intersection, shape::Thickness},
             },
             geometry::{BoundingBox, Vec3},

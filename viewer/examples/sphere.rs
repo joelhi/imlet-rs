@@ -1,7 +1,7 @@
 use {
     imlet_engine::{
         types::{
-            computation::{distance_functions::Sphere, implicit_model::ImplicitModel},
+            computation::{distance_functions::Sphere, ImplicitModel},
             geometry::{BoundingBox, Vec3},
         },
         utils,
@@ -23,7 +23,7 @@ pub fn main() {
 
     // Function
     let mut model = ImplicitModel::new();
-    let _ = model.add_function(
+    model.add_function(
         "Sphere",
         Sphere::new(
             Vec3::new(

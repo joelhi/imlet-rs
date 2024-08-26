@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use imlet_engine::{
     algorithms::marching_cubes::generate_iso_surface,
     types::{
-        computation::{implicit_model::ImplicitModel, DenseField},
+        computation::{ImplicitModel, DenseField},
         geometry::{BoundingBox, Line, Mesh},
     },
 };

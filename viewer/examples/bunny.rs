@@ -3,7 +3,7 @@ use {
         types::{
             computation::{
                 distance_functions::{Gyroid, MeshSDF},
-                implicit_model::ImplicitModel,
+                ImplicitModel,
                 operations::{boolean::Intersection, shape::Thickness},
             },
             geometry::Mesh,
@@ -19,7 +19,7 @@ pub fn main() {
     let mesh: Mesh<f64> = parse_obj_file("assets/geometry/bunny.obj").unwrap();
 
     let cell_size = 0.5;
-    let model_space = mesh.get_bounds().offset(cell_size);
+    let model_space = mesh.bounds().offset(cell_size);
 
     // Build model
     let mut model = ImplicitModel::new();

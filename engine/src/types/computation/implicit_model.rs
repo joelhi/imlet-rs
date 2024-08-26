@@ -1,11 +1,11 @@
-use crate::types::computation::component::Component;
+use crate::types::computation::component::{Component, ComponentId};
 use crate::types::computation::traits::implicit_functions::{ImplicitFunction, ImplicitOperation};
 use crate::types::computation::ComputationGraph;
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
+use std::time::Instant;
 
-use super::ComponentId;
 
 pub struct ImplicitModel<T: Float + Debug> {
     components: HashMap<String, Component<T>>,
@@ -83,6 +83,7 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
     }
 
     pub fn compile(&self, target: &str) -> ComputationGraph<T> {
+        let before = Instant::now();
         let target_output = target.to_string();
         // Traverse model from target to resolve all dependents
         let mut graph = ComputationGraph::new();
@@ -137,6 +138,12 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
                     .to_vec(),
             )
         }
+
+        log::info!(
+            "Computation graph with {} components compiled in {:.2?}",
+            ordered_components.len(),
+            before.elapsed()
+        );
 
         graph
     }

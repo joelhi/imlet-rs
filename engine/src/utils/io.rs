@@ -15,7 +15,7 @@ use crate::types::{
 pub fn mesh_to_obj<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> String {
     let mut data = String::new();
 
-    for &v in mesh.get_vertices() {
+    for &v in mesh.vertices() {
         let v_string = format!(
             "v {} {} {}\n",
             v.x.to_f32().expect("error"),
@@ -25,7 +25,7 @@ pub fn mesh_to_obj<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> String {
         data.push_str(&v_string);
     }
 
-    for &f in mesh.get_faces() {
+    for &f in mesh.faces() {
         let f_string = format!("f {} {} {}\n", f[0] + 1, f[1] + 1, f[2] + 1);
         data.push_str(&f_string);
     }

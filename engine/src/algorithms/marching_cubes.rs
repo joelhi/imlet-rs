@@ -269,7 +269,7 @@ fn interpolate_vertex<T: Float + Debug>(
 mod tests {
 
     use crate::types::{
-        computation::{distance_functions::Sphere, implicit_model::ImplicitModel},
+        computation::{distance_functions::Sphere, ImplicitModel},
         geometry::BoundingBox,
     };
 

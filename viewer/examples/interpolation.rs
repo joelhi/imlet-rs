@@ -3,7 +3,7 @@ use {
         types::{
             computation::{
                 distance_functions::{Gyroid, Sphere, ZDomain},
-                implicit_model::ImplicitModel,
+                ImplicitModel,
                 operations::{
                     boolean::Intersection, interpolation::LinearInterpolation, shape::Thickness,
                 },
