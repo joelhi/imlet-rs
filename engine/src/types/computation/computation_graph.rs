@@ -14,41 +14,22 @@ use super::{
     DenseField,
 };
 
-pub struct Model<T: Float + Debug + Send + Sync> {
+pub struct ComputationGraph<T: Float + Debug + Send + Sync> {
     components: Vec<Component<T>>,
-    connections: Vec<Vec<ComponentId>>,
+    inputs: Vec<Vec<ComponentId>>,
 }
 
-impl<T: Float + Debug + Send + Sync> Model<T> {
+impl<T: Float + Debug + Send + Sync> ComputationGraph<T> {
     pub fn new() -> Self {
         Self {
             components: Vec::new(),
-            connections: Vec::new(),
+            inputs: Vec::new(),
         }
     }
 
-    pub fn add_function<F: ImplicitFunction<T> + 'static>(&mut self, function: F) -> ComponentId {
-        self.components
-            .push(Component::Function(Box::new(function)));
-        self.connections.push(Vec::new());
-        (self.components.len() - 1).into()
-    }
-
-    pub fn add_operation<F: ImplicitOperation<T> + 'static>(
-        &mut self,
-        operation: F,
-        inputs: Vec<ComponentId>,
-    ) -> ComponentId {
-        self.components
-            .push(Component::Operation(Box::new(operation)));
-        self.connections.push(inputs);
-        (self.components.len() - 1).into()
-    }
-
-    pub fn add_constant(&mut self, value: T) -> ComponentId {
-        self.components.push(Component::Constant(value));
-        self.connections.push(Vec::new());
-        (self.components.len() - 1).into()
+    pub fn add_component<T: Float + Debug + Send + Sync + 'static>(&mut self, component: Component<T>, inputs: Vec<ComponentId>) {
+        self.components.push(component);
+        self.inputs.push(inputs);
     }
 
     thread_local! {
@@ -135,8 +116,8 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
     #[inline]
     pub fn get_inputs(&self, component_id: usize, values: &ComponentValues, inputs: &mut Vec<T>) {
         inputs.clear();
-        inputs.resize(self.connections[component_id].len(), T::zero());
-        for (i, &id) in self.connections[component_id].iter().enumerate() {
+        inputs.resize(self.inputs[component_id].len(), T::zero());
+        for (i, &id) in self.inputs[component_id].iter().enumerate() {
             inputs[i] = values.get(id);
         }
     }
