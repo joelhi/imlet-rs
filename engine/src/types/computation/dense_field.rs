@@ -45,13 +45,13 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
 
     pub fn smooth(&mut self, factor: T, iterations: u32) {
         let before = Instant::now();
-        let mut smoothed = vec![T::zero(); self.get_num_points()];
+        let mut smoothed = vec![T::zero(); self.num_points()];
         for _ in 0..iterations {
             smoothed
                 .par_iter_mut()
                 .enumerate()
                 .for_each(|(index, val)| {
-                    if let Some(sum) = self.get_neighbours_sum(index) {
+                    if let Some(sum) = self.neighbours_sum(index) {
                         let laplacian = sum / T::from(6.0).expect("Failed to convert number to T");
                         *val = (T::one() - factor) * self.data[index] + factor * laplacian;
                     } else {
@@ -63,7 +63,7 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
 
         log::info!(
             "Dense value data for {} points smoothed in {:.2?} for {} iterations",
-            self.get_num_points(),
+            self.num_points(),
             before.elapsed(),
             iterations
         );
@@ -77,40 +77,40 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
         });
     }
 
-    fn get_neighbours_sum(&self, index: usize) -> Option<T> {
-        let (i, j, k) = self.get_point_index3d(index);
+    fn neighbours_sum(&self, index: usize) -> Option<T> {
+        let (i, j, k) = self.point_index3d(index);
 
         if i < 1 || j < 1 || k < 1 || i == self.n.x - 1 || j == self.n.y - 1 || k == self.n.z - 1 {
             return None;
         }
         Some(
-            self.data[self.get_point_index1d(i + 1, j, k)]
-                + self.data[self.get_point_index1d(i - 1, j, k)]
-                + self.data[self.get_point_index1d(i, j + 1, k)]
-                + self.data[self.get_point_index1d(i, j - 1, k)]
-                + self.data[self.get_point_index1d(i, j, k + 1)]
-                + self.data[self.get_point_index1d(i, j, k - 1)],
+            self.data[self.point_index1d(i + 1, j, k)]
+                + self.data[self.point_index1d(i - 1, j, k)]
+                + self.data[self.point_index1d(i, j + 1, k)]
+                + self.data[self.point_index1d(i, j - 1, k)]
+                + self.data[self.point_index1d(i, j, k + 1)]
+                + self.data[self.point_index1d(i, j, k - 1)],
         )
     }
 
-    fn get_cell_ids(&self, i: usize, j: usize, k: usize) -> [usize; 8] {
+    fn cell_ids(&self, i: usize, j: usize, k: usize) -> [usize; 8] {
         // Get the ids of the vertices at a certain cell
         if !i < self.n.x - 1 || !j < self.n.y - 1 || !k < self.n.z - 1 {
             panic!("Index out of bounds");
         }
         [
-            self.get_point_index1d(i, j, k),
-            self.get_point_index1d(i + 1, j, k),
-            self.get_point_index1d(i + 1, j + 1, k),
-            self.get_point_index1d(i, j + 1, k),
-            self.get_point_index1d(i, j, k + 1),
-            self.get_point_index1d(i + 1, j, k + 1),
-            self.get_point_index1d(i + 1, j + 1, k + 1),
-            self.get_point_index1d(i, j + 1, k + 1),
+            self.point_index1d(i, j, k),
+            self.point_index1d(i + 1, j, k),
+            self.point_index1d(i + 1, j + 1, k),
+            self.point_index1d(i, j + 1, k),
+            self.point_index1d(i, j, k + 1),
+            self.point_index1d(i + 1, j, k + 1),
+            self.point_index1d(i + 1, j + 1, k + 1),
+            self.point_index1d(i, j + 1, k + 1),
         ]
     }
 
-    pub fn get_cell_corners(&self, i: usize, j: usize, k: usize) -> [Vec3<T>; 8] {
+    pub fn cell_corners(&self, i: usize, j: usize, k: usize) -> [Vec3<T>; 8] {
         let size = self.cell_size;
         let i_val = T::from(i).expect("Failed to convert number to T");
         let j_val = T::from(j).expect("Failed to convert number to T");
@@ -168,8 +168,8 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
         ]
     }
 
-    pub fn get_cell_values(&self, i: usize, j: usize, k: usize) -> [T; 8] {
-        let cell_ids = self.get_cell_ids(i, j, k);
+    pub fn cell_values(&self, i: usize, j: usize, k: usize) -> [T; 8] {
+        let cell_ids = self.cell_ids(i, j, k);
         [
             self.data[cell_ids[0]],
             self.data[cell_ids[1]],
@@ -182,27 +182,27 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
         ]
     }
 
-    pub fn get_point_index1d(&self, i: usize, j: usize, k: usize) -> usize {
+    pub fn point_index1d(&self, i: usize, j: usize, k: usize) -> usize {
         index1d_from_index3d(i, j, k, self.n.x, self.n.y, self.n.z)
     }
 
-    pub fn get_point_index3d(&self, index: usize) -> (usize, usize, usize) {
+    pub fn point_index3d(&self, index: usize) -> (usize, usize, usize) {
         index3d_from_index1d(index, self.n.x, self.n.y, self.n.z)
     }
 
-    pub fn get_cell_index1d(&self, i: usize, j: usize, k: usize) -> usize {
+    pub fn cell_index1d(&self, i: usize, j: usize, k: usize) -> usize {
         index1d_from_index3d(i, j, k, self.n.x - 1, self.n.y - 1, self.n.z - 1)
     }
 
-    pub fn get_cell_index3d(&self, index: usize) -> (usize, usize, usize) {
+    pub fn cell_index3d(&self, index: usize) -> (usize, usize, usize) {
         index3d_from_index1d(index, self.n.x - 1, self.n.y - 1, self.n.z - 1)
     }
 
-    pub fn get_num_points(&self) -> usize {
+    pub fn num_points(&self) -> usize {
         self.n.x * self.n.y * self.n.z
     }
 
-    pub fn get_num_cells(&self) -> usize {
+    pub fn num_cells(&self) -> usize {
         (self.n.x - 1) * (self.n.y - 1) * (self.n.z - 1)
     }
 
@@ -313,23 +313,23 @@ mod tests {
     fn test_map_cell_index_cube() {
         let field = DenseField::new(Vec3::origin(), 1.0, (10, 10, 10).into());
 
-        assert_eq!(1, field.get_cell_index1d(1, 0, 0));
-        assert_eq!(9, field.get_cell_index1d(0, 1, 0));
-        assert_eq!(10, field.get_cell_index1d(1, 1, 0));
-        assert_eq!(81, field.get_cell_index1d(0, 0, 1));
-        assert_eq!(90, field.get_cell_index1d(0, 1, 1));
-        assert_eq!(91, field.get_cell_index1d(1, 1, 1));
+        assert_eq!(1, field.cell_index1d(1, 0, 0));
+        assert_eq!(9, field.cell_index1d(0, 1, 0));
+        assert_eq!(10, field.cell_index1d(1, 1, 0));
+        assert_eq!(81, field.cell_index1d(0, 0, 1));
+        assert_eq!(90, field.cell_index1d(0, 1, 1));
+        assert_eq!(91, field.cell_index1d(1, 1, 1));
     }
 
     #[test]
     fn test_map_point_index() {
         let field = DenseField::new(Vec3::origin(), 1.0, (10, 10, 10).into());
 
-        assert_eq!(1, field.get_point_index1d(1, 0, 0));
-        assert_eq!(10, field.get_point_index1d(0, 1, 0));
-        assert_eq!(11, field.get_point_index1d(1, 1, 0));
-        assert_eq!(100, field.get_point_index1d(0, 0, 1));
-        assert_eq!(110, field.get_point_index1d(0, 1, 1));
-        assert_eq!(111, field.get_point_index1d(1, 1, 1));
+        assert_eq!(1, field.point_index1d(1, 0, 0));
+        assert_eq!(10, field.point_index1d(0, 1, 0));
+        assert_eq!(11, field.point_index1d(1, 1, 0));
+        assert_eq!(100, field.point_index1d(0, 0, 1));
+        assert_eq!(110, field.point_index1d(0, 1, 1));
+        assert_eq!(111, field.point_index1d(1, 1, 1));
     }
 }

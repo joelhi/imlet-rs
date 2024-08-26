@@ -60,14 +60,8 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
             mesh.num_faces(),
             before.elapsed()
         );
-        let before = Instant::now();
-        mesh.compute_vertex_normals();
 
-        log::info!(
-            "Mesh normals computed for {} points in {:.2?}",
-            mesh.num_vertices(),
-            before.elapsed()
-        );
+        mesh.compute_vertex_normals();
 
         mesh
     }
@@ -80,15 +74,15 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         self.faces.extend_from_slice(faces);
     }
 
-    pub fn get_vertices(&self) -> &Vec<Vec3<T>> {
+    pub fn vertices(&self) -> &Vec<Vec3<T>> {
         &self.vertices
     }
 
-    pub fn get_faces(&self) -> &Vec<[usize; 3]> {
+    pub fn faces(&self) -> &Vec<[usize; 3]> {
         &self.faces
     }
 
-    pub fn get_normals(&self) -> Option<&Vec<Vec3<T>>> {
+    pub fn normals(&self) -> Option<&Vec<Vec3<T>>> {
         self.normals.as_ref()
     }
 
@@ -110,21 +104,21 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         self.faces.len()
     }
 
-    pub fn get_centroid(&self) -> Vec3<T> {
+    pub fn centroid(&self) -> Vec3<T> {
         let mut centroid: Vec3<T> = Vec3::origin();
 
-        for &v in self.get_vertices() {
+        for &v in self.vertices() {
             centroid = centroid + v;
         }
 
         centroid * T::from(1.0 / self.num_vertices() as f64).expect("Failed to convert number to T")
     }
 
-    pub fn get_bounds(&self) -> BoundingBox<T> {
+    pub fn bounds(&self) -> BoundingBox<T> {
         let mut max = Vec3::new(-T::max_value(), -T::max_value(), -T::max_value());
         let mut min = Vec3::new(T::max_value(), T::max_value(), T::max_value());
 
-        for v in self.get_vertices() {
+        for v in self.vertices() {
             min.x = min.x.min(v.x);
             min.y = min.y.min(v.y);
             min.z = min.z.min(v.z);
@@ -138,6 +132,8 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
     }
 
     pub fn compute_vertex_normals(&mut self) {
+        let before = Instant::now();
+
         let face_normals: Vec<Vec3<T>> = self.compute_face_normals();
         let vertex_faces: Vec<Vec<usize>> = self.compute_vertex_faces();
         let mut vertex_normals = vec![Vec3::origin(); self.num_vertices()];
@@ -153,6 +149,12 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
                         .expect("Failed to convert number to T");
             });
         self.normals = Some(vertex_normals);
+
+        log::info!(
+            "Mesh normals computed for {} points in {:.2?}",
+            self.num_vertices(),
+            before.elapsed()
+        );
     }
 
     pub fn compute_face_normals(&self) -> Vec<Vec3<T>> {
@@ -212,7 +214,7 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
     ) -> OctreeNode<Triangle<T>, T> {
         let before = Instant::now();
 
-        let mut tree = OctreeNode::new(self.get_bounds(), self.as_triangles());
+        let mut tree = OctreeNode::new(self.bounds(), self.as_triangles());
         tree.build(max_depth, max_triangles);
 
         log::info!(

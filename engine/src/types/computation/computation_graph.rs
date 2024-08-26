@@ -10,77 +10,49 @@ use crate::{
 
 use super::{
     component::{Component, ComponentId, ComponentValues},
-    traits::implicit_functions::{ImplicitFunction, ImplicitOperation},
     DenseField,
 };
 
-pub struct Model<T: Float + Debug + Send + Sync> {
-    components: Vec<Component<T>>,
-    connections: Vec<Vec<ComponentId>>,
+pub struct ComputationGraph<'a, T: Float + Debug + Send + Sync> {
+    components: Vec<&'a Component<T>>,
+    inputs: Vec<Vec<ComponentId>>,
 }
 
-impl<T: Float + Debug + Send + Sync> Model<T> {
-    pub fn new() -> Self {
+impl<'a, T: Float + Debug + Send + Sync> ComputationGraph<'a, T> {
+    pub(crate) fn new() -> Self {
         Self {
             components: Vec::new(),
-            connections: Vec::new(),
+            inputs: Vec::new(),
         }
     }
 
-    pub fn add_function<F: ImplicitFunction<T> + 'static>(&mut self, function: F) -> ComponentId {
-        self.components
-            .push(Component::Function(Box::new(function)));
-        self.connections.push(Vec::new());
-        (self.components.len() - 1).into()
-    }
-
-    pub fn add_operation<F: ImplicitOperation<T> + 'static>(
-        &mut self,
-        operation: F,
-        inputs: Vec<ComponentId>,
-    ) -> ComponentId {
-        self.components
-            .push(Component::Operation(Box::new(operation)));
-        self.connections.push(inputs);
-        (self.components.len() - 1).into()
-    }
-
-    pub fn add_constant(&mut self, value: T) -> ComponentId {
-        self.components.push(Component::Constant(value));
-        self.connections.push(Vec::new());
-        (self.components.len() - 1).into()
+    pub(crate) fn add_component(&mut self, component: &'a Component<T>, inputs: Vec<ComponentId>) {
+        self.components.push(&component);
+        self.inputs.push(inputs);
     }
 
     thread_local! {
         static COMPONENT_VALUES: RefCell<ComponentValues> = RefCell::new(ComponentValues::new());
     }
 
-    fn evaluate_at_coord(&self, x: T, y: T, z: T, output: Option<ComponentId>) -> T {
+    pub fn evaluate_at_coord(&self, x: T, y: T, z: T) -> T {
         Self::COMPONENT_VALUES.with(|values| {
             let mut values = values.borrow_mut();
             values.resize(self.components.len());
-            let output_index = output.unwrap_or_else(|| ComponentId(self.components.len() - 1));
+
             let mut inputs = Vec::with_capacity(4);
             for (index, component) in self.components.iter().enumerate() {
-                self.get_inputs(index, &values, &mut inputs);
+                self.inputs(index, &values, &mut inputs);
                 let val = component.compute(x, y, z, &inputs);
                 values.set(index, val);
-                if index == output_index.value() {
-                    break;
-                }
             }
-            values.get(output_index)
+            values.last()
         })
     }
 
-    pub fn evaluate(
-        &self,
-        bounds: &BoundingBox<T>,
-        cell_size: T,
-        output: Option<ComponentId>,
-    ) -> DenseField<T> {
+    pub fn evaluate(&self, bounds: &BoundingBox<T>, cell_size: T) -> DenseField<T> {
         let before = Instant::now();
-        let n = Self::get_point_count(&bounds, cell_size);
+        let n = Self::point_count(&bounds, cell_size);
 
         log::debug!(
             "Evaluating model from {} to {} with {}x{}x{} points",
@@ -98,7 +70,6 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
                 bounds.min.x + cell_size * T::from(i).expect("Failed to convert number to T"),
                 bounds.min.y + cell_size * T::from(j).expect("Failed to convert number to T"),
                 bounds.min.z + cell_size * T::from(k).expect("Failed to convert number to T"),
-                output,
             );
         });
 
@@ -111,7 +82,7 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
         DenseField::with_data(bounds.min, cell_size, n, data)
     }
 
-    fn get_point_count(bounds: &BoundingBox<T>, cell_size: T) -> Vec3i {
+    fn point_count(bounds: &BoundingBox<T>, cell_size: T) -> Vec3i {
         let (x_dim, y_dim, z_dim) = bounds.dimensions();
         Vec3i::new(
             (x_dim / cell_size)
@@ -133,10 +104,10 @@ impl<T: Float + Debug + Send + Sync> Model<T> {
     }
 
     #[inline]
-    pub fn get_inputs(&self, component_id: usize, values: &ComponentValues, inputs: &mut Vec<T>) {
+    pub fn inputs(&self, component_id: usize, values: &ComponentValues, inputs: &mut Vec<T>) {
         inputs.clear();
-        inputs.resize(self.connections[component_id].len(), T::zero());
-        for (i, &id) in self.connections[component_id].iter().enumerate() {
+        inputs.resize(self.inputs[component_id].len(), T::zero());
+        for (i, &id) in self.inputs[component_id].iter().enumerate() {
             inputs[i] = values.get(id);
         }
     }
@@ -158,20 +129,22 @@ mod tests {
     fn test_evaluate_model_function() {
         let size = 10.0;
         let cell_size = 2.5;
-        let mut model = Model::new();
+        let mut graph = ComputationGraph::new();
         let bounds = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
         // Function
-        let sphere = model.add_function(Sphere::new(
+        let binding = Component::Function(Box::new(Sphere::new(
             Vec3::new(size / 2.0, size / 2.0, size / 2.0),
             size * 0.45,
-        ));
+        )));
+
+        graph.add_component(&binding, vec![]);
 
         // Discretize
-        let field = model.evaluate(&bounds, cell_size, Some(sphere));
+        let field = graph.evaluate(&bounds, cell_size);
 
-        assert_eq!(64, field.get_num_cells());
-        assert_eq!(125, field.get_num_points());
+        assert_eq!(64, field.num_cells());
+        assert_eq!(125, field.num_points());
 
         let data = field.copy_data();
         for val in data {
@@ -183,20 +156,22 @@ mod tests {
     fn test_evaluate_model_function_non_uniform() {
         let size = 10.0;
         let cell_size = 2.5;
-        let mut model = Model::new();
+        let mut model = ComputationGraph::new();
         let bounds = BoundingBox::new(Vec3::origin(), Vec3::new(2.0 * size, 1.5 * size, size));
 
         // Function
-        let sphere = model.add_function(Sphere::new(
+        let sphere = Component::Function(Box::new(Sphere::new(
             Vec3::new(size / 2.0, size / 2.0, size / 2.0),
             size * 0.50,
-        ));
+        )));
+
+        model.add_component(&sphere, vec![]);
 
         // Discretize
-        let field = model.evaluate(&bounds, cell_size, Some(sphere));
+        let field = model.evaluate(&bounds, cell_size);
 
-        assert_eq!(8 * 6 * 4, field.get_num_cells());
-        assert_eq!(9 * 7 * 5, field.get_num_points());
+        assert_eq!(8 * 6 * 4, field.num_cells());
+        assert_eq!(9 * 7 * 5, field.num_points());
 
         // Assert values
         let data = field.copy_data();
@@ -207,40 +182,36 @@ mod tests {
 
     #[test]
     fn test_create_and_evaluate_model_with_function_operation() {
-        let mut model = Model::new();
+        let mut model = ComputationGraph::new();
 
         // Function
-        let sphere_component = model.add_function(Sphere::new(Vec3::origin(), 1.0));
+        let sphere_component = Component::Function(Box::new(Sphere::new(Vec3::origin(), 1.0)));
+        let sphere_component2 = Component::Function(Box::new(Sphere::new(Vec3::origin(), 0.5)));
 
-        let sphere_component_2: ComponentId = model.add_function(Sphere::new(Vec3::origin(), 0.5));
+        let difference_component = Component::Operation(Box::new(Difference::new()));
 
-        let difference_component = Some(model.add_operation(
-            Difference::new(),
-            vec![sphere_component, sphere_component_2],
-        ));
+        model.add_component(&sphere_component, vec![]);
+        model.add_component(&sphere_component2, vec![]);
+        model.add_component(&difference_component, vec![0.into(), 1.into()]);
 
-        assert!(0.5 - model.evaluate_at_coord(0.0, 0.0, 0.0, difference_component) < 0.001);
-        assert!(model.evaluate_at_coord(0.5, 0.0, 0.0, difference_component) < 0.001);
-        assert!(model.evaluate_at_coord(1.0, 0.0, 0.0, difference_component) < 0.001);
-        assert!(model.evaluate_at_coord(0.0, 0.5, 0.0, difference_component) < 0.001);
-        assert!(model.evaluate_at_coord(0.0, 1.0, 0.0, difference_component) < 0.001);
-        assert!(
-            (-0.25 - model.evaluate_at_coord(0.75, 0.0, 0.0, difference_component)).abs() < 0.001
-        );
-        assert!(
-            (-0.25 - model.evaluate_at_coord(0.0, 0.75, 0.0, difference_component)).abs() < 0.001
-        );
+        assert!(0.5 - model.evaluate_at_coord(0.0, 0.0, 0.0) < 0.001);
+        assert!(model.evaluate_at_coord(0.5, 0.0, 0.0) < 0.001);
+        assert!(model.evaluate_at_coord(1.0, 0.0, 0.0) < 0.001);
+        assert!(model.evaluate_at_coord(0.0, 0.5, 0.0) < 0.001);
+        assert!(model.evaluate_at_coord(0.0, 1.0, 0.0) < 0.001);
+        assert!((-0.25 - model.evaluate_at_coord(0.75, 0.0, 0.0)).abs() < 0.001);
+        assert!((-0.25 - model.evaluate_at_coord(0.0, 0.75, 0.0)).abs() < 0.001);
     }
 
     #[test]
     fn test_evaluate_model_constant_operation() {
-        let mut model = Model::new();
+        let mut model = ComputationGraph::new();
 
-        let value_component = model.add_constant(1.0);
-        let addition_component =
-            model.add_operation(Add::new(), vec![value_component, value_component]);
+        model.add_component(&Component::Constant(1.0), vec![]);
+        let addition_component = Component::Operation(Box::new(Add::new()));
+        model.add_component(&addition_component, vec![0.into(), 0.into()]);
 
-        let result = model.evaluate_at_coord(0.0, 0.0, 0.0, Some(addition_component));
+        let result = model.evaluate_at_coord(0.0, 0.0, 0.0);
         assert!((2.0 - result).abs() < 0.0001);
     }
 }

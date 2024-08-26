@@ -4,7 +4,7 @@ use {
             computation::{
                 distance_functions::{Gyroid, MeshSDF},
                 operations::{boolean::Intersection, shape::Thickness},
-                Model,
+                ImplicitModel,
             },
             geometry::Mesh,
         },
@@ -19,14 +19,18 @@ pub fn main() {
     let mesh: Mesh<f64> = parse_obj_file("assets/geometry/bunny.obj").unwrap();
 
     let cell_size = 0.5;
-    let model_space = mesh.get_bounds().offset(cell_size);
+    let model_space = mesh.bounds().offset(cell_size);
 
     // Build model
-    let mut model = Model::new();
-    let bounds = model.add_function(MeshSDF::new(&mesh, 10, 12, 0.1));
-    let shape = model.add_function(Gyroid::with_equal_spacing(7.5, true));
-    let thick_shape = model.add_operation(Thickness::new(5.0), vec![shape]);
-    let _ = model.add_operation(Intersection::new(), vec![bounds, thick_shape]);
+    let mut model = ImplicitModel::new();
+    model.add_function("BunnyMesh", MeshSDF::new(&mesh, 10, 12, 0.1));
+    model.add_function("GyroidInfill", Gyroid::with_equal_spacing(7.5, true));
+    model.add_operation_with_inputs("ThickGyroid", Thickness::new(5.0), &vec!["GyroidInfill"]);
+    model.add_operation_with_inputs(
+        "Output",
+        Intersection::new(),
+        &vec!["BunnyMesh", "ThickGyroid"],
+    );
 
-    Viewer::run(model, model_space, cell_size);
+    Viewer::run(model, model_space, cell_size, "Output");
 }

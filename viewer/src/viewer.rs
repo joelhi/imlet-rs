@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use imlet_engine::types::{computation::Model, geometry::BoundingBox};
+use imlet_engine::types::{computation::ImplicitModel, geometry::BoundingBox};
 use num_traits::Float;
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
@@ -21,28 +21,30 @@ impl Viewer {
     }
 
     pub fn run<T: Float + Debug + Send + Sync + 'static>(
-        model: Model<T>,
+        model: ImplicitModel<T>,
         bounds: BoundingBox<T>,
         cell_size: T,
+        output: &str,
     ) {
-        pollster::block_on(Viewer::run_internal(model, bounds, cell_size));
+        pollster::block_on(Viewer::run_internal(model, bounds, cell_size, output));
     }
 
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
     async fn run_internal<T: Float + Debug + Send + Sync + 'static>(
-        model: Model<T>,
+        model: ImplicitModel<T>,
         bounds: BoundingBox<T>,
         cell_size: T,
+        output: &str,
     ) {
         let window_icon = None;
         let event_loop = EventLoop::new();
         let window = WindowBuilder::new()
-            .with_title("ImLET viewer")
+            .with_title("Imlet viewer")
             .with_window_icon(window_icon)
             .build(&event_loop)
             .unwrap();
 
-        let model_data = ModelData::new(model, bounds);
+        let model_data = ModelData::new(model, bounds, output);
 
         let scene = Scene::new();
 

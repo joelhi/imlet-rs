@@ -17,16 +17,16 @@ pub fn generate_iso_surface<T: Float + Debug + Send + Sync>(
 ) -> Vec<Triangle<T>> {
     let before = Instant::now();
     // Generate triangles for cell
-    let mut triangles: Vec<Triangle<T>> = Vec::with_capacity(field.get_num_cells());
+    let mut triangles: Vec<Triangle<T>> = Vec::with_capacity(field.num_cells());
 
     // Iterate over cell indices in parallel and collect triangles
     triangles.extend(
-        (0..field.get_num_cells())
+        (0..field.num_cells())
             .into_par_iter()
             .map(|cell_index| {
-                let (i, j, k) = field.get_cell_index3d(cell_index);
-                let cell_vec3f = field.get_cell_corners(i, j, k);
-                let cell_values = field.get_cell_values(i, j, k);
+                let (i, j, k) = field.cell_index3d(cell_index);
+                let cell_vec3f = field.cell_corners(i, j, k);
+                let cell_values = field.cell_values(i, j, k);
                 polygonize_cell(iso_val, &cell_vec3f, &cell_values)
             })
             .reduce(Vec::new, |mut acc, triangles| {
@@ -49,11 +49,11 @@ fn polygonize_cell<T: Float + Debug>(
     cell_coord: &[Vec3<T>; 8],
     cell_values: &[T; 8],
 ) -> Vec<Triangle<T>> {
-    let cube_index = get_cube_index(cell_values, iso_val);
-    get_triangles(cube_index, &cell_coord, &cell_values, iso_val)
+    let cube_index = cube_index(cell_values, iso_val);
+    triangles(cube_index, &cell_coord, &cell_values, iso_val)
 }
 
-fn get_cube_index<T: Float + Debug>(cell_values: &[T; 8], iso_val: T) -> usize {
+fn cube_index<T: Float + Debug>(cell_values: &[T; 8], iso_val: T) -> usize {
     let mut cube_index: usize = 0;
 
     if cell_values[0] < iso_val {
@@ -84,7 +84,7 @@ fn get_cube_index<T: Float + Debug>(cell_values: &[T; 8], iso_val: T) -> usize {
     cube_index
 }
 
-fn get_triangles<T: Float + Debug>(
+fn triangles<T: Float + Debug>(
     cube_index: usize,
     cell_coord: &[Vec3<T>; 8],
     cell_values: &[T; 8],
@@ -92,7 +92,7 @@ fn get_triangles<T: Float + Debug>(
 ) -> Vec<Triangle<T>> {
     let mut triangles = Vec::new();
 
-    let vertices = get_vertices(cube_index, cell_coord, cell_values, iso_val);
+    let vertices = vertices(cube_index, cell_coord, cell_values, iso_val);
     for i in (0..15).step_by(3) {
         let tri = TRI_TABLE[cube_index][i];
 
@@ -110,7 +110,7 @@ fn get_triangles<T: Float + Debug>(
     triangles
 }
 
-fn get_vertices<T: Float + Debug>(
+fn vertices<T: Float + Debug>(
     cube_index: usize,
     cell_coord: &[Vec3<T>; 8],
     cell_values: &[T; 8],
@@ -269,7 +269,7 @@ fn interpolate_vertex<T: Float + Debug>(
 mod tests {
 
     use crate::types::{
-        computation::{distance_functions::Sphere, Model},
+        computation::{distance_functions::Sphere, ImplicitModel},
         geometry::BoundingBox,
     };
 
@@ -322,13 +322,15 @@ mod tests {
         let bounds = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
         // Function
-        let mut model = Model::new();
-        let sphere = model.add_function(Sphere::new(
-            Vec3::new(size / 2.0, size / 2.0, size / 2.0),
-            size * 0.4,
-        ));
+        let mut model = ImplicitModel::new();
+        model.add_function(
+            "Sphere",
+            Sphere::new(Vec3::new(size / 2.0, size / 2.0, size / 2.0), size * 0.4),
+        );
 
-        let field = model.evaluate(&bounds, cell_size, Option::Some(sphere));
+        let computation_graph = model.compile("Sphere");
+
+        let field = computation_graph.evaluate(&bounds, cell_size);
 
         // Generate mesh
         let triangles = generate_iso_surface(&field, 0.0);

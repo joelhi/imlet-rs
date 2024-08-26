@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use imlet_engine::{
     algorithms::marching_cubes::generate_iso_surface,
     types::{
-        computation::{DenseField, Model},
+        computation::{DenseField, ImplicitModel},
         geometry::{BoundingBox, Line, Mesh},
     },
 };
@@ -69,16 +69,18 @@ impl SceneSettings {
 }
 
 pub struct ModelData<T: Float + Debug + Send + Sync> {
-    model: Model<T>,
+    model: ImplicitModel<T>,
     bounds: BoundingBox<T>,
+    output: String,
     data: Option<DenseField<T>>,
 }
 
 impl<T: Float + Debug + Send + Sync> ModelData<T> {
-    pub fn new(model: Model<T>, bounds: BoundingBox<T>) -> Self {
+    pub fn new(model: ImplicitModel<T>, bounds: BoundingBox<T>, output: &str) -> Self {
         Self {
             model: model,
             bounds: bounds,
+            output: output.to_string(),
             data: None,
         }
     }
@@ -99,7 +101,8 @@ impl<T: Float + Debug + Send + Sync> ModelData<T> {
     }
 
     pub fn compute(&mut self, cell_size: T) {
-        self.data = Some(self.model.evaluate(&self.bounds, cell_size, None));
+        let computation_graph = self.model.compile(&self.output);
+        self.data = Some(computation_graph.evaluate(&self.bounds, cell_size));
     }
 
     pub fn generate_mesh(&mut self) -> Option<Mesh<T>> {

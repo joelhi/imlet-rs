@@ -132,7 +132,7 @@ impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> OctreeNode<Q, T> {
         (best_point, best_object)
     }
 
-    pub fn get_all_bounds(&self) -> Vec<BoundingBox<T>> {
+    pub fn all_bounds(&self) -> Vec<BoundingBox<T>> {
         let mut bounds = Vec::new();
         self.collect_bounds(&mut bounds);
         bounds
@@ -240,7 +240,7 @@ mod tests {
         let m: Mesh<f64> = parse_obj_file("../assets/geometry/sphere.obj").unwrap();
 
         let octree = m.compute_octree(10, 12);
-        let bounds = octree.get_all_bounds();
+        let bounds = octree.all_bounds();
 
         assert!(bounds.len() == 185);
     }
@@ -267,7 +267,7 @@ mod tests {
         let octree = m.compute_octree(10, 9);
 
         // Inside box
-        let signed_distance = octree.signed_distance(m.get_centroid(), 0.1);
+        let signed_distance = octree.signed_distance(m.centroid(), 0.1);
         assert!((signed_distance + 10.0).abs() < 0.001);
 
         // Outside box
@@ -286,17 +286,17 @@ mod tests {
         let octree = m.compute_octree(10, 9);
 
         // Inside sphere
-        let signed_distance = octree.signed_distance(m.get_centroid(), 0.1);
+        let signed_distance = octree.signed_distance(m.centroid(), 0.1);
         assert!((signed_distance + 47.022).abs() < 0.001);
 
         // Outside sphere,
-        let signed_distance = octree.signed_distance(m.get_bounds().max, 0.1);
+        let signed_distance = octree.signed_distance(m.bounds().max, 0.1);
         assert!((signed_distance - 35.896).abs() < 0.001);
 
-        let (dx, _, _) = m.get_bounds().dimensions();
+        let (dx, _, _) = m.bounds().dimensions();
         // On corner
         let signed_distance =
-            octree.signed_distance(m.get_centroid() + Vec3::new(dx / 2.0, 0.0, 0.0), 0.1);
+            octree.signed_distance(m.centroid() + Vec3::new(dx / 2.0, 0.0, 0.0), 0.1);
         assert!(signed_distance.abs() < 0.001);
     }
 }

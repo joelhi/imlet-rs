@@ -4,7 +4,7 @@ use {
             computation::{
                 distance_functions::{SchwarzP, Sphere},
                 operations::{boolean::Intersection, shape::Thickness},
-                Model,
+                ImplicitModel,
             },
             geometry::{BoundingBox, Vec3},
         },
@@ -22,17 +22,21 @@ pub fn main() {
     let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
     // Build model
-    let mut model = Model::new();
+    let mut model = ImplicitModel::new();
 
-    let bounds = model.add_function(Sphere::new(
-        Vec3::new(0.5 * size, 0.5 * size, 0.5 * size),
-        0.45 * size,
-    ));
+    model.add_function(
+        "Sphere",
+        Sphere::new(Vec3::new(0.5 * size, 0.5 * size, 0.5 * size), 0.45 * size),
+    );
 
-    let shape = model.add_function(SchwarzP::with_equal_spacing(1.0, true));
-    let thick_shape = model.add_operation(Thickness::new(0.30), vec![shape]);
-    let _ = model.add_operation(Intersection::new(), vec![bounds, thick_shape]);
+    model.add_function("Schwarz", SchwarzP::with_equal_spacing(1.0, true));
+    model.add_operation_with_inputs("ThickSchwarz", Thickness::new(0.30), &vec!["Schwarz"]);
+    model.add_operation_with_inputs(
+        "Output",
+        Intersection::new(),
+        &vec!["Sphere", "ThickSchwarz"],
+    );
 
     // Discretize
-    Viewer::run(model, model_space, cell_size);
+    Viewer::run(model, model_space, cell_size, "Output");
 }

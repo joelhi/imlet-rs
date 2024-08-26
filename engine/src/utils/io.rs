@@ -15,7 +15,7 @@ use crate::types::{
 pub fn mesh_to_obj<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> String {
     let mut data = String::new();
 
-    for &v in mesh.get_vertices() {
+    for &v in mesh.vertices() {
         let v_string = format!(
             "v {} {} {}\n",
             v.x.to_f32().expect("error"),
@@ -25,7 +25,7 @@ pub fn mesh_to_obj<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> String {
         data.push_str(&v_string);
     }
 
-    for &f in mesh.get_faces() {
+    for &f in mesh.faces() {
         let f_string = format!("f {} {} {}\n", f[0] + 1, f[1] + 1, f[2] + 1);
         data.push_str(&f_string);
     }
@@ -115,15 +115,15 @@ pub fn write_field_csv<T: Float + Debug + Send + Sync>(
 ) -> io::Result<()> {
     let file_path = Path::new(file_name).with_extension("csv");
     let mut file = fs::File::create(file_path)?;
-    file.write_all(get_field_as_data(&field).as_bytes())?;
+    file.write_all(field_as_data(&field).as_bytes())?;
     Ok(())
 }
 
-fn get_field_as_data<T: Float + Debug + Send + Sync>(field: &DenseField<T>) -> String {
+fn field_as_data<T: Float + Debug + Send + Sync>(field: &DenseField<T>) -> String {
     let mut data = String::new();
     data.push_str("x, y, z, v\n");
     for (idx, v) in field.data().iter().enumerate() {
-        let (i, j, k) = field.get_point_index3d(idx);
+        let (i, j, k) = field.point_index3d(idx);
         let v_string = format!(
             "{:?},{:?},{:?},{:?}\n",
             field.origin().x
