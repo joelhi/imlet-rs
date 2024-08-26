@@ -148,10 +148,11 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
     }
 
     fn get_valid_inputs(&self, component: &String) -> Vec<String> {
+        let default = Vec::new();
         let option_inputs = self
             .inputs
             .get(component)
-            .expect("Component not found in model.");
+            .unwrap_or(&default);
 
         option_inputs.into_iter().fold(Vec::new(), |mut acc, item| {
             item.clone()
