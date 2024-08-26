@@ -39,7 +39,9 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
     ) {
         assert!(
             operation.num_inputs() == inputs.len(),
-            "Number of inputs for component {} does not match the inputs for {}.", tag, std::any::type_name::<F>() 
+            "Number of inputs for component {} does not match the inputs for {}.",
+            tag,
+            std::any::type_name::<F>()
         );
         self.inputs.insert(
             tag.to_string(),
@@ -121,21 +123,27 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         // Iterate all the sources into an ordered list and assign indexed input
         for (component, index) in sources.iter() {
             ordered_components[*index].insert_str(0, component.as_str());
-            ordered_inputs[*index].extend(
-                self.valid_inputs(component).iter().map(|tag| {
-                    ComponentId(*sources.get(tag).expect(&format!("Failed to retrieve component with tag {}", tag)))
-                }),
-            );
+            ordered_inputs[*index].extend(self.valid_inputs(component).iter().map(|tag| {
+                ComponentId(
+                    *sources
+                        .get(tag)
+                        .expect(&format!("Failed to retrieve component with tag {}", tag)),
+                )
+            }));
         }
 
         for (index, component) in ordered_components.iter().enumerate() {
             graph.add_component(
-                self.components
-                    .get(component)
-                    .expect(&format!("Failed to retrieve component with tag {}", component)),
+                self.components.get(component).expect(&format!(
+                    "Failed to retrieve component with tag {}",
+                    component
+                )),
                 ordered_inputs
                     .get(index)
-                    .expect(&format!("Failed to retrieve inputs for component with tag {}", component))
+                    .expect(&format!(
+                        "Failed to retrieve inputs for component with tag {}",
+                        component
+                    ))
                     .to_vec(),
             )
         }
