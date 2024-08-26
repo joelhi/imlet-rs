@@ -269,7 +269,7 @@ fn interpolate_vertex<T: Float + Debug>(
 mod tests {
 
     use crate::types::{
-        computation::{distance_functions::Sphere, Model},
+        computation::{distance_functions::Sphere, implicit_model::ImplicitModel},
         geometry::BoundingBox,
     };
 
@@ -322,13 +322,15 @@ mod tests {
         let bounds = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
         // Function
-        let mut model = Model::new();
-        let sphere = model.add_function(Sphere::new(
-            Vec3::new(size / 2.0, size / 2.0, size / 2.0),
-            size * 0.4,
-        ));
+        let mut model = ImplicitModel::new();
+        model.add_function(
+            "Sphere",
+            Sphere::new(Vec3::new(size / 2.0, size / 2.0, size / 2.0), size * 0.4),
+        );
 
-        let field = model.evaluate(&bounds, cell_size, Option::Some(sphere));
+        let computation_graph = model.compile("Sphere");
+
+        let field = computation_graph.evaluate(&bounds, cell_size);
 
         // Generate mesh
         let triangles = generate_iso_surface(&field, 0.0);

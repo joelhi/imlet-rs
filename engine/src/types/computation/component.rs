@@ -56,6 +56,11 @@ impl ComponentValues {
     pub fn set<T: Float + Debug + Send + Sync>(&mut self, index: usize, value: T) {
         self.values[index] = value.to_f64().expect("Failed to convert value to f64");
     }
+
+    pub fn last<T: Float>(&self) -> T {
+        T::from(self.values[self.values.len() - 1])
+            .expect("Failed to convert component output to T")
+    }
 }
 
 #[cfg(test)]
