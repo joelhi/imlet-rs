@@ -3,10 +3,10 @@ use {
         types::{
             computation::{
                 distance_functions::{Gyroid, Sphere, ZDomain},
-                ImplicitModel,
                 operations::{
                     boolean::Intersection, interpolation::LinearInterpolation, shape::Thickness,
                 },
+                ImplicitModel,
             },
             geometry::{BoundingBox, Vec3},
         },

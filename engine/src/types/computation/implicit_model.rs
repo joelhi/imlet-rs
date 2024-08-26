@@ -6,7 +6,6 @@ use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 use std::time::Instant;
 
-
 pub struct ImplicitModel<T: Float + Debug> {
     components: HashMap<String, Component<T>>,
     inputs: HashMap<String, Vec<Option<String>>>,

@@ -3,8 +3,8 @@ use {
         types::{
             computation::{
                 distance_functions::{Gyroid, MeshSDF},
-                ImplicitModel,
                 operations::{boolean::Intersection, shape::Thickness},
+                ImplicitModel,
             },
             geometry::Mesh,
         },

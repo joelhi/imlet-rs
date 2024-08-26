@@ -42,8 +42,9 @@ impl<T: Pi + Float + Debug + Send + Sync> ImplicitFunction<T> for Neovius<T> {
         let x = two * T::pi() * x / self.length_x;
         let y = two * T::pi() * y / self.length_y;
         let z = two * T::pi() * z / self.length_z;
-        let normalized_distance =
-            (three * (x.cos() + y.cos() + z.cos()) + four * x.cos() * y.cos() * z.cos()) / T::from(10.0).unwrap();
+        let normalized_distance = (three * (x.cos() + y.cos() + z.cos())
+            + four * x.cos() * y.cos() * z.cos())
+            / T::from(10.0).unwrap();
 
         let scale = self.length_x.min(self.length_y).min(self.length_z) / two;
 
@@ -67,15 +68,14 @@ mod tests {
 
     #[test]
     fn test_compute_linearized() {
-
         let length = 5.0;
         let n = 10;
         let linear_neovius: Neovius<f64> = Neovius::with_equal_spacing(5.0, true);
         let mut max = 0.0;
         let mut min = f64::MAX;
-        for i in 0..n + 1{
-            for j in 0..n + 1{
-                for k in 0..n + 1{
+        for i in 0..n + 1 {
+            for j in 0..n + 1 {
+                for k in 0..n + 1 {
                     let x = length * i.to_f64().unwrap() / n.to_f64().unwrap();
                     let y = length * j.to_f64().unwrap() / n.to_f64().unwrap();
                     let z = length * k.to_f64().unwrap() / n.to_f64().unwrap();
