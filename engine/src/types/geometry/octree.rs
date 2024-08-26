@@ -132,7 +132,7 @@ impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> OctreeNode<Q, T> {
         (best_point, best_object)
     }
 
-    pub fn get_all_bounds(&self) -> Vec<BoundingBox<T>> {
+    pub fn all_bounds(&self) -> Vec<BoundingBox<T>> {
         let mut bounds = Vec::new();
         self.collect_bounds(&mut bounds);
         bounds
@@ -240,7 +240,7 @@ mod tests {
         let m: Mesh<f64> = parse_obj_file("../assets/geometry/sphere.obj").unwrap();
 
         let octree = m.compute_octree(10, 12);
-        let bounds = octree.get_all_bounds();
+        let bounds = octree.all_bounds();
 
         assert!(bounds.len() == 185);
     }

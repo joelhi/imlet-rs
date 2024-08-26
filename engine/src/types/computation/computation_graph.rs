@@ -42,7 +42,7 @@ impl<'a, T: Float + Debug + Send + Sync> ComputationGraph<'a, T> {
 
             let mut inputs = Vec::with_capacity(4);
             for (index, component) in self.components.iter().enumerate() {
-                self.get_inputs(index, &values, &mut inputs);
+                self.inputs(index, &values, &mut inputs);
                 let val = component.compute(x, y, z, &inputs);
                 values.set(index, val);
             }
@@ -52,7 +52,7 @@ impl<'a, T: Float + Debug + Send + Sync> ComputationGraph<'a, T> {
 
     pub fn evaluate(&self, bounds: &BoundingBox<T>, cell_size: T) -> DenseField<T> {
         let before = Instant::now();
-        let n = Self::get_point_count(&bounds, cell_size);
+        let n = Self::point_count(&bounds, cell_size);
 
         log::debug!(
             "Evaluating model from {} to {} with {}x{}x{} points",
@@ -82,7 +82,7 @@ impl<'a, T: Float + Debug + Send + Sync> ComputationGraph<'a, T> {
         DenseField::with_data(bounds.min, cell_size, n, data)
     }
 
-    fn get_point_count(bounds: &BoundingBox<T>, cell_size: T) -> Vec3i {
+    fn point_count(bounds: &BoundingBox<T>, cell_size: T) -> Vec3i {
         let (x_dim, y_dim, z_dim) = bounds.dimensions();
         Vec3i::new(
             (x_dim / cell_size)
@@ -104,7 +104,7 @@ impl<'a, T: Float + Debug + Send + Sync> ComputationGraph<'a, T> {
     }
 
     #[inline]
-    pub fn get_inputs(&self, component_id: usize, values: &ComponentValues, inputs: &mut Vec<T>) {
+    pub fn inputs(&self, component_id: usize, values: &ComponentValues, inputs: &mut Vec<T>) {
         inputs.clear();
         inputs.resize(self.inputs[component_id].len(), T::zero());
         for (i, &id) in self.inputs[component_id].iter().enumerate() {
@@ -143,8 +143,8 @@ mod tests {
         // Discretize
         let field = graph.evaluate(&bounds, cell_size);
 
-        assert_eq!(64, field.get_num_cells());
-        assert_eq!(125, field.get_num_points());
+        assert_eq!(64, field.num_cells());
+        assert_eq!(125, field.num_points());
 
         let data = field.copy_data();
         for val in data {
@@ -170,8 +170,8 @@ mod tests {
         // Discretize
         let field = model.evaluate(&bounds, cell_size);
 
-        assert_eq!(8 * 6 * 4, field.get_num_cells());
-        assert_eq!(9 * 7 * 5, field.get_num_points());
+        assert_eq!(8 * 6 * 4, field.num_cells());
+        assert_eq!(9 * 7 * 5, field.num_points());
 
         // Assert values
         let data = field.copy_data();

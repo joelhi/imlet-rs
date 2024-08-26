@@ -54,12 +54,12 @@ impl<T: Float + Debug> SpatialHashGrid<T> {
             }
             None => {
                 // Add new entry and return current count
-                self.get_new_id(hash, v)
+                self.new_id(hash, v)
             }
         }
     }
 
-    fn get_new_id(&mut self, hash: i64, v: Vec3<T>) -> usize {
+    fn new_id(&mut self, hash: i64, v: Vec3<T>) -> usize {
         let id = self.vertices.len();
         self.map.insert(hash, vec![id]);
         self.vertices.push(v);

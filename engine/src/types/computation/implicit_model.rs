@@ -51,19 +51,19 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
     }
 
     pub fn add_input(&mut self, target: &String, source: &String, index: usize) {
-        let target_component_inputs = self
+        let tarcomponent_inputs = self
             .inputs
             .get_mut(target)
             .expect("Target component not found in model.");
         assert!(
-            index < target_component_inputs.len(),
+            index < tarcomponent_inputs.len(),
             "Input index out of bounds for target component. "
         );
         assert!(
             self.components.contains_key(source),
             "Source component not found in model. "
         );
-        target_component_inputs[index] = Some(source.clone());
+        tarcomponent_inputs[index] = Some(source.clone());
     }
 
     pub fn remove_input(&mut self, component: &String, index: usize) {
@@ -81,14 +81,14 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
 
     pub fn compile(&self, target: &str) -> ComputationGraph<T> {
         let before = Instant::now();
-        let target_output = target.to_string();
+        let taroutput = target.to_string();
         // Traverse model from target to resolve all dependents
         let mut graph = ComputationGraph::new();
         let mut ordered_components = Vec::new();
         let mut ordered_inputs = Vec::new();
 
         let mut queue = VecDeque::new();
-        queue.push_back(target_output.clone());
+        queue.push_back(taroutput.clone());
 
         // Find all sources for the target
         let mut sources = HashMap::new();
@@ -97,7 +97,7 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
                 continue;
             }
             sources.insert(front.clone(), sources.len());
-            for component in self.get_valid_inputs(&front) {
+            for component in self.valid_inputs(&front) {
                 assert!(
                     !sources.contains_key(&component),
                     "Cyclical dependency detected for {}",
@@ -118,7 +118,7 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         for (component, index) in sources.iter() {
             ordered_components[*index].insert_str(0, component.as_str());
             ordered_inputs[*index].extend(
-                self.get_valid_inputs(component).iter().map(|tag| {
+                self.valid_inputs(component).iter().map(|tag| {
                     ComponentId(*sources.get(tag).expect("Failed to retrieve component."))
                 }),
             );
@@ -145,7 +145,7 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         graph
     }
 
-    fn get_valid_inputs(&self, component: &String) -> Vec<String> {
+    fn valid_inputs(&self, component: &String) -> Vec<String> {
         let default = Vec::new();
         let option_inputs = self.inputs.get(component).unwrap_or(&default);
 
