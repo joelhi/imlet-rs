@@ -20,7 +20,6 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
     }
 
     pub fn add_function<F: ImplicitFunction<T> + 'static>(&mut self, tag: &str, function: F) {
-        self.inputs.insert(tag.to_string(), vec![]);
         self.components
             .insert(tag.to_string(), Component::Function(Box::new(function)));
     }
@@ -47,7 +46,6 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
     }
 
     pub fn add_constant(&mut self, tag: String, value: T) {
-        self.inputs.insert(tag.clone(), vec![]);
         self.components
             .insert(tag.clone(), Component::Constant(value));
     }
