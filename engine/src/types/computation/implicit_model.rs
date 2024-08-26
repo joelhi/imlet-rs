@@ -37,6 +37,10 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         operation: F,
         inputs: &[&str],
     ) {
+        assert!(
+            operation.num_inputs() == inputs.len(),
+            "Number of inputs for component {} does not match the inputs for {}.", tag, std::any::type_name::<F>() 
+        );
         self.inputs.insert(
             tag.to_string(),
             inputs.iter().map(|s| Some(s.to_string())).collect(),
@@ -51,19 +55,19 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
     }
 
     pub fn add_input(&mut self, target: &String, source: &String, index: usize) {
-        let tarcomponent_inputs = self
+        let target_component_inputs = self
             .inputs
             .get_mut(target)
             .expect("Target component not found in model.");
         assert!(
-            index < tarcomponent_inputs.len(),
+            index < target_component_inputs.len(),
             "Input index out of bounds for target component. "
         );
         assert!(
             self.components.contains_key(source),
             "Source component not found in model. "
         );
-        tarcomponent_inputs[index] = Some(source.clone());
+        target_component_inputs[index] = Some(source.clone());
     }
 
     pub fn remove_input(&mut self, component: &String, index: usize) {
@@ -119,7 +123,7 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
             ordered_components[*index].insert_str(0, component.as_str());
             ordered_inputs[*index].extend(
                 self.valid_inputs(component).iter().map(|tag| {
-                    ComponentId(*sources.get(tag).expect("Failed to retrieve component."))
+                    ComponentId(*sources.get(tag).expect(&format!("Failed to retrieve component with tag {}", tag)))
                 }),
             );
         }
@@ -128,10 +132,10 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
             graph.add_component(
                 self.components
                     .get(component)
-                    .expect("Failed to retrieve component."),
+                    .expect(&format!("Failed to retrieve component with tag {}", component)),
                 ordered_inputs
                     .get(index)
-                    .expect("Failed to retrieve inputs")
+                    .expect(&format!("Failed to retrieve inputs for component with tag {}", component))
                     .to_vec(),
             )
         }
