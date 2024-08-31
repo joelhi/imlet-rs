@@ -18,7 +18,7 @@ The library uses the marching cubes algorithm, following the approach by [Paul B
 
 ## Example Usage
 
-Here’s a simple example demonstrating how to use ImLET to create a model combining a sphere and a gyroid:
+Here’s a simple example demonstrating how to use Imlet to create a model combining a sphere and a gyroid:
 
 ```rust
 use imlet::{BoundingBox, Vec3, ImplicitModel, Sphere, Gyroid, Thickness, Intersection, Viewer};
@@ -66,7 +66,7 @@ fn main() {
 - [ ] Enhance the viewer with interactive buttons and runtime script loading.
 
 ### Future Enhancements
-- [ ] Enable GPU-based computation for faster processing.
+- [ ] Enable GPU-based computation for faster processing. (For example using [CubeCL](https://github.com/tracel-ai/cubecl))
 - [ ] Develop a node editor for visual programming.
 
 ## License
