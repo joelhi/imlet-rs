@@ -1,4 +1,4 @@
-# Implicit Modeling Lightweight Exploration Toolkit (Imet)
+### Implicit Modeling Lightweight Exploration Toolkit (Imlet)
 
 ![Build & Test](https://github.com/joelhi/implicit-rs/actions/workflows/rust.yml/badge.svg)
 
@@ -10,10 +10,9 @@
 
 ## Features
 
-- **Implicit Functions**: Define surfaces using mathematical functions.
+- **Implicit Functions**: Define geometries using distance functions, from equations or triangle meshes.
+- **Modular Design**: Easily combine and manipulate implicit functions by building computations graphs with operations.
 - **Marching Cubes Algorithm**: Convert implicit functions into polygonal meshes.
-- **Modular Design**: Easily combine and manipulate implicit functions.
-- **Extensible Operations**: Apply operations like intersections and unions to models.
 
 ## Example Usage
 
@@ -58,7 +57,7 @@ fn main() {
 ## Roadmap
 
 ### Base Features
-- [ ] Update README with detailed examples and usage instructions.
+- [x] Update README with detailed examples and usage instructions.
 - [ ] Improve SDF (Signed Distance Function) computation, addressing issues with leaking and pseudonormals.
 - [ ] Integrate [Rhai](https://rhai.rs/), a scripting language for Rust, for enhanced customization.
 - [ ] Implement serialization for models, potentially using sealed traits.
