@@ -6,9 +6,9 @@
 
 ## Overview
 
-**Imlet** is a Rust library for implicit geometry generation using the marching cubes algorithm. It provides a flexible and efficient toolkit for creating complex 3D models defined by mathematical functions. Models are defined as computations graphs which allow for combining various distance fields and custom operations to enable the generation of complex functions and shapes. 
+**Imlet** is a Rust library for generating implicit geometry using the marching cubes algorithm. It provides tools for creating 3D models defined by mathematical functions. In **Imlet**, models are represented as computation graphs, allowing for the combination of various distance fields (SDFs) and custom operations to generate complex shapes and functions.
 
-The library is using the marching cubes algorithm based on the logic by [Paul Bourke](https://paulbourke.net/geometry/polygonise/).
+The library uses the marching cubes algorithm, following the approach by [Paul Bourke](https://paulbourke.net/geometry/polygonise/), to convert these mathematical representations into polygonal meshes.
 
 ## Features
 
