@@ -33,7 +33,7 @@ pub fn main() {
             ),
             size * 0.45,
         ),
-    );
+    ).unwrap();
 
     Viewer::run(model, bounds, cell_size, "Sphere");
 }

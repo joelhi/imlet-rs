@@ -27,15 +27,15 @@ pub fn main() {
     model.add_function(
         "Sphere",
         Sphere::new(Vec3::new(0.5 * size, 0.5 * size, 0.5 * size), 0.45 * size),
-    );
+    ).unwrap();
 
-    model.add_function("Schwarz", SchwarzP::with_equal_spacing(1.0, true));
-    model.add_operation_with_inputs("ThickSchwarz", Thickness::new(0.30), &vec!["Schwarz"]);
+    model.add_function("Schwarz", SchwarzP::with_equal_spacing(1.0, true)).unwrap();
+    model.add_operation_with_inputs("ThickSchwarz", Thickness::new(0.30), &vec!["Schwarz"]).unwrap();
     model.add_operation_with_inputs(
         "Output",
         Intersection::new(),
         &vec!["Sphere", "ThickSchwarz"],
-    );
+    ).unwrap();
 
     // Discretize
     Viewer::run(model, model_space, cell_size, "Output");

@@ -325,7 +325,7 @@ mod tests {
         model.add_function(
             "Sphere",
             Sphere::new(Vec3::new(size / 2.0, size / 2.0, size / 2.0), size * 0.4),
-        );
+        ).unwrap();
 
         let field = model.generate_field("Sphere", &bounds, cell_size);
 

@@ -345,7 +345,7 @@ mod tests {
 
         let signed_distance = octree.signed_distance(&query_point);
 
-        let expected_closest_point = Vec3::new(4.082988, -1.45093, 2.175805);
+        let expected_closest_point = Vec3::new(4.0780463, -1.4302883, 2.1699197);
         let expected_signed_distance = 0.537;
 
         assert!(

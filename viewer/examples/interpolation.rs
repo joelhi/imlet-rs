@@ -29,22 +29,22 @@ pub fn main() {
     model.add_function(
         "Sphere",
         Sphere::new(Vec3::new(0.5 * size, 0.5 * size, 0.5 * size), 0.45 * size),
-    );
+    ).unwrap();
 
-    model.add_function("Gyroid", Gyroid::with_equal_spacing(1.0, true));
-    model.add_operation_with_inputs("ThickGyroid", Thickness::new(1.0), &vec!["Gyroid"]);
-    model.add_operation_with_inputs("ThinGyroid", Thickness::new(0.15), &vec!["Gyroid"]);
-    model.add_function("ZParam", ZDomain::remapped(1.0, 9.0));
+    model.add_function("Gyroid", Gyroid::with_equal_spacing(1.0, true)).unwrap();
+    model.add_operation_with_inputs("ThickGyroid", Thickness::new(1.0), &vec!["Gyroid"]).unwrap();
+    model.add_operation_with_inputs("ThinGyroid", Thickness::new(0.15), &vec!["Gyroid"]).unwrap();
+    model.add_function("ZParam", ZDomain::remapped(1.0, 9.0)).unwrap();
     model.add_operation_with_inputs(
         "Interpolation",
         LinearInterpolation::new(),
         &vec!["ThickGyroid", "ThinGyroid", "ZParam"],
-    );
+    ).unwrap();
     model.add_operation_with_inputs(
         "Output",
         Intersection::new(),
         &vec!["Sphere", "Interpolation"],
-    );
+    ).unwrap();
 
     Viewer::run(model, model_space, cell_size, "Output");
 }

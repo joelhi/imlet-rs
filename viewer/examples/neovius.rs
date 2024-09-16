@@ -27,14 +27,14 @@ pub fn main() {
     model.add_function(
         "Sphere",
         Sphere::new(Vec3::new(0.5 * size, 0.5 * size, 0.5 * size), 0.45 * size),
-    );
-    model.add_function("Neovius", Neovius::with_equal_spacing(1.5, true));
-    model.add_operation_with_inputs("ThickNeovius", Thickness::new(0.1), &vec!["Neovius"]);
+    ).unwrap();
+    model.add_function("Neovius", Neovius::with_equal_spacing(1.5, true)).unwrap();
+    model.add_operation_with_inputs("ThickNeovius", Thickness::new(0.1), &vec!["Neovius"]).unwrap();
     model.add_operation_with_inputs(
         "Output",
         Intersection::new(),
         &vec!["Sphere", "ThickNeovius"],
-    );
+    ).unwrap();
 
     Viewer::run(model, model_space, cell_size, "Output");
 }
