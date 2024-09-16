@@ -2,7 +2,7 @@
 
 ![Build & Test](https://github.com/joelhi/implicit-rs/actions/workflows/rust.yml/badge.svg)
 
-![Gyroid Example](media/example_gyroid.png)
+![Gyroid Example](media/examples.png)
 
 ## Overview
 
@@ -52,7 +52,7 @@ fn main() {
         &vec!["Sphere", "ThickGyroid"]
     );
 
-    Viewer::run(model, model_space, cell_size, "Output");
+    let mesh = model.generate_iso_surface("Output", &model_space, cell_size);
 }
 ```
 
@@ -60,9 +60,10 @@ fn main() {
 
 ### Base Features
 - [x] Update README with detailed examples and usage instructions.
-- [ ] Improve SDF (Signed Distance Function) computation, addressing issues with leaking and pseudonormals.
+- [x] Improve SDF (Signed Distance Function) computation, addressing issues with leaking and pseudonormals.
+- [ ] More measured and intentional error handling using Result<> in various parts of the code, to make use easier and remove panics
+- [ ] Implement serialization for models, potentially using sealed traits (?).
 - [ ] Integrate [Rhai](https://rhai.rs/), a scripting language for Rust, for enhanced customization.
-- [ ] Implement serialization for models, potentially using sealed traits.
 - [ ] Enhance the viewer with interactive buttons and runtime script loading.
 
 ### Future Enhancements
