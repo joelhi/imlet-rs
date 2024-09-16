@@ -38,9 +38,16 @@ pub fn write_obj_file<T: Float + Debug + Send + Sync>(
     file_name: &str,
 ) -> io::Result<()> {
     let file_path = Path::new(file_name).with_extension("obj");
-
     let mut file = fs::File::create(file_path)?;
     file.write_all(mesh_to_obj(&mesh).as_bytes())?;
+
+    log::info!(
+        "Obj file with {} triangles and {} vertices written as {}",
+        mesh.num_faces(),
+        mesh.num_vertices(),
+        file_name.to_owned() + ".obj"
+    );
+
     Ok(())
 }
 
@@ -48,6 +55,7 @@ use std::fs::File;
 
 pub fn parse_obj_file<T: Float + Debug + Send + Sync>(
     file_path: &str,
+    flip_yz: bool,
 ) -> Result<Mesh<T>, Box<dyn std::error::Error>> {
     let path = Path::new(file_path);
     let file = File::open(&path)?;
@@ -68,15 +76,23 @@ pub fn parse_obj_file<T: Float + Debug + Send + Sync>(
             "v" => {
                 // Parse vertex position
                 if parts.len() != 4 {
-                    return Err("Invalid vertex format".into());
+                    return Err("Invalid vertex format. Make sure file is triangulated.,".into());
                 }
                 let x: f32 = parts[1].parse()?;
                 let y: f32 = parts[2].parse()?;
                 let z: f32 = parts[3].parse()?;
                 vertices.push(Vec3::new(
                     T::from(x).unwrap(),
-                    T::from(y).unwrap(),
-                    T::from(z).unwrap(),
+                    if flip_yz {
+                        T::from(z).unwrap()
+                    } else {
+                        T::from(y).unwrap()
+                    },
+                    if flip_yz {
+                        T::from(y).unwrap()
+                    } else {
+                        T::from(z).unwrap()
+                    },
                 ));
             }
             "f" => {
@@ -89,6 +105,9 @@ pub fn parse_obj_file<T: Float + Debug + Send + Sync>(
                     let indices: Vec<&str> = parts[i + 1].split("/").collect();
                     let index: usize = indices[0].parse().unwrap();
                     face[i] = index - 1;
+                }
+                if flip_yz {
+                    face.reverse();
                 }
                 faces.push(face);
             }
