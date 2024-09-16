@@ -37,6 +37,6 @@ where
 
     pub fn signed_distance_coord(&self, x: T, y: T, z: T) -> T {
         self.normal
-            .dot_vec3(x - self.origin.x, y - self.origin.y, z - self.origin.z)
+            .dot_coord(x - self.origin.x, y - self.origin.y, z - self.origin.z)
     }
 }

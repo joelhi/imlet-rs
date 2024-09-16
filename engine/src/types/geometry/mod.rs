@@ -5,6 +5,7 @@ mod mesh;
 mod octree;
 mod plane;
 pub mod traits;
+mod triangle;
 mod vec3f;
 mod vec3i;
 
@@ -14,5 +15,6 @@ pub use line::*;
 pub use mesh::*;
 pub use octree::*;
 pub use plane::*;
+pub use triangle::*;
 pub use vec3f::*;
 pub use vec3i::*;

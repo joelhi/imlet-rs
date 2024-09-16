@@ -81,7 +81,7 @@ impl<T: Float + Debug> Vec3<T> {
         (self.x * rhs.x) + (self.y * rhs.y) + (self.z * rhs.z)
     }
 
-    pub fn dot_vec3(&self, x: T, y: T, z: T) -> T {
+    pub fn dot_coord(&self, x: T, y: T, z: T) -> T {
         (self.x * x) + (self.y * y) + (self.z * z)
     }
 
@@ -109,8 +109,36 @@ impl<T: Float + Debug> Vec3<T> {
         self.distance_to_coord(T::zero(), T::zero(), T::zero())
     }
 
+    pub fn scale(self, scalar: T) -> Vec3<T> {
+        Vec3 {
+            x: self.x * scalar,
+            y: self.y * scalar,
+            z: self.z * scalar,
+        }
+    }
+
     pub fn normalize(&self) -> Vec3<T> {
         *self * (T::one() / self.magnitude())
+    }
+
+    pub fn slerp(start: Vec3<T>, end: Vec3<T>, t: T) -> Vec3<T> {
+        let start = start.normalize();
+        let end = end.normalize();
+
+        let dot = start.dot(&end).clamp(-T::one(), T::one());
+
+        let theta = dot.acos();
+
+        let sin_theta = theta.sin();
+
+        if sin_theta == T::zero() {
+            return start.scale(T::one() - t) + end.scale(t);
+        }
+
+        let a = ((T::one() - t) * theta).sin() / sin_theta;
+        let b = (t * theta).sin() / sin_theta;
+
+        start.scale(a) + end.scale(b)
     }
 
     pub fn to_f32(&self) -> Vec3<f32> {
@@ -118,6 +146,14 @@ impl<T: Float + Debug> Vec3<T> {
             x: self.x.to_f32().expect("Failed to convert to f32"),
             y: self.y.to_f32().expect("Failed to convert to f32"),
             z: self.z.to_f32().expect("Failed to convert to f32"),
+        }
+    }
+
+    pub fn to_f64(&self) -> Vec3<f64> {
+        Vec3 {
+            x: self.x.to_f64().expect("Failed to convert to f64"),
+            y: self.y.to_f64().expect("Failed to convert to f64"),
+            z: self.z.to_f64().expect("Failed to convert to f64"),
         }
     }
 
@@ -214,5 +250,29 @@ mod tests {
         assert!((v1.x - deserialized.x).abs() < 0.001);
         assert!((v1.y - deserialized.y).abs() < 0.001);
         assert!((v1.z - deserialized.z).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_slerp_opposite_vecs() {
+        let v1 = Vec3::new(1.0, 0.0, 0.0);
+        let v2 = Vec3::new(0.0, 1.0, 0.0);
+
+        let interpolated = Vec3::slerp(v1, v2, 0.5);
+
+        let expected_angle = PI / 4.0;
+        let first_angle = interpolated.angle(&v1).unwrap();
+        let second_angle = interpolated.angle(&v2).unwrap();
+        assert!(
+            (expected_angle - first_angle).abs() < 0.001,
+            "Incorrect angle, expected {} but was {}",
+            expected_angle,
+            first_angle
+        );
+        assert!(
+            (expected_angle - second_angle).abs() < 0.001,
+            "Incorrect angle, expected {} but was {}",
+            expected_angle,
+            second_angle
+        );
     }
 }

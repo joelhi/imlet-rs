@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use log::debug;
 use num_traits::Float;
 
 use super::{
@@ -25,6 +26,14 @@ impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> OctreeNode<Q, T> {
 
     pub fn build(&mut self, max_depth: u32, max_triangles: usize) {
         if self.objects.len() <= max_triangles || max_depth == 0 {
+            if max_depth == 0 {
+                debug!("Reached max depth of octree with too many triangles. Please increase allowed depth.")
+            }
+            debug!(
+                "Built octree node with {} triangles and depth {}",
+                self.objects.len(),
+                max_depth
+            );
             return;
         }
 
@@ -152,26 +161,24 @@ impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> OctreeNode<Q, T> {
 }
 
 impl<Q: SignedQuery<T>, T: Float + Debug + Send + Sync> OctreeNode<Q, T> {
-    pub fn signed_distance(&self, point: Vec3<T>, proximity_tolerance: T) -> T {
-        let (closest_point, _) = self.closest_point(&point);
+    pub fn signed_distance(&self, point: &Vec3<T>) -> T {
+        let (closest_point, closest_obj) = self.closest_point(&point);
 
-        let direction = point - closest_point;
-
-        assert!(
+        let direction = *point - closest_point;
+        debug_assert!(
             self.bounds.contains(&closest_point),
             "Closest point not in bounds of octree."
         );
-        let normal = self.pseudonormal_at(&closest_point, proximity_tolerance);
 
-        let mut sign = T::one();
+        let normal = closest_obj.normal_at(&closest_point);
         if normal.dot(&direction) < T::zero() {
-            sign = -sign;
+            return -direction.magnitude();
         }
 
-        sign * direction.magnitude()
+        direction.magnitude()
     }
 
-    fn gather_objects_for_pseudonormal(
+    pub fn gather_adjacent_objects(
         &self,
         point: &Vec3<T>,
         proximity_tolerance: T,
@@ -188,39 +195,10 @@ impl<Q: SignedQuery<T>, T: Float + Debug + Send + Sync> OctreeNode<Q, T> {
 
             if let Some(ref children) = self.children {
                 for child in children.iter().filter_map(|c| c.as_ref()) {
-                    child.gather_objects_for_pseudonormal(
-                        point,
-                        proximity_tolerance,
-                        objects,
-                        num_objects,
-                    );
+                    child.gather_adjacent_objects(point, proximity_tolerance, objects, num_objects);
                 }
             }
         }
-    }
-
-    fn pseudonormal_at(&self, point: &Vec3<T>, proximity_tolerance: T) -> Vec3<T> {
-        let mut objects = Vec::new();
-        let mut num_objects = 0;
-
-        self.gather_objects_for_pseudonormal(
-            point,
-            proximity_tolerance,
-            &mut objects,
-            &mut num_objects,
-        );
-
-        assert!(
-            num_objects > 0,
-            "Failed to compute normal as no objects could be found at point within tolerance."
-        );
-
-        let mut pseudonormal = Vec3::origin();
-        for index in 0..num_objects {
-            pseudonormal = pseudonormal + objects[index].normal_at(&point);
-        }
-
-        pseudonormal.normalize()
     }
 }
 
@@ -237,7 +215,7 @@ mod tests {
     fn test_build_octree() {
         utils::logging::init_info();
 
-        let m: Mesh<f64> = parse_obj_file("../assets/geometry/sphere.obj").unwrap();
+        let m: Mesh<f64> = parse_obj_file("../assets/geometry/sphere.obj", false).unwrap();
 
         let octree = m.compute_octree(10, 12);
         let bounds = octree.all_bounds();
@@ -247,7 +225,7 @@ mod tests {
 
     #[test]
     fn test_closest_pt() {
-        let m: Mesh<f64> = parse_obj_file("../assets/geometry/sphere.obj").unwrap();
+        let m: Mesh<f64> = parse_obj_file("../assets/geometry/sphere.obj", false).unwrap();
 
         let octree = m.compute_octree(10, 9);
 
@@ -255,48 +233,160 @@ mod tests {
 
         assert!(closest_pt.distance_to_coord(70.67, 97.26, 58.26) < 0.1);
 
-        assert!(closest_tri.p1.distance_to_coord(59.12, 107.93, 54.46) < 0.1);
-        assert!(closest_tri.p2.distance_to_coord(79.35, 93.23, 54.46) < 0.1);
-        assert!(closest_tri.p3.distance_to_coord(53.38, 103.75, 68.40) < 0.1);
+        assert!(closest_tri.p1().distance_to_coord(59.12, 107.93, 54.46) < 0.1);
+        assert!(closest_tri.p2().distance_to_coord(79.35, 93.23, 54.46) < 0.1);
+        assert!(closest_tri.p3().distance_to_coord(53.38, 103.75, 68.40) < 0.1);
     }
 
     #[test]
     fn test_compute_signed_distance_box() {
-        let m: Mesh<f64> = parse_obj_file("../assets/geometry/box.obj").unwrap();
+        let m: Mesh<f64> = parse_obj_file("../assets/geometry/box.obj", false).unwrap();
 
         let octree = m.compute_octree(10, 9);
 
         // Inside box
-        let signed_distance = octree.signed_distance(m.centroid(), 0.1);
+        let signed_distance = octree.signed_distance(&m.centroid());
         assert!((signed_distance + 10.0).abs() < 0.001);
 
         // Outside box
-        let signed_distance = octree.signed_distance(Vec3::new(30.0, 10.0, 10.0), 0.1);
+        let signed_distance = octree.signed_distance(&Vec3::new(30.0, 10.0, 10.0));
         assert!((signed_distance - 10.0).abs() < 0.001);
 
         // On corner
-        let signed_distance = octree.signed_distance(Vec3::new(20.0, 20.0, 20.0), 0.1);
+        let signed_distance = octree.signed_distance(&Vec3::new(20.0, 20.0, 20.0));
         assert!(signed_distance.abs() < 0.001);
     }
 
     #[test]
     fn test_compute_signed_distance_sphere() {
-        let m: Mesh<f64> = parse_obj_file("../assets/geometry/sphere.obj").unwrap();
+        let m: Mesh<f64> = parse_obj_file("../assets/geometry/sphere.obj", false).unwrap();
 
         let octree = m.compute_octree(10, 9);
 
         // Inside sphere
-        let signed_distance = octree.signed_distance(m.centroid(), 0.1);
+        let signed_distance = octree.signed_distance(&m.centroid());
         assert!((signed_distance + 47.022).abs() < 0.001);
 
         // Outside sphere,
-        let signed_distance = octree.signed_distance(m.bounds().max, 0.1);
+        let signed_distance = octree.signed_distance(&m.bounds().max);
         assert!((signed_distance - 35.896).abs() < 0.001);
 
         let (dx, _, _) = m.bounds().dimensions();
         // On corner
         let signed_distance =
-            octree.signed_distance(m.centroid() + Vec3::new(dx / 2.0, 0.0, 0.0), 0.1);
+            octree.signed_distance(&(m.centroid() + Vec3::new(dx / 2.0, 0.0, 0.0)));
         assert!(signed_distance.abs() < 0.001);
+    }
+
+    #[test]
+    fn test_compute_signed_distance_bunny_leaking() {
+        let m: Mesh<f64> = parse_obj_file("../assets/geometry/bunny.obj", false).unwrap();
+
+        let octree = m.compute_octree(10, 12);
+        let query_point = Vec3::new(6.0, 45.0, 56.0);
+        // Around ear
+
+        let (closest_pt, _) = octree.closest_point(&query_point);
+        let signed_distance = octree.signed_distance(&query_point);
+
+        let expected_closest_point = Vec3::new(7.219, 42.749, 56.182);
+        let expected_signed_distance = 2.567;
+
+        assert!(
+            (signed_distance - expected_signed_distance).abs() < 0.001,
+            "Incorrect signed distance. Was {} but expected {}",
+            signed_distance,
+            expected_signed_distance
+        );
+        assert!(
+            closest_pt.distance_to_vec3(&expected_closest_point).abs() < 0.001,
+            "Incorrect closest point. Was {} but expected {}",
+            closest_pt,
+            expected_closest_point
+        );
+    }
+
+    #[test]
+    fn test_compute_signed_distance_cow_leaking_edge() {
+        let m: Mesh<f64> = parse_obj_file("../assets/geometry/cow.obj", true).unwrap();
+
+        let octree = m.compute_octree(10, 12);
+        let query_point = Vec3::new(3.754165, -1.501405, 2.1629639);
+        // Around ear
+
+        let (closest_pt, _) = octree.closest_point(&query_point);
+        let signed_distance = octree.signed_distance(&query_point);
+
+        let expected_closest_point = Vec3::new(4.070, -1.451, 2.233);
+        let expected_signed_distance = 0.328;
+
+        assert!(
+            (signed_distance - expected_signed_distance).abs() < 0.001,
+            "Incorrect signed distance. Was {} but expected {}",
+            signed_distance,
+            expected_signed_distance
+        );
+        assert!(
+            closest_pt.distance_to_vec3(&expected_closest_point).abs() < 0.001,
+            "Incorrect closest point. Was {} but expected {}",
+            closest_pt,
+            expected_closest_point
+        );
+    }
+
+    #[test]
+    fn test_compute_signed_distance_cow_leaking_edge_2() {
+        let m: Mesh<f64> = parse_obj_file("../assets/geometry/cow.obj", true).unwrap();
+
+        let octree = m.compute_octree(10, 12);
+        let query_point = Vec3::new(3.5741649, -1.581405, 2.062964);
+
+        let (closest_pt, _) = octree.closest_point(&query_point);
+
+        let signed_distance = octree.signed_distance(&query_point);
+
+        let expected_closest_point = Vec3::new(4.082988, -1.45093, 2.175805);
+        let expected_signed_distance = 0.537;
+
+        assert!(
+            closest_pt.distance_to_vec3(&expected_closest_point).abs() < 0.001,
+            "Incorrect closest point. Was {} but expected {}",
+            closest_pt,
+            expected_closest_point
+        );
+        assert!(
+            (signed_distance - expected_signed_distance).abs() < 0.001,
+            "Incorrect signed distance. Was {} but expected {}",
+            signed_distance,
+            expected_signed_distance
+        );
+    }
+
+    #[test]
+    fn test_compute_signed_distance_cow_leaking_vertex() {
+        let m: Mesh<f64> = parse_obj_file("../assets/geometry/cow.obj", true).unwrap();
+
+        let octree = m.compute_octree(10, 12);
+        let query_point = Vec3::new(3.714165, -1.621405, 2.042964);
+
+        let (closest_pt, _) = octree.closest_point(&query_point);
+
+        let signed_distance = octree.signed_distance(&query_point);
+
+        let expected_closest_point = Vec3::new(4.083, -1.451, 2.176);
+        let expected_signed_distance = 0.427;
+
+        assert!(
+            closest_pt.distance_to_vec3(&expected_closest_point).abs() < 0.001,
+            "Incorrect closest point. Was {} but expected {}",
+            closest_pt,
+            expected_closest_point
+        );
+        assert!(
+            (signed_distance - expected_signed_distance).abs() < 0.001,
+            "Incorrect signed distance. Was {} but expected {}",
+            signed_distance,
+            expected_signed_distance
+        );
     }
 }
