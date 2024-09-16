@@ -166,7 +166,7 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
     }
 
     pub fn compute_vertex_faces(&self) -> Vec<Vec<usize>> {
-        let mut vertex_faces = vec![Vec::with_capacity(16); self.num_vertices()];
+        let mut vertex_faces = vec![Vec::with_capacity(12); self.num_vertices()];
         self.faces.iter().enumerate().for_each(|(id, f)| {
             vertex_faces[f[0]].push(id);
             vertex_faces[f[1]].push(id);
