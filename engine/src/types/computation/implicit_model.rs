@@ -207,7 +207,7 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
             for component in self.valid_inputs(&front) {
                 assert!(
                     !sources.contains_key(&component),
-                    "Cyclical dependency detected for {}",
+                    "Cyclical dependency detected for {}. Make sure it's inputs are not dependent on it's own output.",
                     component
                 );
                 queue.push_back(component);
@@ -225,24 +225,23 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         for (component, index) in sources.iter() {
             ordered_components[*index].insert_str(0, component.as_str());
             ordered_inputs[*index].extend(self.valid_inputs(component).iter().map(|tag| {
-                ComponentId(
-                    *sources
-                        .get(tag)
-                        .expect(&format!("Failed to retrieve component with tag {}", tag)),
-                )
+                ComponentId(*sources.get(tag).expect(&format!(
+                    "No component with tag {} found. The model may be corrupt or an invalid target is requested.",
+                    tag
+                )))
             }));
         }
 
         for (index, component) in ordered_components.iter().enumerate() {
             graph.add_component(
                 self.components.get(component).expect(&format!(
-                    "Failed to retrieve component with tag {}",
+                    "No component with tag {} found. The model may be corrupt or an invalid target is requested.",
                     component
                 )),
                 ordered_inputs
                     .get(index)
                     .expect(&format!(
-                        "Failed to retrieve inputs for component with tag {}",
+                        "No component with tag {} found. The model may be corrupt or an invalid target is requested.",
                         component
                     ))
                     .to_vec(),
