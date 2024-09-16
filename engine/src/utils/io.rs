@@ -58,6 +58,11 @@ pub fn parse_obj_file<T: Float + Debug + Send + Sync>(
     flip_yz: bool,
 ) -> Result<Mesh<T>, Box<dyn std::error::Error>> {
     let path = Path::new(file_path);
+
+    if path.extension().unwrap() != "obj" {
+        return Err("Cannot read file. Only .obj files are supported.".into());
+    }
+
     let file = File::open(&path)?;
 
     let mut vertices: Vec<Vec3<T>> = Vec::new();
@@ -84,7 +89,7 @@ pub fn parse_obj_file<T: Float + Debug + Send + Sync>(
                 vertices.push(Vec3::new(
                     T::from(x).unwrap(),
                     if flip_yz {
-                        T::from(z).unwrap()
+                        -T::from(z).unwrap()
                     } else {
                         T::from(y).unwrap()
                     },
@@ -106,9 +111,6 @@ pub fn parse_obj_file<T: Float + Debug + Send + Sync>(
                     let index: usize = indices[0].parse().unwrap();
                     face[i] = index - 1;
                 }
-                if flip_yz {
-                    face.reverse();
-                }
                 faces.push(face);
             }
             _ => continue,
@@ -120,7 +122,8 @@ pub fn parse_obj_file<T: Float + Debug + Send + Sync>(
     mesh.compute_vertex_normals();
 
     log::info!(
-        "Obj file with {} vertices and {} faces successfully read.",
+        "Obj file {} with {} vertices and {} faces successfully read.",
+        file_path,
         mesh.num_vertices(),
         mesh.num_faces()
     );

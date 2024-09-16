@@ -23,16 +23,34 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         }
     }
 
-    pub fn add_function<F: ImplicitFunction<T> + 'static>(&mut self, tag: &str, function: F) {
+    pub fn add_function<F: ImplicitFunction<T> + 'static>(
+        &mut self,
+        tag: &str,
+        function: F,
+    ) -> Result<(), String> {
+        let tag_string = tag.to_string();
+        self.verify_tag_is_free(&tag_string)?;
+
         self.components
-            .insert(tag.to_string(), Component::Function(Box::new(function)));
+            .insert(tag_string, Component::Function(Box::new(function)));
+
+        Ok(())
     }
 
-    pub fn add_operation<F: ImplicitOperation<T> + 'static>(&mut self, tag: &str, operation: F) {
+    pub fn add_operation<F: ImplicitOperation<T> + 'static>(
+        &mut self,
+        tag: &str,
+        operation: F,
+    ) -> Result<(), String> {
+        let tag_string = tag.to_string();
+        self.verify_tag_is_free(&tag_string)?;
+
         self.inputs
-            .insert(tag.to_string(), vec![None; operation.num_inputs()]);
+            .insert(tag_string.clone(), vec![None; operation.num_inputs()]);
         self.components
-            .insert(tag.to_string(), Component::Operation(Box::new(operation)));
+            .insert(tag_string, Component::Operation(Box::new(operation)));
+
+        Ok(())
     }
 
     pub fn add_operation_with_inputs<F: ImplicitOperation<T> + 'static>(
@@ -40,40 +58,64 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         tag: &str,
         operation: F,
         inputs: &[&str],
-    ) {
-        assert!(
-            operation.num_inputs() == inputs.len(),
-            "Number of inputs for component {} does not match the inputs for {}.",
-            tag,
-            std::any::type_name::<F>()
-        );
+    ) -> Result<(), String> {
+        let tag_string = tag.to_string();
+        self.verify_tag_is_free(&tag_string)?;
+
+        if operation.num_inputs() != inputs.len() {
+            return Err(format!(
+                "Number of inputs for component '{}' does not match the inputs for '{}'. Expected {}, got {}.",
+                tag,
+                std::any::type_name::<F>(),
+                operation.num_inputs(),
+                inputs.len()
+            ));
+        }
+
         self.inputs.insert(
-            tag.to_string(),
+            tag_string.clone(),
             inputs.iter().map(|s| Some(s.to_string())).collect(),
         );
+
         self.components
             .insert(tag.to_string(), Component::Operation(Box::new(operation)));
+
+        Ok(())
     }
 
-    pub fn add_constant(&mut self, tag: String, value: T) {
+    pub fn add_constant(&mut self, tag: &str, value: T) -> Result<(), String> {
+        let tag_string = tag.to_string();
+        self.verify_tag_is_free(&tag_string)?;
+
         self.components
-            .insert(tag.clone(), Component::Constant(value));
+            .insert(tag_string, Component::Constant(value));
+
+        Ok(())
     }
 
-    pub fn add_input(&mut self, target: &String, source: &String, index: usize) {
+    pub fn add_input(&mut self, target: &str, source: &str, index: usize) -> Result<(), String> {
+        let target_string = target.to_string();
+        self.verify_tag_is_present(&target_string)?;
+        let source_string = source.to_string();
+        self.verify_tag_is_present(&source_string)?;
+
         let target_component_inputs = self
             .inputs
             .get_mut(target)
             .expect("Target component not found in model.");
-        assert!(
-            index < target_component_inputs.len(),
-            "Input index out of bounds for target component. "
-        );
-        assert!(
-            self.components.contains_key(source),
-            "Source component not found in model. "
-        );
-        target_component_inputs[index] = Some(source.clone());
+
+        if index > target_component_inputs.len() {
+            return Err(format!(
+                "Input '{}' is larger than the number of inputs for '{}', which has {} inputs.",
+                index,
+                target_string,
+                target_component_inputs.len()
+            ));
+        }
+
+        target_component_inputs[index] = Some(source_string.clone());
+
+        Ok(())
     }
 
     pub fn remove_input(&mut self, component: &String, index: usize) {
@@ -87,6 +129,28 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         );
 
         component_inputs[index] = None;
+    }
+
+    fn verify_tag_is_free(&self, tag: &String) -> Result<(), String> {
+        if self.components.contains_key(tag) {
+            return Err(format!(
+                "A component with tag '{}' is already present in the model.",
+                tag
+            ));
+        }
+
+        Ok(())
+    }
+
+    fn verify_tag_is_present(&self, tag: &String) -> Result<(), String> {
+        if !self.components.contains_key(tag) {
+            return Err(format!(
+                "A component with tag '{}' is not present in the model",
+                tag
+            ));
+        }
+
+        Ok(())
     }
 
     pub fn generate_field(
