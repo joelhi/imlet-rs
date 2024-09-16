@@ -6,6 +6,6 @@ mod implicit_model;
 pub mod operations;
 pub mod traits;
 
-pub use computation_graph::*;
+pub(crate) use computation_graph::*;
 pub use dense_field::*;
 pub use implicit_model::*;

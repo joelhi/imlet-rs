@@ -44,9 +44,9 @@ impl<T: Pi + Float + Debug + Send + Sync> ImplicitFunction<T> for Neovius<T> {
         let z = two * T::pi() * z / self.length_z;
         let normalized_distance = (three * (x.cos() + y.cos() + z.cos())
             + four * x.cos() * y.cos() * z.cos())
-            / T::from(10.0).unwrap();
+            / T::from(7.5).unwrap();
 
-        let scale = self.length_x.min(self.length_y).min(self.length_z) / two;
+        let scale = T::from(0.368).unwrap() * self.length_x.min(self.length_y).min(self.length_z);
 
         if self.linear {
             let linear_distance =
@@ -84,7 +84,7 @@ mod tests {
                 }
             }
         }
-        assert!((2.5 - max).abs() < 0.001);
-        assert!((min + 2.5).abs() < 0.001);
+        assert!((1.84 - max).abs() < 0.001);
+        assert!((min + 1.84).abs() < 0.001);
     }
 }

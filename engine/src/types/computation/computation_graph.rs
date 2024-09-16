@@ -54,14 +54,7 @@ impl<'a, T: Float + Debug + Send + Sync> ComputationGraph<'a, T> {
         let before = Instant::now();
         let n = Self::point_count(&bounds, cell_size);
 
-        log::debug!(
-            "Evaluating model from {} to {} with {}x{}x{} points",
-            bounds.min,
-            bounds.max,
-            n.x,
-            n.y,
-            n.z
-        );
+        log::info!("Evaluating model with {}x{}x{} points", n.x, n.y, n.z);
 
         let mut data: Vec<T> = vec![T::zero(); n.x * n.y * n.z];
         data.par_iter_mut().enumerate().for_each(|(index, value)| {

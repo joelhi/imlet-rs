@@ -1,10 +1,14 @@
+use crate::algorithms::marching_cubes::generate_iso_surface;
 use crate::types::computation::component::{Component, ComponentId};
 use crate::types::computation::traits::implicit_functions::{ImplicitFunction, ImplicitOperation};
 use crate::types::computation::ComputationGraph;
+use crate::types::geometry::{BoundingBox, Mesh};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 use std::time::Instant;
+
+use super::DenseField;
 
 pub struct ImplicitModel<T: Float + Debug> {
     components: HashMap<String, Component<T>>,
@@ -85,16 +89,49 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         component_inputs[index] = None;
     }
 
-    pub fn compile(&self, target: &str) -> ComputationGraph<T> {
+    pub fn generate_field(
+        &self,
+        output: &str,
+        bounds: &BoundingBox<T>,
+        cell_size: T,
+    ) -> DenseField<T> {
+        let computation_graph = self.compile(output);
+        computation_graph.evaluate(&bounds, cell_size)
+    }
+
+    pub fn generate_iso_surface(
+        &self,
+        output: &str,
+        bounds: &BoundingBox<T>,
+        cell_size: T,
+    ) -> Mesh<T> {
+        self.generate_iso_surface_at(output, bounds, cell_size, T::zero())
+    }
+
+    pub fn generate_iso_surface_at(
+        &self,
+        output: &str,
+        bounds: &BoundingBox<T>,
+        cell_size: T,
+        iso_value: T,
+    ) -> Mesh<T> {
+        let field = self.generate_field(output, &bounds, cell_size);
+
+        let triangles = generate_iso_surface(&field, iso_value);
+        Mesh::from_triangles(&triangles)
+    }
+
+    fn compile(&self, target: &str) -> ComputationGraph<T> {
         let before = Instant::now();
-        let taroutput = target.to_string();
+        let target_output = target.to_string();
+
         // Traverse model from target to resolve all dependents
         let mut graph = ComputationGraph::new();
         let mut ordered_components = Vec::new();
         let mut ordered_inputs = Vec::new();
 
         let mut queue = VecDeque::new();
-        queue.push_back(taroutput.clone());
+        queue.push_back(target_output.clone());
 
         // Find all sources for the target
         let mut sources = HashMap::new();
