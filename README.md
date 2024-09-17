@@ -2,7 +2,7 @@
 
 ![Build & Test](https://github.com/joelhi/implicit-rs/actions/workflows/rust.yml/badge.svg)
 
-![Gyroid Example](media/examples.png)
+![Periodic Surface Example](media/examples.png)
 
 ## Overview
 
@@ -21,7 +21,6 @@ The library uses the marching cubes algorithm, following the approach by [Paul B
 Here’s a simple example demonstrating how to use Imlet to create a model combining a sphere and a gyroid:
 
 ```rust
-use imlet::{BoundingBox, Vec3, ImplicitModel, Sphere, Gyroid, Thickness, Intersection, Viewer};
 
 fn main() {
     let size: f32 = 10.0;
@@ -51,6 +50,8 @@ fn main() {
         .unwrap();
 
     let mesh = model.generate_iso_surface("Output", &model_space, cell_size);
+
+    write_obj_file(&mesh, "output.obj").unwrap();
 }
 ```
 
