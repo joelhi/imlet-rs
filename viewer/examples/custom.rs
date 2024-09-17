@@ -13,16 +13,11 @@ use {
 pub fn main() {
     utils::logging::init_info();
 
-    // Read inputs
-    let args: Vec<String> = env::args().collect();
-    assert!(args.len() == 3, "For this example, two arguments has to be specified. First a path to the obj file, followed by a cell size.");
-
-    let cell_size = args[2]
-        .parse()
-        .expect("Failed to parse cell size from second argument");
+    // Parse inputs
+    let (file_path, cell_size) = parse_input_args();
 
     // Build model
-    let mesh: Mesh<f64> = parse_obj_file(&args[1], false).unwrap();
+    let mesh: Mesh<f64> = parse_obj_file(&file_path, false).unwrap();
     let model_space = mesh.bounds().offset(cell_size);
 
     let mut model = ImplicitModel::new();
@@ -31,4 +26,16 @@ pub fn main() {
         .unwrap();
 
     Viewer::run(model, model_space, cell_size, "MeshSDF");
+}
+
+fn parse_input_args() -> (String, f64){
+    // Read inputs
+    let args: Vec<String> = env::args().collect();
+    assert!(args.len() == 3, "For this example, two arguments has to be specified. First a path to the obj file, followed by a cell size.");
+
+    let cell_size = args[2]
+        .parse()
+        .expect("Failed to parse cell size from second argument");
+
+    (args[1].clone(), cell_size)
 }
