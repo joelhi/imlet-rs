@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use log::debug;
+use log::{debug, info};
 use num_traits::Float;
 
 use super::{
@@ -26,7 +26,9 @@ impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> OctreeNode<Q, T> {
 
     pub fn build(&mut self, max_depth: u32, max_triangles: usize) {
         if self.objects.len() <= max_triangles || max_depth == 0 {
-            debug_assert!(max_depth != 0, "Reached max depth of octree with too many triangles. Please increase allowed depth.");
+            if max_depth == 0 && self.objects.len() > max_triangles{
+                debug!("Reached max depth of octree with {} triangles. Please increase allowed depth.", self.objects.len());
+            }
             debug!(
                 "Built octree node with {} triangles and depth {}",
                 self.objects.len(),
