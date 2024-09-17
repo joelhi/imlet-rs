@@ -28,7 +28,7 @@ pub fn main() {
     Viewer::run(model, model_space, cell_size, "MeshSDF");
 }
 
-fn parse_input_args() -> (String, f64){
+fn parse_input_args() -> (String, f64) {
     // Read inputs
     let args: Vec<String> = env::args().collect();
     assert!(args.len() == 3, "For this example, two arguments has to be specified. First a path to the obj file, followed by a cell size.");
