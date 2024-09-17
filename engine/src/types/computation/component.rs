@@ -8,12 +8,6 @@ use super::traits::implicit_functions::{ImplicitFunction, ImplicitOperation};
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct ComponentId(pub usize);
 
-impl ComponentId {
-    pub fn value(&self) -> usize {
-        self.0
-    }
-}
-
 impl From<usize> for ComponentId {
     fn from(value: usize) -> Self {
         ComponentId(value)

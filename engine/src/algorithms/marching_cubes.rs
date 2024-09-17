@@ -100,12 +100,11 @@ fn triangles<T: Float + Debug>(
             break;
         }
 
-        triangles.push(Triangle {
-            p1: vertices[TRI_TABLE[cube_index][i] as usize],
-            p2: vertices[TRI_TABLE[cube_index][i + 1] as usize],
-            p3: vertices[TRI_TABLE[cube_index][i + 2] as usize],
-            n: None,
-        });
+        triangles.push(Triangle::new(
+            vertices[TRI_TABLE[cube_index][i] as usize],
+            vertices[TRI_TABLE[cube_index][i + 1] as usize],
+            vertices[TRI_TABLE[cube_index][i + 2] as usize],
+        ));
     }
     triangles
 }
@@ -287,9 +286,9 @@ mod tests {
 
         assert_eq!(2, triangles.len());
         for tri in triangles {
-            assert!(tri.p1.z - 0.5 < 0.0001);
-            assert!(tri.p2.z - 0.5 < 0.0001);
-            assert!(tri.p3.z - 0.5 < 0.0001);
+            assert!(tri.p1().z - 0.5 < 0.0001);
+            assert!(tri.p2().z - 0.5 < 0.0001);
+            assert!(tri.p3().z - 0.5 < 0.0001);
             assert!(tri.compute_area() - 0.5 < 0.0001);
         }
     }
@@ -308,9 +307,9 @@ mod tests {
 
         assert_eq!(4, triangles.len());
         for tri in triangles {
-            assert!(tri.p1.z - 0.5 < 0.0001);
-            assert!(tri.p2.z - 0.5 < 0.0001);
-            assert!(tri.p3.z - 0.5 < 0.0001);
+            assert!(tri.p1().z - 0.5 < 0.0001);
+            assert!(tri.p2().z - 0.5 < 0.0001);
+            assert!(tri.p3().z - 0.5 < 0.0001);
             assert!(tri.compute_area() - 0.5 < 0.0001);
         }
     }
@@ -323,16 +322,16 @@ mod tests {
 
         // Function
         let mut model = ImplicitModel::new();
-        model.add_function(
-            "Sphere",
-            Sphere::new(Vec3::new(size / 2.0, size / 2.0, size / 2.0), size * 0.4),
-        );
+        model
+            .add_function(
+                "Sphere",
+                Sphere::new(Vec3::new(size / 2.0, size / 2.0, size / 2.0), size * 0.4),
+            )
+            .unwrap();
 
-        let computation_graph = model.compile("Sphere");
+        let field = model.generate_field("Sphere", &bounds, cell_size);
 
-        let field = computation_graph.evaluate(&bounds, cell_size);
-
-        // Generate mesh
+        // Generate triangles
         let triangles = generate_iso_surface(&field, 0.0);
 
         let area: f64 = triangles.iter().map(|tri| tri.compute_area()).sum();

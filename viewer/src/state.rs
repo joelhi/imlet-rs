@@ -2,6 +2,7 @@ use std::{fmt::Debug, iter};
 
 use cgmath::Point3;
 
+use imlet_engine::types::geometry::Vec3;
 use num_traits::Float;
 use wgpu::{util::DeviceExt, Buffer};
 use winit::{dpi::PhysicalSize, event::*, window::Window};
@@ -46,7 +47,7 @@ pub struct State<T: Float + Debug + Send + Sync> {
 impl<T: Float + Debug + Send + Sync> State<T> {
     pub async fn new(window: Window, model_data: ModelData<T>, scene: Scene<T>) -> Self {
         let size = window.inner_size();
-        let max = model_data.bounds().max.to_f32();
+        let dim = model_data.bounds().dimensions();
         let centroid = model_data.bounds().centroid().to_f32();
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
@@ -99,8 +100,13 @@ impl<T: Float + Debug + Send + Sync> State<T> {
             view_formats: vec![],
         };
         surface.configure(&device, &config);
-        let default_position: Point3<f32> = (3.0 * max.x, 3.0 * max.y, 3.0 * max.z).into();
-        let default_target: Point3<f32> = (centroid.x, centroid.y, centroid.z).into();
+        let default_position: Point3<f32> = (
+            centroid.x,
+            centroid.z,
+            centroid.y - 2.5 * dim.1.to_f32().unwrap(),
+        )
+            .into();
+        let default_target: Point3<f32> = (centroid.x, centroid.z, centroid.y).into();
         let camera = Camera {
             eye: default_position,
             target: default_target,
@@ -111,7 +117,13 @@ impl<T: Float + Debug + Send + Sync> State<T> {
             zfar: 1000.0,
         };
         let camera_controller = CameraController::new(
-            0.025 * (max - centroid).distance_to_coord(0.0, 0.0, 0.0),
+            0.025
+                * (Vec3::new(
+                    dim.0.to_f32().unwrap(),
+                    dim.1.to_f32().unwrap(),
+                    dim.2.to_f32().unwrap(),
+                ))
+                .distance_to_coord(0.0, 0.0, 0.0),
             default_position,
             default_target,
         );

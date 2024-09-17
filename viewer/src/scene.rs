@@ -101,8 +101,10 @@ impl<T: Float + Debug + Send + Sync> ModelData<T> {
     }
 
     pub fn compute(&mut self, cell_size: T) {
-        let computation_graph = self.model.compile(&self.output);
-        self.data = Some(computation_graph.evaluate(&self.bounds, cell_size));
+        self.data = Some(
+            self.model
+                .generate_field(&self.output, &self.bounds, cell_size),
+        );
     }
 
     pub fn generate_mesh(&mut self) -> Option<Mesh<T>> {

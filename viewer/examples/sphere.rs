@@ -23,17 +23,19 @@ pub fn main() {
 
     // Function
     let mut model = ImplicitModel::new();
-    model.add_function(
-        "Sphere",
-        Sphere::new(
-            Vec3::new(
-                offset + size / 2.0,
-                offset + size / 2.0,
-                offset + size / 2.0,
+    model
+        .add_function(
+            "Sphere",
+            Sphere::new(
+                Vec3::new(
+                    offset + size / 2.0,
+                    offset + size / 2.0,
+                    offset + size / 2.0,
+                ),
+                size * 0.45,
             ),
-            size * 0.45,
-        ),
-    );
+        )
+        .unwrap();
 
     Viewer::run(model, bounds, cell_size, "Sphere");
 }

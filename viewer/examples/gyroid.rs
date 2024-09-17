@@ -23,18 +23,26 @@ pub fn main() {
     // Build model
     let mut model = ImplicitModel::new();
 
-    model.add_function(
-        "Sphere",
-        Sphere::new(Vec3::new(0.5 * size, 0.5 * size, 0.5 * size), 0.45 * size),
-    );
+    model
+        .add_function(
+            "Sphere",
+            Sphere::new(Vec3::new(0.5 * size, 0.5 * size, 0.5 * size), 0.45 * size),
+        )
+        .unwrap();
 
-    model.add_function("Gyroid", Gyroid::with_equal_spacing(2.5, true));
-    model.add_operation_with_inputs("ThickGyroid", Thickness::new(1.5), &vec!["Gyroid"]);
-    model.add_operation_with_inputs(
-        "Output",
-        Intersection::new(),
-        &vec!["Sphere", "ThickGyroid"],
-    );
+    model
+        .add_function("Gyroid", Gyroid::with_equal_spacing(2.5, true))
+        .unwrap();
+    model
+        .add_operation_with_inputs("ThickGyroid", Thickness::new(1.5), &vec!["Gyroid"])
+        .unwrap();
+    model
+        .add_operation_with_inputs(
+            "Output",
+            Intersection::new(),
+            &vec!["Sphere", "ThickGyroid"],
+        )
+        .unwrap();
 
     Viewer::run(model, model_space, cell_size, "Output");
 }
