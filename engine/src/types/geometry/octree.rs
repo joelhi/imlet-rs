@@ -26,9 +26,7 @@ impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> OctreeNode<Q, T> {
 
     pub fn build(&mut self, max_depth: u32, max_triangles: usize) {
         if self.objects.len() <= max_triangles || max_depth == 0 {
-            if max_depth == 0 {
-                debug!("Reached max depth of octree with too many triangles. Please increase allowed depth.")
-            }
+            debug_assert!(max_depth != 0, "Reached max depth of octree with too many triangles. Please increase allowed depth.");
             debug!(
                 "Built octree node with {} triangles and depth {}",
                 self.objects.len(),
