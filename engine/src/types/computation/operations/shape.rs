@@ -6,6 +6,64 @@ use serde::{Deserialize, Serialize};
 use crate::types::computation::traits::implicit_functions::ImplicitOperation;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct BooleanUnion {}
+
+impl BooleanUnion {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for BooleanUnion {
+    fn eval(&self, inputs: &[T]) -> T {
+        inputs[0].min(inputs[1])
+    }
+
+    fn num_inputs(&self) -> usize {
+        2
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct BooleanIntersection {}
+
+impl BooleanIntersection {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for BooleanIntersection {
+    fn eval(&self, inputs: &[T]) -> T {
+        inputs[0].max(inputs[1])
+    }
+
+    fn num_inputs(&self) -> usize {
+        2
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct BooleanDifference {}
+
+impl BooleanDifference {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for BooleanDifference {
+    fn eval(&self, inputs: &[T]) -> T {
+        inputs[0].max(-inputs[1])
+    }
+
+    fn num_inputs(&self) -> usize {
+        2
+    }
+}
+
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Offset<T> {
     distance: T,
 }

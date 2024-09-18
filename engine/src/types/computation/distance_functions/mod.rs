@@ -1,7 +1,7 @@
 mod aabb;
 mod capsule;
 mod custom;
-mod domains;
+mod coordinates;
 mod gyroid;
 mod mesh_sdf;
 mod neovius;
@@ -13,7 +13,7 @@ mod torus;
 pub use aabb::*;
 pub use capsule::*;
 pub use custom::*;
-pub use domains::*;
+pub use coordinates::*;
 pub use gyroid::*;
 pub use mesh_sdf::*;
 pub use neovius::*;

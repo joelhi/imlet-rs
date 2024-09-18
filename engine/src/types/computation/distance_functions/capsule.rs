@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::{computation::traits::implicit_functions::ImplicitFunction, geometry::Vec3};
 
+/// Distance function for a capsule defined by a line and a radius
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Capsule<T: Float + Debug> {
     start: Vec3<T>,
@@ -13,6 +14,12 @@ pub struct Capsule<T: Float + Debug> {
 }
 
 impl<T: Float + Debug> Capsule<T> {
+    /// Creare a new Capsule.
+    /// # Arguments
+    /// 
+    /// * `start` - Start of line for capsule length.
+    /// * `end` - End of line for capsule length.
+    /// * `radius` - Capsule radius.
     pub fn new(start: Vec3<T>, end: Vec3<T>, radius: T) -> Self {
         Capsule {
             start: start,

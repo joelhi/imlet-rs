@@ -111,7 +111,7 @@ mod tests {
     use crate::types::{
         computation::{
             distance_functions::Sphere,
-            operations::{arithmetic::Add, boolean::Difference},
+            operations::{arithmetic::Add, shape::BooleanDifference},
         },
         geometry::Vec3,
     };
@@ -181,7 +181,7 @@ mod tests {
         let sphere_component = Component::Function(Box::new(Sphere::new(Vec3::origin(), 1.0)));
         let sphere_component2 = Component::Function(Box::new(Sphere::new(Vec3::origin(), 0.5)));
 
-        let difference_component = Component::Operation(Box::new(Difference::new()));
+        let difference_component = Component::Operation(Box::new(BooleanDifference::new()));
 
         model.add_component(&sphere_component, vec![]);
         model.add_component(&sphere_component2, vec![]);
