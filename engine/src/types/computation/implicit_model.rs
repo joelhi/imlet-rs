@@ -10,12 +10,14 @@ use std::time::Instant;
 
 use super::ScalarField;
 
+/// Defines an implicit model composed of distance functions and operations.
 pub struct ImplicitModel<T: Float + Debug> {
     components: HashMap<String, Component<T>>,
     inputs: HashMap<String, Vec<Option<String>>>,
 }
 
 impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
+    /// Create a new empty model.
     pub fn new() -> Self {
         Self {
             components: HashMap::new(),
@@ -23,6 +25,14 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         }
     }
 
+    /// Add a distance function component to the model.
+    /// # Arguments
+    /// 
+    /// * `tag` - The tag of the function component added. This is used to reference the component for input and output assignments.
+    /// * `function` - The function to add.
+    /// # Returns
+    ///      
+    /// * `Result<(), String>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is already in use.
     pub fn add_function<F: ImplicitFunction<T> + 'static>(
         &mut self,
         tag: &str,
@@ -37,6 +47,14 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         Ok(())
     }
 
+    /// Add a distance function component to the model.
+    /// # Arguments
+    /// 
+    /// * `tag` - The tag of the operation component added. This is used to reference the component for input and output assignments.
+    /// * `operation` - The operation to add.
+    /// # Returns
+    ///      
+    /// * `Result<(), String>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is already in use.
     pub fn add_operation<F: ImplicitOperation<T> + 'static>(
         &mut self,
         tag: &str,
@@ -53,6 +71,15 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         Ok(())
     }
 
+    /// Add a operation component to the model, and populate it with inputs.
+    /// # Arguments
+    /// 
+    /// * `tag` - The tag of the operation component added. This is used to reference the component for input and output assignments.
+    /// * `function` - The operation to add.
+    /// * `inputs` - The tags of the components which provide the inputs. The number of inputs must match the operation added.
+    /// # Returns
+    ///      
+    /// * `Result<(), String>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is already in use.
     pub fn add_operation_with_inputs<F: ImplicitOperation<T> + 'static>(
         &mut self,
         tag: &str,
@@ -83,6 +110,15 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         Ok(())
     }
 
+    /// Add a tagged constant value to the model, which can be processed in other components.
+    /// # Arguments
+    /// 
+    /// * `tag` - The tag of the value component added. This is used to reference the component for input assignments.
+    /// * `value` - The constant value.
+    /// # Returns
+    ///      
+    /// * `Result<(), String>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is already in use.
+
     pub fn add_constant(&mut self, tag: &str, value: T) -> Result<(), String> {
         let tag_string = tag.to_string();
         self.verify_tag_is_free(&tag_string)?;
@@ -93,6 +129,15 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         Ok(())
     }
 
+    /// Assign an input to a component.
+    /// # Arguments
+    /// 
+    /// * `target` - The tag of the operation which recieves the input.
+    /// * `source` - The tag of the output source to feed as input.
+    /// * `index` - The input index of the targer to which the output source is assigned.
+    /// # Returns
+    ///      
+    /// * `Result<(), String>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the source or target tags are not found in the model.
     pub fn add_input(&mut self, target: &str, source: &str, index: usize) -> Result<(), String> {
         let target_string = target.to_string();
         self.verify_tag_is_present(&target_string)?;
@@ -117,6 +162,16 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
 
         Ok(())
     }
+
+    /// Remove an input from a component. This will leave the specific input parameter unassigned.
+    /// # Arguments
+    /// 
+    /// * `component` - The tag of the operation which recieves the input.
+    /// * `index` - The index of the input to unassign.
+    /// 
+    /// # Returns
+    ///      
+    /// * `Result<(), String>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is not found in the model.
 
     pub fn remove_input(&mut self, component: &String, index: usize) {
         let component_inputs = self
@@ -153,6 +208,16 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         Ok(())
     }
 
+    /// Compute a discrete scalar field from the model.
+    /// # Arguments
+    /// 
+    /// * `output` - The tag of the component for which the output should be stored in the field.
+    /// * `bounds` - The domain to compute.
+    /// * `cell_size` - The resolution at which the domain is computed.
+    /// 
+    /// # Returns
+    ///      
+    /// * `ScalarField<T>` - The scalar field holding the computed data.
     pub fn generate_field(
         &self,
         output: &str,
@@ -163,6 +228,16 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         computation_graph.evaluate(&bounds, cell_size)
     }
 
+    /// Extract the iso surface at the zero-level.
+    /// # Arguments
+    /// 
+    /// * `output` - The tag of the component which output should be used for the iso surface extraction.
+    /// * `bounds` - The domain to compute.
+    /// * `cell_size` - The resolution at which the domain is computed.
+    /// 
+    /// # Returns
+    ///      
+    /// * `Mesh<T>` - The iso surface represented as an indexed triangle mesh.
     pub fn generate_iso_surface(
         &self,
         output: &str,
@@ -172,6 +247,17 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         self.generate_iso_surface_at(output, bounds, cell_size, T::zero())
     }
 
+    /// Extract the iso surface at a specified level.
+    /// # Arguments
+    /// 
+    /// * `output` - The tag of the component which output should be used for the iso surface extraction.
+    /// * `bounds` - The domain to compute.
+    /// * `cell_size` - The resolution at which the domain is computed.
+    /// * `iso_value` - Specific value at which the iso surface should be extracted.
+    /// 
+    /// # Returns
+    ///      
+    /// * `Mesh<T>` - The iso surface represented as an indexed triangle mesh.    
     pub fn generate_iso_surface_at(
         &self,
         output: &str,
