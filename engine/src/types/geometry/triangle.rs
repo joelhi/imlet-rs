@@ -7,14 +7,22 @@ use super::{
     BoundingBox, Vec3,
 };
 
+/// A single triangle object with vertices in 3d space.
 #[derive(Debug, Clone, Copy)]
 pub struct Triangle<T: Float + Debug> {
+    /// Positions of the three vertices.
     pub p: [Vec3<T>; 3],
 
+    /// Optional normals at each vertex.
     pub n: Option<[Vec3<T>; 3]>,
 }
 
 impl<T: Float + Debug> Triangle<T> {
+
+    /// Create a new Triangle from three vertices with no normals.
+    /// * `p1` - First vertex.
+    /// * `p2` - Second vertex.
+    /// * `p3` - Third vertex.
     pub fn new(p1: Vec3<T>, p2: Vec3<T>, p3: Vec3<T>) -> Self {
         Self {
             p: [p1, p2, p3],
@@ -22,6 +30,7 @@ impl<T: Float + Debug> Triangle<T> {
         }
     }
 
+    /// Create a new Triangle with all vertices at the origin {0,0,0}.
     pub fn zero() -> Self {
         Self {
             p: [Vec3::origin(), Vec3::origin(), Vec3::origin()],
@@ -29,14 +38,12 @@ impl<T: Float + Debug> Triangle<T> {
         }
     }
 
-    pub fn with_normals(p1: Vec3<T>, p2: Vec3<T>, p3: Vec3<T>, n: [Vec3<T>; 3]) -> Self {
-        Self {
-            p: [p1, p2, p3],
-            n: Some(n),
-        }
-    }
-
-    pub fn with_normals_option(
+    /// Create a new Triangle from three vertices with no normals.
+    /// * `p1` - First vertex.
+    /// * `p2` - Second vertex.
+    /// * `p3` - Third vertex.
+    /// * `n` - Array with normals for each vertex if applicable.
+    pub fn with_normals(
         p1: Vec3<T>,
         p2: Vec3<T>,
         p3: Vec3<T>,
@@ -48,21 +55,25 @@ impl<T: Float + Debug> Triangle<T> {
         }
     }
 
+    /// Return a copy of the first vertex in the triangle.
     #[inline]
     pub fn p1(&self) -> Vec3<T> {
         self.p[0]
     }
 
+    /// Return a copy of the second vertex in the triangle.
     #[inline]
     pub fn p2(&self) -> Vec3<T> {
         self.p[1]
     }
 
+    /// Return a copy of the third vertex in the triangle.
     #[inline]
     pub fn p3(&self) -> Vec3<T> {
         self.p[2]
     }
 
+    /// Compute the area of the triangle.
     pub fn compute_area(&self) -> T {
         let a = self.p1().distance_to_vec3(&self.p2());
         let b = self.p2().distance_to_vec3(&self.p3());
@@ -71,6 +82,7 @@ impl<T: Float + Debug> Triangle<T> {
         (s * (s - a) * (s - b) * (s - c)).sqrt()
     }
 
+    /// Compute the bounding box of the triangle in global coordinates.
     pub fn bounds(&self) -> BoundingBox<T> {
         BoundingBox::new(
             Vec3::new(
@@ -86,12 +98,14 @@ impl<T: Float + Debug> Triangle<T> {
         )
     }
 
+    /// Compute the normal to the triangle face plane.
     pub fn face_normal(&self) -> Vec3<T> {
         let v1 = self.p2() - self.p1();
         let v2 = self.p3() - self.p1();
         v1.cross(&v2).normalize()
     }
 
+    /// Returns the vertex normals if present, otherwise the face normal applied at each vertex.
     pub fn vertex_normals(&self) -> [Vec3<T>; 3] {
         if let Some(normals) = self.n {
             normals
@@ -101,7 +115,11 @@ impl<T: Float + Debug> Triangle<T> {
         }
     }
 
-    pub fn closest_point(&self, query_point: &Vec3<T>) -> (Feature, Vec3<T>) {
+    /// Compute the closest point on the triangle and at what triangle feature it is located from.
+    /// 
+    /// See [`TriangleFeature`] for info on the feature classification.
+    /// * `query_point` - Point to compute the closest point from.
+    pub fn closest_point(&self, query_point: &Vec3<T>) -> (TriangleFeature, Vec3<T>) {
         let eps = T::from(1e-7).unwrap();
         let ab = self.p[1] - self.p[0];
         let ac = self.p[2] - self.p[0];
@@ -110,40 +128,40 @@ impl<T: Float + Debug> Triangle<T> {
         let d1 = ab.dot(&ap);
         let d2 = ac.dot(&ap);
         if d1 <= eps && d2 <= eps {
-            return (Feature::VERTEX(0), self.p[0]);
+            return (TriangleFeature::VERTEX(0), self.p[0]);
         }
 
         let bp = *query_point - self.p[1];
         let d3 = ab.dot(&bp);
         let d4 = ac.dot(&bp);
         if d3 >= -eps && d4 <= d3 + eps {
-            return (Feature::VERTEX(1), self.p[1]);
+            return (TriangleFeature::VERTEX(1), self.p[1]);
         }
 
         let vc = d1 * d4 - d3 * d2;
         if vc <= eps && d1 >= -eps && d3 <= eps {
             let v = d1 / (d1 - d3);
-            return (Feature::EDGE([0, 1]), self.p[0] + ab * v);
+            return (TriangleFeature::EDGE([0, 1]), self.p[0] + ab * v);
         }
 
         let cp = *query_point - self.p[2];
         let d5 = ab.dot(&cp);
         let d6 = ac.dot(&cp);
         if d6 >= -eps && d5 <= d6 + eps {
-            return (Feature::VERTEX(2), self.p[2]);
+            return (TriangleFeature::VERTEX(2), self.p[2]);
         }
 
         let vb = d5 * d2 - d1 * d6;
         if vb <= eps && d2 >= -eps && d6 <= eps {
             let w = d2 / (d2 - d6);
-            return (Feature::EDGE([0, 2]), self.p[0] + ac * w);
+            return (TriangleFeature::EDGE([0, 2]), self.p[0] + ac * w);
         }
 
         let va = d3 * d6 - d5 * d4;
         if va <= eps && (d4 - d3) >= -eps && (d5 - d6) >= -eps {
             let w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
             return (
-                Feature::EDGE([1, 2]),
+                TriangleFeature::EDGE([1, 2]),
                 self.p[1] + (self.p[2] - self.p[1]) * w,
             );
         }
@@ -151,7 +169,7 @@ impl<T: Float + Debug> Triangle<T> {
         let denom = T::one() / (va + vb + vc);
         let v = vb * denom;
         let w = vc * denom;
-        (Feature::FACE, self.p[0] + ab * v + ac * w)
+        (TriangleFeature::FACE, self.p[0] + ab * v + ac * w)
     }
 }
 
@@ -180,25 +198,29 @@ impl<T: Float + Debug + Send + Sync> SignedQuery<T> for Triangle<T> {
         let (closest_feature, closest_point) = self.closest_point(&query_point);
 
         match closest_feature {
-            Feature::VERTEX(i) => {
+            TriangleFeature::VERTEX(i) => {
                 let normals = self.vertex_normals();
                 normals[i]
             }
-            Feature::EDGE(e) => {
+            TriangleFeature::EDGE(e) => {
                 let t = closest_point.distance_to_vec3(&self.p[e[0]])
                     / self.p[e[0]].distance_to_vec3(&self.p[e[1]]);
                 let normals = self.vertex_normals();
 
                 Vec3::slerp(normals[e[0]], normals[e[1]], t)
             }
-            Feature::FACE => self.face_normal(),
+            TriangleFeature::FACE => self.face_normal(),
         }
     }
 }
 
-pub enum Feature {
+/// Describes a feature on the triangle. Classifying closest point look-ups.
+pub enum TriangleFeature {
+    /// Feature is a vertex in the triangle with specific index.
     VERTEX(usize),
+    /// Feature is an edge in the triangle with index of edge points.
     EDGE([usize; 2]),
+    /// Feature is on the face of the triangle (within the bounds).
     FACE,
 }
 
@@ -219,7 +241,7 @@ mod tests {
 
         let (feature, closest_point) = tri.closest_point(&test_point);
 
-        assert!(matches!(feature, Feature::FACE));
+        assert!(matches!(feature, TriangleFeature::FACE));
         assert!(closest_point.distance_to_coord(1.0, 1.0, 0.0).abs() < f64::epsilon());
     }
 
@@ -235,7 +257,7 @@ mod tests {
 
         let (feature, closest_point) = tri.closest_point(&test_point);
 
-        assert!(matches!(feature, Feature::EDGE(_)));
+        assert!(matches!(feature, TriangleFeature::EDGE(_)));
         assert!(closest_point.distance_to_coord(0.0, 2.5, 0.0).abs() < f64::epsilon());
     }
 
@@ -251,7 +273,7 @@ mod tests {
 
         let (feature, closest_point) = tri.closest_point(&test_point);
 
-        assert!(matches!(feature, Feature::EDGE(_)));
+        assert!(matches!(feature, TriangleFeature::EDGE(_)));
         assert!(closest_point.distance_to_coord(2.5, 0.0, 0.0).abs() < f64::epsilon());
     }
 
@@ -267,7 +289,7 @@ mod tests {
 
         let (feature, closest_point) = tri.closest_point(&test_point);
 
-        assert!(matches!(feature, Feature::EDGE(_)));
+        assert!(matches!(feature, TriangleFeature::EDGE(_)));
         assert!(closest_point.distance_to_coord(2.5, 2.5, 0.0).abs() < f64::epsilon());
     }
 
@@ -283,7 +305,7 @@ mod tests {
 
         let (feature, closest_point) = tri.closest_point(&test_point);
 
-        assert!(matches!(feature, Feature::VERTEX(_)));
+        assert!(matches!(feature, TriangleFeature::VERTEX(_)));
         assert!(closest_point.distance_to_vec3(&v1).abs() < f64::epsilon());
     }
 
@@ -299,7 +321,7 @@ mod tests {
 
         let (feature, closest_point) = tri.closest_point(&test_point);
 
-        assert!(matches!(feature, Feature::VERTEX(_)));
+        assert!(matches!(feature, TriangleFeature::VERTEX(_)));
         assert!(closest_point.distance_to_vec3(&v2).abs() < f64::epsilon());
     }
 
@@ -315,7 +337,7 @@ mod tests {
 
         let (feature, closest_point) = tri.closest_point(&test_point);
 
-        assert!(matches!(feature, Feature::VERTEX(_)));
+        assert!(matches!(feature, TriangleFeature::VERTEX(_)));
         assert!(closest_point.distance_to_vec3(&v3).abs() < f64::epsilon());
     }
 }

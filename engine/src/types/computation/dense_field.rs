@@ -80,7 +80,7 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
     fn neighbours_sum(&self, index: usize) -> Option<T> {
         let (i, j, k) = self.point_index3d(index);
 
-        if i < 1 || j < 1 || k < 1 || i == self.n.x - 1 || j == self.n.y - 1 || k == self.n.z - 1 {
+        if i < 1 || j < 1 || k < 1 || i == self.n.i - 1 || j == self.n.j - 1 || k == self.n.k - 1 {
             return None;
         }
         Some(
@@ -95,7 +95,7 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
 
     fn cell_ids(&self, i: usize, j: usize, k: usize) -> [usize; 8] {
         // Get the ids of the vertices at a certain cell
-        if !i < self.n.x - 1 || !j < self.n.y - 1 || !k < self.n.z - 1 {
+        if !i < self.n.i - 1 || !j < self.n.j - 1 || !k < self.n.k - 1 {
             panic!("Index out of bounds");
         }
         [
@@ -183,27 +183,27 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
     }
 
     pub fn point_index1d(&self, i: usize, j: usize, k: usize) -> usize {
-        index1d_from_index3d(i, j, k, self.n.x, self.n.y, self.n.z)
+        index1d_from_index3d(i, j, k, self.n.i, self.n.j, self.n.k)
     }
 
     pub fn point_index3d(&self, index: usize) -> (usize, usize, usize) {
-        index3d_from_index1d(index, self.n.x, self.n.y, self.n.z)
+        index3d_from_index1d(index, self.n.i, self.n.j, self.n.k)
     }
 
     pub fn cell_index1d(&self, i: usize, j: usize, k: usize) -> usize {
-        index1d_from_index3d(i, j, k, self.n.x - 1, self.n.y - 1, self.n.z - 1)
+        index1d_from_index3d(i, j, k, self.n.i - 1, self.n.j - 1, self.n.k - 1)
     }
 
     pub fn cell_index3d(&self, index: usize) -> (usize, usize, usize) {
-        index3d_from_index1d(index, self.n.x - 1, self.n.y - 1, self.n.z - 1)
+        index3d_from_index1d(index, self.n.i - 1, self.n.j - 1, self.n.k - 1)
     }
 
     pub fn num_points(&self) -> usize {
-        self.n.x * self.n.y * self.n.z
+        self.n.product()
     }
 
     pub fn num_cells(&self) -> usize {
-        (self.n.x - 1) * (self.n.y - 1) * (self.n.z - 1)
+        (self.n.i - 1) * (self.n.j - 1) * (self.n.k - 1)
     }
 
     pub fn copy_data(&self) -> Vec<T> {

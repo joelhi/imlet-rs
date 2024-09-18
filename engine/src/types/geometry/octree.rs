@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use log::{debug, info};
+use log::debug;
 use num_traits::Float;
 
 use super::{

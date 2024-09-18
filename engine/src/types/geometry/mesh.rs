@@ -14,12 +14,14 @@ use std::fmt::Debug;
 use std::time::Instant;
 use std::usize;
 
+/// Indexed triangle mesh.
 pub struct Mesh<T: Float + Debug> {
     vertices: Vec<Vec3<T>>,
     faces: Vec<[usize; 3]>,
     normals: Option<Vec<Vec3<T>>>,
 }
 
+/// Create a new empty mesh
 impl<T: Float + Debug + Send + Sync> Mesh<T> {
     pub fn new() -> Mesh<T> {
         Mesh {
@@ -29,6 +31,8 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         }
     }
 
+    /// Create a indexed mesh from a list of triangle objects.
+    /// * `triangles` - slice of triangles to create mesh from.
     pub fn from_triangles(triangles: &[Triangle<T>]) -> Mesh<T> {
         let before = Instant::now();
         let mut faces: Vec<[usize; 3]> = Vec::new();
@@ -65,26 +69,34 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         mesh
     }
 
+    /// Add vertices to the vertex list of the mesh
+    /// * `vertices` - Slice of vertices to be added.
     pub fn add_vertices(&mut self, vertices: &[Vec3<T>]) {
         self.vertices.extend_from_slice(vertices);
     }
 
+    /// Add faces to the face list of the mesh
+    /// * `faces` - Slice of faces to be added.
     pub fn add_faces(&mut self, faces: &[[usize; 3]]) {
         self.faces.extend_from_slice(faces);
     }
 
+    /// Returns the vertices of the mesh
     pub fn vertices(&self) -> &Vec<Vec3<T>> {
         &self.vertices
     }
 
+    /// Returns the faces of the mesh.
     pub fn faces(&self) -> &Vec<[usize; 3]> {
         &self.faces
     }
 
+    /// Returns the optional vertex normals of the mesh.
     pub fn normals(&self) -> Option<&Vec<Vec3<T>>> {
         self.normals.as_ref()
     }
 
+    /// Returns the unique edges of the mesh.
     pub fn edges(&self) -> Vec<Line<T>> {
         let mut edges: Vec<Line<T>> = Vec::with_capacity(self.num_faces());
         for f in self.faces.iter() {
@@ -95,14 +107,17 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         edges
     }
 
+    /// Total number of vertices
     pub fn num_vertices(&self) -> usize {
         self.vertices.len()
     }
 
+    /// Total number of faces
     pub fn num_faces(&self) -> usize {
         self.faces.len()
     }
 
+    /// Computes the average of all mesh vertices.
     pub fn centroid(&self) -> Vec3<T> {
         let mut centroid: Vec3<T> = Vec3::origin();
 
@@ -113,6 +128,7 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         centroid * T::from(1.0 / self.num_vertices() as f64).expect("Failed to convert number to T")
     }
 
+    /// Bounding box of mesh in global coordinates.
     pub fn bounds(&self) -> BoundingBox<T> {
         let mut max = Vec3::new(-T::max_value(), -T::max_value(), -T::max_value());
         let mut min = Vec3::new(T::max_value(), T::max_value(), T::max_value());
@@ -130,6 +146,7 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         BoundingBox::new(min, max)
     }
 
+    /// Computes and stores the vertex normals using an angle weighted average of the incident faces.
     pub fn compute_vertex_normals(&mut self) {
         let before = Instant::now();
 
@@ -154,7 +171,7 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         );
     }
 
-    pub fn compute_face_normals(&self) -> Vec<Vec3<T>> {
+    pub(crate) fn compute_face_normals(&self) -> Vec<Vec3<T>> {
         self.faces
             .par_iter()
             .map(|f| {
@@ -165,7 +182,7 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
             .collect()
     }
 
-    pub fn compute_vertex_faces(&self) -> Vec<Vec<usize>> {
+    pub(crate) fn compute_vertex_faces(&self) -> Vec<Vec<usize>> {
         let mut vertex_faces = vec![Vec::with_capacity(12); self.num_vertices()];
         self.faces.iter().enumerate().for_each(|(id, f)| {
             vertex_faces[f[0]].push(id);
@@ -198,9 +215,10 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         }
     }
 
-    pub fn to_f32(&self) -> Mesh<f32> {
-        let converted_v: Vec<Vec3<f32>> = self.vertices.iter().map(|v| v.to_f32()).collect();
-        let mut m = Mesh::<f32>::new();
+    /// Convert the vertex data type from the current type to a new type Q.
+    pub fn convert<Q: Float + Debug + Send + Sync>(&self) -> Mesh<Q> {
+        let converted_v: Vec<Vec3<Q>> = self.vertices.iter().map(|v| v.convert::<Q>()).collect();
+        let mut m = Mesh::<Q>::new();
 
         m.add_vertices(&converted_v);
         m.add_faces(&self.faces);
@@ -209,6 +227,7 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         m
     }
 
+    /// Convert the mesh into a list of triangles. The triangles will store the mesh vertex normals if present.
     pub fn as_triangles(&self) -> Vec<Triangle<T>> {
         let mut triangles: Vec<Triangle<T>> = Vec::with_capacity(self.num_faces());
         for face in self.faces.iter() {
@@ -217,7 +236,7 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
             } else {
                 None
             };
-            triangles.push(Triangle::with_normals_option(
+            triangles.push(Triangle::with_normals(
                 self.vertices[face[0]],
                 self.vertices[face[1]],
                 self.vertices[face[2]],
@@ -227,6 +246,9 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         triangles
     }
 
+    /// Compute an octree from the triangles of the mesh.
+    /// * `max_depth` - Maximum allowed recursive depth when constructing the tree.
+    /// * `max_triangles` - Maximum number of triangles per leaf node.
     pub fn compute_octree(
         &self,
         max_depth: u32,

@@ -54,11 +54,11 @@ impl<'a, T: Float + Debug + Send + Sync> ComputationGraph<'a, T> {
         let before = Instant::now();
         let n = Self::point_count(&bounds, cell_size);
 
-        log::info!("Evaluating model with {}x{}x{} points", n.x, n.y, n.z);
+        log::info!("Evaluating model with {}x{}x{} points", n.i, n.j, n.k);
 
-        let mut data: Vec<T> = vec![T::zero(); n.x * n.y * n.z];
+        let mut data: Vec<T> = vec![T::zero(); n.i * n.j * n.k];
         data.par_iter_mut().enumerate().for_each(|(index, value)| {
-            let (i, j, k) = index3d_from_index1d(index, n.x, n.y, n.z);
+            let (i, j, k) = index3d_from_index1d(index, n.i, n.j, n.k);
             *value = self.evaluate_at_coord(
                 bounds.min.x + cell_size * T::from(i).expect("Failed to convert number to T"),
                 bounds.min.y + cell_size * T::from(j).expect("Failed to convert number to T"),
@@ -68,7 +68,7 @@ impl<'a, T: Float + Debug + Send + Sync> ComputationGraph<'a, T> {
 
         log::info!(
             "Dense value buffer for {} points generated in {:.2?}",
-            n.x * n.y * n.z,
+            n.i * n.j * n.k,
             before.elapsed()
         );
 
