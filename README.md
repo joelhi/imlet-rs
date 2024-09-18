@@ -61,9 +61,10 @@ fn main() {
 - [x] Update README with detailed examples and usage instructions.
 - [x] Improve SDF (Signed Distance Function) computation, addressing issues with leaking and pseudonormals.
 - [ ] More measured and intentional error handling using Result<> in various parts of the code, to make use easier and remove panics
+- [ ] Clean up trait bounds across all structs, so they are only specified where needed.
 - [ ] Implement serialization for models, potentially using sealed traits (?).
-- [ ] Integrate [Rhai](https://rhai.rs/), a scripting language for Rust, for enhanced customization.
-- [ ] Enhance the viewer with interactive buttons and runtime script loading.
+- [ ] Integrate [Rhai](https://rhai.rs/), or other scripting language for Rust, for enhanced customization.
+- [ ] Enhance the viewer with interactive buttons and runtime script loading (Use bevy?).
 
 ### Future Enhancements
 - [ ] Enable GPU-based computation for faster processing. (For example using [CubeCL](https://github.com/tracel-ai/cubecl))
