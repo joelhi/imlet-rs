@@ -10,7 +10,7 @@ use crate::{
 
 use super::{
     component::{Component, ComponentId, ComponentValues},
-    DenseField,
+    ScalarField,
 };
 
 pub struct ComputationGraph<'a, T: Float + Debug + Send + Sync> {
@@ -50,7 +50,7 @@ impl<'a, T: Float + Debug + Send + Sync> ComputationGraph<'a, T> {
         })
     }
 
-    pub fn evaluate(&self, bounds: &BoundingBox<T>, cell_size: T) -> DenseField<T> {
+    pub fn evaluate(&self, bounds: &BoundingBox<T>, cell_size: T) -> ScalarField<T> {
         let before = Instant::now();
         let n = Self::point_count(&bounds, cell_size);
 
@@ -72,7 +72,7 @@ impl<'a, T: Float + Debug + Send + Sync> ComputationGraph<'a, T> {
             before.elapsed()
         );
 
-        DenseField::with_data(bounds.min, cell_size, n, data)
+        ScalarField::with_data(bounds.min, cell_size, n, data)
     }
 
     fn point_count(bounds: &BoundingBox<T>, cell_size: T) -> Vec3i {

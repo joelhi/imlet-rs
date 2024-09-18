@@ -18,7 +18,6 @@ pub struct Triangle<T: Float + Debug> {
 }
 
 impl<T: Float + Debug> Triangle<T> {
-
     /// Create a new Triangle from three vertices with no normals.
     /// * `p1` - First vertex.
     /// * `p2` - Second vertex.
@@ -43,12 +42,7 @@ impl<T: Float + Debug> Triangle<T> {
     /// * `p2` - Second vertex.
     /// * `p3` - Third vertex.
     /// * `n` - Array with normals for each vertex if applicable.
-    pub fn with_normals(
-        p1: Vec3<T>,
-        p2: Vec3<T>,
-        p3: Vec3<T>,
-        n: Option<[Vec3<T>; 3]>,
-    ) -> Self {
+    pub fn with_normals(p1: Vec3<T>, p2: Vec3<T>, p3: Vec3<T>, n: Option<[Vec3<T>; 3]>) -> Self {
         Self {
             p: [p1, p2, p3],
             n: n,
@@ -116,7 +110,7 @@ impl<T: Float + Debug> Triangle<T> {
     }
 
     /// Compute the closest point on the triangle and at what triangle feature it is located from.
-    /// 
+    ///
     /// See [`TriangleFeature`] for info on the feature classification.
     /// * `query_point` - Point to compute the closest point from.
     pub fn closest_point(&self, query_point: &Vec3<T>) -> (TriangleFeature, Vec3<T>) {

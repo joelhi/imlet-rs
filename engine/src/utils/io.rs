@@ -8,11 +8,11 @@ use std::{
 use num_traits::Float;
 
 use crate::types::{
-    computation::DenseField,
+    computation::ScalarField,
     geometry::{Mesh, Vec3},
 };
 
-pub fn mesh_to_obj<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> String {
+pub(crate) fn mesh_to_obj<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> String {
     let mut data = String::new();
 
     for &v in mesh.vertices() {
@@ -132,7 +132,7 @@ pub fn parse_obj_file<T: Float + Debug + Send + Sync>(
 }
 
 pub fn write_field_csv<T: Float + Debug + Send + Sync>(
-    field: &DenseField<T>,
+    field: &ScalarField<T>,
     file_name: &str,
 ) -> io::Result<()> {
     let file_path = Path::new(file_name).with_extension("csv");
@@ -141,7 +141,7 @@ pub fn write_field_csv<T: Float + Debug + Send + Sync>(
     Ok(())
 }
 
-fn field_as_data<T: Float + Debug + Send + Sync>(field: &DenseField<T>) -> String {
+fn field_as_data<T: Float + Debug + Send + Sync>(field: &ScalarField<T>) -> String {
     let mut data = String::new();
     data.push_str("x, y, z, v\n");
     for (idx, v) in field.data().iter().enumerate() {

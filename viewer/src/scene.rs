@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use imlet_engine::{
     algorithms::marching_cubes::generate_iso_surface,
     types::{
-        computation::{DenseField, ImplicitModel},
+        computation::{ImplicitModel, ScalarField},
         geometry::{BoundingBox, Line, Mesh},
     },
 };
@@ -72,7 +72,7 @@ pub struct ModelData<T: Float + Debug + Send + Sync> {
     model: ImplicitModel<T>,
     bounds: BoundingBox<T>,
     output: String,
-    data: Option<DenseField<T>>,
+    data: Option<ScalarField<T>>,
 }
 
 impl<T: Float + Debug + Send + Sync> ModelData<T> {
@@ -89,7 +89,7 @@ impl<T: Float + Debug + Send + Sync> ModelData<T> {
         &self.bounds
     }
 
-    pub fn data(&self) -> &Option<DenseField<T>> {
+    pub fn data(&self) -> &Option<ScalarField<T>> {
         &self.data
     }
 

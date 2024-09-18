@@ -9,7 +9,6 @@ pub struct Vec3i {
 }
 
 impl Vec3i {
-
     /// Create a new Vec3i from three indexes.
     /// * `i` - First index.
     /// * `j` - Second index.

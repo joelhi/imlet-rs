@@ -8,7 +8,7 @@ use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 use std::time::Instant;
 
-use super::DenseField;
+use super::ScalarField;
 
 pub struct ImplicitModel<T: Float + Debug> {
     components: HashMap<String, Component<T>>,
@@ -158,7 +158,7 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         output: &str,
         bounds: &BoundingBox<T>,
         cell_size: T,
-    ) -> DenseField<T> {
+    ) -> ScalarField<T> {
         let computation_graph = self.compile(output);
         computation_graph.evaluate(&bounds, cell_size)
     }

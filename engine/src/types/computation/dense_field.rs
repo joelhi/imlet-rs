@@ -13,16 +13,17 @@ use crate::types::geometry::Vec3i;
 use crate::utils::math_helper::index1d_from_index3d;
 use crate::utils::math_helper::index3d_from_index1d;
 
+/// 3-dimensional field for scalar values.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DenseField<T: Float + Debug> {
+pub struct ScalarField<T: Float + Debug> {
     origin: Vec3<T>,
     cell_size: T,
     n: Vec3i,
     data: Vec<T>,
 }
 
-impl<T: Float + Debug + Send + Sync> DenseField<T> {
-    pub fn with_data(origin: Vec3<T>, cell_size: T, num_pts: Vec3i, data: Vec<T>) -> Self {
+impl<T: Float + Debug + Send + Sync> ScalarField<T> {
+    pub(crate) fn with_data(origin: Vec3<T>, cell_size: T, num_pts: Vec3i, data: Vec<T>) -> Self {
         if num_pts.product() != data.len() {
             panic!("Incorrect size of data buffer");
         }
@@ -34,6 +35,10 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
         }
     }
 
+    /// Create a new empty field.
+    /// * `origin` - The base of the field, and the first data location.
+    /// * `cell_size` - The size of each cell in the field.
+    /// * `num_pts` - Number of points in each direction.
     pub fn new(origin: Vec3<T>, cell_size: T, num_pts: Vec3i) -> Self {
         Self {
             origin: origin,
@@ -43,54 +48,34 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
         }
     }
 
-    pub fn smooth(&mut self, factor: T, iterations: u32) {
-        let before = Instant::now();
-        let mut smoothed = vec![T::zero(); self.num_points()];
-        for _ in 0..iterations {
-            smoothed
-                .par_iter_mut()
-                .enumerate()
-                .for_each(|(index, val)| {
-                    if let Some(sum) = self.neighbours_sum(index) {
-                        let laplacian = sum / T::from(6.0).expect("Failed to convert number to T");
-                        *val = (T::one() - factor) * self.data[index] + factor * laplacian;
-                    } else {
-                        *val = self.data[index];
-                    };
-                });
-            std::mem::swap(&mut self.data, &mut smoothed);
-        }
-
-        log::info!(
-            "Dense value data for {} points smoothed in {:.2?} for {} iterations",
-            self.num_points(),
-            before.elapsed(),
-            iterations
-        );
+    /// Returns the origin of the field.
+    pub fn origin(&self) -> &Vec3<T> {
+        &self.origin
     }
 
-    pub fn threshold(&mut self, limit: T) {
-        self.data.iter_mut().for_each(|value| {
-            if *value < limit {
-                *value = T::zero();
-            }
-        });
+    /// Returns the cell size of the field.
+    pub fn cell_size(&self) -> T {
+        self.cell_size
     }
 
-    fn neighbours_sum(&self, index: usize) -> Option<T> {
-        let (i, j, k) = self.point_index3d(index);
+    /// Returns the totla number of points in the field.
+    pub fn num_points(&self) -> usize {
+        self.n.product()
+    }
 
-        if i < 1 || j < 1 || k < 1 || i == self.n.i - 1 || j == self.n.j - 1 || k == self.n.k - 1 {
-            return None;
-        }
-        Some(
-            self.data[self.point_index1d(i + 1, j, k)]
-                + self.data[self.point_index1d(i - 1, j, k)]
-                + self.data[self.point_index1d(i, j + 1, k)]
-                + self.data[self.point_index1d(i, j - 1, k)]
-                + self.data[self.point_index1d(i, j, k + 1)]
-                + self.data[self.point_index1d(i, j, k - 1)],
-        )
+    /// Returns the total number of cells in the field.
+    pub fn num_cells(&self) -> usize {
+        (self.n.i - 1) * (self.n.j - 1) * (self.n.k - 1)
+    }
+
+    /// Returns a copy of the data buffer in the field.
+    pub fn copy_data(&self) -> Vec<T> {
+        self.data.clone()
+    }
+
+    /// Returns a slice of the data buffer in the field.
+    pub fn data(&self) -> &[T] {
+        &self.data
     }
 
     fn cell_ids(&self, i: usize, j: usize, k: usize) -> [usize; 8] {
@@ -168,6 +153,10 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
         ]
     }
 
+    /// Returns the values at the corners of the specified cell.
+    /// * `i` - Index in first direction.
+    /// * `j` - Index in second direction.
+    /// * `k` - Index in third direction.
     pub fn cell_values(&self, i: usize, j: usize, k: usize) -> [T; 8] {
         let cell_ids = self.cell_ids(i, j, k);
         [
@@ -182,44 +171,73 @@ impl<T: Float + Debug + Send + Sync> DenseField<T> {
         ]
     }
 
-    pub fn point_index1d(&self, i: usize, j: usize, k: usize) -> usize {
+    /// Performs a laplacian smoothing operation on the field data.
+    ///
+    /// The value of each point will be updated based on the average of the adjacent points.
+    /// * `factor` - Interpolation value between the average of the adjacent points and the current value.
+    /// * `iterations` - Number of successive smoothing iterations.
+    pub fn smooth(&mut self, factor: T, iterations: u32) {
+        let before = Instant::now();
+        let mut smoothed = vec![T::zero(); self.num_points()];
+        for _ in 0..iterations {
+            smoothed
+                .par_iter_mut()
+                .enumerate()
+                .for_each(|(index, val)| {
+                    if let Some(sum) = self.neighbours_sum(index) {
+                        let laplacian = sum / T::from(6.0).expect("Failed to convert number to T");
+                        *val = (T::one() - factor) * self.data[index] + factor * laplacian;
+                    } else {
+                        *val = self.data[index];
+                    };
+                });
+            std::mem::swap(&mut self.data, &mut smoothed);
+        }
+
+        log::info!(
+            "Dense value data for {} points smoothed in {:.2?} for {} iterations",
+            self.num_points(),
+            before.elapsed(),
+            iterations
+        );
+    }
+
+    /// Assigns 0 to any value with an absolute value below the limit.
+    /// * `limit` - The limit threshold for non-zero values.
+    pub fn threshold(&mut self, limit: T) {
+        self.data.iter_mut().for_each(|value| {
+            if (*value).abs() < limit {
+                *value = T::zero();
+            }
+        });
+    }
+
+    fn neighbours_sum(&self, index: usize) -> Option<T> {
+        let (i, j, k) = self.point_index3d(index);
+
+        if i < 1 || j < 1 || k < 1 || i == self.n.i - 1 || j == self.n.j - 1 || k == self.n.k - 1 {
+            return None;
+        }
+        Some(
+            self.data[self.point_index1d(i + 1, j, k)]
+                + self.data[self.point_index1d(i - 1, j, k)]
+                + self.data[self.point_index1d(i, j + 1, k)]
+                + self.data[self.point_index1d(i, j - 1, k)]
+                + self.data[self.point_index1d(i, j, k + 1)]
+                + self.data[self.point_index1d(i, j, k - 1)],
+        )
+    }
+
+    pub(crate) fn point_index1d(&self, i: usize, j: usize, k: usize) -> usize {
         index1d_from_index3d(i, j, k, self.n.i, self.n.j, self.n.k)
     }
 
-    pub fn point_index3d(&self, index: usize) -> (usize, usize, usize) {
+    pub(crate) fn point_index3d(&self, index: usize) -> (usize, usize, usize) {
         index3d_from_index1d(index, self.n.i, self.n.j, self.n.k)
     }
 
-    pub fn cell_index1d(&self, i: usize, j: usize, k: usize) -> usize {
-        index1d_from_index3d(i, j, k, self.n.i - 1, self.n.j - 1, self.n.k - 1)
-    }
-
-    pub fn cell_index3d(&self, index: usize) -> (usize, usize, usize) {
+    pub(crate) fn cell_index3d(&self, index: usize) -> (usize, usize, usize) {
         index3d_from_index1d(index, self.n.i - 1, self.n.j - 1, self.n.k - 1)
-    }
-
-    pub fn num_points(&self) -> usize {
-        self.n.product()
-    }
-
-    pub fn num_cells(&self) -> usize {
-        (self.n.i - 1) * (self.n.j - 1) * (self.n.k - 1)
-    }
-
-    pub fn copy_data(&self) -> Vec<T> {
-        self.data.clone()
-    }
-
-    pub fn data(&self) -> &[T] {
-        &self.data
-    }
-
-    pub fn origin(&self) -> &Vec3<T> {
-        &self.origin
-    }
-
-    pub fn cell_size(&self) -> T {
-        self.cell_size
     }
 }
 
@@ -231,7 +249,7 @@ mod tests {
     fn test_smooth_field_half() {
         let mut data = vec![1.0; 27];
         data[13] = 2.0;
-        let mut field = DenseField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field = ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
         field.smooth(0.5, 1);
 
         let field_data = field.copy_data();
@@ -249,7 +267,7 @@ mod tests {
     fn test_smooth_field_full() {
         let mut data = vec![1.0; 27];
         data[13] = 2.0;
-        let mut field = DenseField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field = ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
         field.smooth(1.0, 1);
 
         let field_data = field.copy_data();
@@ -268,7 +286,7 @@ mod tests {
         data[14] = 20.0;
         data[16] = 15.0;
         data[22] = 20.0;
-        let mut field = DenseField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field = ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
         field.smooth(1.0, 1);
 
         let field_data = field.copy_data();
@@ -284,7 +302,7 @@ mod tests {
         data[14] = 20.0;
         data[16] = 15.0;
         data[22] = 20.0;
-        let mut field = DenseField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field = ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
         field.smooth(0.5, 1);
 
         let field_data = field.copy_data();
@@ -298,7 +316,7 @@ mod tests {
         data[20] = 1.0;
         data[21] = 1.5;
 
-        let mut field = DenseField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field = ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
         field.threshold(0.1);
 
         let field_data = field.copy_data();
@@ -311,7 +329,7 @@ mod tests {
 
     #[test]
     fn test_map_cell_index_cube() {
-        let field = DenseField::new(Vec3::origin(), 1.0, (10, 10, 10).into());
+        let field = ScalarField::new(Vec3::origin(), 1.0, (10, 10, 10).into());
 
         assert_eq!(1, field.cell_index1d(1, 0, 0));
         assert_eq!(9, field.cell_index1d(0, 1, 0));
@@ -323,7 +341,7 @@ mod tests {
 
     #[test]
     fn test_map_point_index() {
-        let field = DenseField::new(Vec3::origin(), 1.0, (10, 10, 10).into());
+        let field = ScalarField::new(Vec3::origin(), 1.0, (10, 10, 10).into());
 
         assert_eq!(1, field.point_index1d(1, 0, 0));
         assert_eq!(10, field.point_index1d(0, 1, 0));

@@ -19,7 +19,6 @@ where
 }
 
 impl<T: Float + Debug> Vec3<T> {
-
     /// Create a new Vec3 from coordinates.
     /// * `x` - X coordinate.
     /// * `y` - Y coordinate.
@@ -106,7 +105,7 @@ impl<T: Float + Debug> Vec3<T> {
     }
 
     /// Computes the dot product between two Vec3 values.
-    /// 
+    ///
     /// (x_1 * x_2) + (y_1 * y_2) + (z_1 * z_2)
     /// * `rhs` - Vec to compute dot product with.
     pub fn dot(&self, rhs: &Vec3<T>) -> T {
@@ -114,7 +113,7 @@ impl<T: Float + Debug> Vec3<T> {
     }
 
     /// Computes the dot product between a Vec3 and a vector defined by three coordinates.
-    /// 
+    ///
     /// (x_1 * x) + (y_1 * y) + (z_1 * z)
     /// * `x` - X coordinate.
     /// * `y` - Y coordinate.
@@ -168,7 +167,7 @@ impl<T: Float + Debug> Vec3<T> {
     }
 
     /// Compute the [Spherical Linear Interpolation](https://en.wikipedia.org/wiki/Slerp) of two vectors.
-    /// 
+    ///
     /// *This performs a constant-speed motion along a unit-radius great circle arc, given the ends and an interpolation parameter between 0 and 1*
     /// * `start` - Vec to interpolate from.
     /// * `end` - Vec to interpolate to.
