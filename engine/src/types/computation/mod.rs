@@ -1,7 +1,7 @@
 mod component;
 mod computation_graph;
-mod dense_field;
 mod implicit_model;
+mod scalar_field;
 
 /// Various distance functions, including Triply-Periodic suraces (TPS) and primitives.
 pub mod distance_functions;
@@ -11,5 +11,5 @@ pub mod operations;
 pub mod traits;
 
 pub(crate) use computation_graph::*;
-pub use dense_field::*;
 pub use implicit_model::*;
+pub use scalar_field::*;
