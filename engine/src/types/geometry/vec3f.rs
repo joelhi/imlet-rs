@@ -20,6 +20,8 @@ where
 
 impl<T: Float + Debug> Vec3<T> {
     /// Create a new Vec3 from coordinates.
+    /// # Arguments
+    /// 
     /// * `x` - X coordinate.
     /// * `y` - Y coordinate.
     /// * `z` - Z coordinate.
@@ -28,12 +30,16 @@ impl<T: Float + Debug> Vec3<T> {
     }
 
     /// Compute the euclidian distance to another Vec3.
+    /// 
+    /// # Arguments
     /// * `pt` - Other point to compute distance to.
     pub fn distance_to_vec3(&self, pt: &Vec3<T>) -> T {
         self.distance_to_vec3_squared(&pt).sqrt()
     }
 
     /// Compute the euclidian distance to a location defined by x, y and z coordinates.
+    /// 
+    /// # Arguments
     /// * `x` - X coordinate.
     /// * `y` - Y coordinate.
     /// * `z` - Z coordinate.
@@ -42,12 +48,16 @@ impl<T: Float + Debug> Vec3<T> {
     }
 
     /// Compute the euclidian squared distance to another Vec3.
+    /// 
+    /// # Arguments
     /// * `pt` - Other point to compute distance to.
     pub fn distance_to_vec3_squared(&self, pt: &Vec3<T>) -> T {
         self.distance_to_coord_squared(pt.x, pt.y, pt.z)
     }
 
     /// Compute the euclidian squared distance to a location defined by x, y and z coordinates.
+    /// 
+    /// # Arguments
     /// * `x` - X coordinate.
     /// * `y` - Y coordinate.
     /// * `z` - Z coordinate.
@@ -92,6 +102,8 @@ impl<T: Float + Debug> Vec3<T> {
     }
 
     /// Computes a linear interpolaton between two Vec3 values.
+    /// 
+    /// # Arguments
     /// * `start` - Vec to interpolate from.
     /// * `end` - Vec to interpolate to.
     /// * `t` - Parameter value, clamped between [0, 1].
@@ -107,6 +119,8 @@ impl<T: Float + Debug> Vec3<T> {
     /// Computes the dot product between two Vec3 values.
     ///
     /// (x_1 * x_2) + (y_1 * y_2) + (z_1 * z_2)
+    /// 
+    /// # Arguments
     /// * `rhs` - Vec to compute dot product with.
     pub fn dot(&self, rhs: &Vec3<T>) -> T {
         (self.x * rhs.x) + (self.y * rhs.y) + (self.z * rhs.z)
@@ -115,6 +129,8 @@ impl<T: Float + Debug> Vec3<T> {
     /// Computes the dot product between a Vec3 and a vector defined by three coordinates.
     ///
     /// (x_1 * x) + (y_1 * y) + (z_1 * z)
+    /// 
+    /// # Arguments
     /// * `x` - X coordinate.
     /// * `y` - Y coordinate.
     /// * `z` - Z coordinate.
@@ -123,6 +139,8 @@ impl<T: Float + Debug> Vec3<T> {
     }
 
     /// Computes the cross product between two Vec3 values.
+    /// # Arguments
+    /// 
     /// * `rhs` - Vec to compute cross product with.
     pub fn cross(&self, rhs: &Vec3<T>) -> Vec3<T> {
         Self {
@@ -133,6 +151,8 @@ impl<T: Float + Debug> Vec3<T> {
     }
 
     /// Computes the cangle between two Vec3 values.
+    /// # Arguments
+    /// 
     /// * `rhs` - Vec to compute angle with.
     pub fn angle(&self, rhs: &Vec3<T>) -> Option<T> {
         let dot = self.dot(rhs);
@@ -152,6 +172,8 @@ impl<T: Float + Debug> Vec3<T> {
     }
 
     /// Scale the magnitude of a vector with a scalar value.
+    /// # Arguments
+    /// 
     /// * `scalar` - Scale factor.
     pub fn scale(self, scalar: T) -> Vec3<T> {
         Vec3 {
@@ -169,6 +191,8 @@ impl<T: Float + Debug> Vec3<T> {
     /// Compute the [Spherical Linear Interpolation](https://en.wikipedia.org/wiki/Slerp) of two vectors.
     ///
     /// *This performs a constant-speed motion along a unit-radius great circle arc, given the ends and an interpolation parameter between 0 and 1*
+    /// # Arguments
+    /// 
     /// * `start` - Vec to interpolate from.
     /// * `end` - Vec to interpolate to.
     /// * `t` - Parameter value, clamped between [0, 1].
@@ -193,7 +217,7 @@ impl<T: Float + Debug> Vec3<T> {
         start.scale(a) + end.scale(b)
     }
 
-    /// Convert the internal data type to a new type Q.
+    /// Convert the internal data type to a new type *Q*.
     pub fn convert<Q: Float + Debug>(&self) -> Vec3<Q> {
         Vec3::new(
             Q::from(self.x).expect(&format!(

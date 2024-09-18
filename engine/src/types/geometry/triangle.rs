@@ -19,9 +19,15 @@ pub struct Triangle<T: Float + Debug> {
 
 impl<T: Float + Debug> Triangle<T> {
     /// Create a new Triangle from three vertices with no normals.
+    /// # Arguments
+    /// 
     /// * `p1` - First vertex.
     /// * `p2` - Second vertex.
     /// * `p3` - Third vertex.
+    /// 
+    /// # Returns
+    /// 
+    ///  
     pub fn new(p1: Vec3<T>, p2: Vec3<T>, p3: Vec3<T>) -> Self {
         Self {
             p: [p1, p2, p3],
@@ -38,6 +44,8 @@ impl<T: Float + Debug> Triangle<T> {
     }
 
     /// Create a new Triangle from three vertices with no normals.
+    /// # Arguments
+    /// 
     /// * `p1` - First vertex.
     /// * `p2` - Second vertex.
     /// * `p3` - Third vertex.
@@ -112,6 +120,8 @@ impl<T: Float + Debug> Triangle<T> {
     /// Compute the closest point on the triangle and at what triangle feature it is located from.
     ///
     /// See [`TriangleFeature`] for info on the feature classification.
+    /// # Arguments
+    /// 
     /// * `query_point` - Point to compute the closest point from.
     pub fn closest_point(&self, query_point: &Vec3<T>) -> (TriangleFeature, Vec3<T>) {
         let eps = T::from(1e-7).unwrap();

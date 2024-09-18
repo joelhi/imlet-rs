@@ -36,6 +36,8 @@ impl<T: Float + Debug + Send + Sync> ScalarField<T> {
     }
 
     /// Create a new empty field.
+    /// # Arguments
+    /// 
     /// * `origin` - The base of the field, and the first data location.
     /// * `cell_size` - The size of each cell in the field.
     /// * `num_pts` - Number of points in each direction.
@@ -95,6 +97,12 @@ impl<T: Float + Debug + Send + Sync> ScalarField<T> {
         ]
     }
 
+    /// Returns the vertex locations at the corners of the specified cell.
+    /// # Arguments
+    /// 
+    /// * `i` - Index in first direction.
+    /// * `j` - Index in second direction.
+    /// * `k` - Index in third direction.
     pub fn cell_corners(&self, i: usize, j: usize, k: usize) -> [Vec3<T>; 8] {
         let size = self.cell_size;
         let i_val = T::from(i).expect("Failed to convert number to T");
@@ -154,6 +162,8 @@ impl<T: Float + Debug + Send + Sync> ScalarField<T> {
     }
 
     /// Returns the values at the corners of the specified cell.
+    /// # Arguments
+    /// 
     /// * `i` - Index in first direction.
     /// * `j` - Index in second direction.
     /// * `k` - Index in third direction.
@@ -174,6 +184,8 @@ impl<T: Float + Debug + Send + Sync> ScalarField<T> {
     /// Performs a laplacian smoothing operation on the field data.
     ///
     /// The value of each point will be updated based on the average of the adjacent points.
+    /// # Arguments
+    /// 
     /// * `factor` - Interpolation value between the average of the adjacent points and the current value.
     /// * `iterations` - Number of successive smoothing iterations.
     pub fn smooth(&mut self, factor: T, iterations: u32) {
@@ -203,6 +215,8 @@ impl<T: Float + Debug + Send + Sync> ScalarField<T> {
     }
 
     /// Assigns 0 to any point with an absolute value below the limit.
+    /// # Arguments
+    /// 
     /// * `limit` - The limit threshold for non-zero values.
     pub fn threshold(&mut self, limit: T) {
         self.data.iter_mut().for_each(|value| {
