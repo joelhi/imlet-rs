@@ -16,7 +16,7 @@ pub struct Capsule<T: Float + Debug> {
 impl<T: Float + Debug> Capsule<T> {
     /// Creare a new Capsule.
     /// # Arguments
-    /// 
+    ///
     /// * `start` - Start of line for capsule length.
     /// * `end` - End of line for capsule length.
     /// * `radius` - Capsule radius.

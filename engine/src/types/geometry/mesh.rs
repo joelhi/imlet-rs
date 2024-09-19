@@ -32,7 +32,7 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
     }
 
     /// Create a indexed mesh from a list of triangle objects.
-    /// 
+    ///
     /// # Arguments
     /// * `triangles` - slice of triangles to create mesh from.
     pub fn from_triangles(triangles: &[Triangle<T>]) -> Mesh<T> {
@@ -73,7 +73,7 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
 
     /// Add vertices to the vertex list of the mesh
     /// # Arguments
-    /// 
+    ///
     /// * `vertices` - Slice of vertices to be added.
     pub fn add_vertices(&mut self, vertices: &[Vec3<T>]) {
         self.vertices.extend_from_slice(vertices);
@@ -81,7 +81,7 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
 
     /// Add faces to the face list of the mesh
     /// # Arguments
-    /// 
+    ///
     /// * `faces` - Slice of faces to be added.
     pub fn add_faces(&mut self, faces: &[[usize; 3]]) {
         self.faces.extend_from_slice(faces);
@@ -254,7 +254,7 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
 
     /// Compute an octree from the triangles of the mesh.
     /// # Arguments
-    /// 
+    ///
     /// * `max_depth` - Maximum allowed recursive depth when constructing the tree.
     /// * `max_triangles` - Maximum number of triangles per leaf node.
     pub fn compute_octree(

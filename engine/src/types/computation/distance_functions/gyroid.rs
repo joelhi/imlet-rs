@@ -6,6 +6,9 @@ use crate::{
 };
 use std::fmt::Debug;
 
+/// Function representing an approximate distance function for a gyroid surface.
+///
+/// This fuction is not a perfect distance function, and values deviate slightly from the true distance away from the surface.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Gyroid<T: Pi + Float + Debug> {
     pub length_x: T,
@@ -15,6 +18,13 @@ pub struct Gyroid<T: Pi + Float + Debug> {
 }
 
 impl<T: Pi + Float + Debug> Gyroid<T> {
+    /// Create a new gyroid function with custom period lengths in x, y and z directions.
+    /// # Arguments
+    ///
+    /// * `legth_x` -The length of one period (cell size) in x-direction.
+    /// * `legth_y` -The length of one period (cell size) in y-direction.
+    /// * `legth_z` -The length of one period (cell size) in z-direction.
+    /// * `linear` - The gyrioid function is nonlinear in nature. Use this option to linearize the values.
     pub fn new(length_x: T, length_y: T, length_z: T, linear: bool) -> Self {
         Self {
             length_x: length_x,
@@ -24,6 +34,11 @@ impl<T: Pi + Float + Debug> Gyroid<T> {
         }
     }
 
+    /// Create a new gyroid function with equal period lengths in x, y and z directions.
+    /// # Arguments
+    ///
+    /// * `legth` -The length of one period (cell size) in all directions.
+    /// * `linear` - The gyrioid function is nonlinear in nature. Use this option to linearize the values.
     pub fn with_equal_spacing(length: T, linear: bool) -> Self {
         Self {
             length_x: length,

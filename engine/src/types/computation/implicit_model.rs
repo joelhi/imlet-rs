@@ -27,7 +27,7 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
 
     /// Add a distance function component to the model.
     /// # Arguments
-    /// 
+    ///
     /// * `tag` - The tag of the function component added. This is used to reference the component for input and output assignments.
     /// * `function` - The function to add.
     /// # Returns
@@ -49,7 +49,7 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
 
     /// Add a distance function component to the model.
     /// # Arguments
-    /// 
+    ///
     /// * `tag` - The tag of the operation component added. This is used to reference the component for input and output assignments.
     /// * `operation` - The operation to add.
     /// # Returns
@@ -73,7 +73,7 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
 
     /// Add a operation component to the model, and populate it with inputs.
     /// # Arguments
-    /// 
+    ///
     /// * `tag` - The tag of the operation component added. This is used to reference the component for input and output assignments.
     /// * `function` - The operation to add.
     /// * `inputs` - The tags of the components which provide the inputs. The number of inputs must match the operation added.
@@ -112,7 +112,7 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
 
     /// Add a tagged constant value to the model, which can be processed in other components.
     /// # Arguments
-    /// 
+    ///
     /// * `tag` - The tag of the value component added. This is used to reference the component for input assignments.
     /// * `value` - The constant value.
     /// # Returns
@@ -131,7 +131,7 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
 
     /// Assign an input to a component.
     /// # Arguments
-    /// 
+    ///
     /// * `target` - The tag of the operation which recieves the input.
     /// * `source` - The tag of the output source to feed as input.
     /// * `index` - The input index of the targer to which the output source is assigned.
@@ -165,10 +165,10 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
 
     /// Remove an input from a component. This will leave the specific input parameter unassigned.
     /// # Arguments
-    /// 
+    ///
     /// * `component` - The tag of the operation which recieves the input.
     /// * `index` - The index of the input to unassign.
-    /// 
+    ///
     /// # Returns
     ///      
     /// * `Result<(), String>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is not found in the model.
@@ -210,11 +210,11 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
 
     /// Compute a discrete scalar field from the model.
     /// # Arguments
-    /// 
+    ///
     /// * `output` - The tag of the component for which the output should be stored in the field.
     /// * `bounds` - The domain to compute.
     /// * `cell_size` - The resolution at which the domain is computed.
-    /// 
+    ///
     /// # Returns
     ///      
     /// * `ScalarField<T>` - The scalar field holding the computed data.
@@ -230,11 +230,11 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
 
     /// Extract the iso surface at the zero-level.
     /// # Arguments
-    /// 
+    ///
     /// * `output` - The tag of the component which output should be used for the iso surface extraction.
     /// * `bounds` - The domain to compute.
     /// * `cell_size` - The resolution at which the domain is computed.
-    /// 
+    ///
     /// # Returns
     ///      
     /// * `Mesh<T>` - The iso surface represented as an indexed triangle mesh.
@@ -249,12 +249,12 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
 
     /// Extract the iso surface at a specified level.
     /// # Arguments
-    /// 
+    ///
     /// * `output` - The tag of the component which output should be used for the iso surface extraction.
     /// * `bounds` - The domain to compute.
     /// * `cell_size` - The resolution at which the domain is computed.
     /// * `iso_value` - Specific value at which the iso surface should be extracted.
-    /// 
+    ///
     /// # Returns
     ///      
     /// * `Mesh<T>` - The iso surface represented as an indexed triangle mesh.    

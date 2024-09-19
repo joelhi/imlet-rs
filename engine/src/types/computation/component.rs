@@ -60,7 +60,7 @@ impl ComponentValues {
 #[cfg(test)]
 mod tests {
     use crate::types::{
-        computation::{distance_functions::Sphere, operations::arithmetic::Add},
+        computation::{distance_functions::Sphere, operations::math::Add},
         geometry::Vec3,
     };
 

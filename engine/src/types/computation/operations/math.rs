@@ -5,9 +5,15 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::computation::traits::implicit_functions::ImplicitOperation;
 
+/// Operation to multiply two values -> a*b
+///
+/// This operation takes two inputs.
+/// * First value (a)
+/// * Second value (b)
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Multiply {}
 
+/// Create a new Multiply operator
 impl Multiply {
     pub fn new() -> Self {
         Self {}
@@ -24,10 +30,16 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Multiply {
     }
 }
 
+/// Operation to add two values -> a+b
+///
+/// This operation takes two inputs.
+/// * First value (a)
+/// * Second value (b)
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Add {}
 
 impl Add {
+    /// Create a new Add operation.
     pub fn new() -> Self {
         Self {}
     }
@@ -43,10 +55,16 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Add {
     }
 }
 
+/// Operation to subtract a value from another -> a-b.
+///
+/// This operation takes two inputs.
+/// * First value (a)
+/// * Second value (b)
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Subtract {}
 
 impl Subtract {
+    /// Create a new Subtract operation.
     pub fn new() -> Self {
         Self {}
     }
@@ -62,10 +80,16 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Subtract {
     }
 }
 
+/// Operation to divide a value with another -> a/b.
+///
+/// This operation takes two inputs.
+/// * First value (a)
+/// * Second value (b)
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Divide {}
 
 impl Divide {
+    /// Create a new Divide operation.
     pub fn new() -> Self {
         Self {}
     }
@@ -79,5 +103,34 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Divide {
 
     fn num_inputs(&self) -> usize {
         2
+    }
+}
+
+/// Operation to perform a linear interpolation between two values -> a + t*(b-a).
+///
+/// This operation takes three inptus.
+/// * First value to interpolate (a)
+/// * Second value to interpolate (b)
+/// * Interpolation parameter (t)
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct LinearInterpolation {}
+
+impl LinearInterpolation {
+    /// Create a new LinearInterpolation operation.
+    pub fn new() -> Self {
+        Self {}
+    }
+}
+
+impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for LinearInterpolation {
+    fn eval(&self, inputs: &[T]) -> T {
+        let zero = T::zero();
+        let one = T::one();
+        let t = inputs[2].clamp(zero, one);
+        inputs[0] + t * (inputs[1] - inputs[0])
+    }
+
+    fn num_inputs(&self) -> usize {
+        3
     }
 }

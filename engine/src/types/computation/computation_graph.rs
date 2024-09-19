@@ -111,7 +111,7 @@ mod tests {
     use crate::types::{
         computation::{
             distance_functions::Sphere,
-            operations::{arithmetic::Add, shape::BooleanDifference},
+            operations::{math::Add, shape::BooleanDifference},
         },
         geometry::Vec3,
     };

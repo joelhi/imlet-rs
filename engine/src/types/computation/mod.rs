@@ -3,7 +3,7 @@ mod computation_graph;
 mod implicit_model;
 mod scalar_field;
 
-/// Various distance functions, including Triply-Periodic suraces (TPS) and primitives.
+/// Various distance functions, including Triply-Periodic Surfaces (TPS), primitives and custom meshes.
 pub mod distance_functions;
 /// Operations on implicit data such as basic arithmetic and boolean operations.
 pub mod operations;

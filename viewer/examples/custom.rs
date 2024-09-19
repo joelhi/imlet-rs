@@ -18,7 +18,7 @@ pub fn main() {
 
     // Build model
     let mesh: Mesh<f64> = parse_obj_file(&file_path, false).unwrap();
-    let model_space = mesh.bounds().offset(cell_size);
+    let model_space = mesh.bounds().offset(2.0 * cell_size);
 
     let mut model = ImplicitModel::new();
     model

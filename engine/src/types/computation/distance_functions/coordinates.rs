@@ -13,13 +13,13 @@ pub struct ZCoord<T: Float + Debug> {
     max: T,
 }
 
-impl<T: Float + Debug>  ZCoord<T> {
+impl<T: Float + Debug> ZCoord<T> {
     /// Create a distance function for a remapped z domain.
-    /// 
+    ///
     /// Can be used for interpolation.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `min` - Coordinate value that maps to 0.
     /// * `max` - Coordinate value that maps to 1.
     pub fn remapped(min: T, max: T) -> Self {
@@ -35,7 +35,7 @@ impl<T: Float + Debug>  ZCoord<T> {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for  ZCoord<T> {
+impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for ZCoord<T> {
     fn eval(&self, _: T, _: T, z: T) -> T {
         normalize(z, self.min, self.max)
     }
@@ -50,11 +50,11 @@ pub struct YCoord<T: Float + Debug> {
 
 impl<T: Float + Debug> YCoord<T> {
     /// Create a distance function for a remapped y domain.
-    /// 
+    ///
     /// Can be used for interpolation.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `min` - Coordinate value that maps to 0.
     /// * `max` - Coordinate value that maps to 1.
     pub fn remapped(min: T, max: T) -> Self {
@@ -85,11 +85,11 @@ pub struct XCoord<T: Float + Debug> {
 
 impl<T: Float + Debug> XCoord<T> {
     /// Create a distance function for a remapped x domain.
-    /// 
+    ///
     /// Can be used for interpolation.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `min` - Coordinate value that maps to 0.
     /// * `max` - Coordinate value that maps to 1.
     pub fn remapped(min: T, max: T) -> Self {
