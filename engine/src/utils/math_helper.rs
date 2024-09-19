@@ -15,12 +15,13 @@ impl Pi for f64 {
     }
 }
 
-pub fn normalize<T: Float>(value: T, min: T, max: T) -> T {
+#[inline]
+pub(crate) fn normalize<T: Float>(value: T, min: T, max: T) -> T {
     (value - min) / (max - min)
 }
 
 #[inline]
-pub fn index1d_from_index3d(
+pub(crate) fn index1d_from_index3d(
     i: usize,
     j: usize,
     k: usize,
@@ -36,7 +37,7 @@ pub fn index1d_from_index3d(
 }
 
 #[inline]
-pub fn index3d_from_index1d(
+pub(crate) fn index3d_from_index1d(
     index: usize,
     num_x: usize,
     num_y: usize,
