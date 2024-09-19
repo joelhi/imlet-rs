@@ -1,8 +1,6 @@
 //! # Imlet
 //!
-//! The `Imlet` crate provides a lightweight toolkit for implicit geometry generation.
-//!
-//! This consists of a set of core data structures and algorithms that can be used to define and process implicit geometries.
+//! `Imlet` provides a lightweight toolkit for implicit modeling and geometry generation, written in Rust. It provides tools for creating 3D models defined by spatial functions, offering a set of core data structures and algorithms that can be used to define and process implicit geometries in a modular way.
 //!
 //! ## Overview
 //! 
