@@ -21,9 +21,9 @@ impl<T: Pi + Float + Debug> Gyroid<T> {
     /// Create a new gyroid function with custom period lengths in x, y and z directions.
     /// # Arguments
     ///
-    /// * `legth_x` -The length of one period (cell size) in x-direction.
-    /// * `legth_y` -The length of one period (cell size) in y-direction.
-    /// * `legth_z` -The length of one period (cell size) in z-direction.
+    /// * `length_x` -The length of one period (cell size) in x-direction.
+    /// * `length_y` -The length of one period (cell size) in y-direction.
+    /// * `length_z` -The length of one period (cell size) in z-direction.
     /// * `linear` - The gyrioid function is nonlinear in nature. Use this option to linearize the values.
     pub fn new(length_x: T, length_y: T, length_z: T, linear: bool) -> Self {
         Self {
@@ -37,7 +37,7 @@ impl<T: Pi + Float + Debug> Gyroid<T> {
     /// Create a new gyroid function with equal period lengths in x, y and z directions.
     /// # Arguments
     ///
-    /// * `legth` -The length of one period (cell size) in all directions.
+    /// * `length` -The length of one period (cell size) in all directions.
     /// * `linear` - The gyrioid function is nonlinear in nature. Use this option to linearize the values.
     pub fn with_equal_spacing(length: T, linear: bool) -> Self {
         Self {
