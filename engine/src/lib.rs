@@ -1,16 +1,24 @@
 //! # Imlet
 //!
-//! Imlet is a lightweight toolkit for implicit geometry generation, designed to efficiently handle computational models in Rust.
+//! The `Imlet` crate provides a lightweight toolkit for implicit geometry generation.
 //!
-//! It provides a set of core data structures and algorithms to define and process implicitly defined geometries using computation graphs.
-//! These graphs are composed of components that define relationships between data, allowing complex geometries to be generated from simple mathematical functions.
+//! This consists of a set of core data structures and algorithms that can be used to define and process implicit geometries.
 //!
 //! ## Overview
 //! 
+//! **Features in short:**
+//! * Implicit functions and operations to use out the box
+//! * Interface to build complex implicit models combining various functions with custom processing.
+//! * Set of tools to create and process geometric objects such as `Points`, `Lines` and `Meshes`.
+//! * Import OBJ files and compute signed distance fields from arbitrary meshes.
+//! * Algorithms to evaluate and extract iso surfaces (as triangle meshes) from implcict models at arbitrary resolutions.
+//! * Export OBJ of generated iso surfaces.
+//! * Viewer to show generated geometries with some basic post processing tools (WIP)
+//! 
 //! The primary modules of the crate are [`types::geometry`] and [`types::computation`], which supply the tools needed to define geometric types and build implicit models.
 //!
-//! At the heart of Imlet is the [`types::computation::ImplicitModel`] struct, which serves as the foundation for creating and evaluating computation graphs.
-//! These graphs consist of various components, such as implicit functions, data operations, and constants, which work together to compute scalar values at given points in space.
+//! At the heart of Imlet is the [`types::computation::ImplicitModel`] struct, which serves as the foundation for creating and evaluating the computation graphs used to define compound functions.
+//! This struct exposes the main functions to combine functions and operations into a computation graph, which can then be evaluated in 3d space.
 //!
 //! For detailed information on how these components work and interact, refer to the [`types`] module documentation.
 //!
@@ -44,13 +52,12 @@
 //!}
 //!
 //! ```
-//!This should print *The value is 2* to the terminal.
-//!
-//! This example demonstrates how to:
-//! 1. Create an empty model
-//! 2. Create and add some constant values and add them to the model.
-//! 3. Add a simple operation which reads some component outputs
-//! 4. Evaluate the model at a specific coordinate.
+//! 
+//! This should print 
+//! ```shell
+//! The value is 2
+//! ```
+//! to the terminal.
 //! 
 //! **An Actual Geometry (!)**
 //! 
@@ -99,11 +106,6 @@
 //! }
 //! ```
 //!
-//! This example demonstrates how to:
-//! 1. Define a bounded space for the model.
-//! 2. Create and add implicit functions (a sphere and a gyroid).
-//! 3. Combine those functions using a data operation (intersection).
-//! 4. Generate an isosurface from the model and export it as a 3D mesh.
 
 /// Module with algorithms for iso-surface exctraction.
 pub mod algorithms {
@@ -148,7 +150,7 @@ pub mod types {
     /// Module for general geometry types.
     ///
     /// This module defines the geometric types and structures used to set up and process the results from the implicit models.
-    /// These types help manage the spatial aspects of the models and their output, such as grids, vectors, and other geometric representations.
+    /// These types help manage the spatial aspects of the models and their output, such as meshes, vectors, and other geometric representations.
     pub mod geometry;
 }
 
