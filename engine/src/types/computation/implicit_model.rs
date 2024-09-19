@@ -10,7 +10,9 @@ use std::time::Instant;
 
 use super::ScalarField;
 
-/// Defines an implicit model composed of distance functions and operations.
+/// An implicit model composed of distance functions and operations.
+///
+/// This acts as the main interface used to build and compute implicit models.
 pub struct ImplicitModel<T: Float + Debug> {
     components: HashMap<String, Component<T>>,
     inputs: HashMap<String, Vec<Option<String>>>,
@@ -206,6 +208,22 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         }
 
         Ok(())
+    }
+
+    /// Evaluate the model at a coordinate *{x, y, z}*.
+    /// # Arguments
+    ///
+    /// * `output` - The tag of the component for which the output should be returned.
+    /// * `x` - X coordinate to evaluate at.
+    /// * `y` - Y coordinate to evaluate at.
+    /// * `z` - Z coordinate to evaluate at.
+    ///
+    /// # Returns
+    ///      
+    /// * `ScalarField<T>` - The scalar field holding the computed data.
+    pub fn evaluate_at(&self, output: &str, x: T, y: T, z: T) -> T {
+        let computation_graph = self.compile(output);
+        computation_graph.evaluate_at_coord(x, y, z)
     }
 
     /// Compute a discrete scalar field from the model.
