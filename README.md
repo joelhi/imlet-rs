@@ -26,7 +26,7 @@
 
  ## Examples
 
- ### The Very Basic**
+ ### The Very Basic
  
  The simplest possible computation would be to define two constants, and add them together.
  
@@ -55,13 +55,12 @@
 
  ```
  
- This should print 
+ This should print the following to the terminal.
  ```shell
  The value is 2
  ```
- to the terminal.
  
- **An Actual Geometry (!)**
+ ### An Actual Geometry
  
  Below is an example of how to use Imlet to create a 3D model by combining a sphere and a gyroid using an intersection operation.
  
@@ -115,6 +114,7 @@
 - [x] Update README with detailed examples and usage instructions.
 - [x] Improve SDF (Signed Distance Function) computation, addressing issues with leaking and pseudonormals.
 - [ ] Clean up trait bounds across all structs, so they are only specified where needed.
+- [ ] Refactor so implicit geometries can be added directly to the models, based on the SignedDistance trait. Same for collections of geometries.
 - [ ] More measured and intentional error handling using Result<> in various parts of the code, to make use easier and remove panics
 - [ ] Enhance the viewer with interactive buttons and runtime script loading (Use bevy?).
 - [ ] Implement serialization for models, potentially using sealed traits (?).
