@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::traits::implicit_functions::ImplicitFunction;
+use crate::types::computation::traits::ImplicitFunction;
 use crate::utils::math_helper::normalize;
 
 /// Distance function that evaluates to the z-coordinate

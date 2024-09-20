@@ -1,6 +1,6 @@
 use crate::algorithms::marching_cubes::generate_iso_surface;
 use crate::types::computation::component::{Component, ComponentId};
-use crate::types::computation::traits::implicit_functions::{ImplicitFunction, ImplicitOperation};
+use crate::types::computation::traits::{ImplicitFunction, ImplicitOperation};
 use crate::types::computation::ComputationGraph;
 use crate::types::geometry::{BoundingBox, Mesh};
 use num_traits::Float;
@@ -309,12 +309,9 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
             }
             sources.insert(front.clone(), sources.len());
             for component in self.valid_inputs(&front) {
-                assert!(
-                    !sources.contains_key(&component),
-                    "Cyclical dependency detected for {}. Make sure it's inputs are not dependent on it's own output.",
-                    component
-                );
-                queue.push_back(component);
+                if !sources.contains_key(&component){
+                    queue.push_back(component);
+                }   
             }
         }
         let num_sources = sources.len() - 1;

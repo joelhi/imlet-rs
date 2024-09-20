@@ -4,7 +4,7 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{
-    computation::traits::implicit_functions::ImplicitFunction,
+    computation::traits::ImplicitFunction,
     geometry::{BoundingBox, Vec3},
 };
 

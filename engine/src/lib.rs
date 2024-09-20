@@ -135,10 +135,14 @@ pub mod types {
     /// ## Implicit Functions
     /// Implicit functions are mathematical functions that take {x, y, z} coordinates as input and return a scalar value.
     /// These functions are typically used to represent distance functions or other field equations, which can be combined to define implicit geometries.
+    /// 
+    /// Implicit functions should implement [`computation::traits::ImplicitFunction`].
     ///
     /// ## Data Operations
     /// Data operations are components that take one or more inputs from other components in the model, perform a computation or transformation, and produce an output.
     /// These operations can modify or combine values to create more complex behavior within the model.
+    /// 
+    /// Operations should implement [`computation::traits::ImplicitOperation`].
     ///
     /// ## Constants
     /// Constants are simple components that represent fixed values. These values remain unchanged and can be passed as inputs to other components.

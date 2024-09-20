@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::{computation::traits::implicit_functions::ImplicitFunction, geometry::Vec3};
+use crate::types::{computation::traits::ImplicitFunction, geometry::Vec3};
 
 /// Distance function for a capsule defined by a line and a radius
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]

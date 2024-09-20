@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use num_traits::Float;
 
-use crate::types::computation::traits::implicit_functions::ImplicitFunction;
+use crate::types::computation::traits::ImplicitFunction;
 
 /// A wrapper for a closure *(x,y,z)->value* which allows a custom function to be computed.
 #[derive(Debug, Clone, Copy)]

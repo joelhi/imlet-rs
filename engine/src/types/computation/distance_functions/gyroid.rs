@@ -2,7 +2,7 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    types::computation::traits::implicit_functions::ImplicitFunction, utils::math_helper::Pi,
+    types::computation::traits::ImplicitFunction, utils::math_helper::Pi,
 };
 use std::fmt::Debug;
 

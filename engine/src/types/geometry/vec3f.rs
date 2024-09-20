@@ -7,7 +7,7 @@ use std::{
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-/// A Vector or Point with 3 coordinates.
+/// Vector or Point with 3 coordinates.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Vec3<T>
 where

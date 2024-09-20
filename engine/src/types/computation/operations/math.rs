@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::traits::implicit_functions::ImplicitOperation;
+use crate::types::computation::traits::ImplicitOperation;
 
 /// Operation to multiply two values -> a*b
 ///

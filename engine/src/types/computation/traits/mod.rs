@@ -1,1 +1,3 @@
-pub mod implicit_functions;
+mod implicit_functions;
+
+pub use implicit_functions::*;

@@ -11,6 +11,14 @@ use crate::types::geometry::Vec3;
 
 use super::tables::*;
 
+/// Generate a list of triangles from a ScalarField using the marching cubes algorithm.
+/// 
+/// This function is based on the logic by [Paul Bourke](https://paulbourke.net/geometry/polygonise/).
+/// 
+/// # Arguments
+///
+/// * `field` - The field from which the iso surface should be generated.
+/// * `iso_val` - The target iso value.
 pub fn generate_iso_surface<T: Float + Debug + Send + Sync>(
     field: &ScalarField<T>,
     iso_val: T,

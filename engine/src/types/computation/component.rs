@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use super::traits::implicit_functions::{ImplicitFunction, ImplicitOperation};
+use super::traits::{ImplicitFunction, ImplicitOperation};
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct ComponentId(pub usize);

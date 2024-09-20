@@ -17,7 +17,7 @@ pub trait ImplicitFunction<T: Float + Debug + Send + Sync>: Sync + Send {
     fn eval(&self, x: T, y: T, z: T) -> T;
 }
 
-/// Trait to define an operation to be performed as in an implicit model computation.
+/// Trait to define an operation to be performed as part of an implicit model computation.
 ///
 /// This is used to define custom operations on data in an implicit model, independent of global coordinates.
 ///

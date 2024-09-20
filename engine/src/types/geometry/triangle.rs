@@ -7,7 +7,7 @@ use super::{
     BoundingBox, Vec3,
 };
 
-/// A single triangle object with vertices in 3d space.
+/// A single triangle with vertices in 3d space.
 #[derive(Debug, Clone, Copy)]
 pub struct Triangle<T: Float + Debug> {
     /// Positions of the three vertices.
@@ -218,7 +218,7 @@ impl<T: Float + Debug + Send + Sync> SignedQuery<T> for Triangle<T> {
     }
 }
 
-/// Describes a feature on the triangle. Classifying closest point look-ups.
+/// Describes a feature of a triangle. Mainly used for classifying closest point look-ups.
 pub enum TriangleFeature {
     /// Feature is a vertex in the triangle with specific index.
     VERTEX(usize),

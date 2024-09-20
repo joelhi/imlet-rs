@@ -3,14 +3,16 @@ use std::fmt::Debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::{computation::traits::implicit_functions::ImplicitFunction, geometry::Plane};
+use crate::types::{computation::traits::ImplicitFunction, geometry::Plane};
 
+/// Distance function for a plane, with a positive and negative side.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ClippingPlane<T: Float + Debug> {
     pub plane: Plane<T>,
 }
 
 impl<T: Float + Debug> ClippingPlane<T> {
+    /// Create a new ClippingPlane from a Plane struct.
     pub fn new(plane: Plane<T>) -> Self {
         Self { plane: plane }
     }

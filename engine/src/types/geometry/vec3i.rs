@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-/// A Vector with three integer coordinates. Mainly used for 3d indexing.
+/// Vector with three integer coordinates. Mainly used for 3d indexing.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Vec3i {
     pub i: usize,
