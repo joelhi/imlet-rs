@@ -40,7 +40,7 @@ where
     }
 
     /// Computes the signed distance to the plane from a point.
-    /// 
+    ///
     /// Locations above the plane in the direction of the normal will return a positive distance. Locations below will be negative.
     ///
     /// # Arguments
@@ -52,7 +52,7 @@ where
     }
 
     /// Computes the signed distance to the plane from a point, based on x, y and z coordinates.
-    /// 
+    ///
     /// Locations above the plane in the direction of the normal will return a positive distance. Locations below will be negative.
     ///
     /// # Arguments

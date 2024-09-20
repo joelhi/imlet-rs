@@ -309,9 +309,9 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
             }
             sources.insert(front.clone(), sources.len());
             for component in self.valid_inputs(&front) {
-                if !sources.contains_key(&component){
+                if !sources.contains_key(&component) {
                     queue.push_back(component);
-                }   
+                }
             }
         }
         let num_sources = sources.len() - 1;

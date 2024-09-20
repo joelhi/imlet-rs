@@ -15,7 +15,6 @@ pub struct BoundingBox<T: Float + Debug> {
 }
 
 impl<T: Float + Debug> BoundingBox<T> {
-    
     /// Create a new BoundingBox from a min and max coordinate.
     ///
     /// # Arguments
@@ -78,7 +77,7 @@ impl<T: Float + Debug> BoundingBox<T> {
     }
 
     /// Returns the 8 corners of the box as 3d points.
-    /// 
+    ///
     /// ```text
     ///      4 -------- 7       Z
     ///     /|         /|       |
@@ -90,7 +89,7 @@ impl<T: Float + Debug> BoundingBox<T> {
     ///   |/         |/   
     ///   1 -------- 2      
     /// ```
-    /// 
+    ///
     pub fn corners(&self) -> [Vec3<T>; 8] {
         let delta = self.max - self.min;
         [

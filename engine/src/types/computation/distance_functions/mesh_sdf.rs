@@ -8,7 +8,7 @@ use crate::types::{
 };
 
 /// Distance function for an arbitrary triangle mesh.
-/// 
+///
 /// This will create an octree of the mesh triangles and use that for signed distance queries.
 #[derive(Debug)]
 pub struct MeshSDF<T: Float + Debug + Send + Sync> {
@@ -19,9 +19,9 @@ pub struct MeshSDF<T: Float + Debug + Send + Sync> {
 impl<T: Float + Debug + Send + Sync> MeshSDF<T> {
     /// Create a new Mesh SDF operation. This method will take in the mesh and build the octree.
     /// # Panics
-    /// 
+    ///
     /// This method may panic if the octree construction fails.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `max_depth` - Maximum allowed recursive depth when constructing the octree.

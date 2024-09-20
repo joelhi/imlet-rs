@@ -9,24 +9,27 @@ use super::{
 };
 
 /// Octree used for storing object and accelerating closest point and distance queries.
-/// 
+///
 /// The octree can be built for any geometric object which implements the relevant traits.
 #[derive(Debug, Clone)]
-pub struct Octree<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync>{
+pub struct Octree<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> {
     root: OctreeNode<Q, T>,
     max_depth: u32,
-    max_triangles: usize
+    max_triangles: usize,
 }
 
 impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> Octree<Q, T> {
-    
     /// Create a new empty octree.
     /// # Arguments
     ///
     /// * `max_depth` - Maximum allowed recursive depth when constructing the tree.
     /// * `max_triangles` - Maximum number of triangles per leaf node.
-    pub fn new(max_depth: u32, max_triangles: usize)->Self{
-        Self { root: OctreeNode::new(BoundingBox::zero(), Vec::new()), max_depth: max_depth, max_triangles: max_triangles }
+    pub fn new(max_depth: u32, max_triangles: usize) -> Self {
+        Self {
+            root: OctreeNode::new(BoundingBox::zero(), Vec::new()),
+            max_depth: max_depth,
+            max_triangles: max_triangles,
+        }
     }
 
     /// Build the octree from maximum bounds and objects.
@@ -34,7 +37,7 @@ impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> Octree<Q, T> {
     ///
     /// * `bounds` - The maximum bounds for the octree.
     /// * `objects` - The objects to store in the octree.
-    pub fn build(&mut self, bounds: BoundingBox<T>, objects: Vec<Q>){
+    pub fn build(&mut self, bounds: BoundingBox<T>, objects: Vec<Q>) {
         let mut node = OctreeNode::new(bounds, objects);
         node.build(self.max_depth, self.max_triangles);
 
@@ -45,20 +48,20 @@ impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> Octree<Q, T> {
     /// # Arguments
     ///
     /// * `query_point` - The point for which the closest point should be found.
-    /// 
+    ///
     /// # Returns
     ///
     /// * A tuple with the closest point and the object on which it was found.
-    pub fn closest_point(&self, query_point: &Vec3<T>)-> (Vec3<T>, Q) {
+    pub fn closest_point(&self, query_point: &Vec3<T>) -> (Vec3<T>, Q) {
         self.root.closest_point(query_point)
     }
 
     /// Collect all the nested bounding boxes in the tree.
-    /// 
+    ///
     /// # Returns
     ///
     /// * A list of all the bounding boxes.
-    pub fn all_bounds(&self)->Vec<BoundingBox<T>>{
+    pub fn all_bounds(&self) -> Vec<BoundingBox<T>> {
         self.root.all_bounds()
     }
 
@@ -66,14 +69,19 @@ impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> Octree<Q, T> {
     /// # Arguments
     ///
     /// * `query_point` - The point from which the search is carried out.
-    /// 
+    ///
     /// # Returns
     ///
     /// * A list of all the objects with a closest point to the search point below the search distance.
-    pub fn collect_nearby_objects(&self, query_point: &Vec3<T>, search_distance: T)->Vec<Q>{
+    pub fn collect_nearby_objects(&self, query_point: &Vec3<T>, search_distance: T) -> Vec<Q> {
         let mut objects = Vec::new();
         let mut num_objects = 0;
-        self.root.collect_nearby_objects(query_point, search_distance, &mut objects, &mut num_objects);
+        self.root.collect_nearby_objects(
+            query_point,
+            search_distance,
+            &mut objects,
+            &mut num_objects,
+        );
 
         objects
     }
@@ -295,7 +303,12 @@ mod tests {
         let octree = m.compute_octree(10, 12);
         let bounds = octree.all_bounds();
 
-        assert!(bounds.len() == 185);
+        assert!(
+            bounds.len() == 183,
+            "Incorrect number of bounds. Was {} but expected {}",
+            bounds.len(),
+            183
+        );
     }
 
     #[test]

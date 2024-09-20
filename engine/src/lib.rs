@@ -3,7 +3,7 @@
 //! `Imlet` provides a lightweight toolkit for implicit modeling and geometry generation, written in Rust. It provides tools for creating 3D models defined by spatial functions, offering a set of core data structures and algorithms that can be used to define and process implicit geometries in a modular way.
 //!
 //! ## Overview
-//! 
+//!
 //! **Features in short:**
 //! * Implicit functions and operations to use out the box
 //! * Interface to build complex implicit models combining various functions with custom processing.
@@ -12,7 +12,7 @@
 //! * Algorithms to evaluate and extract iso surfaces (as triangle meshes) from implcict models at arbitrary resolutions.
 //! * Export OBJ of generated iso surfaces.
 //! * Viewer to show generated geometries with some basic post processing tools (WIP)
-//! 
+//!
 //! The primary modules of the crate are [`types::geometry`] and [`types::computation`], which supply the tools needed to define geometric types and build implicit models.
 //!
 //! At the heart of Imlet is the [`types::computation::ImplicitModel`] struct, which serves as the foundation for creating and evaluating the computation graphs used to define compound functions.
@@ -23,9 +23,9 @@
 //! ## Examples
 //!
 //! **The Very Basic**
-//! 
+//!
 //! The simplest possible computation would be to define two constants, and add them together.
-//! 
+//!
 //! In this example the value is not depending on the x,y,z coordinates, so we just evaluate it once at the origin.
 //!
 //! ```rust
@@ -50,22 +50,22 @@
 //!}
 //!
 //! ```
-//! 
-//! This should print 
+//!
+//! This should print
 //! ```shell
 //! The value is 2
 //! ```
 //! to the terminal.
-//! 
+//!
 //! **An Actual Geometry (!)**
-//! 
+//!
 //! Below is an example of how to use Imlet to create a 3D model by combining a sphere and a gyroid using an intersection operation.
-//! 
+//!
 //! The model is then evaluated over a 3D space and saved as a mesh in an OBJ file.
 //!
 //! ```rust
 //! fn main() {
-//! 
+//!
 //!     // Define some model parameters
 //!     let size: f32 = 10.0;
 //!     let cell_size = 0.05;
@@ -135,13 +135,13 @@ pub mod types {
     /// ## Implicit Functions
     /// Implicit functions are mathematical functions that take {x, y, z} coordinates as input and return a scalar value.
     /// These functions are typically used to represent distance functions or other field equations, which can be combined to define implicit geometries.
-    /// 
+    ///
     /// Implicit functions should implement [`computation::traits::ImplicitFunction`].
     ///
     /// ## Data Operations
     /// Data operations are components that take one or more inputs from other components in the model, perform a computation or transformation, and produce an output.
     /// These operations can modify or combine values to create more complex behavior within the model.
-    /// 
+    ///
     /// Operations should implement [`computation::traits::ImplicitOperation`].
     ///
     /// ## Constants

@@ -144,13 +144,13 @@ pub fn parse_obj_file<T: Float + Debug + Send + Sync>(
 }
 
 /// Write a ScalarField to a .csv file.
-/// 
+///
 /// This will create a csv with the columns *{x, y, z, v}* where
 /// - `x` is the x cooridinate of the data point
 /// - `y` is the y cooridinate of the data point
 /// - `z` is the z cooridinate of the data point
 /// - `v` is value of the data point
-/// 
+///
 /// # Arguments
 ///
 /// * `field` - Field to export.

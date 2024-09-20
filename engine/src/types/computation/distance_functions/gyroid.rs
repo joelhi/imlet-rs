@@ -1,9 +1,7 @@
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    types::computation::traits::ImplicitFunction, utils::math_helper::Pi,
-};
+use crate::{types::computation::traits::ImplicitFunction, utils::math_helper::Pi};
 use std::fmt::Debug;
 
 /// Function representing an approximate distance function for a gyroid surface.
