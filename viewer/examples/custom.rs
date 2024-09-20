@@ -22,7 +22,7 @@ pub fn main() {
 
     let mut model = ImplicitModel::new();
     model
-        .add_function("MeshSDF", MeshSDF::new(&mesh, 10, 12))
+        .add_function("MeshSDF", MeshSDF::build(&mesh, 10, 12))
         .unwrap();
 
     Viewer::run(model, model_space, cell_size, "MeshSDF");
