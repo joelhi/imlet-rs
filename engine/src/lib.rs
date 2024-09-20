@@ -29,6 +29,9 @@
 //! In this example the value is not depending on the x,y,z coordinates, so we just evaluate it once at the origin.
 //!
 //! ```rust
+//!
+//! use imlet_engine::types::computation::{ImplicitModel, operations::math::Add};
+//!
 //! fn main() {
 //!
 //!     let mut model = ImplicitModel::new();
@@ -64,6 +67,17 @@
 //! The model is then evaluated over a 3D space and saved as a mesh in an OBJ file.
 //!
 //! ```rust
+//!
+//! use imlet_engine::utils::io::write_obj_file;
+//!
+//! use imlet_engine::types::geometry::{Vec3, BoundingBox};
+//! use imlet_engine::types::computation::{
+//!     distance_functions::{Gyroid, Sphere},
+//!     operations::shape::BooleanIntersection,
+//! };
+//!
+//! use imlet_engine::types::computation::ImplicitModel;
+//!
 //! fn main() {
 //!
 //!     // Define some model parameters
@@ -91,7 +105,7 @@
 //!     model
 //!         .add_operation_with_inputs(
 //!             "Output",
-//!             Intersection::new(),
+//!             BooleanIntersection::new(),
 //!             &vec!["Sphere", "Gyroid"],
 //!         )
 //!         .unwrap();
