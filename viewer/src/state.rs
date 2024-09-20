@@ -311,7 +311,7 @@ impl<T: Float + Debug + Send + Sync> State<T> {
         let show_edges = self.scene().settings().show_edges;
 
         if show_bounds {
-            self.scene.add_lines(&self.model_data.bounds().wireframe());
+            self.scene.add_lines(&self.model_data.bounds().as_wireframe());
         }
 
         match result {
