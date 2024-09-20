@@ -1,5 +1,8 @@
 use num_traits::Float;
+
+/// Additional trait for generic computation using PI. Used for periodic surfaces such as Gyroids.
 pub trait Pi {
+    /// Returns the value of Pi.
     fn pi() -> Self;
 }
 

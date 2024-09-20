@@ -158,8 +158,10 @@ pub mod types {
 
 /// Module providing some basic utilities, mainly IO and logging.
 pub mod utils {
-    /// Provides some methods to read and write data to and from files.
+    /// Provides some methods to read and write data to and from files such as CSV and OBJ.
     pub mod io;
+    /// Small utility methods related to logging.
     pub mod logging;
+    /// Additional utilities related to mathematics.
     pub mod math_helper;
 }

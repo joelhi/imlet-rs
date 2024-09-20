@@ -33,6 +33,12 @@ pub(crate) fn mesh_to_obj<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> Str
     data
 }
 
+/// Write a mesh to an .obj file.
+///
+/// # Arguments
+///
+/// * `mesh` - Mesh to export.
+/// * `file_name` - Name of the target file to be created, without .obj extension.
 pub fn write_obj_file<T: Float + Debug + Send + Sync>(
     mesh: &Mesh<T>,
     file_name: &str,
@@ -53,13 +59,19 @@ pub fn write_obj_file<T: Float + Debug + Send + Sync>(
 
 use std::fs::File;
 
+/// Read a mesh from an .obj file.
+///
+/// # Arguments
+///
+/// * `file_path` - Relative path to the file.
+/// * `flip_yz` - Option to flip the y and z directions. Imlet uses z as up-direction so if the mesh has y, you may want to flip it.
 pub fn parse_obj_file<T: Float + Debug + Send + Sync>(
     file_path: &str,
     flip_yz: bool,
 ) -> Result<Mesh<T>, Box<dyn std::error::Error>> {
     let path = Path::new(file_path);
 
-    if path.extension().unwrap() != "obj" {
+    if path.extension().unwrap().to_ascii_lowercase() != "obj" {
         return Err("Cannot read file. Only .obj files are supported.".into());
     }
 
@@ -131,6 +143,18 @@ pub fn parse_obj_file<T: Float + Debug + Send + Sync>(
     Ok(mesh)
 }
 
+/// Write a ScalarField to a .csv file.
+/// 
+/// This will create a csv with the columns *{x, y, z, v}* where
+/// - `x` is the x cooridinate of the data point
+/// - `y` is the y cooridinate of the data point
+/// - `z` is the z cooridinate of the data point
+/// - `v` is value of the data point
+/// 
+/// # Arguments
+///
+/// * `field` - Field to export.
+/// * `file_name` - Name of the target file to be created, without .csv extension.
 pub fn write_field_csv<T: Float + Debug + Send + Sync>(
     field: &ScalarField<T>,
     file_name: &str,
