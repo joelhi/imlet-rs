@@ -60,7 +60,7 @@
 //! ```
 //! to the terminal.
 //!
-//! **An Actual Geometry (!)**
+//! **An Actual Geometry**
 //!
 //! Below is an example of how to use Imlet to create a 3D model by combining a sphere and a gyroid using an intersection operation.
 //!
