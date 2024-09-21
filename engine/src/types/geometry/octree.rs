@@ -12,13 +12,13 @@ use super::{
 ///
 /// The octree can be built for any geometric object which implements the relevant traits.
 #[derive(Debug, Clone)]
-pub struct Octree<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> {
+pub struct Octree<Q, T> {
     root: OctreeNode<Q, T>,
     max_depth: u32,
     max_triangles: usize,
 }
 
-impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> Octree<Q, T> {
+impl<Q, T: Float> Octree<Q, T> {
     /// Create a new empty octree.
     /// # Arguments
     ///
@@ -32,6 +32,17 @@ impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> Octree<Q, T> {
         }
     }
 
+    /// Collect all the nested bounding boxes in the tree.
+    ///
+    /// # Returns
+    ///
+    /// * A list of all the bounding boxes.
+    pub fn all_bounds(&self) -> Vec<BoundingBox<T>> {
+        self.root.all_bounds()
+    }
+}
+
+impl<Q: SpatialQuery<T>, T: Float> Octree<Q, T> {
     /// Build the octree from maximum bounds and objects.
     /// # Arguments
     ///
@@ -56,15 +67,6 @@ impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> Octree<Q, T> {
         self.root.closest_point(query_point)
     }
 
-    /// Collect all the nested bounding boxes in the tree.
-    ///
-    /// # Returns
-    ///
-    /// * A list of all the bounding boxes.
-    pub fn all_bounds(&self) -> Vec<BoundingBox<T>> {
-        self.root.all_bounds()
-    }
-
     /// Collect all the objects in the tree withing a certain distance from a point.
     /// # Arguments
     ///
@@ -87,20 +89,20 @@ impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> Octree<Q, T> {
     }
 }
 
-impl<Q: SignedQuery<T>, T: Float + Debug + Send + Sync> Octree<Q, T> {
+impl<Q: SignedQuery<T>, T: Float> Octree<Q, T> {
     pub fn signed_distance(&self, query_point: &Vec3<T>) -> T {
         self.root.signed_distance(query_point)
     }
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct OctreeNode<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> {
+pub(crate) struct OctreeNode<Q, T> {
     pub bounds: BoundingBox<T>,
     pub objects: Vec<Q>,
     pub children: Option<Box<[Option<OctreeNode<Q, T>>; 8]>>,
 }
 
-impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> OctreeNode<Q, T> {
+impl<Q, T: Float> OctreeNode<Q, T> {
     pub fn new(bounds: BoundingBox<T>, objects: Vec<Q>) -> Self {
         Self {
             bounds: bounds,
@@ -109,6 +111,26 @@ impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> OctreeNode<Q, T> {
         }
     }
 
+    pub fn all_bounds(&self) -> Vec<BoundingBox<T>> {
+        let mut bounds = Vec::new();
+        self.collect_bounds(&mut bounds);
+        bounds
+    }
+
+    fn collect_bounds(&self, bounds: &mut Vec<BoundingBox<T>>) {
+        bounds.push(self.bounds);
+
+        if let Some(ref children) = self.children {
+            for child in children.iter() {
+                if let Some(ref child_node) = child {
+                    child_node.collect_bounds(bounds);
+                }
+            }
+        }
+    }
+}
+
+impl<Q: SpatialQuery<T>, T: Float> OctreeNode<Q, T> {
     pub fn build(&mut self, max_depth: u32, max_triangles: usize) {
         if self.objects.len() <= max_triangles || max_depth == 0 {
             if max_depth == 0 && self.objects.len() > max_triangles {
@@ -229,12 +251,6 @@ impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> OctreeNode<Q, T> {
         (best_point, best_object)
     }
 
-    pub fn all_bounds(&self) -> Vec<BoundingBox<T>> {
-        let mut bounds = Vec::new();
-        self.collect_bounds(&mut bounds);
-        bounds
-    }
-
     pub fn collect_nearby_objects(
         &self,
         point: &Vec3<T>,
@@ -257,21 +273,9 @@ impl<Q: SpatialQuery<T>, T: Float + Debug + Send + Sync> OctreeNode<Q, T> {
             }
         }
     }
-
-    fn collect_bounds(&self, bounds: &mut Vec<BoundingBox<T>>) {
-        bounds.push(self.bounds);
-
-        if let Some(ref children) = self.children {
-            for child in children.iter() {
-                if let Some(ref child_node) = child {
-                    child_node.collect_bounds(bounds);
-                }
-            }
-        }
-    }
 }
 
-impl<Q: SignedQuery<T>, T: Float + Debug + Send + Sync> OctreeNode<Q, T> {
+impl<Q: SignedQuery<T>, T: Float> OctreeNode<Q, T> {
     pub fn signed_distance(&self, point: &Vec3<T>) -> T {
         let (closest_point, closest_obj) = self.closest_point(&point);
 

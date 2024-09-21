@@ -7,12 +7,12 @@ use super::Vec3;
 
 /// Single line segment defined by a start and end point.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Line<T: Float + Debug> {
+pub struct Line<T> {
     pub start: Vec3<T>,
     pub end: Vec3<T>,
 }
 
-impl<T: Float + Debug> Line<T> {
+impl<T> Line<T> {
     /// Create a new Line from a start and end point.
     ///
     /// # Arguments
@@ -22,7 +22,9 @@ impl<T: Float + Debug> Line<T> {
     pub fn new(start: Vec3<T>, end: Vec3<T>) -> Self {
         Self { start, end }
     }
+}
 
+impl<T: Float> Line<T> {
     /// Computes the distance to the closest point on the line from a point.
     ///
     /// # Arguments

@@ -15,14 +15,14 @@ use std::time::Instant;
 use std::usize;
 
 /// Indexed triangle mesh.
-pub struct Mesh<T: Float + Debug> {
+pub struct Mesh<T> {
     vertices: Vec<Vec3<T>>,
     faces: Vec<[usize; 3]>,
     normals: Option<Vec<Vec3<T>>>,
 }
-
-/// Create a new empty mesh
-impl<T: Float + Debug + Send + Sync> Mesh<T> {
+    
+impl<T: Float> Mesh<T> {
+    /// Create a new empty mesh
     pub fn new() -> Mesh<T> {
         Mesh {
             vertices: Vec::new(),
@@ -30,7 +30,9 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
             normals: None,
         }
     }
+}
 
+impl<T: Float> Mesh<T> {
     /// Create a indexed mesh from a list of triangle objects.
     ///
     /// # Arguments
@@ -159,15 +161,12 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         let face_normals: Vec<Vec3<T>> = self.compute_face_normals();
         let vertex_faces: Vec<Vec<usize>> = self.compute_vertex_faces();
         let mut vertex_normals = vec![Vec3::origin(); self.num_vertices()];
-        vertex_normals
-            .par_iter_mut()
-            .enumerate()
-            .for_each(|(id, n)| {
-                for &f in &vertex_faces[id] {
-                    *n = *n + (face_normals[f] * self.face_angle_at_vertex(id, f));
-                }
-                *n = n.normalize();
-            });
+        vertex_normals.iter_mut().enumerate().for_each(|(id, n)| {
+            for &f in &vertex_faces[id] {
+                *n = *n + (face_normals[f] * self.face_angle_at_vertex(id, f));
+            }
+            *n = n.normalize();
+        });
         self.normals = Some(vertex_normals);
 
         log::info!(
@@ -179,7 +178,7 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
 
     pub(crate) fn compute_face_normals(&self) -> Vec<Vec3<T>> {
         self.faces
-            .par_iter()
+            .iter()
             .map(|f| {
                 let v1 = self.vertices[f[1]] - self.vertices[f[0]];
                 let v2 = self.vertices[f[2]] - self.vertices[f[0]];
@@ -278,5 +277,43 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         );
 
         tree
+    }
+}
+
+impl<T: Float + Send + Sync> Mesh<T> {
+    /// Computes and stores the vertex normals using an angle weighted average of the incident faces.
+    pub fn compute_vertex_normals_par(&mut self) {
+        let before = Instant::now();
+
+        let face_normals: Vec<Vec3<T>> = self.compute_face_normals();
+        let vertex_faces: Vec<Vec<usize>> = self.compute_vertex_faces();
+        let mut vertex_normals = vec![Vec3::origin(); self.num_vertices()];
+        vertex_normals
+            .par_iter_mut()
+            .enumerate()
+            .for_each(|(id, n)| {
+                for &f in &vertex_faces[id] {
+                    *n = *n + (face_normals[f] * self.face_angle_at_vertex(id, f));
+                }
+                *n = n.normalize();
+            });
+        self.normals = Some(vertex_normals);
+
+        log::info!(
+            "Mesh normals computed for {} points in {:.2?}",
+            self.num_vertices(),
+            before.elapsed()
+        );
+    }
+
+    pub(crate) fn compute_face_normals_par(&self) -> Vec<Vec3<T>> {
+        self.faces
+            .par_iter()
+            .map(|f| {
+                let v1 = self.vertices[f[1]] - self.vertices[f[0]];
+                let v2 = self.vertices[f[2]] - self.vertices[f[0]];
+                v1.cross(&v2).normalize()
+            })
+            .collect()
     }
 }
