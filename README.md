@@ -4,12 +4,12 @@
 
 ![Periodic Surface Example](media/examples.png)
 
-`Imlet` provides a lightweight toolkit for implicit modeling and geometry generation, written in Rust. It provides tools for creating 3D models defined by spatial functions, offering a set of core data structures and algorithms that can be used to define and process implicit geometries in a modular way.
+`Imlet` is a lightweight toolkit for implicit modeling and geometry generation, written in Rust. It provides tools for creating 3D geometries, offering a set of data structures and algorithms that can be used to model in 3d using an implicit logic in a modular way.
 
  ## Overview
  
  ### Features
- * Implicit functions and operations to use out the box
+ * Implicit functions, such as various primitives and periodic surfaces; and operations, such as boolean methods.
  * Interface to build complex implicit models combining various functions with custom processing.
  * Set of tools to create and process geometric objects such as `Points`, `Lines` and `Meshes`.
  * Import OBJ files and compute signed distance fields from arbitrary meshes.
@@ -19,10 +19,11 @@
  
  The primary modules of the crate are [`types::geometry`] and [`types::computation`], which supply the tools needed to define geometric types and build implicit models.
 
- At the heart of Imlet is the [`types::computation::ImplicitModel`] struct, which serves as the foundation for creating and evaluating the computation graphs used to define compound functions.
- This struct exposes the main functions to combine functions and operations into a computation graph, which can then be evaluated in 3d space.
+At the heart of Imlet is the [`ImplicitModel`] struct, which serves as the foundation for creating and evaluating compound functions in 3d space.
 
- For detailed information on how these components work and interact, refer to the [`types`] module documentation.
+This struct exposes the main methods used to combine functions and operations into a computation graph, which can then be evaluated and used to generate iso surfaces.
+
+For detailed information on how these components work and interact, refer to the [`types`] module documentation.
 
  ## Examples
 
