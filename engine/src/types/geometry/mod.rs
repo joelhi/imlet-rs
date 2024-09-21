@@ -4,10 +4,12 @@ mod line;
 mod mesh;
 mod octree;
 mod plane;
-pub mod traits;
 mod triangle;
 mod vec3f;
 mod vec3i;
+
+/// Traits related to geometric computations.
+pub mod traits;
 
 pub use bounding_box::*;
 use hash_grid::*;

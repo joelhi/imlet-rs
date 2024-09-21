@@ -4,7 +4,7 @@ use log::debug;
 use num_traits::Float;
 
 use super::{
-    traits::spatial_query::{SignedQuery, SpatialQuery},
+    traits::{SignedQuery, SpatialQuery},
     BoundingBox, Vec3,
 };
 
