@@ -48,7 +48,7 @@ impl<T: Float + Debug + Send + Sync> State<T> {
     pub async fn new(window: Window, model_data: ModelData<T>, scene: Scene<T>) -> Self {
         let size = window.inner_size();
         let dim = model_data.bounds().dimensions();
-        let centroid = model_data.bounds().centroid().to_f32();
+        let centroid = model_data.bounds().centroid().convert::<f32>();
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::all(),
@@ -311,7 +311,8 @@ impl<T: Float + Debug + Send + Sync> State<T> {
         let show_edges = self.scene().settings().show_edges;
 
         if show_bounds {
-            self.scene.add_lines(&self.model_data.bounds().wireframe());
+            self.scene
+                .add_lines(&self.model_data.bounds().as_wireframe());
         }
 
         match result {

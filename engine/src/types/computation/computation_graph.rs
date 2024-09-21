@@ -10,7 +10,7 @@ use crate::{
 
 use super::{
     component::{Component, ComponentId, ComponentValues},
-    DenseField,
+    ScalarField,
 };
 
 pub struct ComputationGraph<'a, T: Float + Debug + Send + Sync> {
@@ -50,15 +50,15 @@ impl<'a, T: Float + Debug + Send + Sync> ComputationGraph<'a, T> {
         })
     }
 
-    pub fn evaluate(&self, bounds: &BoundingBox<T>, cell_size: T) -> DenseField<T> {
+    pub fn evaluate(&self, bounds: &BoundingBox<T>, cell_size: T) -> ScalarField<T> {
         let before = Instant::now();
         let n = Self::point_count(&bounds, cell_size);
 
-        log::info!("Evaluating model with {}x{}x{} points", n.x, n.y, n.z);
+        log::info!("Evaluating model with {}x{}x{} points", n.i, n.j, n.k);
 
-        let mut data: Vec<T> = vec![T::zero(); n.x * n.y * n.z];
+        let mut data: Vec<T> = vec![T::zero(); n.i * n.j * n.k];
         data.par_iter_mut().enumerate().for_each(|(index, value)| {
-            let (i, j, k) = index3d_from_index1d(index, n.x, n.y, n.z);
+            let (i, j, k) = index3d_from_index1d(index, n.i, n.j, n.k);
             *value = self.evaluate_at_coord(
                 bounds.min.x + cell_size * T::from(i).expect("Failed to convert number to T"),
                 bounds.min.y + cell_size * T::from(j).expect("Failed to convert number to T"),
@@ -68,11 +68,11 @@ impl<'a, T: Float + Debug + Send + Sync> ComputationGraph<'a, T> {
 
         log::info!(
             "Dense value buffer for {} points generated in {:.2?}",
-            n.x * n.y * n.z,
+            n.i * n.j * n.k,
             before.elapsed()
         );
 
-        DenseField::with_data(bounds.min, cell_size, n, data)
+        ScalarField::with_data(bounds.min, cell_size, n, data)
     }
 
     fn point_count(bounds: &BoundingBox<T>, cell_size: T) -> Vec3i {
@@ -111,7 +111,7 @@ mod tests {
     use crate::types::{
         computation::{
             distance_functions::Sphere,
-            operations::{arithmetic::Add, boolean::Difference},
+            operations::{math::Add, shape::BooleanDifference},
         },
         geometry::Vec3,
     };
@@ -181,7 +181,7 @@ mod tests {
         let sphere_component = Component::Function(Box::new(Sphere::new(Vec3::origin(), 1.0)));
         let sphere_component2 = Component::Function(Box::new(Sphere::new(Vec3::origin(), 0.5)));
 
-        let difference_component = Component::Operation(Box::new(Difference::new()));
+        let difference_component = Component::Operation(Box::new(BooleanDifference::new()));
 
         model.add_component(&sphere_component, vec![]);
         model.add_component(&sphere_component2, vec![]);

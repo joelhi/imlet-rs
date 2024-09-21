@@ -5,14 +5,22 @@ use num_traits::Float;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 
-use crate::types::computation::DenseField;
+use crate::types::computation::ScalarField;
 use crate::types::geometry::Triangle;
 use crate::types::geometry::Vec3;
 
 use super::tables::*;
 
+/// Generate a list of triangles from a ScalarField using the marching cubes algorithm.
+///
+/// This function is based on the logic by [Paul Bourke](https://paulbourke.net/geometry/polygonise/).
+///
+/// # Arguments
+///
+/// * `field` - The field from which the iso surface should be generated.
+/// * `iso_val` - The target iso value.
 pub fn generate_iso_surface<T: Float + Debug + Send + Sync>(
-    field: &DenseField<T>,
+    field: &ScalarField<T>,
     iso_val: T,
 ) -> Vec<Triangle<T>> {
     let before = Instant::now();
@@ -276,7 +284,7 @@ mod tests {
 
     #[test]
     fn test_generate_iso_surface_2x2x2() {
-        let field = DenseField::with_data(
+        let field = ScalarField::with_data(
             Vec3::origin(),
             1.0,
             (2, 2, 2).into(),
@@ -295,7 +303,7 @@ mod tests {
 
     #[test]
     fn test_generate_iso_surface_3x2x2() {
-        let field = DenseField::with_data(
+        let field = ScalarField::with_data(
             Vec3::origin(),
             1.0,
             (3, 2, 2).into(),

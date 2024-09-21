@@ -3,7 +3,7 @@ use {
         types::{
             computation::{
                 distance_functions::{SchwarzP, Sphere},
-                operations::{boolean::Intersection, shape::Thickness},
+                operations::shape::{BooleanIntersection, Thickness},
                 ImplicitModel,
             },
             geometry::{BoundingBox, Vec3},
@@ -40,7 +40,7 @@ pub fn main() {
     model
         .add_operation_with_inputs(
             "Output",
-            Intersection::new(),
+            BooleanIntersection::new(),
             &vec!["Sphere", "ThickSchwarz"],
         )
         .unwrap();

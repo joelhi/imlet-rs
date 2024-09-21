@@ -5,17 +5,27 @@ use serde::{Deserialize, Serialize};
 
 use super::{Line, Triangle, Vec3};
 
+/// Axis-Aligned Bounding Box based on a max and min coordinate.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct BoundingBox<T: Float + Debug> {
+    // Minimum coordinate of the box
     pub min: Vec3<T>,
+    // Maximum coordinate of the box
     pub max: Vec3<T>,
 }
 
 impl<T: Float + Debug> BoundingBox<T> {
+    /// Create a new BoundingBox from a min and max coordinate.
+    ///
+    /// # Arguments
+    ///
+    /// * `min` - The minimum coordinate of the Box.
+    /// * `max` - The maximum coordinate of the Box.
     pub fn new(min: Vec3<T>, max: Vec3<T>) -> Self {
         Self { min, max }
     }
 
+    /// Create a new BoundingBox with zero size at the origin.
     pub fn zero() -> Self {
         Self {
             min: Vec3::origin(),
@@ -23,6 +33,11 @@ impl<T: Float + Debug> BoundingBox<T> {
         }
     }
 
+    /// Return the size of the box in x, y and z
+    ///
+    /// # Returns
+    ///
+    /// * `(x_size, y_size, z_size)` - A tuple with the size in x, y and z.
     pub fn dimensions(&self) -> (T, T, T) {
         (
             self.max.x - self.min.x,
@@ -31,15 +46,27 @@ impl<T: Float + Debug> BoundingBox<T> {
         )
     }
 
-    pub fn contains(&self, pt: &Vec3<T>) -> bool {
-        pt.x >= self.min.x
-            && pt.y >= self.min.y
-            && pt.z >= self.min.z
-            && pt.x <= self.max.x
-            && pt.y <= self.max.y
-            && pt.z <= self.max.z
+    /// Checks if the box contains a point
+    ///
+    /// # Arguments
+    ///
+    /// * `point` - Point for contains check.
+    pub fn contains(&self, point: &Vec3<T>) -> bool {
+        point.x >= self.min.x
+            && point.y >= self.min.y
+            && point.z >= self.min.z
+            && point.x <= self.max.x
+            && point.y <= self.max.y
+            && point.z <= self.max.z
     }
 
+    /// Checks if the box contains a point defined by a x, y and z coordinate.
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - X coordinate of the point.
+    /// * `y` - Y coordinate of the point.
+    /// * `z` - Z coordinate of the point.
     pub fn contains_coord(&self, x: T, y: T, z: T) -> bool {
         x >= self.min.x
             && y >= self.min.y
@@ -49,6 +76,20 @@ impl<T: Float + Debug> BoundingBox<T> {
             && z <= self.max.z
     }
 
+    /// Returns the 8 corners of the box as 3d points.
+    ///
+    /// ```text
+    ///      4 -------- 7       Z
+    ///     /|         /|       |
+    ///    / |        / |       + -- Y
+    ///   5 -------- 6  |      /
+    ///   |  |       |  |     X
+    ///   |  0 ------|-- 3    
+    ///   | /        | /    
+    ///   |/         |/   
+    ///   1 -------- 2      
+    /// ```
+    ///
     pub fn corners(&self) -> [Vec3<T>; 8] {
         let delta = self.max - self.min;
         [
@@ -63,7 +104,8 @@ impl<T: Float + Debug> BoundingBox<T> {
         ]
     }
 
-    pub fn wireframe(&self) -> [Line<T>; 12] {
+    /// Returns the wirframe of the box as a list of 12 lines.
+    pub fn as_wireframe(&self) -> [Line<T>; 12] {
         let corners = self.corners();
         [
             Line::new(corners[0], corners[1]),
@@ -81,7 +123,8 @@ impl<T: Float + Debug> BoundingBox<T> {
         ]
     }
 
-    pub fn triangles(&self) -> [Triangle<T>; 12] {
+    /// Returns a triangulated box as a list of triangles.
+    pub fn as_triangles(&self) -> [Triangle<T>; 12] {
         let corners = self.corners();
         [
             Triangle::new(corners[0], corners[1], corners[2]),
@@ -99,10 +142,16 @@ impl<T: Float + Debug> BoundingBox<T> {
         ]
     }
 
+    /// Returns the centre of the box.
     pub fn centroid(&self) -> Vec3<T> {
         return (self.max + self.min) * T::from(0.5).expect("Failed to convert number to T");
     }
 
+    /// Checks if the box intersects another box.
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - Other box to check for.
     pub fn intersects(&self, other: &BoundingBox<T>) -> bool {
         self.min.x <= other.max.x
             && self.max.x >= other.min.x
@@ -112,6 +161,11 @@ impl<T: Float + Debug> BoundingBox<T> {
             && self.max.z >= other.min.z
     }
 
+    /// Get the closest point on the box.
+    ///
+    /// # Arguments
+    ///
+    /// * `point` - Point to find closest point from.
     pub fn closest_point(&self, point: &Vec3<T>) -> Vec3<T> {
         let x = point.x.max(self.min.x).min(self.max.x);
         let y = point.y.max(self.min.y).min(self.max.y);
@@ -119,6 +173,11 @@ impl<T: Float + Debug> BoundingBox<T> {
         Vec3 { x, y, z }
     }
 
+    /// Get the signed distance to the box.
+    ///
+    /// # Arguments
+    ///
+    /// * `point` - Point to find the signed distance to.
     pub fn signed_distance(&self, point: &Vec3<T>) -> T {
         let diff1 = self.max - *point;
         let diff2 = self.min - *point;
@@ -139,6 +198,11 @@ impl<T: Float + Debug> BoundingBox<T> {
         }
     }
 
+    /// Offset the box equally in all directions.
+    ///
+    /// # Arguments
+    ///
+    /// * `distance` - Offset distance.
     pub fn offset(&self, distance: T) -> BoundingBox<T> {
         let offset_vec = Vec3::new(distance, distance, distance);
         Self {
@@ -188,7 +252,7 @@ mod tests {
     fn test_compute_wireframe() {
         let bounds = BoundingBox::new(Vec3::origin(), Vec3::new(1.0, 1.0, 1.0));
 
-        let wireframe = bounds.wireframe();
+        let wireframe = bounds.as_wireframe();
 
         for line in wireframe {
             assert!(line.length() - 1.0 < 0.001);
@@ -199,7 +263,7 @@ mod tests {
     fn test_compute_wireframe_non_origin() {
         let bounds = BoundingBox::new(Vec3::new(1.0, 1.0, 1.0), Vec3::new(2.0, 2.0, 2.0));
 
-        let wireframe = bounds.wireframe();
+        let wireframe = bounds.as_wireframe();
 
         for line in wireframe {
             assert!(line.length() - 1.0 < 0.001);

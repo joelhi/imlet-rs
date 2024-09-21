@@ -1,4 +1,5 @@
 use std::{
+    any,
     fmt::{self, Debug},
     ops,
 };
@@ -6,6 +7,7 @@ use std::{
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
+/// Vector or Point with 3 coordinates.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Vec3<T>
 where
@@ -17,26 +19,53 @@ where
 }
 
 impl<T: Float + Debug> Vec3<T> {
+    /// Create a new Vec3 from coordinates.
+    /// # Arguments
+    ///
+    /// * `x` - X coordinate.
+    /// * `y` - Y coordinate.
+    /// * `z` - Z coordinate.
     pub fn new(x: T, y: T, z: T) -> Self {
         Self { x: x, y: y, z: z }
     }
 
+    /// Compute the euclidian distance to another Vec3.
+    ///
+    /// # Arguments
+    /// * `pt` - Other point to compute distance to.
     pub fn distance_to_vec3(&self, pt: &Vec3<T>) -> T {
         self.distance_to_vec3_squared(&pt).sqrt()
     }
 
+    /// Compute the euclidian distance to a location defined by x, y and z coordinates.
+    ///
+    /// # Arguments
+    /// * `x` - X coordinate.
+    /// * `y` - Y coordinate.
+    /// * `z` - Z coordinate.
     pub fn distance_to_coord(&self, x: T, y: T, z: T) -> T {
         self.distance_to_coord_squared(x, y, z).sqrt()
     }
 
+    /// Compute the euclidian squared distance to another Vec3.
+    ///
+    /// # Arguments
+    /// * `pt` - Other point to compute distance to.
     pub fn distance_to_vec3_squared(&self, pt: &Vec3<T>) -> T {
         self.distance_to_coord_squared(pt.x, pt.y, pt.z)
     }
 
+    /// Compute the euclidian squared distance to a location defined by x, y and z coordinates.
+    ///
+    /// # Arguments
+    /// * `x` - X coordinate.
+    /// * `y` - Y coordinate.
+    /// * `z` - Z coordinate.
     pub fn distance_to_coord_squared(&self, x: T, y: T, z: T) -> T {
         (self.x - x).powi(2) + (self.y - y).powi(2) + (self.z - z).powi(2)
     }
 
+    /// Construct a new point at {0,0,0}
     pub fn origin() -> Vec3<T> {
         Self {
             x: T::zero(),
@@ -45,6 +74,7 @@ impl<T: Float + Debug> Vec3<T> {
         }
     }
 
+    /// Create a unit X-axis.
     pub fn x_axis() -> Vec3<T> {
         Self {
             x: T::one(),
@@ -53,6 +83,7 @@ impl<T: Float + Debug> Vec3<T> {
         }
     }
 
+    /// Create a unit Y-axis.
     pub fn y_axis() -> Vec3<T> {
         Self {
             x: T::zero(),
@@ -61,6 +92,7 @@ impl<T: Float + Debug> Vec3<T> {
         }
     }
 
+    /// Create a unit Z-axis.
     pub fn z_axis() -> Vec3<T> {
         Self {
             x: T::zero(),
@@ -69,22 +101,47 @@ impl<T: Float + Debug> Vec3<T> {
         }
     }
 
-    pub fn interpolate(first: &Vec3<T>, second: &Vec3<T>, parameter: T) -> Vec3<T> {
+    /// Computes a linear interpolaton between two Vec3 values.
+    ///
+    /// # Arguments
+    /// * `start` - Vec to interpolate from.
+    /// * `end` - Vec to interpolate to.
+    /// * `t` - Parameter value, clamped between [0, 1].
+    pub fn interpolate(start: &Vec3<T>, end: &Vec3<T>, t: T) -> Vec3<T> {
+        let clamped = t.clamp(T::zero(), T::one());
         Self {
-            x: first.x + parameter * (second.x - first.x),
-            y: first.y + parameter * (second.y - first.y),
-            z: first.z + parameter * (second.z - first.z),
+            x: start.x + clamped * (end.x - start.x),
+            y: start.y + clamped * (end.y - start.y),
+            z: start.z + clamped * (end.z - start.z),
         }
     }
 
+    /// Computes the dot product between two Vec3 values.
+    ///
+    /// (x_1 * x_2) + (y_1 * y_2) + (z_1 * z_2)
+    ///
+    /// # Arguments
+    /// * `rhs` - Vec to compute dot product with.
     pub fn dot(&self, rhs: &Vec3<T>) -> T {
         (self.x * rhs.x) + (self.y * rhs.y) + (self.z * rhs.z)
     }
 
+    /// Computes the dot product between a Vec3 and a vector defined by three coordinates.
+    ///
+    /// (x_1 * x) + (y_1 * y) + (z_1 * z)
+    ///
+    /// # Arguments
+    /// * `x` - X coordinate.
+    /// * `y` - Y coordinate.
+    /// * `z` - Z coordinate.
     pub fn dot_coord(&self, x: T, y: T, z: T) -> T {
         (self.x * x) + (self.y * y) + (self.z * z)
     }
 
+    /// Computes the cross product between two Vec3 values.
+    /// # Arguments
+    ///
+    /// * `rhs` - Vec to compute cross product with.
     pub fn cross(&self, rhs: &Vec3<T>) -> Vec3<T> {
         Self {
             x: self.y * rhs.z - self.z * rhs.y,
@@ -93,10 +150,14 @@ impl<T: Float + Debug> Vec3<T> {
         }
     }
 
-    pub fn angle(&self, other: &Vec3<T>) -> Option<T> {
-        let dot = self.dot(other);
+    /// Computes the cangle between two Vec3 values.
+    /// # Arguments
+    ///
+    /// * `rhs` - Vec to compute angle with.
+    pub fn angle(&self, rhs: &Vec3<T>) -> Option<T> {
+        let dot = self.dot(rhs);
         let len_self = self.magnitude();
-        let len_other = other.magnitude();
+        let len_other = rhs.magnitude();
         if len_self.is_zero() || len_other.is_zero() {
             None
         } else {
@@ -105,10 +166,15 @@ impl<T: Float + Debug> Vec3<T> {
         }
     }
 
+    /// Compute the total length of a vector (distance to origin).
     pub fn magnitude(&self) -> T {
         self.distance_to_coord(T::zero(), T::zero(), T::zero())
     }
 
+    /// Scale the magnitude of a vector with a scalar value.
+    /// # Arguments
+    ///
+    /// * `scalar` - Scale factor.
     pub fn scale(self, scalar: T) -> Vec3<T> {
         Vec3 {
             x: self.x * scalar,
@@ -117,11 +183,21 @@ impl<T: Float + Debug> Vec3<T> {
         }
     }
 
+    /// Normalize the vector, giving it a unit length.
     pub fn normalize(&self) -> Vec3<T> {
         *self * (T::one() / self.magnitude())
     }
 
+    /// Compute the [Spherical Linear Interpolation](https://en.wikipedia.org/wiki/Slerp) of two vectors.
+    ///
+    /// *This performs a constant-speed motion along a unit-radius great circle arc, given the ends and an interpolation parameter between 0 and 1*
+    /// # Arguments
+    ///
+    /// * `start` - Vec to interpolate from.
+    /// * `end` - Vec to interpolate to.
+    /// * `t` - Parameter value, clamped between [0, 1].
     pub fn slerp(start: Vec3<T>, end: Vec3<T>, t: T) -> Vec3<T> {
+        let clamped = t.clamp(T::zero(), T::one());
         let start = start.normalize();
         let end = end.normalize();
 
@@ -132,31 +208,37 @@ impl<T: Float + Debug> Vec3<T> {
         let sin_theta = theta.sin();
 
         if sin_theta == T::zero() {
-            return start.scale(T::one() - t) + end.scale(t);
+            return start.scale(T::one() - clamped) + end.scale(clamped);
         }
 
-        let a = ((T::one() - t) * theta).sin() / sin_theta;
-        let b = (t * theta).sin() / sin_theta;
+        let a = ((T::one() - clamped) * theta).sin() / sin_theta;
+        let b = (clamped * theta).sin() / sin_theta;
 
         start.scale(a) + end.scale(b)
     }
 
-    pub fn to_f32(&self) -> Vec3<f32> {
-        Vec3 {
-            x: self.x.to_f32().expect("Failed to convert to f32"),
-            y: self.y.to_f32().expect("Failed to convert to f32"),
-            z: self.z.to_f32().expect("Failed to convert to f32"),
-        }
+    /// Convert the internal data type to a new type *Q*.
+    pub fn convert<Q: Float + Debug>(&self) -> Vec3<Q> {
+        Vec3::new(
+            Q::from(self.x).expect(&format!(
+                "Failed to convert from {} to {}",
+                any::type_name::<Q>(),
+                any::type_name::<T>()
+            )),
+            Q::from(self.y).expect(&format!(
+                "Failed to convert from {} to {}",
+                any::type_name::<Q>(),
+                any::type_name::<T>()
+            )),
+            Q::from(self.z).expect(&format!(
+                "Failed to convert from {} to {}",
+                any::type_name::<Q>(),
+                any::type_name::<T>()
+            )),
+        )
     }
 
-    pub fn to_f64(&self) -> Vec3<f64> {
-        Vec3 {
-            x: self.x.to_f64().expect("Failed to convert to f64"),
-            y: self.y.to_f64().expect("Failed to convert to f64"),
-            z: self.z.to_f64().expect("Failed to convert to f64"),
-        }
-    }
-
+    /// Returns the default spatial tolerance value.
     pub fn default_tolerance() -> T {
         T::from(1E-7).expect("Fail")
     }

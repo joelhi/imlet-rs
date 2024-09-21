@@ -18,11 +18,11 @@ pub fn main() {
 
     // Build model
     let mesh: Mesh<f64> = parse_obj_file(&file_path, false).unwrap();
-    let model_space = mesh.bounds().offset(cell_size);
+    let model_space = mesh.bounds().offset(2.0 * cell_size);
 
     let mut model = ImplicitModel::new();
     model
-        .add_function("MeshSDF", MeshSDF::new(&mesh, 10, 12))
+        .add_function("MeshSDF", MeshSDF::build(&mesh, 10, 12))
         .unwrap();
 
     Viewer::run(model, model_space, cell_size, "MeshSDF");

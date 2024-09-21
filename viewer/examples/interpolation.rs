@@ -2,9 +2,9 @@ use {
     imlet_engine::{
         types::{
             computation::{
-                distance_functions::{Gyroid, Sphere, ZDomain},
+                distance_functions::{Gyroid, Sphere, ZCoord},
                 operations::{
-                    boolean::Intersection, interpolation::LinearInterpolation, shape::Thickness,
+                    math::LinearInterpolation, shape::BooleanIntersection, shape::Thickness,
                 },
                 ImplicitModel,
             },
@@ -43,7 +43,7 @@ pub fn main() {
         .add_operation_with_inputs("ThinGyroid", Thickness::new(0.15), &vec!["Gyroid"])
         .unwrap();
     model
-        .add_function("ZParam", ZDomain::remapped(1.0, 9.0))
+        .add_function("ZParam", ZCoord::remapped(1.0, 9.0))
         .unwrap();
     model
         .add_operation_with_inputs(
@@ -55,7 +55,7 @@ pub fn main() {
     model
         .add_operation_with_inputs(
             "Output",
-            Intersection::new(),
+            BooleanIntersection::new(),
             &vec!["Sphere", "Interpolation"],
         )
         .unwrap();

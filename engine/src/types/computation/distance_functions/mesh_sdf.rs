@@ -3,17 +3,30 @@ use std::fmt::Debug;
 use num_traits::Float;
 
 use crate::types::{
-    computation::traits::implicit_functions::ImplicitFunction,
-    geometry::{Mesh, OctreeNode, Triangle, Vec3},
+    computation::traits::ImplicitFunction,
+    geometry::{Mesh, Octree, Triangle, Vec3},
 };
 
+/// Distance function for an arbitrary triangle mesh.
+///
+/// This will create an octree of the mesh triangles and use that for signed distance queries.
 #[derive(Debug)]
 pub struct MeshSDF<T: Float + Debug + Send + Sync> {
-    pub tree: Box<OctreeNode<Triangle<T>, T>>,
+    /// Octree of triangles to use for signed distance computation
+    pub tree: Box<Octree<Triangle<T>, T>>,
 }
 
-impl<'a, T: Float + Debug + Send + Sync> MeshSDF<T> {
-    pub fn new(mesh: &Mesh<T>, max_depth: u32, max_triangles: usize) -> Self {
+impl<T: Float + Debug + Send + Sync> MeshSDF<T> {
+    /// Create a new Mesh SDF operation. This method will take in the mesh and build the octree.
+    /// # Panics
+    ///
+    /// This method may panic if the octree construction fails.
+    ///
+    /// # Arguments
+    ///
+    /// * `max_depth` - Maximum allowed recursive depth when constructing the octree.
+    /// * `max_triangles` - Maximum number of triangles per leaf node.
+    pub fn build(mesh: &Mesh<T>, max_depth: u32, max_triangles: usize) -> Self {
         let tree = mesh.compute_octree(max_depth, max_triangles);
         Self {
             tree: Box::new(tree),
@@ -21,7 +34,7 @@ impl<'a, T: Float + Debug + Send + Sync> MeshSDF<T> {
     }
 }
 
-impl<'a, T: Float + Debug + Send + Sync> ImplicitFunction<T> for MeshSDF<T> {
+impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for MeshSDF<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         let query = Vec3::new(x, y, z);
         self.tree.signed_distance(&query)

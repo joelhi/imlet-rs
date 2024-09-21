@@ -4,22 +4,42 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{
-    computation::traits::implicit_functions::ImplicitFunction,
+    computation::traits::ImplicitFunction,
     geometry::{BoundingBox, Vec3},
 };
 
+/// Distance function for an Axis Aligned Bounding Box (AABB)
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct AABB<T: Float + Debug> {
+    /// Box geometry
     pub bounds: BoundingBox<T>,
 }
 
 impl<T: Float + Debug> AABB<T> {
+    /// Creare a new AABB from extents.
+    /// # Arguments
+    ///
+    /// * `min` - Minimum coordinate.
+    /// * `max` - Maximum coordinate.
     pub fn new(min: Vec3<T>, max: Vec3<T>) -> Self {
         Self {
             bounds: BoundingBox::new(min, max),
         }
     }
 
+    /// Creare a new AABB from a BoundigBox.
+    /// # Arguments
+    ///
+    /// * `box` - Box for distance function.
+    pub fn from_bounds(bounds: BoundingBox<T>) -> Self {
+        Self { bounds: bounds }
+    }
+
+    /// Creare a new AABB from a base point and a size.
+    /// # Arguments
+    ///
+    /// * `origin` - Base point of the box.
+    /// * `size` - Size of the box.
     pub fn from_size(origin: Vec3<T>, size: T) -> Self {
         Self {
             bounds: BoundingBox::new(
