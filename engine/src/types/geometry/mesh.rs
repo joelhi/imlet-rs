@@ -20,7 +20,7 @@ pub struct Mesh<T> {
     normals: Option<Vec<Vec3<T>>>,
 }
 
-impl<T: Float> Mesh<T> {
+impl<T> Mesh<T> {
     /// Create a new empty mesh
     pub fn new() -> Mesh<T> {
         Mesh {
@@ -28,6 +28,31 @@ impl<T: Float> Mesh<T> {
             faces: Vec::new(),
             normals: None,
         }
+    }
+
+    /// Returns the vertices of the mesh
+    pub fn vertices(&self) -> &Vec<Vec3<T>> {
+        &self.vertices
+    }
+
+    /// Returns the faces of the mesh.
+    pub fn faces(&self) -> &Vec<[usize; 3]> {
+        &self.faces
+    }
+
+    /// Returns the optional vertex normals of the mesh.
+    pub fn normals(&self) -> Option<&Vec<Vec3<T>>> {
+        self.normals.as_ref()
+    }
+
+    /// Total number of vertices
+    pub fn num_vertices(&self) -> usize {
+        self.vertices.len()
+    }
+
+    /// Total number of faces
+    pub fn num_faces(&self) -> usize {
+        self.faces.len()
     }
 }
 
@@ -48,21 +73,6 @@ impl<T: Float> Mesh<T> {
         self.faces.extend_from_slice(faces);
     }
 
-    /// Returns the vertices of the mesh
-    pub fn vertices(&self) -> &Vec<Vec3<T>> {
-        &self.vertices
-    }
-
-    /// Returns the faces of the mesh.
-    pub fn faces(&self) -> &Vec<[usize; 3]> {
-        &self.faces
-    }
-
-    /// Returns the optional vertex normals of the mesh.
-    pub fn normals(&self) -> Option<&Vec<Vec3<T>>> {
-        self.normals.as_ref()
-    }
-
     /// Returns the unique edges of the mesh.
     pub fn edges(&self) -> Vec<Line<T>> {
         let mut edges: Vec<Line<T>> = Vec::with_capacity(self.num_faces());
@@ -72,16 +82,6 @@ impl<T: Float> Mesh<T> {
             edges.push(Line::new(self.vertices[f[2]], self.vertices[f[0]]));
         }
         edges
-    }
-
-    /// Total number of vertices
-    pub fn num_vertices(&self) -> usize {
-        self.vertices.len()
-    }
-
-    /// Total number of faces
-    pub fn num_faces(&self) -> usize {
-        self.faces.len()
     }
 
     /// Computes the average of all mesh vertices.

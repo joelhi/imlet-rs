@@ -20,7 +20,7 @@ impl Viewer {
         Self {}
     }
 
-    pub fn run<T: Float + Debug + Send + Sync + 'static>(
+    pub fn run<T: Float + Send + Sync + 'static>(
         model: ImplicitModel<T>,
         bounds: BoundingBox<T>,
         cell_size: T,
@@ -30,7 +30,7 @@ impl Viewer {
     }
 
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
-    async fn run_internal<T: Float + Debug + Send + Sync + 'static>(
+    async fn run_internal<T: Float + Send + Sync  + 'static>(
         model: ImplicitModel<T>,
         bounds: BoundingBox<T>,
         cell_size: T,

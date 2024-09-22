@@ -7,7 +7,7 @@ use super::vertex::Vertex;
 
 const MAX_LINE_BUFFER_SIZE: usize = 65000000;
 
-pub fn mesh_to_buffers<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> (Vec<Vertex>, Vec<u32>) {
+pub fn mesh_to_buffers<T: Float>(mesh: &Mesh<T>) -> (Vec<Vertex>, Vec<u32>) {
     let mut vertices: Vec<Vertex> = Vec::with_capacity(mesh.num_vertices());
     let default = &vec![
         Vec3 {
@@ -32,7 +32,7 @@ pub fn mesh_to_buffers<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> (Vec<V
     (vertices, indices)
 }
 
-pub fn lines_to_buffer<T: Float + Debug + Send + Sync>(lines: &[Line<T>]) -> Vec<Vec<Vertex>> {
+pub fn lines_to_buffer<T: Float>(lines: &[Line<T>]) -> Vec<Vec<Vertex>> {
     let mut output: Vec<Vec<Vertex>> = Vec::new();
     let mut vertices: Vec<Vertex> = Vec::with_capacity(MAX_LINE_BUFFER_SIZE);
     for line in lines {

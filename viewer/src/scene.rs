@@ -11,13 +11,13 @@ use num_traits::Float;
 
 use crate::material::Material;
 
-pub struct Scene<T: Float + Debug + Send + Sync> {
+pub struct Scene<T> {
     meshes: Vec<Mesh<T>>,
     lines: Vec<Line<T>>,
     settings: SceneSettings,
 }
 
-impl<T: Float + Debug + Send + Sync> Scene<T> {
+impl<T: Float> Scene<T> {
     pub fn new() -> Self {
         Self {
             meshes: Vec::new(),
@@ -68,14 +68,14 @@ impl SceneSettings {
     }
 }
 
-pub struct ModelData<T: Float + Debug + Send + Sync> {
+pub struct ModelData<T> {
     model: ImplicitModel<T>,
     bounds: BoundingBox<T>,
     output: String,
     data: Option<ScalarField<T>>,
 }
 
-impl<T: Float + Debug + Send + Sync> ModelData<T> {
+impl<T: Float + Send + Sync> ModelData<T> {
     pub fn new(model: ImplicitModel<T>, bounds: BoundingBox<T>, output: &str) -> Self {
         Self {
             model: model,

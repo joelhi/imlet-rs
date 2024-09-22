@@ -70,7 +70,7 @@ impl<T: Float> YCoord<T> {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for YCoord<T> {
+impl<T: Float + Send + Sync> ImplicitFunction<T> for YCoord<T> {
     fn eval(&self, _: T, y: T, _: T) -> T {
         normalize(y, self.min, self.max)
     }

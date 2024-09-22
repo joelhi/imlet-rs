@@ -70,7 +70,7 @@ impl Subtract {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Subtract {
+impl<T: Float> ImplicitOperation<T> for Subtract {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0] - inputs[1]
     }
