@@ -1,4 +1,4 @@
-use std::{fmt::Debug, iter};
+use std::iter;
 
 use cgmath::Point3;
 

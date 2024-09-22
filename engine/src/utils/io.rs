@@ -16,12 +16,7 @@ pub(crate) fn mesh_to_obj<T: Display>(mesh: &Mesh<T>) -> String {
     let mut data = String::new();
 
     for v in mesh.vertices().iter() {
-        let v_string = format!(
-            "v {} {} {}\n",
-            v.x,
-            v.y,
-            v.z
-        );
+        let v_string = format!("v {} {} {}\n", v.x, v.y, v.z);
         data.push_str(&v_string);
     }
 
@@ -39,10 +34,7 @@ pub(crate) fn mesh_to_obj<T: Display>(mesh: &Mesh<T>) -> String {
 ///
 /// * `mesh` - Mesh to export.
 /// * `file_name` - Name of the target file to be created, without .obj extension.
-pub fn write_obj_file<T: Display>(
-    mesh: &Mesh<T>,
-    file_name: &str,
-) -> io::Result<()> {
+pub fn write_obj_file<T: Display>(mesh: &Mesh<T>, file_name: &str) -> io::Result<()> {
     let file_path = Path::new(file_name).with_extension("obj");
     let mut file = fs::File::create(file_path)?;
     file.write_all(mesh_to_obj(&mesh).as_bytes())?;

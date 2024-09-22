@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 use cgmath::num_traits::Float;
 use imlet_engine::types::geometry::{Line, Mesh, Vec3};
 

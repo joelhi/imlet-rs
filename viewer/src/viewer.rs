@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 use imlet_engine::types::{computation::ImplicitModel, geometry::BoundingBox};
 use num_traits::Float;
 use winit::{
@@ -30,7 +28,7 @@ impl Viewer {
     }
 
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
-    async fn run_internal<T: Float + Send + Sync  + 'static>(
+    async fn run_internal<T: Float + Send + Sync + 'static>(
         model: ImplicitModel<T>,
         bounds: BoundingBox<T>,
         cell_size: T,
