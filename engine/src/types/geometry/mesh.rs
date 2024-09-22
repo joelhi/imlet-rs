@@ -19,7 +19,7 @@ pub struct Mesh<T> {
     faces: Vec<[usize; 3]>,
     normals: Option<Vec<Vec3<T>>>,
 }
-    
+
 impl<T: Float> Mesh<T> {
     /// Create a new empty mesh
     pub fn new() -> Mesh<T> {

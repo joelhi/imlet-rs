@@ -1,7 +1,3 @@
-use std::fmt::Debug;
-
-use num_traits::Float;
-
 /// Trait to define a distance function in 3d space.
 ///
 /// This trait provides the framework for evaluating distance functions as part of an implicit model.

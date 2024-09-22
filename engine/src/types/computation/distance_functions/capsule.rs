@@ -3,7 +3,10 @@ use std::fmt::Debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::{computation::traits::ImplicitFunction, geometry::{Line, Vec3}};
+use crate::types::{
+    computation::traits::ImplicitFunction,
+    geometry::{Line, Vec3},
+};
 
 /// Distance function for a capsule defined by a line and a radius
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -12,7 +15,7 @@ pub struct Capsule<T> {
     radius: T,
 }
 
-impl <T> Capsule<T> {
+impl<T> Capsule<T> {
     /// Create a new Capsule.
     /// # Arguments
     ///

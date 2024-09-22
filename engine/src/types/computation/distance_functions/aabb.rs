@@ -15,7 +15,7 @@ pub struct AABB<T> {
     pub bounds: BoundingBox<T>,
 }
 
-impl<T> AABB<T>{
+impl<T> AABB<T> {
     /// Creare a new AABB from extents.
     /// # Arguments
     ///

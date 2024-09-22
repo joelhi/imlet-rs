@@ -1,4 +1,4 @@
-use std::{cell::RefCell, fmt::Debug, time::Instant};
+use std::{cell::RefCell, time::Instant};
 
 use num_traits::Float;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
@@ -18,7 +18,7 @@ pub struct ComputationGraph<'a, T> {
     inputs: Vec<Vec<ComponentId>>,
 }
 
-impl <'a, T> ComputationGraph<'a, T> {
+impl<'a, T> ComputationGraph<'a, T> {
     pub(crate) fn new() -> Self {
         Self {
             components: Vec::new(),
@@ -83,7 +83,7 @@ impl<'a, T: Float> ComputationGraph<'a, T> {
     }
 }
 
-impl <'a, T: Float + Send + Sync> ComputationGraph<'a, T>{
+impl<'a, T: Float + Send + Sync> ComputationGraph<'a, T> {
     pub fn evaluate(&self, bounds: &BoundingBox<T>, cell_size: T) -> ScalarField<T> {
         let before = Instant::now();
         let n = Self::point_count(&bounds, cell_size);

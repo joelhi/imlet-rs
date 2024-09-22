@@ -22,7 +22,7 @@ pub struct ScalarField<T> {
     data: Vec<T>,
 }
 
-impl <T> ScalarField<T> {
+impl<T> ScalarField<T> {
     pub(crate) fn with_data(origin: Vec3<T>, cell_size: T, num_pts: Vec3i, data: Vec<T>) -> Self {
         if num_pts.product() != data.len() {
             panic!("Incorrect size of data buffer");
@@ -234,17 +234,14 @@ impl<T: Float> ScalarField<T> {
         let before = Instant::now();
         let mut smoothed = vec![T::zero(); self.num_points()];
         for _ in 0..iterations {
-            smoothed
-                .iter_mut()
-                .enumerate()
-                .for_each(|(index, val)| {
-                    if let Some(sum) = self.neighbours_sum(index) {
-                        let laplacian = sum / T::from(6.0).expect("Failed to convert number to T");
-                        *val = (T::one() - factor) * self.data[index] + factor * laplacian;
-                    } else {
-                        *val = self.data[index];
-                    };
-                });
+            smoothed.iter_mut().enumerate().for_each(|(index, val)| {
+                if let Some(sum) = self.neighbours_sum(index) {
+                    let laplacian = sum / T::from(6.0).expect("Failed to convert number to T");
+                    *val = (T::one() - factor) * self.data[index] + factor * laplacian;
+                } else {
+                    *val = self.data[index];
+                };
+            });
             std::mem::swap(&mut self.data, &mut smoothed);
         }
 
@@ -257,7 +254,7 @@ impl<T: Float> ScalarField<T> {
     }
 }
 
-impl <T: Float + Send + Sync> ScalarField<T>{
+impl<T: Float + Send + Sync> ScalarField<T> {
     /// Performs a laplacian smoothing operation on the field data using parallel iteration.
     ///
     /// The value of each point will be updated based on the average of the adjacent points.
@@ -290,7 +287,6 @@ impl <T: Float + Send + Sync> ScalarField<T>{
             iterations
         );
     }
-    
 }
 
 #[cfg(test)]

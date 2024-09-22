@@ -12,8 +12,7 @@ pub struct Plane<T> {
     normal: Vec3<T>,
 }
 
-impl<T: Float> Plane<T>
-{
+impl<T: Float> Plane<T> {
     /// Create a new Plane from an origin point and a normal.
     ///
     /// # Arguments
@@ -36,7 +35,7 @@ impl<T: Float> Plane<T>
     pub fn normal(&self) -> Vec3<T> {
         self.normal
     }
-    
+
     /// Computes the signed distance to the plane from a point.
     ///
     /// Locations above the plane in the direction of the normal will return a positive distance. Locations below will be negative.

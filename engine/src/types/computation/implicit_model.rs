@@ -5,7 +5,6 @@ use crate::types::computation::ComputationGraph;
 use crate::types::geometry::{BoundingBox, Mesh};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
-use std::fmt::Debug;
 use std::time::Instant;
 
 use super::ScalarField;
@@ -18,7 +17,7 @@ pub struct ImplicitModel<T> {
     inputs: HashMap<String, Vec<Option<String>>>,
 }
 
-impl <T> ImplicitModel<T> {
+impl<T> ImplicitModel<T> {
     /// Create a new empty model.
     pub fn new() -> Self {
         Self {

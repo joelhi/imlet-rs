@@ -1,4 +1,3 @@
-use std::fmt::Debug;
 use std::time::Instant;
 
 use num_traits::Float;
