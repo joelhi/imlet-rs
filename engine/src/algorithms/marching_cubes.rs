@@ -19,7 +19,7 @@ use super::tables::*;
 ///
 /// * `field` - The field from which the iso surface should be generated.
 /// * `iso_val` - The target iso value.
-pub fn generate_iso_surface<T: Float + Debug + Send + Sync>(
+pub fn generate_iso_surface<T: Float + Send + Sync>(
     field: &ScalarField<T>,
     iso_val: T,
 ) -> Vec<Triangle<T>> {
@@ -52,7 +52,7 @@ pub fn generate_iso_surface<T: Float + Debug + Send + Sync>(
     triangles
 }
 
-fn polygonize_cell<T: Float + Debug>(
+fn polygonize_cell<T: Float>(
     iso_val: T,
     cell_coord: &[Vec3<T>; 8],
     cell_values: &[T; 8],
@@ -61,7 +61,7 @@ fn polygonize_cell<T: Float + Debug>(
     triangles(cube_index, &cell_coord, &cell_values, iso_val)
 }
 
-fn cube_index<T: Float + Debug>(cell_values: &[T; 8], iso_val: T) -> usize {
+fn cube_index<T: Float>(cell_values: &[T; 8], iso_val: T) -> usize {
     let mut cube_index: usize = 0;
 
     if cell_values[0] < iso_val {
@@ -92,7 +92,7 @@ fn cube_index<T: Float + Debug>(cell_values: &[T; 8], iso_val: T) -> usize {
     cube_index
 }
 
-fn triangles<T: Float + Debug>(
+fn triangles<T: Float>(
     cube_index: usize,
     cell_coord: &[Vec3<T>; 8],
     cell_values: &[T; 8],
@@ -117,7 +117,7 @@ fn triangles<T: Float + Debug>(
     triangles
 }
 
-fn vertices<T: Float + Debug>(
+fn vertices<T: Float>(
     cube_index: usize,
     cell_coord: &[Vec3<T>; 8],
     cell_values: &[T; 8],
@@ -251,7 +251,7 @@ fn vertices<T: Float + Debug>(
     vertices
 }
 
-fn interpolate_vertex<T: Float + Debug>(
+fn interpolate_vertex<T: Float>(
     iso_val: T,
     first_coord: &Vec3<T>,
     second_coord: &Vec3<T>,

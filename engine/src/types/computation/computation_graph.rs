@@ -13,12 +13,12 @@ use super::{
     ScalarField,
 };
 
-pub struct ComputationGraph<'a, T: Float + Debug + Send + Sync> {
+pub struct ComputationGraph<'a, T> {
     components: Vec<&'a Component<T>>,
     inputs: Vec<Vec<ComponentId>>,
 }
 
-impl<'a, T: Float + Debug + Send + Sync> ComputationGraph<'a, T> {
+impl <'a, T> ComputationGraph<'a, T> {
     pub(crate) fn new() -> Self {
         Self {
             components: Vec::new(),
@@ -30,7 +30,9 @@ impl<'a, T: Float + Debug + Send + Sync> ComputationGraph<'a, T> {
         self.components.push(&component);
         self.inputs.push(inputs);
     }
+}
 
+impl<'a, T: Float> ComputationGraph<'a, T> {
     thread_local! {
         static COMPONENT_VALUES: RefCell<ComponentValues> = RefCell::new(ComponentValues::new());
     }
@@ -48,31 +50,6 @@ impl<'a, T: Float + Debug + Send + Sync> ComputationGraph<'a, T> {
             }
             values.last()
         })
-    }
-
-    pub fn evaluate(&self, bounds: &BoundingBox<T>, cell_size: T) -> ScalarField<T> {
-        let before = Instant::now();
-        let n = Self::point_count(&bounds, cell_size);
-
-        log::info!("Evaluating model with {}x{}x{} points", n.i, n.j, n.k);
-
-        let mut data: Vec<T> = vec![T::zero(); n.i * n.j * n.k];
-        data.par_iter_mut().enumerate().for_each(|(index, value)| {
-            let (i, j, k) = index3d_from_index1d(index, n.i, n.j, n.k);
-            *value = self.evaluate_at_coord(
-                bounds.min.x + cell_size * T::from(i).expect("Failed to convert number to T"),
-                bounds.min.y + cell_size * T::from(j).expect("Failed to convert number to T"),
-                bounds.min.z + cell_size * T::from(k).expect("Failed to convert number to T"),
-            );
-        });
-
-        log::info!(
-            "Dense value buffer for {} points generated in {:.2?}",
-            n.i * n.j * n.k,
-            before.elapsed()
-        );
-
-        ScalarField::with_data(bounds.min, cell_size, n, data)
     }
 
     fn point_count(bounds: &BoundingBox<T>, cell_size: T) -> Vec3i {
@@ -103,6 +80,33 @@ impl<'a, T: Float + Debug + Send + Sync> ComputationGraph<'a, T> {
         for (i, &id) in self.inputs[component_id].iter().enumerate() {
             inputs[i] = values.get(id);
         }
+    }
+}
+
+impl <'a, T: Float + Send + Sync> ComputationGraph<'a, T>{
+    pub fn evaluate(&self, bounds: &BoundingBox<T>, cell_size: T) -> ScalarField<T> {
+        let before = Instant::now();
+        let n = Self::point_count(&bounds, cell_size);
+
+        log::info!("Evaluating model with {}x{}x{} points", n.i, n.j, n.k);
+
+        let mut data: Vec<T> = vec![T::zero(); n.i * n.j * n.k];
+        data.par_iter_mut().enumerate().for_each(|(index, value)| {
+            let (i, j, k) = index3d_from_index1d(index, n.i, n.j, n.k);
+            *value = self.evaluate_at_coord(
+                bounds.min.x + cell_size * T::from(i).expect("Failed to convert number to T"),
+                bounds.min.y + cell_size * T::from(j).expect("Failed to convert number to T"),
+                bounds.min.z + cell_size * T::from(k).expect("Failed to convert number to T"),
+            );
+        });
+
+        log::info!(
+            "Dense value buffer for {} points generated in {:.2?}",
+            n.i * n.j * n.k,
+            before.elapsed()
+        );
+
+        ScalarField::with_data(bounds.min, cell_size, n, data)
     }
 }
 

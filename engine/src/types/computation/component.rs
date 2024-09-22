@@ -14,13 +14,13 @@ impl From<usize> for ComponentId {
     }
 }
 
-pub enum Component<T: Float + Debug> {
+pub enum Component<T> {
     Constant(T),
     Function(Box<dyn ImplicitFunction<T>>),
     Operation(Box<dyn ImplicitOperation<T>>),
 }
 
-impl<T: Float + Debug + Send + Sync> Component<T> {
+impl<T: Float> Component<T> {
     pub fn compute(&self, x: T, y: T, z: T, inputs: &[T]) -> T {
         match self {
             Component::Constant(value) => *value,
@@ -47,7 +47,7 @@ impl ComponentValues {
         T::from(self.values[component_id.0]).expect("Failed to convert component output to T")
     }
 
-    pub fn set<T: Float + Debug + Send + Sync>(&mut self, index: usize, value: T) {
+    pub fn set<T: Float>(&mut self, index: usize, value: T) {
         self.values[index] = value.to_f64().expect("Failed to convert value to f64");
     }
 
