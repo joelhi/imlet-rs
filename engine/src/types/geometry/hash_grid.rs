@@ -1,7 +1,7 @@
 use num_traits::Float;
 
 use super::Vec3;
-use std::{collections::HashMap, fmt::Debug, usize};
+use std::{collections::HashMap, usize};
 
 const DEFAULT_SPATIAL_TOL: f32 = 1E-5;
 

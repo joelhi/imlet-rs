@@ -5,7 +5,7 @@ use num_traits::Float;
 /// Trait to define a distance function in 3d space.
 ///
 /// This trait provides the framework for evaluating distance functions as part of an implicit model.
-pub trait ImplicitFunction<T: Float + Debug + Send + Sync>: Sync + Send {
+pub trait ImplicitFunction<T>: Sync + Send {
     /// Evaluate a function in 3 dimensional space. *f(x,y,z)->value*
     ///
     /// This function will be evaluated at each sample point in an implicit model.
@@ -22,7 +22,7 @@ pub trait ImplicitFunction<T: Float + Debug + Send + Sync>: Sync + Send {
 /// This is used to define custom operations on data in an implicit model, independent of global coordinates.
 ///
 /// For example simple arithmetic or boolean operations.
-pub trait ImplicitOperation<T: Float + Debug + Send + Sync>: Sync + Send {
+pub trait ImplicitOperation<T>: Sync + Send {
     /// Perform the operation based on the input values.
     /// # Arguments
     ///

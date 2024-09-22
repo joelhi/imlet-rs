@@ -10,7 +10,6 @@ use super::Octree;
 use super::SpatialHashGrid;
 use super::Triangle;
 use super::Vec3;
-use std::fmt::Debug;
 use std::time::Instant;
 use std::usize;
 
@@ -33,46 +32,6 @@ impl<T: Float> Mesh<T> {
 }
 
 impl<T: Float> Mesh<T> {
-    /// Create a indexed mesh from a list of triangle objects.
-    ///
-    /// # Arguments
-    /// * `triangles` - slice of triangles to create mesh from.
-    pub fn from_triangles(triangles: &[Triangle<T>]) -> Mesh<T> {
-        let before = Instant::now();
-        let mut faces: Vec<[usize; 3]> = Vec::with_capacity(triangles.len());
-        let mut grid = SpatialHashGrid::new();
-
-        let mut mesh = Mesh::new();
-        for triangle in triangles {
-            let vertex_ids = [
-                grid.add_point(triangle.p1()),
-                grid.add_point(triangle.p2()),
-                grid.add_point(triangle.p3()),
-            ];
-
-            if !(vertex_ids[0] == vertex_ids[1]
-                || vertex_ids[0] == vertex_ids[2]
-                || vertex_ids[1] == vertex_ids[2])
-            {
-                faces.push(vertex_ids);
-            }
-        }
-
-        mesh.add_vertices(&grid.vertices());
-        mesh.add_faces(&faces);
-
-        log::info!(
-            "Mesh topology generated for {} points and {} triangles in {:.2?}",
-            mesh.num_vertices(),
-            mesh.num_faces(),
-            before.elapsed()
-        );
-
-        mesh.compute_vertex_normals();
-
-        mesh
-    }
-
     /// Add vertices to the vertex list of the mesh
     /// # Arguments
     ///
@@ -221,13 +180,13 @@ impl<T: Float> Mesh<T> {
     }
 
     /// Convert the vertex data type from the current type to a new type Q.
-    pub fn convert<Q: Float + Debug + Send + Sync>(&self) -> Mesh<Q> {
+    pub fn convert<Q: Float + Send + Sync>(&self) -> Mesh<Q> {
         let converted_v: Vec<Vec3<Q>> = self.vertices.iter().map(|v| v.convert::<Q>()).collect();
         let mut m = Mesh::<Q>::new();
 
         m.add_vertices(&converted_v);
         m.add_faces(&self.faces);
-        m.compute_vertex_normals();
+        m.compute_vertex_normals_par();
 
         m
     }
@@ -281,11 +240,51 @@ impl<T: Float> Mesh<T> {
 }
 
 impl<T: Float + Send + Sync> Mesh<T> {
-    /// Computes and stores the vertex normals using an angle weighted average of the incident faces.
+    /// Create a indexed mesh from a list of triangle objects.
+    ///
+    /// # Arguments
+    /// * `triangles` - slice of triangles to create mesh from.
+    pub fn from_triangles(triangles: &[Triangle<T>]) -> Mesh<T> {
+        let before = Instant::now();
+        let mut faces: Vec<[usize; 3]> = Vec::with_capacity(triangles.len());
+        let mut grid = SpatialHashGrid::new();
+
+        let mut mesh = Mesh::new();
+        for triangle in triangles {
+            let vertex_ids = [
+                grid.add_point(triangle.p1()),
+                grid.add_point(triangle.p2()),
+                grid.add_point(triangle.p3()),
+            ];
+
+            if !(vertex_ids[0] == vertex_ids[1]
+                || vertex_ids[0] == vertex_ids[2]
+                || vertex_ids[1] == vertex_ids[2])
+            {
+                faces.push(vertex_ids);
+            }
+        }
+
+        mesh.add_vertices(&grid.vertices());
+        mesh.add_faces(&faces);
+
+        log::info!(
+            "Mesh topology generated for {} points and {} triangles in {:.2?}",
+            mesh.num_vertices(),
+            mesh.num_faces(),
+            before.elapsed()
+        );
+
+        mesh.compute_vertex_normals_par();
+
+        mesh
+    }
+
+    /// Computes and stores the vertex normals using an angle weighted average of the incident faces using a parallel iterator.
     pub fn compute_vertex_normals_par(&mut self) {
         let before = Instant::now();
 
-        let face_normals: Vec<Vec3<T>> = self.compute_face_normals();
+        let face_normals: Vec<Vec3<T>> = self.compute_face_normals_par();
         let vertex_faces: Vec<Vec<usize>> = self.compute_vertex_faces();
         let mut vertex_normals = vec![Vec3::origin(); self.num_vertices()];
         vertex_normals

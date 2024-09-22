@@ -7,7 +7,7 @@ use crate::types::{computation::traits::ImplicitFunction, geometry::Vec3};
 
 /// Distance function for a torus, defined by an a centre point, major radius and minor radius.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Torus<T: Float + Debug> {
+pub struct Torus<T> {
     /// The centre point
     pub centre: Vec3<T>,
     /// Major radius of the torus
@@ -16,7 +16,7 @@ pub struct Torus<T: Float + Debug> {
     pub t: T,
 }
 
-impl<T: Float + Debug> Torus<T> {
+impl<T> Torus<T> {
     /// Create a new sphere.
     /// # Arguments
     ///
@@ -28,7 +28,7 @@ impl<T: Float + Debug> Torus<T> {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for Torus<T> {
+impl<T: Float + Send + Sync> ImplicitFunction<T> for Torus<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         (self.r - ((x - self.centre.x).powi(2) + (z - self.centre.z).powi(2)).sqrt()).powi(2)
             + (y - self.centre.y).powi(2)

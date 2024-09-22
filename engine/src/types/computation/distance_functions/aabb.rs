@@ -10,12 +10,12 @@ use crate::types::{
 
 /// Distance function for an Axis Aligned Bounding Box (AABB)
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct AABB<T: Float + Debug> {
+pub struct AABB<T> {
     /// Box geometry
     pub bounds: BoundingBox<T>,
 }
 
-impl<T: Float + Debug> AABB<T> {
+impl<T> AABB<T>{
     /// Creare a new AABB from extents.
     /// # Arguments
     ///
@@ -34,7 +34,9 @@ impl<T: Float + Debug> AABB<T> {
     pub fn from_bounds(bounds: BoundingBox<T>) -> Self {
         Self { bounds: bounds }
     }
+}
 
+impl<T: Float + Debug> AABB<T> {
     /// Creare a new AABB from a base point and a size.
     /// # Arguments
     ///
@@ -50,7 +52,7 @@ impl<T: Float + Debug> AABB<T> {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for AABB<T> {
+impl<T: Float + Send + Sync> ImplicitFunction<T> for AABB<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         let point = Vec3::new(x, y, z);
 

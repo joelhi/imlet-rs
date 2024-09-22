@@ -11,12 +11,12 @@ use crate::types::{
 ///
 /// This will create an octree of the mesh triangles and use that for signed distance queries.
 #[derive(Debug)]
-pub struct MeshSDF<T: Float + Debug + Send + Sync> {
+pub struct MeshSDF<T> {
     /// Octree of triangles to use for signed distance computation
     pub tree: Box<Octree<Triangle<T>, T>>,
 }
 
-impl<T: Float + Debug + Send + Sync> MeshSDF<T> {
+impl<T: Float> MeshSDF<T> {
     /// Create a new Mesh SDF operation. This method will take in the mesh and build the octree.
     /// # Panics
     ///
@@ -34,7 +34,7 @@ impl<T: Float + Debug + Send + Sync> MeshSDF<T> {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for MeshSDF<T> {
+impl<T: Float + Send + Sync> ImplicitFunction<T> for MeshSDF<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         let query = Vec3::new(x, y, z);
         self.tree.signed_distance(&query)
