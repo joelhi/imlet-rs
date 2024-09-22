@@ -1,6 +1,6 @@
 use num_traits::Float;
-use std::fmt;
 use std::fmt::Debug;
+use std::fmt::{self, Display};
 
 use super::{
     traits::{SignedQuery, SpatialQuery},
@@ -9,7 +9,7 @@ use super::{
 
 /// A single triangle with vertices in 3d space.
 #[derive(Debug, Clone, Copy)]
-pub struct Triangle<T: Float + Debug> {
+pub struct Triangle<T> {
     /// Positions of the three vertices.
     pub p: [Vec3<T>; 3],
 
@@ -17,7 +17,7 @@ pub struct Triangle<T: Float + Debug> {
     pub n: Option<[Vec3<T>; 3]>,
 }
 
-impl<T: Float + Debug> Triangle<T> {
+impl<T> Triangle<T> {
     /// Create a new Triangle from three vertices with no normals.
     /// # Arguments
     ///
@@ -35,14 +35,6 @@ impl<T: Float + Debug> Triangle<T> {
         }
     }
 
-    /// Create a new Triangle with all vertices at the origin {0,0,0}.
-    pub fn zero() -> Self {
-        Self {
-            p: [Vec3::origin(), Vec3::origin(), Vec3::origin()],
-            n: None,
-        }
-    }
-
     /// Create a new Triangle from three vertices with no normals.
     /// # Arguments
     ///
@@ -54,6 +46,16 @@ impl<T: Float + Debug> Triangle<T> {
         Self {
             p: [p1, p2, p3],
             n: n,
+        }
+    }
+}
+
+impl<T: Float> Triangle<T> {
+    /// Create a new Triangle with all vertices at the origin {0,0,0}.
+    pub fn zero() -> Self {
+        Self {
+            p: [Vec3::origin(), Vec3::origin(), Vec3::origin()],
+            n: None,
         }
     }
 
@@ -177,13 +179,13 @@ impl<T: Float + Debug> Triangle<T> {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> fmt::Display for Triangle<T> {
+impl<T: Display> fmt::Display for Triangle<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "T: {}, {}, {}", self.p[0], self.p[1], self.p[2])
     }
 }
 
-impl<T: Float + Debug + Send + Sync> SpatialQuery<T> for Triangle<T> {
+impl<T: Float> SpatialQuery<T> for Triangle<T> {
     fn bounds(&self) -> BoundingBox<T> {
         self.bounds()
     }
@@ -197,7 +199,7 @@ impl<T: Float + Debug + Send + Sync> SpatialQuery<T> for Triangle<T> {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> SignedQuery<T> for Triangle<T> {
+impl<T: Float> SignedQuery<T> for Triangle<T> {
     fn normal_at(&self, query_point: &Vec3<T>) -> Vec3<T> {
         let (closest_feature, closest_point) = self.closest_point(&query_point);
 

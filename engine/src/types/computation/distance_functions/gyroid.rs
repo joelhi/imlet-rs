@@ -8,14 +8,14 @@ use std::fmt::Debug;
 ///
 /// This fuction is not a perfect distance function, and values deviate slightly from the true distance away from the surface.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Gyroid<T: Pi + Float + Debug> {
+pub struct Gyroid<T> {
     pub length_x: T,
     pub length_y: T,
     pub length_z: T,
     pub linear: bool,
 }
 
-impl<T: Pi + Float + Debug> Gyroid<T> {
+impl<T: Float> Gyroid<T> {
     /// Create a new gyroid function with custom period lengths in x, y and z directions.
     /// # Arguments
     ///
@@ -47,7 +47,7 @@ impl<T: Pi + Float + Debug> Gyroid<T> {
     }
 }
 
-impl<T: Pi + Float + Debug + Send + Sync> ImplicitFunction<T> for Gyroid<T> {
+impl<T: Pi + Float + Send + Sync> ImplicitFunction<T> for Gyroid<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         let two = T::from(2.0).unwrap();
         let normalized_distance = (T::pi() * x / self.length_x).sin()

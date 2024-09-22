@@ -1,6 +1,6 @@
 use std::{
     any,
-    fmt::{self, Debug},
+    fmt::{self, Debug, Display},
     ops,
 };
 
@@ -9,16 +9,13 @@ use serde::{Deserialize, Serialize};
 
 /// Vector or Point with 3 coordinates.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Vec3<T>
-where
-    T: Float + Debug,
-{
+pub struct Vec3<T> {
     pub x: T,
     pub y: T,
     pub z: T,
 }
 
-impl<T: Float + Debug> Vec3<T> {
+impl<T> Vec3<T> {
     /// Create a new Vec3 from coordinates.
     /// # Arguments
     ///
@@ -28,43 +25,9 @@ impl<T: Float + Debug> Vec3<T> {
     pub fn new(x: T, y: T, z: T) -> Self {
         Self { x: x, y: y, z: z }
     }
+}
 
-    /// Compute the euclidian distance to another Vec3.
-    ///
-    /// # Arguments
-    /// * `pt` - Other point to compute distance to.
-    pub fn distance_to_vec3(&self, pt: &Vec3<T>) -> T {
-        self.distance_to_vec3_squared(&pt).sqrt()
-    }
-
-    /// Compute the euclidian distance to a location defined by x, y and z coordinates.
-    ///
-    /// # Arguments
-    /// * `x` - X coordinate.
-    /// * `y` - Y coordinate.
-    /// * `z` - Z coordinate.
-    pub fn distance_to_coord(&self, x: T, y: T, z: T) -> T {
-        self.distance_to_coord_squared(x, y, z).sqrt()
-    }
-
-    /// Compute the euclidian squared distance to another Vec3.
-    ///
-    /// # Arguments
-    /// * `pt` - Other point to compute distance to.
-    pub fn distance_to_vec3_squared(&self, pt: &Vec3<T>) -> T {
-        self.distance_to_coord_squared(pt.x, pt.y, pt.z)
-    }
-
-    /// Compute the euclidian squared distance to a location defined by x, y and z coordinates.
-    ///
-    /// # Arguments
-    /// * `x` - X coordinate.
-    /// * `y` - Y coordinate.
-    /// * `z` - Z coordinate.
-    pub fn distance_to_coord_squared(&self, x: T, y: T, z: T) -> T {
-        (self.x - x).powi(2) + (self.y - y).powi(2) + (self.z - z).powi(2)
-    }
-
+impl<T: Float> Vec3<T> {
     /// Construct a new point at {0,0,0}
     pub fn origin() -> Vec3<T> {
         Self {
@@ -99,6 +62,41 @@ impl<T: Float + Debug> Vec3<T> {
             y: T::zero(),
             z: T::one(),
         }
+    }
+    /// Compute the euclidian distance to another Vec3.
+    ///
+    /// # Arguments
+    /// * `pt` - Other point to compute distance to.
+    pub fn distance_to_vec3(&self, pt: &Vec3<T>) -> T {
+        self.distance_to_vec3_squared(&pt).sqrt()
+    }
+
+    /// Compute the euclidian distance to a location defined by x, y and z coordinates.
+    ///
+    /// # Arguments
+    /// * `x` - X coordinate.
+    /// * `y` - Y coordinate.
+    /// * `z` - Z coordinate.
+    pub fn distance_to_coord(&self, x: T, y: T, z: T) -> T {
+        self.distance_to_coord_squared(x, y, z).sqrt()
+    }
+
+    /// Compute the euclidian squared distance to another Vec3.
+    ///
+    /// # Arguments
+    /// * `pt` - Other point to compute distance to.
+    pub fn distance_to_vec3_squared(&self, pt: &Vec3<T>) -> T {
+        self.distance_to_coord_squared(pt.x, pt.y, pt.z)
+    }
+
+    /// Compute the euclidian squared distance to a location defined by x, y and z coordinates.
+    ///
+    /// # Arguments
+    /// * `x` - X coordinate.
+    /// * `y` - Y coordinate.
+    /// * `z` - Z coordinate.
+    pub fn distance_to_coord_squared(&self, x: T, y: T, z: T) -> T {
+        (self.x - x).powi(2) + (self.y - y).powi(2) + (self.z - z).powi(2)
     }
 
     /// Computes a linear interpolaton between two Vec3 values.
@@ -218,7 +216,7 @@ impl<T: Float + Debug> Vec3<T> {
     }
 
     /// Convert the internal data type to a new type *Q*.
-    pub fn convert<Q: Float + Debug>(&self) -> Vec3<Q> {
+    pub fn convert<Q: Float>(&self) -> Vec3<Q> {
         Vec3::new(
             Q::from(self.x).expect(&format!(
                 "Failed to convert from {} to {}",
@@ -244,7 +242,7 @@ impl<T: Float + Debug> Vec3<T> {
     }
 }
 
-impl<T: Float + Debug> ops::Add<Vec3<T>> for Vec3<T> {
+impl<T: Float> ops::Add<Vec3<T>> for Vec3<T> {
     type Output = Vec3<T>;
     fn add(self, _rhs: Vec3<T>) -> Vec3<T> {
         {
@@ -257,7 +255,7 @@ impl<T: Float + Debug> ops::Add<Vec3<T>> for Vec3<T> {
     }
 }
 
-impl<T: Float + Debug> ops::Sub<Vec3<T>> for Vec3<T> {
+impl<T: Float> ops::Sub<Vec3<T>> for Vec3<T> {
     type Output = Vec3<T>;
     fn sub(self, _rhs: Vec3<T>) -> Vec3<T> {
         Self {
@@ -268,7 +266,7 @@ impl<T: Float + Debug> ops::Sub<Vec3<T>> for Vec3<T> {
     }
 }
 
-impl<T: Float + Debug> ops::Mul<T> for Vec3<T> {
+impl<T: Float> ops::Mul<T> for Vec3<T> {
     type Output = Vec3<T>;
     fn mul(self, rhs: T) -> Self::Output {
         Self {
@@ -279,22 +277,16 @@ impl<T: Float + Debug> ops::Mul<T> for Vec3<T> {
     }
 }
 
-impl<T: Float + Debug> ops::Mul<Vec3<T>> for Vec3<T> {
+impl<T: Float> ops::Mul<Vec3<T>> for Vec3<T> {
     type Output = T;
     fn mul(self, rhs: Vec3<T>) -> Self::Output {
         self.dot(&rhs)
     }
 }
 
-impl<T: Float + Debug> fmt::Display for Vec3<T> {
+impl<T: Display> fmt::Display for Vec3<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{{{}, {}, {}}}",
-            self.x.to_f32().unwrap(),
-            self.y.to_f32().unwrap(),
-            self.z.to_f32().unwrap()
-        )
+        write!(f, "{{{}, {}, {}}}", self.x, self.y, self.z)
     }
 }
 

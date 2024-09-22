@@ -1,4 +1,4 @@
-use std::{fmt::Debug, iter};
+use std::iter;
 
 use cgmath::Point3;
 
@@ -20,7 +20,7 @@ use super::{
     vertex::Vertex,
 };
 
-pub struct State<T: Float + Debug + Send + Sync> {
+pub struct State<T> {
     surface: wgpu::Surface,
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -44,7 +44,7 @@ pub struct State<T: Float + Debug + Send + Sync> {
     window: Window,
 }
 
-impl<T: Float + Debug + Send + Sync> State<T> {
+impl<T: Float + Send + Sync> State<T> {
     pub async fn new(window: Window, model_data: ModelData<T>, scene: Scene<T>) -> Self {
         let size = window.inner_size();
         let dim = model_data.bounds().dimensions();

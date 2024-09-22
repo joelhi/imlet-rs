@@ -7,15 +7,12 @@ use super::Vec3;
 
 /// Infinite plane, defined by origin point and normal direction.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Plane<T: Float + Debug> {
+pub struct Plane<T> {
     origin: Vec3<T>,
     normal: Vec3<T>,
 }
 
-impl<T> Plane<T>
-where
-    T: Float + Debug,
-{
+impl<T: Float> Plane<T> {
     /// Create a new Plane from an origin point and a normal.
     ///
     /// # Arguments

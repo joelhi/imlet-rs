@@ -114,7 +114,7 @@ For detailed information on how these components work and interact, refer to the
 ### Base Features
 - [x] Update README with detailed examples and usage instructions.
 - [x] Improve SDF (Signed Distance Function) computation, addressing issues with leaking and pseudonormals.
-- [ ] Clean up trait bounds across all structs, so they are only specified where needed.
+- [x] Clean up trait bounds across all structs, so they are only specified where needed.
 - [ ] Refactor so implicit geometries can be added directly to the models, based on the SignedDistance trait. Same for collections of geometries.
 - [ ] More measured and intentional error handling using Result<> in various parts of the code, to make use easier and remove panics
 - [ ] Enhance the viewer with interactive buttons and runtime script loading (Use bevy?).

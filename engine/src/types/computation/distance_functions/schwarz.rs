@@ -9,14 +9,14 @@ use std::fmt::Debug;
 ///
 /// This fuction is not a perfect distance function, and values deviate slightly from the true distance away from the surface.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct SchwarzP<T: Pi + Float + Debug> {
+pub struct SchwarzP<T> {
     pub length_x: T,
     pub length_y: T,
     pub length_z: T,
     pub linear: bool,
 }
 
-impl<T: Pi + Float + Debug> SchwarzP<T> {
+impl<T: Float> SchwarzP<T> {
     /// Create a new gyroid function with custom period lengths in x, y and z directions.
     /// # Arguments
     ///
@@ -48,7 +48,7 @@ impl<T: Pi + Float + Debug> SchwarzP<T> {
     }
 }
 
-impl<T: Float + Debug + Send + Sync + Pi> ImplicitFunction<T> for SchwarzP<T> {
+impl<T: Float + Send + Sync + Pi> ImplicitFunction<T> for SchwarzP<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         let two = T::from(2.0).expect("Failed to convert number to T");
         let x = two * (T::pi() * x / self.length_x) as T;

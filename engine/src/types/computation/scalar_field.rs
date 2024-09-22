@@ -15,14 +15,14 @@ use crate::utils::math_helper::index3d_from_index1d;
 
 /// 3-dimensional field for scalar values.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ScalarField<T: Float + Debug> {
+pub struct ScalarField<T> {
     origin: Vec3<T>,
     cell_size: T,
     n: Vec3i,
     data: Vec<T>,
 }
 
-impl<T: Float + Debug + Send + Sync> ScalarField<T> {
+impl<T> ScalarField<T> {
     pub(crate) fn with_data(origin: Vec3<T>, cell_size: T, num_pts: Vec3i, data: Vec<T>) -> Self {
         if num_pts.product() != data.len() {
             panic!("Incorrect size of data buffer");
@@ -35,29 +35,9 @@ impl<T: Float + Debug + Send + Sync> ScalarField<T> {
         }
     }
 
-    /// Create a new empty field.
-    /// # Arguments
-    ///
-    /// * `origin` - The base of the field, and the first data location.
-    /// * `cell_size` - The size of each cell in the field.
-    /// * `num_pts` - Number of points in each direction.
-    pub fn new(origin: Vec3<T>, cell_size: T, num_pts: Vec3i) -> Self {
-        Self {
-            origin: origin,
-            cell_size: cell_size,
-            n: num_pts,
-            data: vec![T::zero(); num_pts.product()],
-        }
-    }
-
     /// Returns the origin of the field.
     pub fn origin(&self) -> &Vec3<T> {
         &self.origin
-    }
-
-    /// Returns the cell size of the field.
-    pub fn cell_size(&self) -> T {
-        self.cell_size
     }
 
     /// Returns the totla number of points in the field.
@@ -68,11 +48,6 @@ impl<T: Float + Debug + Send + Sync> ScalarField<T> {
     /// Returns the total number of cells in the field.
     pub fn num_cells(&self) -> usize {
         (self.n.i - 1) * (self.n.j - 1) * (self.n.k - 1)
-    }
-
-    /// Returns a copy of the data buffer in the field.
-    pub fn copy_data(&self) -> Vec<T> {
-        self.data.clone()
     }
 
     /// Returns a slice of the data buffer in the field.
@@ -95,6 +70,45 @@ impl<T: Float + Debug + Send + Sync> ScalarField<T> {
             self.point_index1d(i + 1, j + 1, k + 1),
             self.point_index1d(i, j + 1, k + 1),
         ]
+    }
+
+    pub(crate) fn point_index1d(&self, i: usize, j: usize, k: usize) -> usize {
+        index1d_from_index3d(i, j, k, self.n.i, self.n.j, self.n.k)
+    }
+
+    pub(crate) fn point_index3d(&self, index: usize) -> (usize, usize, usize) {
+        index3d_from_index1d(index, self.n.i, self.n.j, self.n.k)
+    }
+
+    pub(crate) fn cell_index3d(&self, index: usize) -> (usize, usize, usize) {
+        index3d_from_index1d(index, self.n.i - 1, self.n.j - 1, self.n.k - 1)
+    }
+}
+
+impl<T: Float> ScalarField<T> {
+    /// Create a new empty field.
+    /// # Arguments
+    ///
+    /// * `origin` - The base of the field, and the first data location.
+    /// * `cell_size` - The size of each cell in the field.
+    /// * `num_pts` - Number of points in each direction.
+    pub fn new(origin: Vec3<T>, cell_size: T, num_pts: Vec3i) -> Self {
+        Self {
+            origin: origin,
+            cell_size: cell_size,
+            n: num_pts,
+            data: vec![T::zero(); num_pts.product()],
+        }
+    }
+
+    /// Returns the cell size of the field.
+    pub fn cell_size(&self) -> T {
+        self.cell_size
+    }
+
+    /// Returns a copy of the data buffer in the field.
+    pub fn copy_data(&self) -> Vec<T> {
+        self.data.clone()
     }
 
     /// Returns the vertex locations at the corners of the specified cell.
@@ -181,39 +195,6 @@ impl<T: Float + Debug + Send + Sync> ScalarField<T> {
         ]
     }
 
-    /// Performs a laplacian smoothing operation on the field data.
-    ///
-    /// The value of each point will be updated based on the average of the adjacent points.
-    /// # Arguments
-    ///
-    /// * `factor` - Interpolation value between the average of the adjacent points and the current value.
-    /// * `iterations` - Number of successive smoothing iterations.
-    pub fn smooth(&mut self, factor: T, iterations: u32) {
-        let before = Instant::now();
-        let mut smoothed = vec![T::zero(); self.num_points()];
-        for _ in 0..iterations {
-            smoothed
-                .par_iter_mut()
-                .enumerate()
-                .for_each(|(index, val)| {
-                    if let Some(sum) = self.neighbours_sum(index) {
-                        let laplacian = sum / T::from(6.0).expect("Failed to convert number to T");
-                        *val = (T::one() - factor) * self.data[index] + factor * laplacian;
-                    } else {
-                        *val = self.data[index];
-                    };
-                });
-            std::mem::swap(&mut self.data, &mut smoothed);
-        }
-
-        log::info!(
-            "Dense value data for {} points smoothed in {:.2?} for {} iterations",
-            self.num_points(),
-            before.elapsed(),
-            iterations
-        );
-    }
-
     /// Assigns 0 to any point with an absolute value below the limit.
     /// # Arguments
     ///
@@ -242,16 +223,69 @@ impl<T: Float + Debug + Send + Sync> ScalarField<T> {
         )
     }
 
-    pub(crate) fn point_index1d(&self, i: usize, j: usize, k: usize) -> usize {
-        index1d_from_index3d(i, j, k, self.n.i, self.n.j, self.n.k)
-    }
+    /// Performs a laplacian smoothing operation on the field data.
+    ///
+    /// The value of each point will be updated based on the average of the adjacent points.
+    /// # Arguments
+    ///
+    /// * `factor` - Interpolation value between the average of the adjacent points and the current value.
+    /// * `iterations` - Number of successive smoothing iterations.
+    pub fn smooth(&mut self, factor: T, iterations: u32) {
+        let before = Instant::now();
+        let mut smoothed = vec![T::zero(); self.num_points()];
+        for _ in 0..iterations {
+            smoothed.iter_mut().enumerate().for_each(|(index, val)| {
+                if let Some(sum) = self.neighbours_sum(index) {
+                    let laplacian = sum / T::from(6.0).expect("Failed to convert number to T");
+                    *val = (T::one() - factor) * self.data[index] + factor * laplacian;
+                } else {
+                    *val = self.data[index];
+                };
+            });
+            std::mem::swap(&mut self.data, &mut smoothed);
+        }
 
-    pub(crate) fn point_index3d(&self, index: usize) -> (usize, usize, usize) {
-        index3d_from_index1d(index, self.n.i, self.n.j, self.n.k)
+        log::info!(
+            "Dense value data for {} points smoothed in {:.2?} for {} iterations",
+            self.num_points(),
+            before.elapsed(),
+            iterations
+        );
     }
+}
 
-    pub(crate) fn cell_index3d(&self, index: usize) -> (usize, usize, usize) {
-        index3d_from_index1d(index, self.n.i - 1, self.n.j - 1, self.n.k - 1)
+impl<T: Float + Send + Sync> ScalarField<T> {
+    /// Performs a laplacian smoothing operation on the field data using parallel iteration.
+    ///
+    /// The value of each point will be updated based on the average of the adjacent points.
+    /// # Arguments
+    ///
+    /// * `factor` - Interpolation value between the average of the adjacent points and the current value.
+    /// * `iterations` - Number of successive smoothing iterations.
+    pub fn smooth_par(&mut self, factor: T, iterations: u32) {
+        let before = Instant::now();
+        let mut smoothed = vec![T::zero(); self.num_points()];
+        for _ in 0..iterations {
+            smoothed
+                .par_iter_mut()
+                .enumerate()
+                .for_each(|(index, val)| {
+                    if let Some(sum) = self.neighbours_sum(index) {
+                        let laplacian = sum / T::from(6.0).expect("Failed to convert number to T");
+                        *val = (T::one() - factor) * self.data[index] + factor * laplacian;
+                    } else {
+                        *val = self.data[index];
+                    };
+                });
+            std::mem::swap(&mut self.data, &mut smoothed);
+        }
+
+        log::info!(
+            "Dense value data for {} points smoothed in {:.2?} for {} iterations",
+            self.num_points(),
+            before.elapsed(),
+            iterations
+        );
     }
 }
 

@@ -10,81 +10,24 @@ use super::Octree;
 use super::SpatialHashGrid;
 use super::Triangle;
 use super::Vec3;
-use std::fmt::Debug;
 use std::time::Instant;
 use std::usize;
 
 /// Indexed triangle mesh.
-pub struct Mesh<T: Float + Debug> {
+pub struct Mesh<T> {
     vertices: Vec<Vec3<T>>,
     faces: Vec<[usize; 3]>,
     normals: Option<Vec<Vec3<T>>>,
 }
 
-/// Create a new empty mesh
-impl<T: Float + Debug + Send + Sync> Mesh<T> {
+impl<T> Mesh<T> {
+    /// Create a new empty mesh
     pub fn new() -> Mesh<T> {
         Mesh {
             vertices: Vec::new(),
             faces: Vec::new(),
             normals: None,
         }
-    }
-
-    /// Create a indexed mesh from a list of triangle objects.
-    ///
-    /// # Arguments
-    /// * `triangles` - slice of triangles to create mesh from.
-    pub fn from_triangles(triangles: &[Triangle<T>]) -> Mesh<T> {
-        let before = Instant::now();
-        let mut faces: Vec<[usize; 3]> = Vec::with_capacity(triangles.len());
-        let mut grid = SpatialHashGrid::new();
-
-        let mut mesh = Mesh::new();
-        for triangle in triangles {
-            let vertex_ids = [
-                grid.add_point(triangle.p1()),
-                grid.add_point(triangle.p2()),
-                grid.add_point(triangle.p3()),
-            ];
-
-            if !(vertex_ids[0] == vertex_ids[1]
-                || vertex_ids[0] == vertex_ids[2]
-                || vertex_ids[1] == vertex_ids[2])
-            {
-                faces.push(vertex_ids);
-            }
-        }
-
-        mesh.add_vertices(&grid.vertices());
-        mesh.add_faces(&faces);
-
-        log::info!(
-            "Mesh topology generated for {} points and {} triangles in {:.2?}",
-            mesh.num_vertices(),
-            mesh.num_faces(),
-            before.elapsed()
-        );
-
-        mesh.compute_vertex_normals();
-
-        mesh
-    }
-
-    /// Add vertices to the vertex list of the mesh
-    /// # Arguments
-    ///
-    /// * `vertices` - Slice of vertices to be added.
-    pub fn add_vertices(&mut self, vertices: &[Vec3<T>]) {
-        self.vertices.extend_from_slice(vertices);
-    }
-
-    /// Add faces to the face list of the mesh
-    /// # Arguments
-    ///
-    /// * `faces` - Slice of faces to be added.
-    pub fn add_faces(&mut self, faces: &[[usize; 3]]) {
-        self.faces.extend_from_slice(faces);
     }
 
     /// Returns the vertices of the mesh
@@ -102,6 +45,34 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         self.normals.as_ref()
     }
 
+    /// Total number of vertices
+    pub fn num_vertices(&self) -> usize {
+        self.vertices.len()
+    }
+
+    /// Total number of faces
+    pub fn num_faces(&self) -> usize {
+        self.faces.len()
+    }
+}
+
+impl<T: Float> Mesh<T> {
+    /// Add vertices to the vertex list of the mesh
+    /// # Arguments
+    ///
+    /// * `vertices` - Slice of vertices to be added.
+    pub fn add_vertices(&mut self, vertices: &[Vec3<T>]) {
+        self.vertices.extend_from_slice(vertices);
+    }
+
+    /// Add faces to the face list of the mesh
+    /// # Arguments
+    ///
+    /// * `faces` - Slice of faces to be added.
+    pub fn add_faces(&mut self, faces: &[[usize; 3]]) {
+        self.faces.extend_from_slice(faces);
+    }
+
     /// Returns the unique edges of the mesh.
     pub fn edges(&self) -> Vec<Line<T>> {
         let mut edges: Vec<Line<T>> = Vec::with_capacity(self.num_faces());
@@ -111,16 +82,6 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
             edges.push(Line::new(self.vertices[f[2]], self.vertices[f[0]]));
         }
         edges
-    }
-
-    /// Total number of vertices
-    pub fn num_vertices(&self) -> usize {
-        self.vertices.len()
-    }
-
-    /// Total number of faces
-    pub fn num_faces(&self) -> usize {
-        self.faces.len()
     }
 
     /// Computes the average of all mesh vertices.
@@ -159,15 +120,12 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         let face_normals: Vec<Vec3<T>> = self.compute_face_normals();
         let vertex_faces: Vec<Vec<usize>> = self.compute_vertex_faces();
         let mut vertex_normals = vec![Vec3::origin(); self.num_vertices()];
-        vertex_normals
-            .par_iter_mut()
-            .enumerate()
-            .for_each(|(id, n)| {
-                for &f in &vertex_faces[id] {
-                    *n = *n + (face_normals[f] * self.face_angle_at_vertex(id, f));
-                }
-                *n = n.normalize();
-            });
+        vertex_normals.iter_mut().enumerate().for_each(|(id, n)| {
+            for &f in &vertex_faces[id] {
+                *n = *n + (face_normals[f] * self.face_angle_at_vertex(id, f));
+            }
+            *n = n.normalize();
+        });
         self.normals = Some(vertex_normals);
 
         log::info!(
@@ -179,7 +137,7 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
 
     pub(crate) fn compute_face_normals(&self) -> Vec<Vec3<T>> {
         self.faces
-            .par_iter()
+            .iter()
             .map(|f| {
                 let v1 = self.vertices[f[1]] - self.vertices[f[0]];
                 let v2 = self.vertices[f[2]] - self.vertices[f[0]];
@@ -222,13 +180,13 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
     }
 
     /// Convert the vertex data type from the current type to a new type Q.
-    pub fn convert<Q: Float + Debug + Send + Sync>(&self) -> Mesh<Q> {
+    pub fn convert<Q: Float + Send + Sync>(&self) -> Mesh<Q> {
         let converted_v: Vec<Vec3<Q>> = self.vertices.iter().map(|v| v.convert::<Q>()).collect();
         let mut m = Mesh::<Q>::new();
 
         m.add_vertices(&converted_v);
         m.add_faces(&self.faces);
-        m.compute_vertex_normals();
+        m.compute_vertex_normals_par();
 
         m
     }
@@ -278,5 +236,83 @@ impl<T: Float + Debug + Send + Sync> Mesh<T> {
         );
 
         tree
+    }
+}
+
+impl<T: Float + Send + Sync> Mesh<T> {
+    /// Create a indexed mesh from a list of triangle objects.
+    ///
+    /// # Arguments
+    /// * `triangles` - slice of triangles to create mesh from.
+    pub fn from_triangles(triangles: &[Triangle<T>]) -> Mesh<T> {
+        let before = Instant::now();
+        let mut faces: Vec<[usize; 3]> = Vec::with_capacity(triangles.len());
+        let mut grid = SpatialHashGrid::new();
+
+        let mut mesh = Mesh::new();
+        for triangle in triangles {
+            let vertex_ids = [
+                grid.add_point(triangle.p1()),
+                grid.add_point(triangle.p2()),
+                grid.add_point(triangle.p3()),
+            ];
+
+            if !(vertex_ids[0] == vertex_ids[1]
+                || vertex_ids[0] == vertex_ids[2]
+                || vertex_ids[1] == vertex_ids[2])
+            {
+                faces.push(vertex_ids);
+            }
+        }
+
+        mesh.add_vertices(&grid.vertices());
+        mesh.add_faces(&faces);
+
+        log::info!(
+            "Mesh topology generated for {} points and {} triangles in {:.2?}",
+            mesh.num_vertices(),
+            mesh.num_faces(),
+            before.elapsed()
+        );
+
+        mesh.compute_vertex_normals_par();
+
+        mesh
+    }
+
+    /// Computes and stores the vertex normals using an angle weighted average of the incident faces using a parallel iterator.
+    pub fn compute_vertex_normals_par(&mut self) {
+        let before = Instant::now();
+
+        let face_normals: Vec<Vec3<T>> = self.compute_face_normals_par();
+        let vertex_faces: Vec<Vec<usize>> = self.compute_vertex_faces();
+        let mut vertex_normals = vec![Vec3::origin(); self.num_vertices()];
+        vertex_normals
+            .par_iter_mut()
+            .enumerate()
+            .for_each(|(id, n)| {
+                for &f in &vertex_faces[id] {
+                    *n = *n + (face_normals[f] * self.face_angle_at_vertex(id, f));
+                }
+                *n = n.normalize();
+            });
+        self.normals = Some(vertex_normals);
+
+        log::info!(
+            "Mesh normals computed for {} points in {:.2?}",
+            self.num_vertices(),
+            before.elapsed()
+        );
+    }
+
+    pub(crate) fn compute_face_normals_par(&self) -> Vec<Vec3<T>> {
+        self.faces
+            .par_iter()
+            .map(|f| {
+                let v1 = self.vertices[f[1]] - self.vertices[f[0]];
+                let v2 = self.vertices[f[2]] - self.vertices[f[0]];
+                v1.cross(&v2).normalize()
+            })
+            .collect()
     }
 }

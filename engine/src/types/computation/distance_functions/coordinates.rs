@@ -8,12 +8,12 @@ use crate::utils::math_helper::normalize;
 
 /// Distance function that evaluates to the z-coordinate
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct ZCoord<T: Float + Debug> {
+pub struct ZCoord<T> {
     min: T,
     max: T,
 }
 
-impl<T: Float + Debug> ZCoord<T> {
+impl<T: Float> ZCoord<T> {
     /// Create a distance function for a remapped z domain.
     ///
     /// Can be used for interpolation.
@@ -35,7 +35,7 @@ impl<T: Float + Debug> ZCoord<T> {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for ZCoord<T> {
+impl<T: Float + Send + Sync> ImplicitFunction<T> for ZCoord<T> {
     fn eval(&self, _: T, _: T, z: T) -> T {
         normalize(z, self.min, self.max)
     }
@@ -43,12 +43,12 @@ impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for ZCoord<T> {
 
 /// Distance function that evaluates to the y-coordinate
 #[derive(Debug, Clone, Copy)]
-pub struct YCoord<T: Float + Debug> {
+pub struct YCoord<T> {
     min: T,
     max: T,
 }
 
-impl<T: Float + Debug> YCoord<T> {
+impl<T: Float> YCoord<T> {
     /// Create a distance function for a remapped y domain.
     ///
     /// Can be used for interpolation.
@@ -70,7 +70,7 @@ impl<T: Float + Debug> YCoord<T> {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for YCoord<T> {
+impl<T: Float + Send + Sync> ImplicitFunction<T> for YCoord<T> {
     fn eval(&self, _: T, y: T, _: T) -> T {
         normalize(y, self.min, self.max)
     }
@@ -78,12 +78,12 @@ impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for YCoord<T> {
 
 /// Distance function that evaluates to the x-coordinate
 #[derive(Debug, Clone, Copy)]
-pub struct XCoord<T: Float + Debug> {
+pub struct XCoord<T> {
     min: T,
     max: T,
 }
 
-impl<T: Float + Debug> XCoord<T> {
+impl<T: Float> XCoord<T> {
     /// Create a distance function for a remapped x domain.
     ///
     /// Can be used for interpolation.
@@ -105,7 +105,7 @@ impl<T: Float + Debug> XCoord<T> {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for XCoord<T> {
+impl<T: Float + Send + Sync> ImplicitFunction<T> for XCoord<T> {
     fn eval(&self, x: T, _: T, _: T) -> T {
         normalize(x, self.min, self.max)
     }

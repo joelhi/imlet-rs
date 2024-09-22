@@ -10,14 +10,14 @@ use crate::utils::math_helper::Pi;
 ///
 /// This fuction is not a perfect distance function, and values deviate slightly from the true distance away from the surface.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Neovius<T: Pi + Float + Debug> {
+pub struct Neovius<T> {
     pub length_x: T,
     pub length_y: T,
     pub length_z: T,
     pub linear: bool,
 }
 
-impl<T: Pi + Float + Debug> Neovius<T> {
+impl<T: Float> Neovius<T> {
     /// Create a new neovius function with custom period lengths in x, y and z directions.
     /// # Arguments
     ///
@@ -49,7 +49,7 @@ impl<T: Pi + Float + Debug> Neovius<T> {
     }
 }
 
-impl<T: Pi + Float + Debug + Send + Sync> ImplicitFunction<T> for Neovius<T> {
+impl<T: Pi + Float + Send + Sync> ImplicitFunction<T> for Neovius<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         let two = T::from(2.0).expect("Failed to convert number to T");
         let three = T::from(2.0).expect("Failed to convert number to T");

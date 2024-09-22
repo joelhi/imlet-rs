@@ -11,7 +11,7 @@ pub struct Vertex {
 }
 
 impl Vertex {
-    pub fn from_vec3<T: Float + Debug>(position: &Vec3<T>, normal: &Vec3<T>) -> Self {
+    pub fn from_vec3<T: Float>(position: &Vec3<T>, normal: &Vec3<T>) -> Self {
         Self {
             position: [
                 position.x.to_f32().unwrap(),

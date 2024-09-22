@@ -20,7 +20,7 @@ impl BooleanUnion {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for BooleanUnion {
+impl<T: Float> ImplicitOperation<T> for BooleanUnion {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0].min(inputs[1])
     }
@@ -45,7 +45,7 @@ impl BooleanIntersection {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for BooleanIntersection {
+impl<T: Float> ImplicitOperation<T> for BooleanIntersection {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0].max(inputs[1])
     }
@@ -70,7 +70,7 @@ impl BooleanDifference {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for BooleanDifference {
+impl<T: Float> ImplicitOperation<T> for BooleanDifference {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0].max(-inputs[1])
     }
@@ -89,7 +89,7 @@ pub struct Offset<T> {
     distance: T,
 }
 
-impl<T: Float + Debug> Offset<T> {
+impl<T> Offset<T> {
     /// Create a new Offset operation.
     ///
     /// # Arguments
@@ -102,7 +102,7 @@ impl<T: Float + Debug> Offset<T> {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Offset<T> {
+impl<T: Float + Send + Sync> ImplicitOperation<T> for Offset<T> {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0] - self.distance
     }
@@ -117,11 +117,11 @@ impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Offset<T> {
 /// This function takes one input.
 /// * Thickness value
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Thickness<T: Float + Debug> {
+pub struct Thickness<T> {
     t: T,
 }
 
-impl<T: Float + Debug> Thickness<T> {
+impl<T> Thickness<T> {
     /// Create a new Thickness operation.
     ///
     /// # Arguments
@@ -132,7 +132,7 @@ impl<T: Float + Debug> Thickness<T> {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Thickness<T> {
+impl<T: Float + Send + Sync> ImplicitOperation<T> for Thickness<T> {
     fn eval(&self, inputs: &[T]) -> T {
         let two = T::from(2.0).unwrap();
         (inputs[0] - self.t / two).max(-(inputs[0] + self.t / two))

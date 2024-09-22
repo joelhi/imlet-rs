@@ -7,14 +7,14 @@ use super::{Line, Triangle, Vec3};
 
 /// Axis-Aligned Bounding Box based on a max and min coordinate.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct BoundingBox<T: Float + Debug> {
+pub struct BoundingBox<T> {
     // Minimum coordinate of the box
     pub min: Vec3<T>,
     // Maximum coordinate of the box
     pub max: Vec3<T>,
 }
 
-impl<T: Float + Debug> BoundingBox<T> {
+impl<T> BoundingBox<T> {
     /// Create a new BoundingBox from a min and max coordinate.
     ///
     /// # Arguments
@@ -24,7 +24,9 @@ impl<T: Float + Debug> BoundingBox<T> {
     pub fn new(min: Vec3<T>, max: Vec3<T>) -> Self {
         Self { min, max }
     }
+}
 
+impl<T: Float> BoundingBox<T> {
     /// Create a new BoundingBox with zero size at the origin.
     pub fn zero() -> Self {
         Self {

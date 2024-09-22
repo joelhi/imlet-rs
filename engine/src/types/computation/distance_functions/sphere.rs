@@ -7,12 +7,12 @@ use crate::types::{computation::traits::ImplicitFunction, geometry::Vec3};
 
 /// Distance function for a Sphere, defined by a centre point and a radius.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Sphere<T: Float + Debug> {
+pub struct Sphere<T> {
     pub centre: Vec3<T>,
     pub radius: T,
 }
 
-impl<T: Float + Debug> Sphere<T> {
+impl<T> Sphere<T> {
     /// Create a new sphere.
     /// # Arguments
     ///
@@ -23,7 +23,7 @@ impl<T: Float + Debug> Sphere<T> {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitFunction<T> for Sphere<T> {
+impl<T: Float + Send + Sync> ImplicitFunction<T> for Sphere<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.centre.distance_to_coord(x, y, z) - self.radius
     }

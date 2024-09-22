@@ -1,19 +1,19 @@
 use num_traits::Float;
 
 use super::Vec3;
-use std::{collections::HashMap, fmt::Debug, usize};
+use std::{collections::HashMap, usize};
 
 const DEFAULT_SPATIAL_TOL: f32 = 1E-5;
 
-// Simple implementation of a spatial hash grid, not properly checking adjacent bins.
-// So tolerance may not be guaranteed to be satisfied in the event of close points in adjacent bins.
-pub struct SpatialHashGrid<T: Float + Debug> {
+/// Simple implementation of a spatial hash grid, not properly checking adjacent bins.
+/// Tolerances may not be guaranteed to be satisfied in the event of close points in adjacent bins.
+pub struct SpatialHashGrid<T> {
     map: HashMap<i64, Vec<usize>>,
     vertices: Vec<Vec3<T>>,
     tolerance: T,
 }
 
-impl<T: Float + Debug> SpatialHashGrid<T> {
+impl<T: Float> SpatialHashGrid<T> {
     #[allow(dead_code)]
     pub fn new() -> Self {
         Self {

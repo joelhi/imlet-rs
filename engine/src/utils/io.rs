@@ -1,5 +1,5 @@
 use std::{
-    fmt::Debug,
+    fmt::{Debug, Display},
     fs,
     io::{self, BufRead, Write},
     path::Path,
@@ -12,16 +12,11 @@ use crate::types::{
     geometry::{Mesh, Vec3},
 };
 
-pub(crate) fn mesh_to_obj<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> String {
+pub(crate) fn mesh_to_obj<T: Display>(mesh: &Mesh<T>) -> String {
     let mut data = String::new();
 
-    for &v in mesh.vertices() {
-        let v_string = format!(
-            "v {} {} {}\n",
-            v.x.to_f32().expect("error"),
-            v.y.to_f32().expect("error"),
-            v.z.to_f32().expect("error")
-        );
+    for v in mesh.vertices().iter() {
+        let v_string = format!("v {} {} {}\n", v.x, v.y, v.z);
         data.push_str(&v_string);
     }
 
@@ -39,10 +34,7 @@ pub(crate) fn mesh_to_obj<T: Float + Debug + Send + Sync>(mesh: &Mesh<T>) -> Str
 ///
 /// * `mesh` - Mesh to export.
 /// * `file_name` - Name of the target file to be created, without .obj extension.
-pub fn write_obj_file<T: Float + Debug + Send + Sync>(
-    mesh: &Mesh<T>,
-    file_name: &str,
-) -> io::Result<()> {
+pub fn write_obj_file<T: Display>(mesh: &Mesh<T>, file_name: &str) -> io::Result<()> {
     let file_path = Path::new(file_name).with_extension("obj");
     let mut file = fs::File::create(file_path)?;
     file.write_all(mesh_to_obj(&mesh).as_bytes())?;
@@ -65,7 +57,7 @@ use std::fs::File;
 ///
 /// * `file_path` - Relative path to the file.
 /// * `flip_yz` - Option to flip the y and z directions. Imlet uses z as up-direction so if the mesh has y, you may want to flip it.
-pub fn parse_obj_file<T: Float + Debug + Send + Sync>(
+pub fn parse_obj_file<T: Float + Send + Sync>(
     file_path: &str,
     flip_yz: bool,
 ) -> Result<Mesh<T>, Box<dyn std::error::Error>> {
@@ -131,7 +123,7 @@ pub fn parse_obj_file<T: Float + Debug + Send + Sync>(
 
     mesh.add_vertices(&vertices);
     mesh.add_faces(&faces);
-    mesh.compute_vertex_normals();
+    mesh.compute_vertex_normals_par();
 
     log::info!(
         "Obj file {} with {} vertices and {} faces successfully read.",
@@ -155,7 +147,7 @@ pub fn parse_obj_file<T: Float + Debug + Send + Sync>(
 ///
 /// * `field` - Field to export.
 /// * `file_name` - Name of the target file to be created, without .csv extension.
-pub fn write_field_csv<T: Float + Debug + Send + Sync>(
+pub fn write_field_csv<T: Float + Display>(
     field: &ScalarField<T>,
     file_name: &str,
 ) -> io::Result<()> {
@@ -165,13 +157,13 @@ pub fn write_field_csv<T: Float + Debug + Send + Sync>(
     Ok(())
 }
 
-fn field_as_data<T: Float + Debug + Send + Sync>(field: &ScalarField<T>) -> String {
+fn field_as_data<T: Float + Display>(field: &ScalarField<T>) -> String {
     let mut data = String::new();
     data.push_str("x, y, z, v\n");
     for (idx, v) in field.data().iter().enumerate() {
         let (i, j, k) = field.point_index3d(idx);
         let v_string = format!(
-            "{:?},{:?},{:?},{:?}\n",
+            "{},{},{},{}\n",
             field.origin().x
                 + field.cell_size() * T::from(i).expect("Failed to convert number to T"),
             field.origin().y

@@ -5,7 +5,6 @@ use crate::types::computation::ComputationGraph;
 use crate::types::geometry::{BoundingBox, Mesh};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
-use std::fmt::Debug;
 use std::time::Instant;
 
 use super::ScalarField;
@@ -13,12 +12,12 @@ use super::ScalarField;
 /// An implicit model composed of distance functions and operations.
 ///
 /// This acts as the main interface used to build and compute implicit models.
-pub struct ImplicitModel<T: Float + Debug> {
+pub struct ImplicitModel<T> {
     components: HashMap<String, Component<T>>,
     inputs: HashMap<String, Vec<Option<String>>>,
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
+impl<T> ImplicitModel<T> {
     /// Create a new empty model.
     pub fn new() -> Self {
         Self {
@@ -210,85 +209,6 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
         Ok(())
     }
 
-    /// Evaluate the model at a coordinate *{x, y, z}*.
-    /// # Arguments
-    ///
-    /// * `output` - The tag of the component for which the output should be returned.
-    /// * `x` - X coordinate to evaluate at.
-    /// * `y` - Y coordinate to evaluate at.
-    /// * `z` - Z coordinate to evaluate at.
-    ///
-    /// # Returns
-    ///      
-    /// * `ScalarField<T>` - The scalar field holding the computed data.
-    pub fn evaluate_at(&self, output: &str, x: T, y: T, z: T) -> T {
-        let computation_graph = self.compile(output);
-        computation_graph.evaluate_at_coord(x, y, z)
-    }
-
-    /// Compute a discrete scalar field from the model.
-    /// # Arguments
-    ///
-    /// * `output` - The tag of the component for which the output should be stored in the field.
-    /// * `bounds` - The domain to compute.
-    /// * `cell_size` - The resolution at which the domain is computed.
-    ///
-    /// # Returns
-    ///      
-    /// * `ScalarField<T>` - The scalar field holding the computed data.
-    pub fn generate_field(
-        &self,
-        output: &str,
-        bounds: &BoundingBox<T>,
-        cell_size: T,
-    ) -> ScalarField<T> {
-        let computation_graph = self.compile(output);
-        computation_graph.evaluate(&bounds, cell_size)
-    }
-
-    /// Extract the iso surface at the zero-level.
-    /// # Arguments
-    ///
-    /// * `output` - The tag of the component which output should be used for the iso surface extraction.
-    /// * `bounds` - The domain to compute.
-    /// * `cell_size` - The resolution at which the domain is computed.
-    ///
-    /// # Returns
-    ///      
-    /// * `Mesh<T>` - The iso surface represented as an indexed triangle mesh.
-    pub fn generate_iso_surface(
-        &self,
-        output: &str,
-        bounds: &BoundingBox<T>,
-        cell_size: T,
-    ) -> Mesh<T> {
-        self.generate_iso_surface_at(output, bounds, cell_size, T::zero())
-    }
-
-    /// Extract the iso surface at a specified level.
-    /// # Arguments
-    ///
-    /// * `output` - The tag of the component which output should be used for the iso surface extraction.
-    /// * `bounds` - The domain to compute.
-    /// * `cell_size` - The resolution at which the domain is computed.
-    /// * `iso_value` - Specific value at which the iso surface should be extracted.
-    ///
-    /// # Returns
-    ///      
-    /// * `Mesh<T>` - The iso surface represented as an indexed triangle mesh.    
-    pub fn generate_iso_surface_at(
-        &self,
-        output: &str,
-        bounds: &BoundingBox<T>,
-        cell_size: T,
-        iso_value: T,
-    ) -> Mesh<T> {
-        let field = self.generate_field(output, &bounds, cell_size);
-
-        let triangles = generate_iso_surface(&field, iso_value);
-        Mesh::from_triangles(&triangles)
-    }
-
     fn compile(&self, target: &str) -> ComputationGraph<T> {
         let before = Instant::now();
         let target_output = target.to_string();
@@ -370,5 +290,86 @@ impl<T: Float + Debug + Send + Sync> ImplicitModel<T> {
                 })
                 .expect(&format!("Component {} is missing an input.", component))
         })
+    }
+}
+
+impl<T: Float + Send + Sync> ImplicitModel<T> {
+    /// Evaluate the model at a coordinate *{x, y, z}*.
+    /// # Arguments
+    ///
+    /// * `output` - The tag of the component for which the output should be returned.
+    /// * `x` - X coordinate to evaluate at.
+    /// * `y` - Y coordinate to evaluate at.
+    /// * `z` - Z coordinate to evaluate at.
+    ///
+    /// # Returns
+    ///      
+    /// * `ScalarField<T>` - The scalar field holding the computed data.
+    pub fn evaluate_at(&self, output: &str, x: T, y: T, z: T) -> T {
+        let computation_graph = self.compile(output);
+        computation_graph.evaluate_at_coord(x, y, z)
+    }
+
+    /// Compute a discrete scalar field from the model.
+    /// # Arguments
+    ///
+    /// * `output` - The tag of the component for which the output should be stored in the field.
+    /// * `bounds` - The domain to compute.
+    /// * `cell_size` - The resolution at which the domain is computed.
+    ///
+    /// # Returns
+    ///      
+    /// * `ScalarField<T>` - The scalar field holding the computed data.
+    pub fn generate_field(
+        &self,
+        output: &str,
+        bounds: &BoundingBox<T>,
+        cell_size: T,
+    ) -> ScalarField<T> {
+        let computation_graph = self.compile(output);
+        computation_graph.evaluate(&bounds, cell_size)
+    }
+
+    /// Extract the iso surface at the zero-level.
+    /// # Arguments
+    ///
+    /// * `output` - The tag of the component which output should be used for the iso surface extraction.
+    /// * `bounds` - The domain to compute.
+    /// * `cell_size` - The resolution at which the domain is computed.
+    ///
+    /// # Returns
+    ///      
+    /// * `Mesh<T>` - The iso surface represented as an indexed triangle mesh.
+    pub fn generate_iso_surface(
+        &self,
+        output: &str,
+        bounds: &BoundingBox<T>,
+        cell_size: T,
+    ) -> Mesh<T> {
+        self.generate_iso_surface_at(output, bounds, cell_size, T::zero())
+    }
+
+    /// Extract the iso surface at a specified level.
+    /// # Arguments
+    ///
+    /// * `output` - The tag of the component which output should be used for the iso surface extraction.
+    /// * `bounds` - The domain to compute.
+    /// * `cell_size` - The resolution at which the domain is computed.
+    /// * `iso_value` - Specific value at which the iso surface should be extracted.
+    ///
+    /// # Returns
+    ///      
+    /// * `Mesh<T>` - The iso surface represented as an indexed triangle mesh.    
+    pub fn generate_iso_surface_at(
+        &self,
+        output: &str,
+        bounds: &BoundingBox<T>,
+        cell_size: T,
+        iso_value: T,
+    ) -> Mesh<T> {
+        let field = self.generate_field(output, &bounds, cell_size);
+
+        let triangles = generate_iso_surface(&field, iso_value);
+        Mesh::from_triangles(&triangles)
     }
 }

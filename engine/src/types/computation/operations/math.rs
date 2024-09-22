@@ -20,7 +20,7 @@ impl Multiply {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Multiply {
+impl<T: Float> ImplicitOperation<T> for Multiply {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0] * inputs[1]
     }
@@ -45,7 +45,7 @@ impl Add {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Add {
+impl<T: Float> ImplicitOperation<T> for Add {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0] + inputs[1]
     }
@@ -70,7 +70,7 @@ impl Subtract {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Subtract {
+impl<T: Float> ImplicitOperation<T> for Subtract {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0] - inputs[1]
     }
@@ -95,7 +95,7 @@ impl Divide {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for Divide {
+impl<T: Float> ImplicitOperation<T> for Divide {
     fn eval(&self, inputs: &[T]) -> T {
         debug_assert!(inputs[1] != T::zero(), "Cannot divide by zero");
         inputs[0] / inputs[1]
@@ -122,7 +122,7 @@ impl LinearInterpolation {
     }
 }
 
-impl<T: Float + Debug + Send + Sync> ImplicitOperation<T> for LinearInterpolation {
+impl<T: Float> ImplicitOperation<T> for LinearInterpolation {
     fn eval(&self, inputs: &[T]) -> T {
         let zero = T::zero();
         let one = T::one();
