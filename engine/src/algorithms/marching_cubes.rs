@@ -336,7 +336,7 @@ mod tests {
             )
             .unwrap();
 
-        let field = model.generate_field("Sphere", &bounds, cell_size);
+        let field = model.generate_field("Sphere", &bounds, cell_size).unwrap();
 
         // Generate triangles
         let triangles = generate_iso_surface(&field, 0.0);

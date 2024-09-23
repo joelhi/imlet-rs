@@ -173,18 +173,23 @@ impl<T> ImplicitModel<T> {
     /// # Returns
     ///      
     /// * `Result<(), String>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is not found in the model.
-
-    pub fn remove_input(&mut self, component: &String, index: usize) {
+    pub fn remove_input(&mut self, component: &String, index: usize) -> Result<(), String>{
         let component_inputs = self
             .inputs
             .get_mut(component)
             .expect("Target component not found in model.");
-        assert!(
-            index < component_inputs.len(),
-            "Input index out of bounds for target component. "
-        );
+        
+            if index > component_inputs.len() {
+                return Err(format!(
+                    "Input '{}' is larger than the number of inputs for '{}', which has {} inputs.",
+                    index,
+                    component,
+                    component_inputs.len()
+                ));
+            }
 
         component_inputs[index] = None;
+        Ok(())
     }
 
     fn verify_tag_is_free(&self, tag: &String) -> Result<(), String> {
@@ -209,7 +214,7 @@ impl<T> ImplicitModel<T> {
         Ok(())
     }
 
-    fn compile(&self, target: &str) -> ComputationGraph<T> {
+    fn compile(&self, target: &str) -> Result<ComputationGraph<T>, String>{
         let before = Instant::now();
         let target_output = target.to_string();
 
@@ -275,7 +280,7 @@ impl<T> ImplicitModel<T> {
             before.elapsed()
         );
 
-        graph
+        Ok(graph)
     }
 
     fn valid_inputs(&self, component: &String) -> Vec<String> {
@@ -305,9 +310,9 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
     /// # Returns
     ///      
     /// * `ScalarField<T>` - The scalar field holding the computed data.
-    pub fn evaluate_at(&self, output: &str, x: T, y: T, z: T) -> T {
-        let computation_graph = self.compile(output);
-        computation_graph.evaluate_at_coord(x, y, z)
+    pub fn evaluate_at(&self, output: &str, x: T, y: T, z: T) -> Result<T, String> {
+        let computation_graph = self.compile(output)?;
+        Ok(computation_graph.evaluate_at_coord(x, y, z))
     }
 
     /// Compute a discrete scalar field from the model.
@@ -325,9 +330,9 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
         output: &str,
         bounds: &BoundingBox<T>,
         cell_size: T,
-    ) -> ScalarField<T> {
-        let computation_graph = self.compile(output);
-        computation_graph.evaluate(&bounds, cell_size)
+    ) -> Result<ScalarField<T>, String> {
+        let computation_graph = self.compile(output)?;
+        Ok(computation_graph.evaluate(&bounds, cell_size))
     }
 
     /// Extract the iso surface at the zero-level.
@@ -345,7 +350,7 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
         output: &str,
         bounds: &BoundingBox<T>,
         cell_size: T,
-    ) -> Mesh<T> {
+    ) -> Result<Mesh<T>, String> {
         self.generate_iso_surface_at(output, bounds, cell_size, T::zero())
     }
 
@@ -366,10 +371,10 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
         bounds: &BoundingBox<T>,
         cell_size: T,
         iso_value: T,
-    ) -> Mesh<T> {
-        let field = self.generate_field(output, &bounds, cell_size);
+    ) -> Result<Mesh<T>, String> {
+        let field = self.generate_field(output, &bounds, cell_size)?;
 
         let triangles = generate_iso_surface(&field, iso_value);
-        Mesh::from_triangles(&triangles)
+        Ok(Mesh::from_triangles(&triangles))
     }
 }
