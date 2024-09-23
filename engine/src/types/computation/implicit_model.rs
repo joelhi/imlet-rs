@@ -144,6 +144,14 @@ impl<T> ImplicitModel<T> {
         self.verify_tag_is_present(&target_string)?;
         let source_string = source.to_string();
         self.verify_tag_is_present(&source_string)?;
+        self.verify_input_validity(&target_string, &source_string)?;
+
+        if target_string.eq(&source_string){
+            return Err(format!(
+                "Target and Source components are the same value {}. Component cannot be input to itself.",
+                target_string
+            ));
+        }
 
         let target_component_inputs = self
             .inputs
@@ -173,20 +181,20 @@ impl<T> ImplicitModel<T> {
     /// # Returns
     ///      
     /// * `Result<(), String>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is not found in the model.
-    pub fn remove_input(&mut self, component: &String, index: usize) -> Result<(), String>{
+    pub fn remove_input(&mut self, component: &str, index: usize) -> Result<(), String> {
         let component_inputs = self
             .inputs
             .get_mut(component)
             .expect("Target component not found in model.");
-        
-            if index > component_inputs.len() {
-                return Err(format!(
-                    "Input '{}' is larger than the number of inputs for '{}', which has {} inputs.",
-                    index,
-                    component,
-                    component_inputs.len()
-                ));
-            }
+
+        if index > component_inputs.len() {
+            return Err(format!(
+                "Input '{}' is larger than the number of inputs for '{}', which has {} inputs.",
+                index,
+                component,
+                component_inputs.len()
+            ));
+        }
 
         component_inputs[index] = None;
         Ok(())
@@ -214,7 +222,66 @@ impl<T> ImplicitModel<T> {
         Ok(())
     }
 
-    fn compile(&self, target: &str) -> Result<ComputationGraph<T>, String>{
+    /// Verify that new input will not create cyclic dependecy.
+    fn verify_input_validity(&self, target: &String, source: &String) -> Result<(), String> {
+        // Verify that the source is not dependent on the target.
+        let mut queue = VecDeque::new();
+        queue.push_back(source.clone());
+
+        // Traverse all sources for the target and verify that source is not dependent on target.
+        while let Some(front) = queue.pop_front() {
+            if front.eq(target) {
+                // Component depends on itself. Return an error.
+                return Err(
+                    format!(
+                        "Invalid input component {} specified for {}. The component will depends on itself.", source, target
+                    )
+                );
+            }
+            for component in self.valid_inputs(&front) {
+                queue.push_back(component);
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Return all the sources upon which a component depends.
+    ///
+    /// Returns a HashMap with all dependends by tag and index if valid. Will return an error if a successful traversal is impossible, for example if a cyclical dependecy is found.
+    fn gather_sources_for_component(&self, tag: &String) -> Result<HashMap<String, usize>, String> {
+        let mut queue = VecDeque::new();
+        for component in self.valid_inputs(tag) {
+            queue.push_back(component);
+        }
+
+        // Find all sources for the target
+        let mut sources = HashMap::new();
+        while let Some(front) = queue.pop_front() {
+            if front.eq(tag) {
+                // Component depends on itself. Return an error.
+                return Err(
+                    format!(
+                        "Cyclical dependency detected for operator with tag {}. The component depends on itself.", tag
+                    )
+                );
+            }
+            if sources.contains_key(&front) {
+                continue;
+            }
+            sources.insert(front.clone(), sources.len() + 1);
+            for component in self.valid_inputs(&front) {
+                if !sources.contains_key(&component) {
+                    queue.push_back(component);
+                }
+            }
+        }
+
+        sources.insert(tag.clone(), 0);
+        Ok(sources)
+    }
+
+    fn compile(&self, target: &str) -> Result<ComputationGraph<T>, String> {
         let before = Instant::now();
         let target_output = target.to_string();
 
@@ -223,22 +290,7 @@ impl<T> ImplicitModel<T> {
         let mut ordered_components = Vec::new();
         let mut ordered_inputs = Vec::new();
 
-        let mut queue = VecDeque::new();
-        queue.push_back(target_output.clone());
-
-        // Find all sources for the target
-        let mut sources = HashMap::new();
-        while let Some(front) = queue.pop_front() {
-            if sources.contains_key(&front) {
-                continue;
-            }
-            sources.insert(front.clone(), sources.len());
-            for component in self.valid_inputs(&front) {
-                if !sources.contains_key(&component) {
-                    queue.push_back(component);
-                }
-            }
-        }
+        let mut sources = self.gather_sources_for_component(&target_output)?;
         let num_sources = sources.len() - 1;
         sources
             .iter_mut()
@@ -377,4 +429,56 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
         let triangles = generate_iso_surface(&field, iso_value);
         Ok(Mesh::from_triangles(&triangles))
     }
+}
+
+
+#[cfg(test)]
+mod tests {
+
+    use crate::types::computation::operations::math::Add;
+
+    use super::*;
+
+    #[test]
+    fn test_build_model_with_input_connections() {
+        let mut model = ImplicitModel::new();
+
+        model.add_constant("Value", 1.0).unwrap();
+        model.add_operation("Add", Add::new()).unwrap();
+
+        model.add_input("Add", "Value", 0).unwrap();
+        model.add_input("Add", "Value", 1).unwrap();
+
+        let val = model.evaluate_at("Add", 0.0, 0.0, 0.0).unwrap();
+
+        assert!((val - 2.0).abs() < f64::epsilon(), "Incorrect value. Expected 2.0 but was {}", val);
+    }
+
+    #[test]
+    fn test_error_with_cyclic_dependecies() {
+        let mut model = ImplicitModel::new();
+
+        model.add_constant("Value", 1.0).unwrap();
+        model.add_operation("Add", Add::new()).unwrap();
+
+        model.add_input("Add", "Value", 0).unwrap();
+        model.add_input("Add", "Value", 1).unwrap();
+
+
+        model.add_operation("Add2", Add::new()).unwrap();
+
+        model.add_input("Add2", "Add", 0).unwrap();
+        model.add_input("Add2", "Value", 1).unwrap();
+
+        let val = model.evaluate_at("Add2", 0.0, 0.0, 0.0).unwrap();
+
+        assert!((val - 3.0).abs() < f64::epsilon(), "Incorrect value. Expected 3.0 but was {}", val);
+
+        model.remove_input("Add", 0).unwrap();
+
+        let error = model.add_input("Add", "Add2", 0).unwrap_err();
+
+        assert_eq!("Invalid input component Add2 specified for Add. The component will depends on itself.", error);
+    }
+
 }
