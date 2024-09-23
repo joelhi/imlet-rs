@@ -1,18 +1,25 @@
+/// Error variants returned from model building and computation, in the event that something went wrong.
 #[derive(Debug)]
 pub enum ModelError {
+    /// A cyclic dependency was found. This means that one components inputs are dependent on itself.
     CyclicDependency(String),
+    /// A referenced tag was not present in the model.
     MissingTag(String),
+    /// A component was added with a tag that is already used.
     DuplicateTag(String),
+    /// An input was specified to a component that was larger than the total inputs required.
     InputIndexOutOfRange {
         component: String,
         num_inputs: usize,
         index: usize,
     },
+    /// A component was added with a list of inputs that doesn't match the number specified by the operation.
     IncorrectInputCount {
         component: String,
         num_inputs: usize,
         count: usize,
     },
+    /// Model cannot be computed as a component as an input with no source.
     MissingInput {
         component: String,
         index: usize,
