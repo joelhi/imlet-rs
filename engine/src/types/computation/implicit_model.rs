@@ -33,7 +33,7 @@ impl<T> ImplicitModel<T> {
     /// * `function` - The function to add.
     /// # Returns
     ///      
-    /// * `Result<(), ModelError>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is already in use.
+    /// * `Result<String, ModelError>` - Returns `Ok(String)` with the tag of the new component if the function is added successfully, or `Err(ModelError)` if something goes wrong.
     pub fn add_function<F: ImplicitFunction<T> + 'static>(
         &mut self,
         tag: &str,
@@ -55,7 +55,7 @@ impl<T> ImplicitModel<T> {
     /// * `operation` - The operation to add.
     /// # Returns
     ///      
-    /// * `Result<&str, ModelError>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is already in use.
+    /// * `Result<String, ModelError>` - Returns `Ok(String)` with the tag if the function is added successfully, or `Err(String)` if something goes wrong.
     pub fn add_operation<F: ImplicitOperation<T> + 'static>(
         &mut self,
         tag: &str,
@@ -82,7 +82,7 @@ impl<T> ImplicitModel<T> {
     /// * `inputs` - The tags of the components which provide the inputs. The number of inputs must match the operation added.
     /// # Returns
     ///      
-    /// * `Result<String, ModelError>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is already in use.
+    /// * `Result<String, ModelError>` - Returns `Ok(String)` with the tag of the component if the operation is added successfully, or `Err(String)` if something goes wrong.
     pub fn add_operation_with_inputs<F: ImplicitOperation<T> + 'static>(
         &mut self,
         tag: &str,
@@ -120,7 +120,7 @@ impl<T> ImplicitModel<T> {
     /// * `value` - The constant value.
     /// # Returns
     ///      
-    /// * `Result<String, ModelError>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is already in use.
+    /// * `Result<String, ModelError>` - Returns `Ok(String)` with the tag of the component if the constant is added successfully, or `Err(String)` if something goes wrong.
 
     pub fn add_constant(&mut self, tag: &str, value: T) -> Result<String, ModelError> {
         let tag_string = tag.to_string();
@@ -140,7 +140,7 @@ impl<T> ImplicitModel<T> {
     /// * `index` - The input index of the targer to which the output source is assigned.
     /// # Returns
     ///      
-    /// * `Result<(), ModelError>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the source or target tags are not found in the model.
+    /// * `Result<(), ModelError>` - Returns `Ok(())` if the input is assigned successfully, or `Err(String)` if something goes wrong, such as when the source or target tags are not found in the model.
     pub fn add_input(
         &mut self,
         target: &str,
@@ -183,7 +183,7 @@ impl<T> ImplicitModel<T> {
     ///
     /// # Returns
     ///      
-    /// * `Result<(), ModelError>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is not found in the model.
+    /// * `Result<(), ModelError>` - Returns `Ok(())` if the input is removed successfully, or `Err(String)` if something goes wrong, such as when the tag is not found in the model.
     pub fn remove_input(&mut self, component: &str, index: usize) -> Result<(), ModelError> {
         let component_inputs = self
             .inputs
@@ -373,7 +373,7 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
     ///
     /// # Returns
     ///      
-    /// * `ScalarField<T>` - The scalar field holding the computed data.
+    /// * `Result<T, ModelError>` - The computed value, or an error if not successful.
     pub fn evaluate_at(&self, output: &str, x: T, y: T, z: T) -> Result<T, ModelError> {
         let computation_graph = self.compile(output)?;
         Ok(computation_graph.evaluate_at_coord(x, y, z))
@@ -388,7 +388,7 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
     ///
     /// # Returns
     ///      
-    /// * `ScalarField<T>` - The scalar field holding the computed data.
+    /// * `Result<ScalarField<T>, ModelError> ` - The scalar field holding the computed data, or an error if not successful.
     pub fn generate_field(
         &self,
         output: &str,
@@ -408,7 +408,7 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
     ///
     /// # Returns
     ///      
-    /// * `Mesh<T>` - The iso surface represented as an indexed triangle mesh.
+    /// * `Result<Mesh<T>, ModelError>` - The iso surface represented as an indexed triangle mesh, or an error if not successful.
     pub fn generate_iso_surface(
         &self,
         output: &str,
@@ -428,7 +428,7 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
     ///
     /// # Returns
     ///      
-    /// * `Mesh<T>` - The iso surface represented as an indexed triangle mesh.    
+    /// * `Result<Mesh<T>, ModelError>` - The iso surface represented as an indexed triangle mesh, or an error if not successful.    
     pub fn generate_iso_surface_at(
         &self,
         output: &str,
@@ -554,5 +554,25 @@ mod tests {
         let error = model.evaluate_at("Add", 0.0, 0.0, 0.0).unwrap_err();
 
         assert!(matches!(error, ModelError::MissingInput { .. }));
+    }
+
+    #[test]
+    fn test_error_add_operation_incorrect_input_list() {
+        let mut model = ImplicitModel::new();
+
+        model.add_constant("Value", 1.0).unwrap();
+
+        // Only add one when two needed.
+        let error1 = model
+            .add_operation_with_inputs("Add", Add::new(), &vec!["Value"])
+            .unwrap_err();
+
+        // Add three when two needed.
+        let error2 = model
+            .add_operation_with_inputs("Add", Add::new(), &vec!["Value"])
+            .unwrap_err();
+
+        assert!(matches!(error1, ModelError::IncorrectInputCount { .. }));
+        assert!(matches!(error2, ModelError::IncorrectInputCount { .. }));
     }
 }
