@@ -7,7 +7,7 @@ use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 
-use super::ScalarField;
+use super::{ModelError, ScalarField};
 
 /// An implicit model composed of distance functions and operations.
 ///
@@ -33,19 +33,19 @@ impl<T> ImplicitModel<T> {
     /// * `function` - The function to add.
     /// # Returns
     ///      
-    /// * `Result<(), String>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is already in use.
+    /// * `Result<(), ModelError>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is already in use.
     pub fn add_function<F: ImplicitFunction<T> + 'static>(
         &mut self,
         tag: &str,
         function: F,
-    ) -> Result<(), String> {
+    ) -> Result<String, ModelError> {
         let tag_string = tag.to_string();
         self.verify_tag_is_free(&tag_string)?;
 
         self.components
-            .insert(tag_string, Component::Function(Box::new(function)));
+            .insert(tag_string.clone(), Component::Function(Box::new(function)));
 
-        Ok(())
+        Ok(tag_string)
     }
 
     /// Add a distance function component to the model.
@@ -55,21 +55,23 @@ impl<T> ImplicitModel<T> {
     /// * `operation` - The operation to add.
     /// # Returns
     ///      
-    /// * `Result<(), String>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is already in use.
+    /// * `Result<&str, ModelError>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is already in use.
     pub fn add_operation<F: ImplicitOperation<T> + 'static>(
         &mut self,
         tag: &str,
         operation: F,
-    ) -> Result<(), String> {
+    ) -> Result<String, ModelError> {
         let tag_string = tag.to_string();
         self.verify_tag_is_free(&tag_string)?;
 
         self.inputs
             .insert(tag_string.clone(), vec![None; operation.num_inputs()]);
-        self.components
-            .insert(tag_string, Component::Operation(Box::new(operation)));
+        self.components.insert(
+            tag_string.clone(),
+            Component::Operation(Box::new(operation)),
+        );
 
-        Ok(())
+        Ok(tag_string)
     }
 
     /// Add a operation component to the model, and populate it with inputs.
@@ -80,24 +82,22 @@ impl<T> ImplicitModel<T> {
     /// * `inputs` - The tags of the components which provide the inputs. The number of inputs must match the operation added.
     /// # Returns
     ///      
-    /// * `Result<(), String>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is already in use.
+    /// * `Result<String, ModelError>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is already in use.
     pub fn add_operation_with_inputs<F: ImplicitOperation<T> + 'static>(
         &mut self,
         tag: &str,
         operation: F,
         inputs: &[&str],
-    ) -> Result<(), String> {
+    ) -> Result<String, ModelError> {
         let tag_string = tag.to_string();
         self.verify_tag_is_free(&tag_string)?;
 
         if operation.num_inputs() != inputs.len() {
-            return Err(format!(
-                "Number of inputs for component '{}' does not match the inputs for '{}'. Expected {}, got {}.",
-                tag,
-                std::any::type_name::<F>(),
-                operation.num_inputs(),
-                inputs.len()
-            ));
+            return Err(ModelError::IncorrectInputCount {
+                component: tag_string,
+                num_inputs: inputs.len(),
+                count: operation.num_inputs(),
+            });
         }
 
         self.inputs.insert(
@@ -105,10 +105,12 @@ impl<T> ImplicitModel<T> {
             inputs.iter().map(|s| Some(s.to_string())).collect(),
         );
 
-        self.components
-            .insert(tag.to_string(), Component::Operation(Box::new(operation)));
+        self.components.insert(
+            tag_string.clone(),
+            Component::Operation(Box::new(operation)),
+        );
 
-        Ok(())
+        Ok(tag_string)
     }
 
     /// Add a tagged constant value to the model, which can be processed in other components.
@@ -118,16 +120,16 @@ impl<T> ImplicitModel<T> {
     /// * `value` - The constant value.
     /// # Returns
     ///      
-    /// * `Result<(), String>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is already in use.
+    /// * `Result<String, ModelError>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is already in use.
 
-    pub fn add_constant(&mut self, tag: &str, value: T) -> Result<(), String> {
+    pub fn add_constant(&mut self, tag: &str, value: T) -> Result<String, ModelError> {
         let tag_string = tag.to_string();
         self.verify_tag_is_free(&tag_string)?;
 
         self.components
-            .insert(tag_string, Component::Constant(value));
+            .insert(tag_string.clone(), Component::Constant(value));
 
-        Ok(())
+        Ok(tag_string)
     }
 
     /// Assign an input to a component.
@@ -138,19 +140,21 @@ impl<T> ImplicitModel<T> {
     /// * `index` - The input index of the targer to which the output source is assigned.
     /// # Returns
     ///      
-    /// * `Result<(), String>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the source or target tags are not found in the model.
-    pub fn add_input(&mut self, target: &str, source: &str, index: usize) -> Result<(), String> {
+    /// * `Result<(), ModelError>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the source or target tags are not found in the model.
+    pub fn add_input(
+        &mut self,
+        target: &str,
+        source: &str,
+        index: usize,
+    ) -> Result<(), ModelError> {
         let target_string = target.to_string();
         self.verify_tag_is_present(&target_string)?;
         let source_string = source.to_string();
         self.verify_tag_is_present(&source_string)?;
-        self.verify_input_validity(&target_string, &source_string)?;
+        self.verify_input_validity(&target_string, &source_string, index)?;
 
-        if target_string.eq(&source_string){
-            return Err(format!(
-                "Target and Source components are the same value {}. Component cannot be input to itself.",
-                target_string
-            ));
+        if target_string.eq(&source_string) {
+            return Err(ModelError::CyclicDependency(target.to_string()));
         }
 
         let target_component_inputs = self
@@ -159,12 +163,11 @@ impl<T> ImplicitModel<T> {
             .expect("Target component not found in model.");
 
         if index > target_component_inputs.len() {
-            return Err(format!(
-                "Input '{}' is larger than the number of inputs for '{}', which has {} inputs.",
+            return Err(ModelError::InputIndexOutOfRange {
+                component: target_string,
+                num_inputs: target_component_inputs.len(),
                 index,
-                target_string,
-                target_component_inputs.len()
-            ));
+            });
         }
 
         target_component_inputs[index] = Some(source_string.clone());
@@ -180,50 +183,62 @@ impl<T> ImplicitModel<T> {
     ///
     /// # Returns
     ///      
-    /// * `Result<(), String>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is not found in the model.
-    pub fn remove_input(&mut self, component: &str, index: usize) -> Result<(), String> {
+    /// * `Result<(), ModelError>` - Returns `Ok(())` if the function is added successfully, or `Err(String)` if something goes wrong, such as when the tag is not found in the model.
+    pub fn remove_input(&mut self, component: &str, index: usize) -> Result<(), ModelError> {
         let component_inputs = self
             .inputs
             .get_mut(component)
             .expect("Target component not found in model.");
 
         if index > component_inputs.len() {
-            return Err(format!(
-                "Input '{}' is larger than the number of inputs for '{}', which has {} inputs.",
+            return Err(ModelError::InputIndexOutOfRange {
+                component: component.to_string(),
+                num_inputs: component_inputs.len(),
                 index,
-                component,
-                component_inputs.len()
-            ));
+            });
         }
 
         component_inputs[index] = None;
         Ok(())
     }
 
-    fn verify_tag_is_free(&self, tag: &String) -> Result<(), String> {
+    fn verify_tag_is_free(&self, tag: &String) -> Result<(), ModelError> {
         if self.components.contains_key(tag) {
-            return Err(format!(
-                "A component with tag '{}' is already present in the model.",
-                tag
-            ));
+            return Err(ModelError::DuplicateTag(tag.clone()));
         }
 
         Ok(())
     }
 
-    fn verify_tag_is_present(&self, tag: &String) -> Result<(), String> {
+    fn verify_tag_is_present(&self, tag: &str) -> Result<(), ModelError> {
         if !self.components.contains_key(tag) {
-            return Err(format!(
-                "A component with tag '{}' is not present in the model",
-                tag
-            ));
+            return Err(ModelError::MissingTag(tag.to_string()));
         }
 
         Ok(())
     }
 
-    /// Verify that new input will not create cyclic dependecy.
-    fn verify_input_validity(&self, target: &String, source: &String) -> Result<(), String> {
+    /// Verify that new input is ok.
+    fn verify_input_validity(
+        &self,
+        target: &str,
+        source: &String,
+        index: usize,
+    ) -> Result<(), ModelError> {
+        // Verify that the index is within range
+        let inputs = self
+            .inputs
+            .get(target)
+            .ok_or_else(|| ModelError::MissingTag(target.to_string()))?;
+
+        if inputs.len() <= index {
+            return Err(ModelError::InputIndexOutOfRange {
+                component: target.to_string(),
+                num_inputs: inputs.len(),
+                index: index,
+            });
+        }
+
         // Verify that the source is not dependent on the target.
         let mut queue = VecDeque::new();
         queue.push_back(source.clone());
@@ -232,13 +247,9 @@ impl<T> ImplicitModel<T> {
         while let Some(front) = queue.pop_front() {
             if front.eq(target) {
                 // Component depends on itself. Return an error.
-                return Err(
-                    format!(
-                        "Invalid input component {} specified for {}. The component will depends on itself.", source, target
-                    )
-                );
+                return Err(ModelError::CyclicDependency(target.to_string()));
             }
-            for component in self.valid_inputs(&front) {
+            for component in self.valid_inputs(&front)? {
                 queue.push_back(component);
             }
         }
@@ -249,9 +260,12 @@ impl<T> ImplicitModel<T> {
     /// Return all the sources upon which a component depends.
     ///
     /// Returns a HashMap with all dependends by tag and index if valid. Will return an error if a successful traversal is impossible, for example if a cyclical dependecy is found.
-    fn gather_sources_for_component(&self, tag: &String) -> Result<HashMap<String, usize>, String> {
+    fn gather_sources_for_component(
+        &self,
+        tag: &str,
+    ) -> Result<HashMap<String, usize>, ModelError> {
         let mut queue = VecDeque::new();
-        for component in self.valid_inputs(tag) {
+        for component in self.valid_inputs(tag)? {
             queue.push_back(component);
         }
 
@@ -260,28 +274,24 @@ impl<T> ImplicitModel<T> {
         while let Some(front) = queue.pop_front() {
             if front.eq(tag) {
                 // Component depends on itself. Return an error.
-                return Err(
-                    format!(
-                        "Cyclical dependency detected for operator with tag {}. The component depends on itself.", tag
-                    )
-                );
+                return Err(ModelError::CyclicDependency(tag.to_string()));
             }
             if sources.contains_key(&front) {
                 continue;
             }
             sources.insert(front.clone(), sources.len() + 1);
-            for component in self.valid_inputs(&front) {
+            for component in self.valid_inputs(&front)? {
                 if !sources.contains_key(&component) {
                     queue.push_back(component);
                 }
             }
         }
 
-        sources.insert(tag.clone(), 0);
+        sources.insert(tag.to_string(), 0);
         Ok(sources)
     }
 
-    fn compile(&self, target: &str) -> Result<ComputationGraph<T>, String> {
+    fn compile(&self, target: &str) -> Result<ComputationGraph<T>, ModelError> {
         let before = Instant::now();
         let target_output = target.to_string();
 
@@ -302,7 +312,7 @@ impl<T> ImplicitModel<T> {
         // Iterate all the sources into an ordered list and assign indexed input
         for (component, index) in sources.iter() {
             ordered_components[*index].insert_str(0, component.as_str());
-            ordered_inputs[*index].extend(self.valid_inputs(component).iter().map(|tag| {
+            ordered_inputs[*index].extend(self.valid_inputs(component)?.iter().map(|tag| {
                 ComponentId(*sources.get(tag).expect(&format!(
                     "No component with tag {} found. The model may be corrupt or an invalid target is requested.",
                     tag
@@ -335,18 +345,20 @@ impl<T> ImplicitModel<T> {
         Ok(graph)
     }
 
-    fn valid_inputs(&self, component: &String) -> Vec<String> {
+    fn valid_inputs(&self, component: &str) -> Result<Vec<String>, ModelError> {
         let default = Vec::new();
         let option_inputs = self.inputs.get(component).unwrap_or(&default);
 
-        option_inputs.into_iter().fold(Vec::new(), |mut acc, item| {
-            item.clone()
-                .map(|s| {
-                    acc.push(s);
-                    acc
+        option_inputs
+            .iter()
+            .enumerate()
+            .map(|(index, item)| {
+                item.clone().ok_or_else(|| ModelError::MissingInput {
+                    component: component.to_string(),
+                    index: index,
                 })
-                .expect(&format!("Component {} is missing an input.", component))
-        })
+            })
+            .collect()
     }
 }
 
@@ -362,7 +374,7 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
     /// # Returns
     ///      
     /// * `ScalarField<T>` - The scalar field holding the computed data.
-    pub fn evaluate_at(&self, output: &str, x: T, y: T, z: T) -> Result<T, String> {
+    pub fn evaluate_at(&self, output: &str, x: T, y: T, z: T) -> Result<T, ModelError> {
         let computation_graph = self.compile(output)?;
         Ok(computation_graph.evaluate_at_coord(x, y, z))
     }
@@ -382,7 +394,7 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
         output: &str,
         bounds: &BoundingBox<T>,
         cell_size: T,
-    ) -> Result<ScalarField<T>, String> {
+    ) -> Result<ScalarField<T>, ModelError> {
         let computation_graph = self.compile(output)?;
         Ok(computation_graph.evaluate(&bounds, cell_size))
     }
@@ -402,7 +414,7 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
         output: &str,
         bounds: &BoundingBox<T>,
         cell_size: T,
-    ) -> Result<Mesh<T>, String> {
+    ) -> Result<Mesh<T>, ModelError> {
         self.generate_iso_surface_at(output, bounds, cell_size, T::zero())
     }
 
@@ -423,14 +435,13 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
         bounds: &BoundingBox<T>,
         cell_size: T,
         iso_value: T,
-    ) -> Result<Mesh<T>, String> {
+    ) -> Result<Mesh<T>, ModelError> {
         let field = self.generate_field(output, &bounds, cell_size)?;
 
         let triangles = generate_iso_surface(&field, iso_value);
         Ok(Mesh::from_triangles(&triangles))
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -451,7 +462,11 @@ mod tests {
 
         let val = model.evaluate_at("Add", 0.0, 0.0, 0.0).unwrap();
 
-        assert!((val - 2.0).abs() < f64::epsilon(), "Incorrect value. Expected 2.0 but was {}", val);
+        assert!(
+            (val - 2.0).abs() < f64::epsilon(),
+            "Incorrect value. Expected 2.0 but was {}",
+            val
+        );
     }
 
     #[test]
@@ -464,7 +479,6 @@ mod tests {
         model.add_input("Add", "Value", 0).unwrap();
         model.add_input("Add", "Value", 1).unwrap();
 
-
         model.add_operation("Add2", Add::new()).unwrap();
 
         model.add_input("Add2", "Add", 0).unwrap();
@@ -472,13 +486,73 @@ mod tests {
 
         let val = model.evaluate_at("Add2", 0.0, 0.0, 0.0).unwrap();
 
-        assert!((val - 3.0).abs() < f64::epsilon(), "Incorrect value. Expected 3.0 but was {}", val);
+        assert!(
+            (val - 3.0).abs() < f64::epsilon(),
+            "Incorrect value. Expected 3.0 but was {}",
+            val
+        );
 
         model.remove_input("Add", 0).unwrap();
 
         let error = model.add_input("Add", "Add2", 0).unwrap_err();
 
-        assert_eq!("Invalid input component Add2 specified for Add. The component will depends on itself.", error);
+        assert!(matches!(error, ModelError::CyclicDependency { .. }));
     }
 
+    #[test]
+    fn test_error_incorrect_input_count() {
+        let mut model = ImplicitModel::new();
+
+        model.add_constant("Value", 1.0).unwrap();
+        model.add_operation("Add", Add::new()).unwrap();
+
+        model.add_input("Add", "Value", 0).unwrap();
+        model.add_input("Add", "Value", 1).unwrap();
+
+        // Out of bounds
+        let error = model.add_input("Add", "Value", 2).unwrap_err();
+
+        assert!(matches!(error, ModelError::InputIndexOutOfRange { .. }));
+    }
+
+    #[test]
+    fn test_error_missing_tag() {
+        let mut model = ImplicitModel::new();
+
+        model.add_constant("Value", 1.0).unwrap();
+        model.add_operation("Add", Add::new()).unwrap();
+
+        model.add_input("Add", "Value", 0).unwrap();
+
+        // Value2 is not in model
+        let error = model.add_input("Add", "Value2", 1).unwrap_err();
+
+        assert!(matches!(error, ModelError::MissingTag { .. }));
+    }
+
+    #[test]
+    fn test_error_duplicate_tag() {
+        let mut model = ImplicitModel::new();
+
+        model.add_constant("Value", 1.0).unwrap();
+
+        // Value is already in model
+        let error = model.add_operation("Value", Add::new()).unwrap_err();
+
+        assert!(matches!(error, ModelError::DuplicateTag { .. }));
+    }
+
+    #[test]
+    fn test_error_missing_input() {
+        let mut model = ImplicitModel::new();
+
+        model.add_constant("Value", 1.0).unwrap();
+        model.add_operation("Add", Add::new()).unwrap();
+
+        model.add_input("Add", "Value", 0).unwrap();
+
+        let error = model.evaluate_at("Add", 0.0, 0.0, 0.0).unwrap_err();
+
+        assert!(matches!(error, ModelError::MissingInput { .. }));
+    }
 }
