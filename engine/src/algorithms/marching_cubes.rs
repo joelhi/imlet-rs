@@ -343,7 +343,18 @@ mod tests {
 
         let area: f64 = triangles.iter().map(|tri| tri.compute_area()).sum();
 
-        assert!(200.079 - area < 0.1);
-        assert_eq!(2312, triangles.len());
+        assert!(
+            200.079 - area < 0.1,
+            "Incorrect area computed. Expected {}, but was {}",
+            200.079,
+            area
+        );
+        assert_eq!(
+            2312,
+            triangles.len(),
+            "Incorrect number of triangles computed. Expected {} but was {}",
+            2312,
+            triangles.len()
+        );
     }
 }
