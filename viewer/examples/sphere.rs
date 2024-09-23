@@ -23,7 +23,8 @@ pub fn main() {
 
     // Function
     let mut model = ImplicitModel::new();
-    model
+
+    let sphere_tag = model
         .add_function(
             "Sphere",
             Sphere::new(
@@ -37,5 +38,5 @@ pub fn main() {
         )
         .unwrap();
 
-    Viewer::run(model, bounds, cell_size, "Sphere");
+    Viewer::run(model, bounds, cell_size, &sphere_tag);
 }

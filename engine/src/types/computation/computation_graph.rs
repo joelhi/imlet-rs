@@ -90,7 +90,7 @@ impl<'a, T: Float + Send + Sync> ComputationGraph<'a, T> {
 
         log::info!("Evaluating model with {}x{}x{} points", n.i, n.j, n.k);
 
-        let mut data: Vec<T> = vec![T::zero(); n.i * n.j * n.k];
+        let mut data: Vec<T> = vec![T::zero(); n.product()];
         data.par_iter_mut().enumerate().for_each(|(index, value)| {
             let (i, j, k) = index3d_from_index1d(index, n.i, n.j, n.k);
             *value = self.evaluate_at_coord(

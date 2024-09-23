@@ -1,6 +1,7 @@
 mod component;
 mod computation_graph;
 mod implicit_model;
+mod model_error;
 mod scalar_field;
 
 /// Various distance functions, including Triply-Periodic Surfaces (TPS), primitives and custom meshes.
@@ -12,4 +13,5 @@ pub mod traits;
 
 pub(crate) use computation_graph::*;
 pub use implicit_model::*;
+pub use model_error::*;
 pub use scalar_field::*;

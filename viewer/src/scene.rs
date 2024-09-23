@@ -101,7 +101,8 @@ impl<T: Float + Send + Sync> ModelData<T> {
     pub fn compute(&mut self, cell_size: T) {
         self.data = Some(
             self.model
-                .generate_field(&self.output, &self.bounds, cell_size),
+                .generate_field(&self.output, &self.bounds, cell_size)
+                .unwrap(),
         );
     }
 

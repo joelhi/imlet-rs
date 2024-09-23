@@ -21,11 +21,11 @@ pub fn main() {
     let model_space = mesh.bounds().offset(2.0 * cell_size);
 
     let mut model = ImplicitModel::new();
-    model
+    let mesh_sdf_tag = model
         .add_function("MeshSDF", MeshSDF::build(&mesh, 10, 12))
         .unwrap();
 
-    Viewer::run(model, model_space, cell_size, "MeshSDF");
+    Viewer::run(model, model_space, cell_size, &mesh_sdf_tag);
 }
 
 fn parse_input_args() -> (String, f64) {

@@ -26,39 +26,47 @@ pub fn main() {
     // Build model
     let mut model = ImplicitModel::new();
 
-    model
+    let sphere_tag = model
         .add_function(
             "Sphere",
             Sphere::new(Vec3::new(0.5 * size, 0.5 * size, 0.5 * size), 0.45 * size),
         )
         .unwrap();
 
-    model
+    let original_gyroid_tag = model
         .add_function("Gyroid", Gyroid::with_equal_spacing(1.0, true))
         .unwrap();
-    model
-        .add_operation_with_inputs("ThickGyroid", Thickness::new(1.0), &vec!["Gyroid"])
+
+    let offset_gyroid_thick_tag = model
+        .add_operation_with_inputs("ThickGyroid", Thickness::new(1.0), &[&original_gyroid_tag])
         .unwrap();
-    model
-        .add_operation_with_inputs("ThinGyroid", Thickness::new(0.15), &vec!["Gyroid"])
+
+    let offset_gyroid_thin_tag = model
+        .add_operation_with_inputs("ThinGyroid", Thickness::new(0.15), &[&original_gyroid_tag])
         .unwrap();
-    model
+
+    let z_param_tag = model
         .add_function("ZParam", ZCoord::remapped(1.0, 9.0))
         .unwrap();
-    model
+
+    let interpolation_tag = model
         .add_operation_with_inputs(
             "Interpolation",
             LinearInterpolation::new(),
-            &vec!["ThickGyroid", "ThinGyroid", "ZParam"],
+            &[
+                &offset_gyroid_thick_tag,
+                &offset_gyroid_thin_tag,
+                &z_param_tag,
+            ],
         )
         .unwrap();
-    model
+    let output_tag = model
         .add_operation_with_inputs(
             "Output",
             BooleanIntersection::new(),
-            &vec!["Sphere", "Interpolation"],
+            &[&sphere_tag, &interpolation_tag],
         )
         .unwrap();
 
-    Viewer::run(model, model_space, cell_size, "Output");
+    Viewer::run(model, model_space, cell_size, &output_tag);
 }
