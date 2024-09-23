@@ -20,10 +20,7 @@ pub enum ModelError {
         count: usize,
     },
     /// Model cannot be computed as a component as an input with no source.
-    MissingInput {
-        component: String,
-        index: usize,
-    },
+    MissingInput { component: String, index: usize },
 }
 
 impl std::fmt::Display for ModelError {
