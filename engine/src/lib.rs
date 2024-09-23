@@ -48,7 +48,7 @@
 //!        .unwrap();
 //!
 //!    // Evaluate the model reading the output of the Sum operation.
-//!    let value = model.evaluate_at("Sum", 0.0, 0.0, 0.0);
+//!    let value = model.evaluate_at("Sum", 0.0, 0.0, 0.0).unwrap();
 //!    println!("The value is {}", value)
 //!}
 //!
@@ -111,7 +111,8 @@
 //!         .unwrap();
 //!
 //!     // Generate an isosurface at the 0 distance.
-//!     let mesh = model.generate_iso_surface("Output", &model_space, cell_size);
+//!     let mesh = model.generate_iso_surface("Output", &model_space, cell_size)
+//!         .unwrap();
 //!
 //!     // Write the mesh to an obj file.
 //!     write_obj_file(&mesh, "output.obj").unwrap();
