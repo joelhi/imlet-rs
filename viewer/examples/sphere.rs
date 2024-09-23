@@ -23,7 +23,7 @@ pub fn main() {
 
     // Function
     let mut model = ImplicitModel::new();
-    
+
     let sphere_tag = model
         .add_function(
             "Sphere",

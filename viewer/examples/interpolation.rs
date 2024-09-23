@@ -48,7 +48,7 @@ pub fn main() {
     let z_param_tag = model
         .add_function("ZParam", ZCoord::remapped(1.0, 9.0))
         .unwrap();
-    
+
     let interpolation_tag = model
         .add_operation_with_inputs(
             "Interpolation",
