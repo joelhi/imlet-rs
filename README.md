@@ -6,7 +6,7 @@
 
  # Imlet
 
- `Imlet` is a lightweight toolkit for implicit modeling and geometry generation, written in Rust. It provides tools for creating 3D geometries, offering a set of data structures and algorithms that can be used to model in 3d using an implicit logic in a modular way.
+ `Imlet` is a lightweight toolkit for implicit modeling and geometry generation, written in Rust. It provides tools for creating 3D geometries using an implicit logic in a modular way.
 
  ## Overview
 
@@ -14,8 +14,8 @@
  * Implicit functions, such as various primitives and periodic surfaces; and operations, such as boolean methods.
  * Interface to build complex implicit models combining various functions with custom processing.
  * Set of tools to create and process geometric objects such as `Points`, `Lines` and `Meshes`.
+ * Algorithms to evaluate and extract iso surfaces (as triangle meshes) from implicit models at arbitrary resolutions.
  * Import OBJ files and compute signed distance fields from arbitrary meshes.
- * Algorithms to evaluate and extract iso surfaces (as triangle meshes) from implcict models at arbitrary resolutions.
  * Export OBJ of generated iso surfaces.
  * Viewer to show generated geometries with some basic post processing tools (WIP)
 
