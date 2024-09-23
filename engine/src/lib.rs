@@ -31,34 +31,28 @@
 //! ```rust
 //!
 //! use imlet_engine::types::computation::{ImplicitModel, operations::math::Add};
-//!
+//! 
 //! fn main() {
-//!
-//!     let mut model = ImplicitModel::new();
+//!     // Create a new empty model.
+//!     let mut model: ImplicitModel<f64> = ImplicitModel::new();
 //!
 //!    // Add a constant with a value 1 to the model.
-//!    model.add_constant("FirstValue", 1.0).unwrap();
+//!    let first_value = model.add_constant("FirstValue", 1.0).unwrap();
 //!
 //!    // Add another constant with a value 1 to the model.
-//!    model.add_constant("SecondValue", 1.0).unwrap();
+//!    let second_value = model.add_constant("SecondValue", 1.0).unwrap();
 //!
 //!    // Add an addition operation that reads the two constants and adds them together.
-//!    model
-//!        .add_operation_with_inputs("Sum", Add::new(), &vec!["FirstValue", "SecondValue"])
+//!    let sum = model
+//!        .add_operation_with_inputs("Sum", Add::new(), &[&first_value, &second_value])
 //!        .unwrap();
 //!
 //!    // Evaluate the model reading the output of the Sum operation.
-//!    let value = model.evaluate_at("Sum", 0.0, 0.0, 0.0).unwrap();
-//!    println!("The value is {}", value)
+//!    let value = model.evaluate_at(&sum, 0.0, 0.0, 0.0).unwrap();
+//!    assert!((value - 2.0).abs() < 1E-5)
 //!}
 //!
 //! ```
-//!
-//! This should print
-//! ```shell
-//! The value is 2
-//! ```
-//! to the terminal.
 //!
 //! **An Actual Geometry**
 //!
@@ -82,14 +76,14 @@
 //!
 //!     // Define some model parameters
 //!     let size: f32 = 10.0;
-//!     let cell_size = 0.05;
+//!     let cell_size = 0.1;
 //!     let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 //!
 //!     // Create an empty model
 //!     let mut model = ImplicitModel::new();
 //!
 //!     // Adda a sphere distance function to the model.
-//!     model
+//!     let sphere = model
 //!         .add_function(
 //!             "Sphere",
 //!             Sphere::new(Vec3::new(0.5 * size, 0.5 * size, 0.5 * size), 0.45 * size),
@@ -97,21 +91,21 @@
 //!         .unwrap();
 //!     
 //!     // Add a gyroid distance function to the model.
-//!     model
+//!     let gyroid = model
 //!         .add_function("Gyroid", Gyroid::with_equal_spacing(2.5, true))
 //!         .unwrap();
 //!
 //!     // Add a difference operation to the model, and feed it the output of the sphere and gyroid distance functions.
-//!     model
+//!     let intersection = model
 //!         .add_operation_with_inputs(
-//!             "Output",
+//!             "Intersection",
 //!             BooleanIntersection::new(),
-//!             &vec!["Sphere", "Gyroid"],
+//!             &[&sphere, &gyroid],
 //!         )
 //!         .unwrap();
 //!
 //!     // Generate an isosurface at the 0 distance.
-//!     let mesh = model.generate_iso_surface("Output", &model_space, cell_size)
+//!     let mesh = model.generate_iso_surface(&intersection, &model_space, cell_size)
 //!         .unwrap();
 //!
 //!     // Write the mesh to an obj file.
