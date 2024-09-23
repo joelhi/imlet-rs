@@ -31,7 +31,7 @@
 //! ```rust
 //!
 //! use imlet_engine::types::computation::{ImplicitModel, operations::math::Add};
-//! 
+//!
 //! fn main() {
 //!     // Create a new empty model.
 //!     let mut model: ImplicitModel<f64> = ImplicitModel::new();

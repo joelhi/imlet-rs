@@ -36,20 +36,28 @@ pub fn main() {
     let original_gyroid_tag = model
         .add_function("Gyroid", Gyroid::with_equal_spacing(1.0, true))
         .unwrap();
-    let offset_gyroid_thick_tag =model
+
+    let offset_gyroid_thick_tag = model
         .add_operation_with_inputs("ThickGyroid", Thickness::new(1.0), &[&original_gyroid_tag])
         .unwrap();
+
     let offset_gyroid_thin_tag = model
         .add_operation_with_inputs("ThinGyroid", Thickness::new(0.15), &[&original_gyroid_tag])
         .unwrap();
+
     let z_param_tag = model
         .add_function("ZParam", ZCoord::remapped(1.0, 9.0))
         .unwrap();
+    
     let interpolation_tag = model
         .add_operation_with_inputs(
             "Interpolation",
             LinearInterpolation::new(),
-            &[&offset_gyroid_thick_tag, &offset_gyroid_thin_tag, &z_param_tag],
+            &[
+                &offset_gyroid_thick_tag,
+                &offset_gyroid_thin_tag,
+                &z_param_tag,
+            ],
         )
         .unwrap();
     let output_tag = model
