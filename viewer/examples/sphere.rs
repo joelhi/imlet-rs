@@ -1,8 +1,8 @@
 use {
     imlet_engine::{
         types::{
-            computation::{distance_functions::Sphere, ImplicitModel},
-            geometry::{BoundingBox, Vec3},
+            computation::ImplicitModel,
+            geometry::{BoundingBox, Sphere, Vec3},
         },
         utils,
     },

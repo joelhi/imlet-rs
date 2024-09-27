@@ -275,8 +275,8 @@ fn interpolate_vertex<T: Float>(
 mod tests {
 
     use crate::types::{
-        computation::{distance_functions::Sphere, ImplicitModel},
-        geometry::BoundingBox,
+        computation::ImplicitModel,
+        geometry::{BoundingBox, Sphere},
     };
 
     use super::*;

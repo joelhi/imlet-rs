@@ -2,11 +2,11 @@ use {
     imlet_engine::{
         types::{
             computation::{
-                distance_functions::{Neovius, Sphere},
+                functions::Neovius,
                 operations::shape::{BooleanIntersection, Thickness},
                 ImplicitModel,
             },
-            geometry::{BoundingBox, Vec3},
+            geometry::{BoundingBox, Sphere, Vec3},
         },
         utils,
     },

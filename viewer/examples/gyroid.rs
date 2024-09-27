@@ -2,11 +2,11 @@ use {
     imlet_engine::{
         types::{
             computation::{
-                distance_functions::{Gyroid, Sphere},
+                functions::Gyroid,
                 operations::shape::{BooleanIntersection, Thickness},
                 ImplicitModel,
             },
-            geometry::{BoundingBox, Vec3},
+            geometry::{BoundingBox, Sphere, Vec3},
         },
         utils::{self},
     },
@@ -26,7 +26,7 @@ pub fn main() {
     let sphere_tag = model
         .add_function(
             "Sphere",
-            Sphere::new(Vec3::new(0.5 * size, 0.5 * size, 0.5 * size), 0.45 * size),
+            Sphere::at_coord(0.5 * size, 0.5 * size, 0.5 * size, 0.45 * size),
         )
         .unwrap();
 
