@@ -2,6 +2,9 @@ use num_traits::Float;
 use std::fmt::Debug;
 use std::fmt::{self, Display};
 
+use crate::types::computation::traits::ImplicitFunction;
+
+use super::traits::SignedDistance;
 use super::{
     traits::{SignedQuery, SpatialQuery},
     BoundingBox, Vec3,
@@ -200,23 +203,43 @@ impl<T: Float> SpatialQuery<T> for Triangle<T> {
 }
 
 impl<T: Float> SignedQuery<T> for Triangle<T> {
-    fn normal_at(&self, query_point: &Vec3<T>) -> Vec3<T> {
+    fn closest_point_with_normal(&self, query_point: &Vec3<T>) -> (Vec3<T>, Vec3<T>) {
         let (closest_feature, closest_point) = self.closest_point(&query_point);
 
         match closest_feature {
             TriangleFeature::VERTEX(i) => {
                 let normals = self.vertex_normals();
-                normals[i]
+                (closest_point, normals[i])
             }
             TriangleFeature::EDGE(e) => {
                 let t = closest_point.distance_to_vec3(&self.p[e[0]])
                     / self.p[e[0]].distance_to_vec3(&self.p[e[1]]);
                 let normals = self.vertex_normals();
 
-                Vec3::slerp(normals[e[0]], normals[e[1]], t)
+                (closest_point, Vec3::slerp(normals[e[0]], normals[e[1]], t))
             }
-            TriangleFeature::FACE => self.face_normal(),
+            TriangleFeature::FACE => (closest_point, self.face_normal()),
         }
+    }
+}
+
+impl<T: Float + Send + Sync> SignedDistance<T> for Triangle<T> {
+    fn signed_distance(&self, x: T, y: T, z: T) -> T {
+        let query_point = Vec3::new(x, y, z);
+        let (closest_point, normal) = self.closest_point_with_normal(&query_point);
+        let qp = query_point - closest_point;
+
+        let distance = query_point.distance_to_vec3(&query_point);
+        if qp.dot(&normal) < T::zero() {
+            return -distance;
+        }
+        distance
+    }
+}
+
+impl<T: Float + Send + Sync> ImplicitFunction<T> for Triangle<T> {
+    fn eval(&self, x: T, y: T, z: T) -> T {
+        self.signed_distance(x, y, z)
     }
 }
 

@@ -23,7 +23,17 @@ pub struct ScalarField<T> {
 }
 
 impl<T> ScalarField<T> {
-    pub(crate) fn with_data(origin: Vec3<T>, cell_size: T, num_pts: Vec3i, data: Vec<T>) -> Self {
+    /// Create a new field and populate it with data.
+    ///
+    /// The size of the data buffer must match the point count.
+    ///
+    /// # Arguments
+    ///
+    /// * `origin` - The base of the field, and the first value location in space.
+    /// * `cell_size` - The size of each cell in the field.
+    /// * `num_pts` - Number of points in each direction.
+    /// * `data` - The data buffer.
+    pub fn with_data(origin: Vec3<T>, cell_size: T, num_pts: Vec3i, data: Vec<T>) -> Self {
         if num_pts.product() != data.len() {
             panic!("Incorrect size of data buffer");
         }

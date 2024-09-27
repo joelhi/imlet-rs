@@ -63,6 +63,31 @@ impl<T: Float> Vec3<T> {
             z: T::one(),
         }
     }
+
+    /// Compute the minium x, y and z coordinates compared to another point.
+    ///
+    /// # Arguments
+    /// * `pt` - Other point to compare coordinates to.
+    pub fn min(&self, other: &Vec3<T>) -> Vec3<T> {
+        Vec3::new(
+            self.x.min(other.x),
+            self.z.min(other.z),
+            self.z.min(other.z),
+        )
+    }
+
+    /// Compute the maximum x, y and z coordinates compared to another point.
+    ///
+    /// # Arguments
+    /// * `pt` - Other point to compare coordinates to.
+    pub fn max(&self, other: &Vec3<T>) -> Vec3<T> {
+        Vec3::new(
+            self.x.max(other.x),
+            self.z.max(other.z),
+            self.z.max(other.z),
+        )
+    }
+
     /// Compute the euclidian distance to another Vec3.
     ///
     /// # Arguments
@@ -238,7 +263,7 @@ impl<T: Float> Vec3<T> {
 
     /// Returns the default spatial tolerance value.
     pub fn default_tolerance() -> T {
-        T::from(1E-7).expect("Fail")
+        T::from(1E-5).expect("Failed to convert value of tolerance to target type T")
     }
 }
 

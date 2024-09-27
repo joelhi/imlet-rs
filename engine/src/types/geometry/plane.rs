@@ -3,7 +3,9 @@ use std::fmt::Debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use super::Vec3;
+use crate::types::computation::traits::ImplicitFunction;
+
+use super::{traits::SignedDistance, Vec3};
 
 /// Infinite plane, defined by origin point and normal direction.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -36,18 +38,6 @@ impl<T: Float> Plane<T> {
         self.normal
     }
 
-    /// Computes the signed distance to the plane from a point.
-    ///
-    /// Locations above the plane in the direction of the normal will return a positive distance. Locations below will be negative.
-    ///
-    /// # Arguments
-    ///
-    /// * `point` - The point from which the signed distance is computed.
-    pub fn signed_distance(&self, point: Vec3<T>) -> T {
-        let v = point - self.origin;
-        self.normal.dot(&v)
-    }
-
     /// Computes the signed distance to the plane from a point, based on x, y and z coordinates.
     ///
     /// Locations above the plane in the direction of the normal will return a positive distance. Locations below will be negative.
@@ -60,5 +50,17 @@ impl<T: Float> Plane<T> {
     pub fn signed_distance_coord(&self, x: T, y: T, z: T) -> T {
         self.normal
             .dot_coord(x - self.origin.x, y - self.origin.y, z - self.origin.z)
+    }
+}
+
+impl<T: Float + Send + Sync> SignedDistance<T> for Plane<T> {
+    fn signed_distance(&self, x: T, y: T, z: T) -> T {
+        self.signed_distance_coord(x, y, z)
+    }
+}
+
+impl<T: Float + Send + Sync> ImplicitFunction<T> for Plane<T> {
+    fn eval(&self, x: T, y: T, z: T) -> T {
+        self.signed_distance_coord(x, y, z)
     }
 }

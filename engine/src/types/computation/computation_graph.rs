@@ -58,17 +58,17 @@ impl<'a, T: Float> ComputationGraph<'a, T> {
             (x_dim / cell_size)
                 .floor()
                 .to_usize()
-                .expect("Failed to convert T to usize")
+                .expect("Failed to get point count from bounds. Make sure the bounds have a positive size in all directions.")
                 + 1,
             (y_dim / cell_size)
                 .floor()
                 .to_usize()
-                .expect("Failed to convert T to usize")
+                .expect("Failed to get point count from bounds. Make sure the bounds have a positive size in all directions.")
                 + 1,
             (z_dim / cell_size)
                 .floor()
                 .to_usize()
-                .expect("Failed to convert T to usize")
+                .expect("Failed to get point count from bounds. Make sure the bounds have a positive size in all directions.")
                 + 1,
         )
     }
@@ -113,11 +113,8 @@ impl<'a, T: Float + Send + Sync> ComputationGraph<'a, T> {
 #[cfg(test)]
 mod tests {
     use crate::types::{
-        computation::{
-            distance_functions::Sphere,
-            operations::{math::Add, shape::BooleanDifference},
-        },
-        geometry::Vec3,
+        computation::operations::{math::Add, shape::BooleanDifference},
+        geometry::{Sphere, Vec3},
     };
 
     use super::*;
