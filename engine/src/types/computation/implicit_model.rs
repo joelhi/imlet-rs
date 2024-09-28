@@ -466,7 +466,7 @@ impl<T: Float + Send + Sync + 'static> ImplicitModel<T> {
             .insert(tag_string.clone(), Component::Function(Box::new(function)));
 
         Ok(tag_string)
-    }   
+    }
 }
 
 #[cfg(test)]
