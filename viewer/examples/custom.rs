@@ -1,6 +1,6 @@
 use {
     imlet_engine::{
-        types::{computation::{functions::CustomSDF, ImplicitModel}, geometry::Mesh},
+        types::{computation::ImplicitModel, geometry::{GeometryCollection, Mesh}},
         utils::{self, io::parse_obj_file},
     },
     imlet_viewer::viewer::Viewer,
@@ -18,7 +18,7 @@ pub fn main() {
     let model_space = mesh.bounds().offset(2.0 * cell_size);
 
     let mut model = ImplicitModel::new();
-    let mesh_sdf_tag = model.add_function("Mesh", CustomSDF::from_mesh(&mesh)).unwrap();
+    let mesh_sdf_tag = model.add_function("Mesh", GeometryCollection::from_mesh(&mesh)).unwrap();
 
     Viewer::run(model, model_space, cell_size, &mesh_sdf_tag);
 }
