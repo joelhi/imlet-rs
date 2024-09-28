@@ -215,11 +215,7 @@ impl<T: Float> Mesh<T> {
     ///
     /// * `max_depth` - Maximum allowed recursive depth when constructing the tree.
     /// * `max_triangles` - Maximum number of triangles per leaf node.
-    pub fn compute_octree(
-        &self,
-        max_depth: u32,
-        max_triangles: usize,
-    ) -> Octree<Triangle<T>, T> {
+    pub fn compute_octree(&self, max_depth: u32, max_triangles: usize) -> Octree<Triangle<T>, T> {
         let before = Instant::now();
         let mut tree = Octree::new(max_depth, max_triangles);
         tree.build(
@@ -314,4 +310,3 @@ impl<T: Float + Send + Sync> Mesh<T> {
             .collect()
     }
 }
-

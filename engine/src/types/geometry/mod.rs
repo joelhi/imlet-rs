@@ -7,10 +7,10 @@ mod mesh;
 mod octree;
 mod plane;
 mod sphere;
+mod torus;
 mod triangle;
 mod vec3f;
 mod vec3i;
-mod torus;
 
 /// Traits related to geometric computations.
 pub mod traits;
@@ -24,7 +24,7 @@ pub use mesh::*;
 pub use octree::*;
 pub use plane::*;
 pub use sphere::*;
+pub use torus::*;
 pub use triangle::*;
 pub use vec3f::*;
 pub use vec3i::*;
-pub use torus::*;

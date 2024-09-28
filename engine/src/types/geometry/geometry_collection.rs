@@ -16,7 +16,7 @@ pub struct GeometryCollection<Q, T> {
 
 impl<Q: SpatialQuery<T>, T: Float> GeometryCollection<Q, T> {
     /// Build a collection from a set of objects.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `objects` - List of objects to store in collection.
@@ -29,18 +29,18 @@ impl<Q: SpatialQuery<T>, T: Float> GeometryCollection<Q, T> {
     }
 
     /// Find the closest point on any object in the collection.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `query_point` - Point to find closest point to.
-    pub fn closest_point(&self, query_point: &Vec3<T>)->(Vec3<T>, Q){
+    pub fn closest_point(&self, query_point: &Vec3<T>) -> (Vec3<T>, Q) {
         self.tree.closest_point(query_point)
     }
 }
 
 impl<T: Float> GeometryCollection<Triangle<T>, T> {
     /// Generate a collection of triangles from a mesh
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `mesh` - Mesh to generate collection of triangles from.
@@ -51,9 +51,7 @@ impl<T: Float> GeometryCollection<Triangle<T>, T> {
     }
 }
 
-impl<Q: SignedQuery<T>, T: Float> SignedDistance<T>
-    for GeometryCollection<Q, T>
-{
+impl<Q: SignedQuery<T>, T: Float> SignedDistance<T> for GeometryCollection<Q, T> {
     fn signed_distance(&self, x: T, y: T, z: T) -> T {
         self.tree.signed_distance(&Vec3::new(x, y, z))
     }

@@ -5,7 +5,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::computation::traits::ImplicitFunction;
 
-use super::{traits::{SignedDistance, SpatialQuery}, Line, Triangle, Vec3};
+use super::{
+    traits::{SignedDistance, SpatialQuery},
+    Line, Triangle, Vec3,
+};
 
 /// Axis-Aligned Bounding Box based on a max and min coordinate.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -37,8 +40,11 @@ impl<T: Float> BoundingBox<T> {
         }
     }
 
-    pub fn union(&self, other: &BoundingBox<T>)->BoundingBox<T>{
-        Self { min: self.min.min(&other.min), max: self.max.max(&other.max) }
+    pub fn union(&self, other: &BoundingBox<T>) -> BoundingBox<T> {
+        Self {
+            min: self.min.min(&other.min),
+            max: self.max.max(&other.max),
+        }
     }
 
     /// Return the size of the box in x, y and z
@@ -220,10 +226,10 @@ impl<T: Float> BoundingBox<T> {
     }
 
     /// Create a union box containing a collection of objects.
-    pub fn from_objects<Q: SpatialQuery<T>>(objects: &[Q])->Self{
+    pub fn from_objects<Q: SpatialQuery<T>>(objects: &[Q]) -> Self {
         let bounds: Vec<BoundingBox<T>> = objects.iter().map(|o| o.bounds()).collect();
         let mut total_extents = bounds[0];
-        for bound in bounds{
+        for bound in bounds {
             total_extents = total_extents.union(&bound);
         }
 
@@ -231,7 +237,7 @@ impl<T: Float> BoundingBox<T> {
     }
 }
 
-impl<T: Float + Send + Sync> SignedDistance<T> for BoundingBox<T>{
+impl<T: Float + Send + Sync> SignedDistance<T> for BoundingBox<T> {
     fn signed_distance(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(&Vec3::new(x, y, z))
     }
