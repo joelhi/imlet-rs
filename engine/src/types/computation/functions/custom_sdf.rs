@@ -47,7 +47,7 @@ impl<T: Float> CustomSDF<GeometryCollection<Triangle<T>, T>, T>{
     }
 }
 
-impl<Q: SignedDistance<T>, T: Float + Send + Sync> ImplicitFunction<T> for CustomSDF<Q, T> {
+impl<Q: SignedDistance<T> + Send + Sync, T: Float + Send + Sync> ImplicitFunction<T> for CustomSDF<Q, T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.geometry.signed_distance(x, y, z) - self.offset
     }

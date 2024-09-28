@@ -29,9 +29,7 @@ impl<Q: SpatialQuery<T>, T: Float> GeometryCollection<Q, T> {
     }
 
     /// Find the closest point on any object in the collection.
-    /// /// # Arguments
-    ///
-    /// * `query_point` - Point to find closest point to.
+    /// 
     /// # Arguments
     ///
     /// * `query_point` - Point to find closest point to.
@@ -53,7 +51,7 @@ impl<T: Float> GeometryCollection<Triangle<T>, T> {
     }
 }
 
-impl<Q: SignedQuery<T> + Send + Sync, T: Float + Send + Sync> SignedDistance<T>
+impl<Q: SignedQuery<T>, T: Float> SignedDistance<T>
     for GeometryCollection<Q, T>
 {
     fn signed_distance(&self, x: T, y: T, z: T) -> T {
