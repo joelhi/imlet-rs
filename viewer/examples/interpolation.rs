@@ -2,13 +2,14 @@ use {
     imlet_engine::{
         types::{
             computation::{
-                distance_functions::{Gyroid, Sphere, ZCoord},
+                functions::{Gyroid, ZCoord},
                 operations::{
-                    math::LinearInterpolation, shape::BooleanIntersection, shape::Thickness,
+                    math::LinearInterpolation,
+                    shape::{BooleanIntersection, Thickness},
                 },
                 ImplicitModel,
             },
-            geometry::{BoundingBox, Vec3},
+            geometry::{BoundingBox, Sphere, Vec3},
         },
         utils,
     },

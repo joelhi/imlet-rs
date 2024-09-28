@@ -4,7 +4,7 @@ use log::debug;
 use num_traits::Float;
 
 use super::{
-    traits::{SignedQuery, SpatialQuery},
+    traits::{SignedDistance, SignedQuery, SpatialQuery},
     BoundingBox, Vec3,
 };
 
@@ -15,7 +15,7 @@ use super::{
 pub struct Octree<Q, T> {
     root: OctreeNode<Q, T>,
     max_depth: u32,
-    max_triangles: usize,
+    max_objects: usize,
 }
 
 impl<Q, T: Float> Octree<Q, T> {
@@ -23,12 +23,12 @@ impl<Q, T: Float> Octree<Q, T> {
     /// # Arguments
     ///
     /// * `max_depth` - Maximum allowed recursive depth when constructing the tree.
-    /// * `max_triangles` - Maximum number of triangles per leaf node.
-    pub fn new(max_depth: u32, max_triangles: usize) -> Self {
+    /// * `max_objects` - Maximum number of objects per leaf node.
+    pub fn new(max_depth: u32, max_objects: usize) -> Self {
         Self {
             root: OctreeNode::new(BoundingBox::zero(), Vec::new()),
             max_depth: max_depth,
-            max_triangles: max_triangles,
+            max_objects: max_objects,
         }
     }
 
@@ -50,7 +50,7 @@ impl<Q: SpatialQuery<T>, T: Float> Octree<Q, T> {
     /// * `objects` - The objects to store in the octree.
     pub fn build(&mut self, bounds: BoundingBox<T>, objects: Vec<Q>) {
         let mut node = OctreeNode::new(bounds, objects);
-        node.build(self.max_depth, self.max_triangles);
+        node.build(self.max_depth, self.max_objects);
 
         self.root = node;
     }
@@ -280,12 +280,18 @@ impl<Q: SignedQuery<T>, T: Float> OctreeNode<Q, T> {
         let (closest_point, closest_obj) = self.closest_point(&point);
 
         let direction = *point - closest_point;
-        let normal = closest_obj.normal_at(&closest_point);
+        let normal = closest_obj.closest_point_with_normal(&closest_point).1;
         if normal.dot(&direction) < T::zero() {
             return -direction.magnitude();
         }
 
         direction.magnitude()
+    }
+}
+
+impl<Q: SignedQuery<T> + Send + Sync, T: Float + Send + Sync> SignedDistance<T> for Octree<Q, T> {
+    fn signed_distance(&self, x: T, y: T, z: T) -> T {
+        self.signed_distance(&Vec3::new(x, y, z))
     }
 }
 
@@ -303,7 +309,6 @@ mod tests {
         utils::logging::init_info();
 
         let m: Mesh<f64> = parse_obj_file("../assets/geometry/sphere.obj", false).unwrap();
-
         let octree = m.compute_octree(10, 12);
         let bounds = octree.all_bounds();
 
@@ -333,7 +338,6 @@ mod tests {
     #[test]
     fn test_compute_signed_distance_box() {
         let m: Mesh<f64> = parse_obj_file("../assets/geometry/box.obj", false).unwrap();
-
         let octree = m.compute_octree(10, 9);
 
         // Inside box

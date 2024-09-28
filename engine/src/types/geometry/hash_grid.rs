@@ -3,8 +3,6 @@ use num_traits::Float;
 use super::Vec3;
 use std::{collections::HashMap, usize};
 
-const DEFAULT_SPATIAL_TOL: f32 = 1E-5;
-
 /// Simple implementation of a spatial hash grid, not properly checking adjacent bins.
 /// Tolerances may not be guaranteed to be satisfied in the event of close points in adjacent bins.
 pub struct SpatialHashGrid<T> {
@@ -19,8 +17,7 @@ impl<T: Float> SpatialHashGrid<T> {
         Self {
             map: HashMap::new(),
             vertices: Vec::new(),
-            tolerance: T::from(DEFAULT_SPATIAL_TOL)
-                .expect("Failed to convert default tolerance to T"),
+            tolerance: Vec3::default_tolerance(),
         }
     }
     #[allow(dead_code)]

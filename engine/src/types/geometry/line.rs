@@ -3,7 +3,9 @@ use std::fmt::Debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use super::Vec3;
+use crate::types::computation::traits::ImplicitFunction;
+
+use super::{traits::SignedDistance, Vec3};
 
 /// Single line segment defined by a start and end point.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -49,5 +51,17 @@ impl<T: Float> Line<T> {
     /// Compute the length of the line.
     pub fn length(&self) -> T {
         self.start.distance_to_vec3(&self.end)
+    }
+}
+
+impl<T: Float + Send + Sync> SignedDistance<T> for Line<T> {
+    fn signed_distance(&self, x: T, y: T, z: T) -> T {
+        self.distance_to(Vec3::new(x, y, z))
+    }
+}
+
+impl<T: Float + Send + Sync> ImplicitFunction<T> for Line<T> {
+    fn eval(&self, x: T, y: T, z: T) -> T {
+        self.signed_distance(x, y, z)
     }
 }

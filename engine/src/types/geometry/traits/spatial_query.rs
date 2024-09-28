@@ -13,7 +13,9 @@ pub trait SpatialQuery<T>: Copy {
 
 /// Extension to allow closest point look-ups to be classified as inside or outside, based on the normal.
 ///
+/// Returns a tuple (Vec3, Vec3) closest points and the normal at the closest point.
+///
 /// This is mainly used for computing signed distances to objects stored in an octree.
 pub trait SignedQuery<T>: SpatialQuery<T> {
-    fn normal_at(&self, query_point: &Vec3<T>) -> Vec3<T>;
+    fn closest_point_with_normal(&self, query_point: &Vec3<T>) -> (Vec3<T>, Vec3<T>);
 }

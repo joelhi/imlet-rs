@@ -8,7 +8,9 @@ use crate::types::{
     geometry::{Line, Vec3},
 };
 
-/// Distance function for a capsule defined by a line and a radius
+use super::traits::SignedDistance;
+
+/// A capsule primitive defined by a line and a radius.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Capsule<T> {
     line: Line<T>,
@@ -27,7 +29,7 @@ impl<T> Capsule<T> {
             radius: radius,
         }
     }
-    /// Creare a new Capsule from start and end points.
+    /// Creare a new capsule from start and end points.
     /// # Arguments
     ///
     /// * `start` - Start of line for capsule length.
@@ -41,8 +43,14 @@ impl<T> Capsule<T> {
     }
 }
 
+impl<T: Float + Send + Sync> SignedDistance<T> for Capsule<T> {
+    fn signed_distance(&self, x: T, y: T, z: T) -> T {
+        self.line.distance_to(Vec3::new(x, y, z)) - self.radius
+    }
+}
+
 impl<T: Float + Send + Sync> ImplicitFunction<T> for Capsule<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
-        self.line.distance_to(Vec3::new(x, y, z))
+        self.signed_distance(x, y, z)
     }
 }

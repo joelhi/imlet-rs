@@ -1,8 +1,8 @@
 use {
     imlet_engine::{
         types::{
-            computation::{distance_functions::MeshSDF, ImplicitModel},
-            geometry::Mesh,
+            computation::ImplicitModel,
+            geometry::{GeometryCollection, Mesh},
         },
         utils::{self, io::parse_obj_file},
     },
@@ -22,7 +22,7 @@ pub fn main() {
 
     let mut model = ImplicitModel::new();
     let mesh_sdf_tag = model
-        .add_function("MeshSDF", MeshSDF::build(&mesh, 10, 12))
+        .add_function("Mesh", GeometryCollection::from_mesh(&mesh))
         .unwrap();
 
     Viewer::run(model, model_space, cell_size, &mesh_sdf_tag);

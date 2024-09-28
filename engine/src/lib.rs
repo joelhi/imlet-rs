@@ -64,9 +64,9 @@
 //!
 //! use imlet_engine::utils::io::write_obj_file;
 //!
-//! use imlet_engine::types::geometry::{Vec3, BoundingBox};
+//! use imlet_engine::types::geometry::{Vec3, BoundingBox, Sphere};
 //! use imlet_engine::types::computation::{
-//!     distance_functions::{Gyroid, Sphere},
+//!     functions::Gyroid,
 //!     operations::shape::BooleanIntersection,
 //! };
 //!

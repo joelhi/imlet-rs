@@ -210,20 +210,14 @@ impl<T: Float> Mesh<T> {
         triangles
     }
 
-    /// Compute an octree from the triangles of the mesh.
+    /// Compute an octree from the triangles of the mesh. Used for closest point and signed distance queries.
     /// # Arguments
     ///
     /// * `max_depth` - Maximum allowed recursive depth when constructing the tree.
     /// * `max_triangles` - Maximum number of triangles per leaf node.
-    ///
-    /// # Returns
-    ///
-    /// * Octree with the triangles of the mesh. The triangles will store the vertex normals.
     pub fn compute_octree(&self, max_depth: u32, max_triangles: usize) -> Octree<Triangle<T>, T> {
         let before = Instant::now();
-
         let mut tree = Octree::new(max_depth, max_triangles);
-
         tree.build(
             self.bounds().offset(T::from(0.1).unwrap()),
             self.as_triangles(),

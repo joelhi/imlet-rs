@@ -4,8 +4,8 @@ mod implicit_model;
 mod model_error;
 mod scalar_field;
 
-/// Various distance functions, including Triply-Periodic Surfaces (TPS), primitives and custom meshes.
-pub mod distance_functions;
+/// Various functions, including Triply-Periodic Surfaces (TPS), primitives and custom meshes.
+pub mod functions;
 /// Operations on implicit data such as basic arithmetic and boolean operations.
 pub mod operations;
 /// Traits used to define implicit operations and functions.
