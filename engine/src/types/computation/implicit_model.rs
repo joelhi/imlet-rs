@@ -2,11 +2,13 @@ use crate::algorithms::marching_cubes::generate_iso_surface;
 use crate::types::computation::component::{Component, ComponentId};
 use crate::types::computation::traits::{ImplicitFunction, ImplicitOperation};
 use crate::types::computation::ComputationGraph;
+use crate::types::geometry::traits::SignedDistance;
 use crate::types::geometry::{BoundingBox, Mesh};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 
+use super::functions::CustomSDF;
 use super::{ModelError, ScalarField};
 
 /// An implicit model composed of distance functions and operations.
@@ -362,29 +364,6 @@ impl<T> ImplicitModel<T> {
 }
 
 impl<T: Float + Send + Sync> ImplicitModel<T> {
-    // /// Add a distance function component, from a geometry which implements the `SignedDistance<T>` trait, to the model.
-    // /// # Arguments
-    // ///
-    // /// * `tag` - The tag of the function component added. This is used to reference the component for input and output assignments.
-    // /// * `geometry` - The geometry to add.
-    // /// # Returns
-    // ///
-    // /// * `Result<String, ModelError>` - Returns `Ok(String)` with the tag of the new component if the function is added successfully, or `Err(ModelError)` if something goes wrong.
-    // pub fn add_geometry<G: SignedDistance<T> + 'static>(
-    //     &mut self,
-    //     tag: &str,
-    //     geometry: G,
-    // ) -> Result<String, ModelError> {
-    //     let tag_string = tag.to_string();
-    //     self.verify_tag_is_free(&tag_string)?;
-
-    //     let function = CustomSDF::new(geometry);
-    //     self.components
-    //         .insert(tag_string.clone(), Component::Function(Box::new(function)));
-
-    //     Ok(tag_string)
-    // }
-
     /// Evaluate the model at a coordinate *{x, y, z}*.
     /// # Arguments
     ///
@@ -463,6 +442,31 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
         let triangles = generate_iso_surface(&field, iso_value);
         Ok(Mesh::from_triangles(&triangles))
     }
+}
+
+impl<T: Float + Send + Sync + 'static> ImplicitModel<T> {
+    /// Add a distance function component, from a geometry which implements the `SignedDistance<T>` trait, to the model.
+    /// # Arguments
+    ///
+    /// * `tag` - The tag of the function component added. This is used to reference the component for input and output assignments.
+    /// * `geometry` - The geometry to add.
+    /// # Returns
+    ///
+    /// * `Result<String, ModelError>` - Returns `Ok(String)` with the tag of the new component if the function is added successfully, or `Err(ModelError)` if something goes wrong.
+    pub fn add_geometry<G: SignedDistance<T> + Send + Sync + 'static>(
+        &mut self,
+        tag: &str,
+        geometry: G,
+    ) -> Result<String, ModelError> {
+        let tag_string = tag.to_string();
+        self.verify_tag_is_free(&tag_string)?;
+
+        let function = CustomSDF::new(geometry);
+        self.components
+            .insert(tag_string.clone(), Component::Function(Box::new(function)));
+
+        Ok(tag_string)
+    }   
 }
 
 #[cfg(test)]
