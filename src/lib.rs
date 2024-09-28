@@ -174,3 +174,10 @@ pub mod utils {
     /// Additional utilities related to mathematics.
     pub mod math_helper;
 }
+
+#[cfg(feature = "viewer")]
+/// Module for some simple 3d tools
+pub mod viewer{
+    /// Exposes a simple 3d viewer to display and interact with the exported meshes from the implicit models.
+    pub mod app;
+}
