@@ -177,7 +177,11 @@ pub mod utils {
 
 #[cfg(feature = "viewer")]
 /// Module for some simple 3d tools
-pub mod viewer{
+pub mod viewer {
     /// Exposes a simple 3d viewer to display and interact with the exported meshes from the implicit models.
     pub mod app;
+
+    pub mod utils;
+
+    pub mod raw_mesh_data;
 }

@@ -3,6 +3,8 @@ use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::IntoParallelRefMutIterator;
 use rayon::iter::ParallelIterator;
+use serde::Deserialize;
+use serde::Serialize;
 
 use super::BoundingBox;
 use super::Line;
@@ -13,6 +15,7 @@ use super::Vec3;
 use std::time::Instant;
 use std::usize;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 /// Indexed triangle mesh.
 pub struct Mesh<T> {
     vertices: Vec<Vec3<T>>,
