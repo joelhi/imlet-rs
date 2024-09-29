@@ -42,7 +42,8 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     custom_mesh_data: Res<RawMeshData>,
 ) {
-    let orth = Camera3dBundle {
+    // Set up the orthographic camera with Z as up
+    let orthographic_camera = Camera3dBundle {
         projection: OrthographicProjection {
             scale: 1.0,
             near: 1e-1,
@@ -51,11 +52,12 @@ fn setup(
             ..Default::default()
         }
         .into(),
-        transform: Transform::from_translation(Vec3::new(0., 0., 10.))
-            .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
+        transform: Transform::from_translation(Vec3::new(0.0, 00.0, 10.0)) // Position above the origin
+            .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y), // Looking down the Y-axis
         ..Default::default()
     };
-    commands.spawn((orth, PanOrbitCamera::default()));
+
+    commands.spawn((orthographic_camera, PanOrbitCamera::default()));
 
     let mesh = build_mesh_from_data(custom_mesh_data);
 
@@ -79,7 +81,7 @@ fn setup(
             ..Default::default()
         },
         transform: Transform {
-            rotation: Quat::from_rotation_x(std::f32::consts::FRAC_PI_4),
+            rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4),
             ..Default::default()
         },
         ..Default::default()

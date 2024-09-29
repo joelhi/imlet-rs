@@ -251,6 +251,8 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for BoundingBox<T> {
 
 #[cfg(test)]
 mod tests {
+    use crate::{types::geometry::Mesh, utils::io::parse_obj_file};
+
     use super::*;
 
     #[test]
@@ -318,5 +320,28 @@ mod tests {
         let bounds = BoundingBox::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0));
 
         assert!(bounds.intersects(&triangle.bounds()));
+    }
+
+    #[test]
+    fn test_create_from_objects() {
+        let mesh: Mesh<f32> = parse_obj_file("assets/geometry/sphere.obj", false).unwrap();
+
+        let bounds = mesh.bounds();
+
+        let union = BoundingBox::from_objects(&mesh.as_triangles());
+
+        assert!(
+            bounds.min.distance_to_vec3(&union.min) < f32::epsilon(),
+            "Incorrect min value. Mesh bounds was {} and triangles union was {}",
+            bounds.min,
+            union.min
+        );
+
+        assert!(
+            bounds.max.distance_to_vec3(&union.max) < f32::epsilon(),
+            "Incorrect max value. Mesh bounds was {} and triangles union was {}",
+            bounds.max,
+            union.max
+        );
     }
 }

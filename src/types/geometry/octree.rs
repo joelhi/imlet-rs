@@ -308,7 +308,7 @@ mod tests {
     fn test_build_octree() {
         utils::logging::init_info();
 
-        let m: Mesh<f64> = parse_obj_file("../assets/geometry/sphere.obj", false).unwrap();
+        let m: Mesh<f64> = parse_obj_file("assets/geometry/sphere.obj", false).unwrap();
         let octree = m.compute_octree(10, 12);
         let bounds = octree.all_bounds();
 
@@ -322,7 +322,7 @@ mod tests {
 
     #[test]
     fn test_closest_pt() {
-        let m: Mesh<f64> = parse_obj_file("../assets/geometry/sphere.obj", false).unwrap();
+        let m: Mesh<f64> = parse_obj_file("assets/geometry/sphere.obj", false).unwrap();
 
         let octree = m.compute_octree(10, 9);
 
@@ -337,7 +337,7 @@ mod tests {
 
     #[test]
     fn test_compute_signed_distance_box() {
-        let m: Mesh<f64> = parse_obj_file("../assets/geometry/box.obj", false).unwrap();
+        let m: Mesh<f64> = parse_obj_file("assets/geometry/box.obj", false).unwrap();
         let octree = m.compute_octree(10, 9);
 
         // Inside box
@@ -355,7 +355,7 @@ mod tests {
 
     #[test]
     fn test_compute_signed_distance_sphere() {
-        let m: Mesh<f64> = parse_obj_file("../assets/geometry/sphere.obj", false).unwrap();
+        let m: Mesh<f64> = parse_obj_file("assets/geometry/sphere.obj", false).unwrap();
 
         let octree = m.compute_octree(10, 9);
 
@@ -376,7 +376,7 @@ mod tests {
 
     #[test]
     fn test_compute_signed_distance_bunny_leaking() {
-        let m: Mesh<f64> = parse_obj_file("../assets/geometry/bunny.obj", false).unwrap();
+        let m: Mesh<f64> = parse_obj_file("assets/geometry/bunny.obj", false).unwrap();
 
         let octree = m.compute_octree(10, 12);
         let query_point = Vec3::new(6.0, 45.0, 56.0);
@@ -404,7 +404,7 @@ mod tests {
 
     #[test]
     fn test_compute_signed_distance_cow_leaking_edge() {
-        let m: Mesh<f64> = parse_obj_file("../assets/geometry/cow.obj", true).unwrap();
+        let m: Mesh<f64> = parse_obj_file("assets/geometry/cow.obj", true).unwrap();
 
         let octree = m.compute_octree(10, 12);
         let query_point = Vec3::new(3.754165, -1.501405, 2.1629639);
@@ -432,7 +432,7 @@ mod tests {
 
     #[test]
     fn test_compute_signed_distance_cow_leaking_edge_2() {
-        let m: Mesh<f64> = parse_obj_file("../assets/geometry/cow.obj", true).unwrap();
+        let m: Mesh<f64> = parse_obj_file("assets/geometry/cow.obj", true).unwrap();
 
         let octree = m.compute_octree(10, 12);
         let query_point = Vec3::new(3.5741649, -1.581405, 2.062964);
@@ -460,7 +460,7 @@ mod tests {
 
     #[test]
     fn test_compute_signed_distance_cow_leaking_vertex() {
-        let m: Mesh<f64> = parse_obj_file("../assets/geometry/cow.obj", true).unwrap();
+        let m: Mesh<f64> = parse_obj_file("assets/geometry/cow.obj", true).unwrap();
 
         let octree = m.compute_octree(10, 12);
         let query_point = Vec3::new(3.714165, -1.621405, 2.042964);
@@ -483,6 +483,22 @@ mod tests {
             "Incorrect signed distance. Was {} but expected {}",
             signed_distance,
             expected_signed_distance
+        );
+    }
+
+    #[test]
+    fn test_compute_signed_distance_sphere_leaking() {
+        let m: Mesh<f64> = parse_obj_file("assets/geometry/sphere.obj", false).unwrap();
+
+        let octree = m.compute_octree(10, 12);
+
+        // Outside sphere,
+        let signed_distance = octree.signed_distance(&Vec3::new(103.180, 167.482, 119.522));
+        assert!(
+            (signed_distance - 2.391).abs() < 0.001,
+            "Incorrect signed distance, expected {}, but was {}",
+            2.391,
+            signed_distance
         );
     }
 }

@@ -3,21 +3,24 @@ use imlet::{
         computation::{functions::CustomSDF, operations::shape, ImplicitModel, ModelError},
         geometry::Mesh,
     },
-    utils::{io::parse_obj_file, logging::init_info},
-    viewer::app::run_viewer,
+    utils::{
+        io::{parse_obj_file, write_obj_file},
+        logging::init_info,
+    },
+    //viewer::app::run_viewer,
 };
 use num_traits::Float;
 
 pub fn main() {
     init_info();
 
-    let mesh: imlet::types::geometry::Mesh<f64> =
-        parse_obj_file("assets/geometry/cow.obj", false).unwrap();
+    let mesh: imlet::types::geometry::Mesh<f32> =
+        parse_obj_file("assets/geometry/sphere.obj", false).unwrap();
 
     let bounds = mesh.bounds();
     let (x_size, y_size, z_size) = bounds.dimensions();
     // Build model
-    let cell_size = x_size.max(y_size).max(z_size) / 150.0;
+    let cell_size = x_size.max(y_size).max(z_size) / 25.0;
 
     let model = match build_model(&mesh) {
         Ok(model) => model,
@@ -30,7 +33,9 @@ pub fn main() {
         .generate_iso_surface("Mesh", &bounds, cell_size)
         .unwrap();
 
-    run_viewer(&iso_surface.convert::<f32>());
+    write_obj_file(&iso_surface, "sphere_sdf").unwrap();
+
+    //run_viewer(&iso_surface.convert::<f32>());
 }
 
 fn build_model<T: Float + Send + Sync + 'static>(

@@ -30,7 +30,7 @@
 //!
 //! ```rust
 //!
-//! use imlet_engine::types::computation::{ImplicitModel, operations::math::Add};
+//! use imlet::types::computation::{ImplicitModel, operations::math::Add};
 //!
 //! fn main() {
 //!     // Create a new empty model.
@@ -62,15 +62,15 @@
 //!
 //! ```rust
 //!
-//! use imlet_engine::utils::io::write_obj_file;
+//! use imlet::utils::io::write_obj_file;
 //!
-//! use imlet_engine::types::geometry::{Vec3, BoundingBox, Sphere};
-//! use imlet_engine::types::computation::{
+//! use imlet::types::geometry::{Vec3, BoundingBox, Sphere};
+//! use imlet::types::computation::{
 //!     functions::Gyroid,
 //!     operations::shape::BooleanIntersection,
 //! };
 //!
-//! use imlet_engine::types::computation::ImplicitModel;
+//! use imlet::types::computation::ImplicitModel;
 //!
 //! fn main() {
 //!

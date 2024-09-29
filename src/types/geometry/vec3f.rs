@@ -71,7 +71,7 @@ impl<T: Float> Vec3<T> {
     pub fn min(&self, other: &Vec3<T>) -> Vec3<T> {
         Vec3::new(
             self.x.min(other.x),
-            self.z.min(other.z),
+            self.y.min(other.y),
             self.z.min(other.z),
         )
     }
@@ -83,7 +83,7 @@ impl<T: Float> Vec3<T> {
     pub fn max(&self, other: &Vec3<T>) -> Vec3<T> {
         Vec3::new(
             self.x.max(other.x),
-            self.z.max(other.z),
+            self.y.max(other.y),
             self.z.max(other.z),
         )
     }
