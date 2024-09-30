@@ -403,6 +403,34 @@ mod tests {
     }
 
     #[test]
+    fn test_compute_signed_distance_bunny_leaking_f32() {
+        let m: Mesh<f32> = parse_obj_file("assets/geometry/bunny.obj", false).unwrap();
+
+        let octree = m.compute_octree(10, 12);
+        let query_point = Vec3::new(6.0, 45.0, 56.0);
+        // Around ear
+
+        let (closest_pt, _) = octree.closest_point(&query_point);
+        let signed_distance = octree.signed_distance(&query_point);
+
+        let expected_closest_point = Vec3::new(7.219, 42.749, 56.182);
+        let expected_signed_distance = 2.567;
+
+        assert!(
+            (signed_distance - expected_signed_distance).abs() < 0.001,
+            "Incorrect signed distance. Was {} but expected {}",
+            signed_distance,
+            expected_signed_distance
+        );
+        assert!(
+            closest_pt.distance_to_vec3(&expected_closest_point).abs() < 0.001,
+            "Incorrect closest point. Was {} but expected {}",
+            closest_pt,
+            expected_closest_point
+        );
+    }
+
+    #[test]
     fn test_compute_signed_distance_cow_leaking_edge() {
         let m: Mesh<f64> = parse_obj_file("assets/geometry/cow.obj", true).unwrap();
 

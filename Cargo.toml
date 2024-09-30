@@ -24,7 +24,7 @@ serde_json = "1.0.120"
 
 # Define features in the project
 [features]
-viewer = ["bevy","bevy_panorbit_camera"]
+viewer = ["bevy","bevy_panorbit_camera","bevy_normal_material"]
 
 # Optional dependencies
 [dependencies.bevy]
@@ -33,6 +33,10 @@ optional = true
 
 [dependencies.bevy_panorbit_camera]
 version = "0.19.3"
+optional = true
+
+[dependencies.bevy_normal_material]
+version = "0.6.0"
 optional = true
 
 # Profile settings (default optimization)

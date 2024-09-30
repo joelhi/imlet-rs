@@ -440,7 +440,7 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
         let field = self.generate_field(output, &bounds, cell_size)?;
 
         let triangles = generate_iso_surface(&field, iso_value);
-        Ok(Mesh::from_triangles(&triangles))
+        Ok(Mesh::from_triangles(&triangles, false))
     }
 }
 

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::{computation::traits::ImplicitFunction, geometry::Vec3};
 
-use super::traits::SignedDistance;
+use super::{traits::SignedDistance, BoundingBox};
 
 /// A sphere object, defined by a centre point and a radius.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -36,6 +36,15 @@ impl<T> Sphere<T> {
             centre: Vec3::new(x, y, z),
             radius,
         }
+    }
+}
+
+impl<T: Float> Sphere<T> {
+    /// Compute the bounding box for the sphere
+    pub fn bounds(&self) -> BoundingBox<T> {
+        let min = self.centre - Vec3::new(self.radius, self.radius, self.radius);
+        let max = self.centre + Vec3::new(self.radius, self.radius, self.radius);
+        BoundingBox::new(min, max)
     }
 }
 

@@ -132,7 +132,7 @@ impl<T: Float> Mesh<T> {
         self.normals = Some(vertex_normals);
 
         log::info!(
-            "Mesh normals computed for {} points in {:.2?}",
+            "!!Mesh normals computed for {} points in {:.2?}",
             self.num_vertices(),
             before.elapsed()
         );
@@ -183,13 +183,16 @@ impl<T: Float> Mesh<T> {
     }
 
     /// Convert the vertex data type from the current type to a new type Q.
-    pub fn convert<Q: Float + Send + Sync>(&self) -> Mesh<Q> {
+    pub fn convert<Q: Float>(&self) -> Mesh<Q> {
         let converted_v: Vec<Vec3<Q>> = self.vertices.iter().map(|v| v.convert::<Q>()).collect();
         let mut m = Mesh::<Q>::new();
 
         m.add_vertices(&converted_v);
         m.add_faces(&self.faces);
-        m.compute_vertex_normals_par();
+
+        if self.normals.is_some() {
+            m.compute_vertex_normals();
+        }
 
         m
     }
@@ -241,7 +244,8 @@ impl<T: Float + Send + Sync> Mesh<T> {
     ///
     /// # Arguments
     /// * `triangles` - slice of triangles to create mesh from.
-    pub fn from_triangles(triangles: &[Triangle<T>]) -> Mesh<T> {
+    /// * `compute_normals` - If true will compute the smooth mesh normals for the vertices.
+    pub fn from_triangles(triangles: &[Triangle<T>], compute_normals: bool) -> Mesh<T> {
         let before = Instant::now();
         let mut faces: Vec<[usize; 3]> = Vec::with_capacity(triangles.len());
         let mut grid = SpatialHashGrid::new();
@@ -272,7 +276,10 @@ impl<T: Float + Send + Sync> Mesh<T> {
             before.elapsed()
         );
 
-        mesh.compute_vertex_normals_par();
+        if compute_normals {
+            log::info!("computing normals");
+            mesh.compute_vertex_normals_par();
+        }
 
         mesh
     }
