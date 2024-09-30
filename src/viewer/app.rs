@@ -34,14 +34,16 @@ const BASIC_TEXT: &'static str = "imlet viewer";
 pub fn run_viewer(mesh: &crate::types::geometry::Mesh<f32>) {
     App::new()
         .add_plugins((
-            DefaultPlugins.set(RenderPlugin {
-                render_creation: RenderCreation::Automatic(WgpuSettings {
-                    // WARN this is a native only feature. It will not work with webgl or webgpu
-                    features: WgpuFeatures::POLYGON_MODE_LINE,
-                    ..default()
-                }),
-                synchronous_pipeline_compilation: false,
-            }).disable::<bevy::log::LogPlugin>(),
+            DefaultPlugins
+                .set(RenderPlugin {
+                    render_creation: RenderCreation::Automatic(WgpuSettings {
+                        // WARN this is a native only feature. It will not work with webgl or webgpu
+                        features: WgpuFeatures::POLYGON_MODE_LINE,
+                        ..default()
+                    }),
+                    synchronous_pipeline_compilation: false,
+                })
+                .disable::<bevy::log::LogPlugin>(),
             WireframePlugin,
         ))
         .insert_resource(WireframeConfig {
