@@ -14,6 +14,12 @@ use crate::types::computation::traits::ImplicitOperation;
 pub struct Multiply {}
 
 /// Create a new Multiply operator
+impl Default for Multiply {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Multiply {
     pub fn new() -> Self {
         Self {}
@@ -37,6 +43,12 @@ impl<T: Float> ImplicitOperation<T> for Multiply {
 /// * Second value (b)
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Add {}
+
+impl Default for Add {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl Add {
     /// Create a new Add operation.
@@ -63,6 +75,12 @@ impl<T: Float> ImplicitOperation<T> for Add {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Subtract {}
 
+impl Default for Subtract {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Subtract {
     /// Create a new Subtract operation.
     pub fn new() -> Self {
@@ -87,6 +105,12 @@ impl<T: Float> ImplicitOperation<T> for Subtract {
 /// * Second value (b)
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Divide {}
+
+impl Default for Divide {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl Divide {
     /// Create a new Divide operation.
@@ -114,6 +138,12 @@ impl<T: Float> ImplicitOperation<T> for Divide {
 /// * Interpolation parameter (t)
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct LinearInterpolation {}
+
+impl Default for LinearInterpolation {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl LinearInterpolation {
     /// Create a new LinearInterpolation operation.

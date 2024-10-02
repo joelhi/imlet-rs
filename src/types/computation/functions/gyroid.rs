@@ -25,10 +25,10 @@ impl<T: Float> Gyroid<T> {
     /// * `linear` - The gyrioid function is nonlinear in nature. Use this option to linearize the values.
     pub fn new(length_x: T, length_y: T, length_z: T, linear: bool) -> Self {
         Self {
-            length_x: length_x,
-            length_y: length_y,
-            length_z: length_z,
-            linear: linear,
+            length_x,
+            length_y,
+            length_z,
+            linear,
         }
     }
 
@@ -42,7 +42,7 @@ impl<T: Float> Gyroid<T> {
             length_x: length,
             length_y: length,
             length_z: length,
-            linear: linear,
+            linear,
         }
     }
 }

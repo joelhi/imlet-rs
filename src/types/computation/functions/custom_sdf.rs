@@ -24,7 +24,7 @@ impl<Q, T: Float> CustomSDF<Q, T> {
     /// * `geometry` - Geomtry to use as base for signed distance computation.
     pub fn new(geometry: Q) -> Self {
         Self {
-            geometry: geometry,
+            geometry,
             offset: T::zero(),
         }
     }

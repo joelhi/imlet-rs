@@ -23,7 +23,7 @@ impl<T: Float> Plane<T> {
     /// * `normal` - The direction of the normal (z) direction.
     pub fn new(origin: Vec3<T>, normal: Vec3<T>) -> Self {
         Plane {
-            origin: origin,
+            origin,
             normal: normal.normalize(),
         }
     }

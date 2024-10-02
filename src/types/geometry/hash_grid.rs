@@ -1,7 +1,7 @@
 use num_traits::Float;
 
 use super::Vec3;
-use std::{collections::HashMap, usize};
+use std::collections::HashMap;
 
 /// Simple implementation of a spatial hash grid, not properly checking adjacent bins.
 /// Tolerances may not be guaranteed to be satisfied in the event of close points in adjacent bins.
@@ -25,7 +25,7 @@ impl<T: Float> SpatialHashGrid<T> {
         Self {
             map: HashMap::new(),
             vertices: Vec::new(),
-            tolerance: tolerance,
+            tolerance,
         }
     }
 
@@ -71,6 +71,6 @@ impl<T: Float> SpatialHashGrid<T> {
         s_hash = s_hash * 37 + (v.y * multiplier).to_i64().unwrap();
         s_hash = s_hash * 37 + (v.z * multiplier).to_i64().unwrap();
 
-        return s_hash;
+        s_hash
     }
 }

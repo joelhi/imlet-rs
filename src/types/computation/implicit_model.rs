@@ -19,6 +19,12 @@ pub struct ImplicitModel<T> {
     inputs: HashMap<String, Vec<Option<String>>>,
 }
 
+impl<T> Default for ImplicitModel<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T> ImplicitModel<T> {
     /// Create a new empty model.
     pub fn new() -> Self {
@@ -223,7 +229,7 @@ impl<T> ImplicitModel<T> {
     fn verify_input_validity(
         &self,
         target: &str,
-        source: &String,
+        source: &str,
         index: usize,
     ) -> Result<(), ModelError> {
         // Verify that the index is within range
@@ -236,13 +242,13 @@ impl<T> ImplicitModel<T> {
             return Err(ModelError::InputIndexOutOfRange {
                 component: target.to_string(),
                 num_inputs: inputs.len(),
-                index: index,
+                index,
             });
         }
 
         // Verify that the source is not dependent on the target.
         let mut queue = VecDeque::new();
-        queue.push_back(source.clone());
+        queue.push_back(source.to_string());
 
         // Traverse all sources for the target and verify that source is not dependent on target.
         while let Some(front) = queue.pop_front() {
@@ -314,25 +320,19 @@ impl<T> ImplicitModel<T> {
         for (component, index) in sources.iter() {
             ordered_components[*index].insert_str(0, component.as_str());
             ordered_inputs[*index].extend(self.valid_inputs(component)?.iter().map(|tag| {
-                ComponentId(*sources.get(tag).expect(&format!(
-                    "No component with tag {} found. The model may be corrupt or an invalid target is requested.",
-                    tag
-                )))
+                ComponentId(*sources.get(tag).unwrap_or_else(|| panic!("No component with tag {} found. The model may be corrupt or an invalid target is requested.",
+                    tag)))
             }));
         }
 
         for (index, component) in ordered_components.iter().enumerate() {
             graph.add_component(
-                self.components.get(component).expect(&format!(
-                    "No component with tag {} found. The model may be corrupt or an invalid target is requested.",
-                    component
-                )),
+                self.components.get(component).unwrap_or_else(|| panic!("No component with tag {} found. The model may be corrupt or an invalid target is requested.",
+                    component)),
                 ordered_inputs
                     .get(index)
-                    .expect(&format!(
-                        "No component with tag {} found. The model may be corrupt or an invalid target is requested.",
-                        component
-                    ))
+                    .unwrap_or_else(|| panic!("No component with tag {} found. The model may be corrupt or an invalid target is requested.",
+                        component))
                     .to_vec(),
             )
         }
@@ -356,7 +356,7 @@ impl<T> ImplicitModel<T> {
             .map(|(index, item)| {
                 item.clone().ok_or_else(|| ModelError::MissingInput {
                     component: component.to_string(),
-                    index: index,
+                    index,
                 })
             })
             .collect()
@@ -397,7 +397,7 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
         cell_size: T,
     ) -> Result<ScalarField<T>, ModelError> {
         let computation_graph = self.compile(output)?;
-        Ok(computation_graph.evaluate(&bounds, cell_size))
+        Ok(computation_graph.evaluate(bounds, cell_size))
     }
 
     /// Extract the iso surface at the zero-level.
@@ -437,7 +437,7 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
         cell_size: T,
         iso_value: T,
     ) -> Result<Mesh<T>, ModelError> {
-        let field = self.generate_field(output, &bounds, cell_size)?;
+        let field = self.generate_field(output, bounds, cell_size)?;
 
         let triangles = generate_iso_surface(&field, iso_value);
         Ok(Mesh::from_triangles(&triangles, false))

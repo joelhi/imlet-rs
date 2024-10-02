@@ -14,7 +14,7 @@ impl Vec3i {
     /// * `j` - Second index.
     /// * `k` - Third index.
     pub fn new(i: usize, j: usize, k: usize) -> Self {
-        Vec3i { i: i, j: j, k: k }
+        Vec3i { i, j, k }
     }
 
     /// Compute the product of the indexes. (i * j * k)
@@ -23,9 +23,9 @@ impl Vec3i {
     }
 }
 
-impl Into<(usize, usize, usize)> for Vec3i {
-    fn into(self) -> (usize, usize, usize) {
-        (self.i, self.j, self.k)
+impl From<Vec3i> for (usize, usize, usize) {
+    fn from(val: Vec3i) -> Self {
+        (val.i, val.j, val.k)
     }
 }
 

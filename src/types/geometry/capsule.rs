@@ -25,8 +25,8 @@ impl<T> Capsule<T> {
     /// * `radius` - Capsule radius.
     pub fn new(line: Line<T>, radius: T) -> Self {
         Self {
-            line: line,
-            radius: radius,
+            line,
+            radius,
         }
     }
     /// Creare a new capsule from start and end points.
@@ -38,7 +38,7 @@ impl<T> Capsule<T> {
     pub fn from_points(start: Vec3<T>, end: Vec3<T>, radius: T) -> Self {
         Self {
             line: Line::new(start, end),
-            radius: radius,
+            radius,
         }
     }
 }

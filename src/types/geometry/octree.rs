@@ -8,6 +8,8 @@ use super::{
     BoundingBox, Vec3,
 };
 
+type OctreeChildren<Q, T> = Box<[Option<OctreeNode<Q, T>>; 8]>;
+
 /// Octree used for storing object and accelerating closest point and distance queries.
 ///
 /// The octree can be built for any geometric object which implements the relevant traits.
@@ -27,8 +29,8 @@ impl<Q, T: Float> Octree<Q, T> {
     pub fn new(max_depth: u32, max_objects: usize) -> Self {
         Self {
             root: OctreeNode::new(BoundingBox::zero(), Vec::new()),
-            max_depth: max_depth,
-            max_objects: max_objects,
+            max_depth,
+            max_objects,
         }
     }
 
@@ -99,14 +101,14 @@ impl<Q: SignedQuery<T>, T: Float> Octree<Q, T> {
 pub(crate) struct OctreeNode<Q, T> {
     pub bounds: BoundingBox<T>,
     pub objects: Vec<Q>,
-    pub children: Option<Box<[Option<OctreeNode<Q, T>>; 8]>>,
+    pub children: Option<OctreeChildren<Q, T>>
 }
 
 impl<Q, T: Float> OctreeNode<Q, T> {
     pub fn new(bounds: BoundingBox<T>, objects: Vec<Q>) -> Self {
         Self {
-            bounds: bounds,
-            objects: objects,
+            bounds,
+            objects,
             children: None,
         }
     }
@@ -121,10 +123,8 @@ impl<Q, T: Float> OctreeNode<Q, T> {
         bounds.push(self.bounds);
 
         if let Some(ref children) = self.children {
-            for child in children.iter() {
-                if let Some(ref child_node) = child {
-                    child_node.collect_bounds(bounds);
-                }
+            for child in children.iter().flatten() {
+                child.collect_bounds(bounds);
             }
         }
     }
@@ -148,7 +148,7 @@ impl<Q: SpatialQuery<T>, T: Float> OctreeNode<Q, T> {
         }
 
         let center = self.bounds.min + (self.bounds.max - self.bounds.min) * T::from(0.5).unwrap();
-        let mut children: [Option<OctreeNode<Q, T>>; 8] = Default::default();
+        let mut children: OctreeChildren<Q, T> = Default::default();
 
         for i in 0..8 {
             let offset = Vec3::<T>::new(
@@ -186,7 +186,7 @@ impl<Q: SpatialQuery<T>, T: Float> OctreeNode<Q, T> {
                 children[i] = Some(child_node);
             }
         }
-        self.children = Some(Box::new(children));
+        self.children = Some(children);
         self.objects.clear();
     }
 
@@ -224,14 +224,14 @@ impl<Q: SpatialQuery<T>, T: Float> OctreeNode<Q, T> {
             child_nodes.sort_by(|a, b| {
                 let a_dist = &a
                     .bounds
-                    .closest_point(&point)
+                    .closest_point(point)
                     .distance_to_vec3_squared(point);
                 let b_dist = &b
                     .bounds
-                    .closest_point(&point)
+                    .closest_point(point)
                     .distance_to_vec3_squared(point);
                 a_dist
-                    .partial_cmp(&b_dist)
+                    .partial_cmp(b_dist)
                     .unwrap_or(std::cmp::Ordering::Equal)
             });
 
@@ -245,7 +245,7 @@ impl<Q: SpatialQuery<T>, T: Float> OctreeNode<Q, T> {
 
     pub fn closest_point(&self, point: &Vec3<T>) -> (Vec3<T>, Q) {
         let mut best_dist_sq = T::max_value();
-        let mut best_point = point.clone();
+        let mut best_point = *point;
         let mut best_object = SpatialQuery::default();
         self.closest_point_recursive(point, &mut best_dist_sq, &mut best_point, &mut best_object);
         (best_point, best_object)
@@ -277,7 +277,7 @@ impl<Q: SpatialQuery<T>, T: Float> OctreeNode<Q, T> {
 
 impl<Q: SignedQuery<T>, T: Float> OctreeNode<Q, T> {
     pub fn signed_distance(&self, point: &Vec3<T>) -> T {
-        let (closest_point, closest_obj) = self.closest_point(&point);
+        let (closest_point, closest_obj) = self.closest_point(point);
 
         let direction = *point - closest_point;
         let normal = closest_obj.closest_point_with_normal(&closest_point).1;

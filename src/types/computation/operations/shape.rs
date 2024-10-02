@@ -13,6 +13,12 @@ use crate::types::computation::traits::ImplicitOperation;
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct BooleanUnion {}
 
+impl Default for BooleanUnion {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl BooleanUnion {
     /// Create a new BooleanUnion operation.
     pub fn new() -> Self {
@@ -38,6 +44,12 @@ impl<T: Float> ImplicitOperation<T> for BooleanUnion {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct BooleanIntersection {}
 
+impl Default for BooleanIntersection {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl BooleanIntersection {
     /// Create a new BooleanIntersection operation
     pub fn new() -> Self {
@@ -62,6 +74,12 @@ impl<T: Float> ImplicitOperation<T> for BooleanIntersection {
 /// * Second distance value (b)
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct BooleanDifference {}
+
+impl Default for BooleanDifference {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl BooleanDifference {
     /// Create a new BooleanDifference operation.

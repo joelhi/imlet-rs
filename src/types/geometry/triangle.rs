@@ -48,7 +48,7 @@ impl<T> Triangle<T> {
     pub fn with_normals(p1: Vec3<T>, p2: Vec3<T>, p3: Vec3<T>, n: Option<[Vec3<T>; 3]>) -> Self {
         Self {
             p: [p1, p2, p3],
-            n: n,
+            n,
         }
     }
 }
@@ -204,7 +204,7 @@ impl<T: Float> SpatialQuery<T> for Triangle<T> {
 
 impl<T: Float> SignedQuery<T> for Triangle<T> {
     fn closest_point_with_normal(&self, query_point: &Vec3<T>) -> (Vec3<T>, Vec3<T>) {
-        let (closest_feature, closest_point) = self.closest_point(&query_point);
+        let (closest_feature, closest_point) = self.closest_point(query_point);
 
         match closest_feature {
             TriangleFeature::VERTEX(i) => {

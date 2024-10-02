@@ -27,7 +27,7 @@ impl<'a, T> ComputationGraph<'a, T> {
     }
 
     pub(crate) fn add_component(&mut self, component: &'a Component<T>, inputs: Vec<ComponentId>) {
-        self.components.push(&component);
+        self.components.push(component);
         self.inputs.push(inputs);
     }
 }
@@ -86,7 +86,7 @@ impl<'a, T: Float> ComputationGraph<'a, T> {
 impl<'a, T: Float + Send + Sync> ComputationGraph<'a, T> {
     pub fn evaluate(&self, bounds: &BoundingBox<T>, cell_size: T) -> ScalarField<T> {
         let before = Instant::now();
-        let n = Self::point_count(&bounds, cell_size);
+        let n = Self::point_count(bounds, cell_size);
 
         log::info!("Evaluating model with {}x{}x{} points", n.i, n.j, n.k);
 

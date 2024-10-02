@@ -158,7 +158,7 @@ impl<T: Float> BoundingBox<T> {
 
     /// Returns the centre of the box.
     pub fn centroid(&self) -> Vec3<T> {
-        return (self.max + self.min) * T::from(0.5).expect("Failed to convert number to T");
+        (self.max + self.min) * T::from(0.5).expect("Failed to convert number to T")
     }
 
     /// Checks if the box intersects another box.

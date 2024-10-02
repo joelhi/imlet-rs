@@ -23,7 +23,7 @@ impl<T> Vec3<T> {
     /// * `y` - Y coordinate.
     /// * `z` - Z coordinate.
     pub fn new(x: T, y: T, z: T) -> Self {
-        Self { x: x, y: y, z: z }
+        Self { x, y, z }
     }
 }
 
@@ -93,7 +93,7 @@ impl<T: Float> Vec3<T> {
     /// # Arguments
     /// * `pt` - Other point to compute distance to.
     pub fn distance_to_vec3(&self, pt: &Vec3<T>) -> T {
-        self.distance_to_vec3_squared(&pt).sqrt()
+        self.distance_to_vec3_squared(pt).sqrt()
     }
 
     /// Compute the euclidian distance to a location defined by x, y and z coordinates.
@@ -243,21 +243,15 @@ impl<T: Float> Vec3<T> {
     /// Convert the internal data type to a new type *Q*.
     pub fn convert<Q: Float>(&self) -> Vec3<Q> {
         Vec3::new(
-            Q::from(self.x).expect(&format!(
-                "Failed to convert from {} to {}",
+            Q::from(self.x).unwrap_or_else(|| panic!("Failed to convert from {} to {}",
                 any::type_name::<Q>(),
-                any::type_name::<T>()
-            )),
-            Q::from(self.y).expect(&format!(
-                "Failed to convert from {} to {}",
+                any::type_name::<T>())),
+            Q::from(self.y).unwrap_or_else(|| panic!("Failed to convert from {} to {}",
                 any::type_name::<Q>(),
-                any::type_name::<T>()
-            )),
-            Q::from(self.z).expect(&format!(
-                "Failed to convert from {} to {}",
+                any::type_name::<T>())),
+            Q::from(self.z).unwrap_or_else(|| panic!("Failed to convert from {} to {}",
                 any::type_name::<Q>(),
-                any::type_name::<T>()
-            )),
+                any::type_name::<T>())),
         )
     }
 

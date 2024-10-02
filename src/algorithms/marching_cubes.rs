@@ -57,7 +57,7 @@ fn polygonize_cell<T: Float>(
     cell_values: &[T; 8],
 ) -> Vec<Triangle<T>> {
     let cube_index = cube_index(cell_values, iso_val);
-    triangles(cube_index, &cell_coord, &cell_values, iso_val)
+    triangles(cube_index, cell_coord, cell_values, iso_val)
 }
 
 fn cube_index<T: Float>(cell_values: &[T; 8], iso_val: T) -> usize {
@@ -262,13 +262,13 @@ fn interpolate_vertex<T: Float>(
     if (iso_val - first_value).abs() < iso_threshold
         || (first_value - second_value).abs() < iso_threshold
     {
-        return first_coord.clone();
+        return *first_coord;
     } else if (iso_val - second_value).abs() < iso_threshold {
-        return second_coord.clone();
+        return *second_coord;
     }
 
     let parameter = (iso_val - first_value) / (second_value - first_value);
-    Vec3::interpolate(&first_coord, &second_coord, parameter)
+    Vec3::interpolate(first_coord, second_coord, parameter)
 }
 
 #[cfg(test)]

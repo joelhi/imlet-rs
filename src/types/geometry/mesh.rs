@@ -13,7 +13,6 @@ use super::SpatialHashGrid;
 use super::Triangle;
 use super::Vec3;
 use std::time::Instant;
-use std::usize;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Indexed triangle mesh.
@@ -21,6 +20,12 @@ pub struct Mesh<T> {
     vertices: Vec<Vec3<T>>,
     faces: Vec<[usize; 3]>,
     normals: Option<Vec<Vec3<T>>>,
+}
+
+impl<T> Default for Mesh<T> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<T> Mesh<T> {
@@ -166,7 +171,7 @@ impl<T: Float> Mesh<T> {
             let v1 = self.vertices[face[1]] - vertex;
             let v2 = self.vertices[face[2]] - vertex;
 
-            return v1.angle(&v2).unwrap_or(T::zero());
+            v1.angle(&v2).unwrap_or(T::zero())
         } else if face[1] == vertex_index {
             let v1 = self.vertices[face[0]] - vertex;
             let v2 = self.vertices[face[2]] - vertex;
@@ -201,11 +206,7 @@ impl<T: Float> Mesh<T> {
     pub fn as_triangles(&self) -> Vec<Triangle<T>> {
         let mut triangles: Vec<Triangle<T>> = Vec::with_capacity(self.num_faces());
         for face in self.faces.iter() {
-            let face_normals = if let Some(n) = &self.normals {
-                Some([n[face[0]], n[face[1]], n[face[2]]])
-            } else {
-                None
-            };
+            let face_normals = self.normals.as_ref().map(|n| [n[face[0]], n[face[1]], n[face[2]]]);
             triangles.push(Triangle::with_normals(
                 self.vertices[face[0]],
                 self.vertices[face[1]],
@@ -266,7 +267,7 @@ impl<T: Float + Send + Sync> Mesh<T> {
             }
         }
 
-        mesh.add_vertices(&grid.vertices());
+        mesh.add_vertices(grid.vertices());
         mesh.add_faces(&faces);
 
         log::info!(

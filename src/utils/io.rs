@@ -37,7 +37,7 @@ pub(crate) fn mesh_to_obj<T: Display>(mesh: &Mesh<T>) -> String {
 pub fn write_obj_file<T: Display>(mesh: &Mesh<T>, file_name: &str) -> io::Result<()> {
     let file_path = Path::new(file_name).with_extension("obj");
     let mut file = fs::File::create(file_path)?;
-    file.write_all(mesh_to_obj(&mesh).as_bytes())?;
+    file.write_all(mesh_to_obj(mesh).as_bytes())?;
 
     log::info!(
         "Obj file with {} triangles and {} vertices written as {}",
@@ -67,7 +67,7 @@ pub fn parse_obj_file<T: Float + Send + Sync>(
         return Err("Cannot read file. Only .obj files are supported.".into());
     }
 
-    let file = File::open(&path)?;
+    let file = File::open(path)?;
 
     let mut vertices: Vec<Vec3<T>> = Vec::new();
     let mut faces: Vec<[usize; 3]> = Vec::new();
@@ -153,7 +153,7 @@ pub fn write_field_csv<T: Float + Display>(
 ) -> io::Result<()> {
     let file_path = Path::new(file_name).with_extension("csv");
     let mut file = fs::File::create(file_path)?;
-    file.write_all(field_as_data(&field).as_bytes())?;
+    file.write_all(field_as_data(field).as_bytes())?;
     Ok(())
 }
 

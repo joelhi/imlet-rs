@@ -38,10 +38,10 @@ impl<T> ScalarField<T> {
             panic!("Incorrect size of data buffer");
         }
         Self {
-            origin: origin,
-            cell_size: cell_size,
+            origin,
+            cell_size,
             n: num_pts,
-            data: data,
+            data,
         }
     }
 
@@ -104,8 +104,8 @@ impl<T: Float> ScalarField<T> {
     /// * `num_pts` - Number of points in each direction.
     pub fn new(origin: Vec3<T>, cell_size: T, num_pts: Vec3i) -> Self {
         Self {
-            origin: origin,
-            cell_size: cell_size,
+            origin,
+            cell_size,
             n: num_pts,
             data: vec![T::zero(); num_pts.product()],
         }
