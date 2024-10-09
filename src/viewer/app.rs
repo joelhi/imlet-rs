@@ -1,4 +1,5 @@
 use bevy::app::App;
+use num_traits::Float;
 
 use super::plugins::MeshViewerPlugin;
 
@@ -8,6 +9,6 @@ use super::plugins::MeshViewerPlugin;
 ///
 /// * `mesh` - The mesh to render.
 ///
-pub fn show_mesh(mesh: &crate::types::geometry::Mesh<f32>) {
-    App::new().add_plugins(MeshViewerPlugin::new(mesh)).run();
+pub fn show_mesh<T: Float>(mesh: &crate::types::geometry::Mesh<T>) {
+    App::new().add_plugins(MeshViewerPlugin::new(&mesh.convert::<f32>())).run();
 }
