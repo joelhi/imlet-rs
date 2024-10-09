@@ -1,4 +1,5 @@
 use {
+    imlet::viewer::show_mesh,
     imlet::{
         types::{
             computation::ImplicitModel,
@@ -6,7 +7,6 @@ use {
         },
         utils,
     },
-    imlet::viewer::show_mesh,
 };
 
 pub fn main() {
@@ -39,7 +39,9 @@ pub fn main() {
         .unwrap();
 
     // Generate mesh
-    let mesh = model.generate_iso_surface("Sphere", &bounds, cell_size).unwrap();
+    let mesh = model
+        .generate_iso_surface("Sphere", &bounds, cell_size)
+        .unwrap();
 
     show_mesh(&mesh);
 }

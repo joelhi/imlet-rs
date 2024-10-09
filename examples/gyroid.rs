@@ -1,5 +1,15 @@
-use imlet::{types::{computation::{functions::Gyroid, operations::shape::{BooleanIntersection, Thickness}, ImplicitModel}, geometry::{BoundingBox, Sphere, Vec3}}, utils, viewer::show_mesh};
-
+use imlet::{
+    types::{
+        computation::{
+            functions::Gyroid,
+            operations::shape::{BooleanIntersection, Thickness},
+            ImplicitModel,
+        },
+        geometry::{BoundingBox, Sphere, Vec3},
+    },
+    utils,
+    viewer::show_mesh,
+};
 
 pub fn main() {
     utils::logging::init_info();
@@ -34,7 +44,9 @@ pub fn main() {
         )
         .unwrap();
 
-    let mesh = model.generate_iso_surface(&output, &model_space, cell_size).unwrap();
+    let mesh = model
+        .generate_iso_surface(&output, &model_space, cell_size)
+        .unwrap();
 
     show_mesh(&mesh);
 }
