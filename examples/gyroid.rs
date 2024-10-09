@@ -8,7 +8,6 @@ use imlet::{
         geometry::{BoundingBox, Sphere, Vec3},
     },
     utils,
-    viewer::show_mesh,
 };
 
 pub fn main() {
@@ -44,9 +43,20 @@ pub fn main() {
         )
         .unwrap();
 
-    let mesh = model
-        .generate_iso_surface(&output, &model_space, cell_size)
-        .unwrap();
+    #[cfg(feature = "viewer")]
+    {
+        let mesh = model
+            .generate_iso_surface(&output, &model_space, cell_size)
+            .unwrap();
 
-    show_mesh(&mesh);
+        imlet::viewer::show_mesh(&mesh);
+    }
+    #[cfg(not(feature = "viewer"))]
+    {
+        let _ = model
+            .generate_iso_surface(&output, &model_space, cell_size)
+            .unwrap();
+
+        println!("Enable viewer feature to show the result.")
+    }
 }

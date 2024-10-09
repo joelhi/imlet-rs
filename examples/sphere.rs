@@ -1,12 +1,9 @@
-use {
-    imlet::viewer::show_mesh,
-    imlet::{
-        types::{
-            computation::ImplicitModel,
-            geometry::{BoundingBox, Sphere, Vec3},
-        },
-        utils,
+use imlet::{
+    types::{
+        computation::ImplicitModel,
+        geometry::{BoundingBox, Sphere, Vec3},
     },
+    utils,
 };
 
 pub fn main() {
@@ -24,7 +21,7 @@ pub fn main() {
     // Function
     let mut model = ImplicitModel::new();
 
-    let sphere_tag = model
+    let output = model
         .add_function(
             "Sphere",
             Sphere::new(
@@ -39,9 +36,20 @@ pub fn main() {
         .unwrap();
 
     // Generate mesh
-    let mesh = model
-        .generate_iso_surface("Sphere", &bounds, cell_size)
-        .unwrap();
+    #[cfg(feature = "viewer")]
+    {
+        let mesh = model
+            .generate_iso_surface(&output, &bounds, cell_size)
+            .unwrap();
 
-    show_mesh(&mesh);
+        imlet::viewer::show_mesh(&mesh);
+    }
+    #[cfg(not(feature = "viewer"))]
+    {
+        let _ = model
+            .generate_iso_surface(&output, &bounds, cell_size)
+            .unwrap();
+
+        println!("Enable viewer feature to show the result.")
+    }
 }
