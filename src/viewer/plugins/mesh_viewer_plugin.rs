@@ -20,7 +20,6 @@ use bevy::{
         settings::{RenderCreation, WgpuFeatures, WgpuSettings},
         RenderPlugin,
     },
-    winit::WinitSettings,
     DefaultPlugins,
 };
 use bevy_normal_material::{plugin::NormalMaterialPlugin, prelude::NormalMaterial};
@@ -43,7 +42,6 @@ impl MeshViewerPlugin {
 impl Plugin for MeshViewerPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(self.mesh_data.clone())
-            .insert_resource(WinitSettings::desktop_app())
             .add_systems(Startup, setup)
             .add_plugins((
                 DefaultPlugins
