@@ -243,15 +243,27 @@ impl<T: Float> Vec3<T> {
     /// Convert the internal data type to a new type *Q*.
     pub fn convert<Q: Float>(&self) -> Vec3<Q> {
         Vec3::new(
-            Q::from(self.x).unwrap_or_else(|| panic!("Failed to convert from {} to {}",
-                any::type_name::<Q>(),
-                any::type_name::<T>())),
-            Q::from(self.y).unwrap_or_else(|| panic!("Failed to convert from {} to {}",
-                any::type_name::<Q>(),
-                any::type_name::<T>())),
-            Q::from(self.z).unwrap_or_else(|| panic!("Failed to convert from {} to {}",
-                any::type_name::<Q>(),
-                any::type_name::<T>())),
+            Q::from(self.x).unwrap_or_else(|| {
+                panic!(
+                    "Failed to convert from {} to {}",
+                    any::type_name::<Q>(),
+                    any::type_name::<T>()
+                )
+            }),
+            Q::from(self.y).unwrap_or_else(|| {
+                panic!(
+                    "Failed to convert from {} to {}",
+                    any::type_name::<Q>(),
+                    any::type_name::<T>()
+                )
+            }),
+            Q::from(self.z).unwrap_or_else(|| {
+                panic!(
+                    "Failed to convert from {} to {}",
+                    any::type_name::<Q>(),
+                    any::type_name::<T>()
+                )
+            }),
         )
     }
 

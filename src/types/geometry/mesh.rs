@@ -206,7 +206,10 @@ impl<T: Float> Mesh<T> {
     pub fn as_triangles(&self) -> Vec<Triangle<T>> {
         let mut triangles: Vec<Triangle<T>> = Vec::with_capacity(self.num_faces());
         for face in self.faces.iter() {
-            let face_normals = self.normals.as_ref().map(|n| [n[face[0]], n[face[1]], n[face[2]]]);
+            let face_normals = self
+                .normals
+                .as_ref()
+                .map(|n| [n[face[0]], n[face[1]], n[face[2]]]);
             triangles.push(Triangle::with_normals(
                 self.vertices[face[0]],
                 self.vertices[face[1]],

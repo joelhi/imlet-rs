@@ -28,9 +28,6 @@ impl<T> Triangle<T> {
     /// * `p2` - Second vertex.
     /// * `p3` - Third vertex.
     ///
-    /// # Returns
-    ///
-    ///  
     pub fn new(p1: Vec3<T>, p2: Vec3<T>, p3: Vec3<T>) -> Self {
         Self {
             p: [p1, p2, p3],
@@ -46,10 +43,7 @@ impl<T> Triangle<T> {
     /// * `p3` - Third vertex.
     /// * `n` - Array with normals for each vertex if applicable.
     pub fn with_normals(p1: Vec3<T>, p2: Vec3<T>, p3: Vec3<T>, n: Option<[Vec3<T>; 3]>) -> Self {
-        Self {
-            p: [p1, p2, p3],
-            n,
-        }
+        Self { p: [p1, p2, p3], n }
     }
 }
 

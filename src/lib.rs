@@ -176,12 +176,15 @@ pub mod utils {
 }
 
 #[cfg(feature = "viewer")]
-/// Module for some simple 3d tools
+/// Module for some basic functions to display the generated outputs.
 pub mod viewer {
-    /// Exposes a simple 3d viewer to display and interact with the exported meshes from the implicit models.
-    pub mod app;
 
-    pub mod utils;
+    mod app;
+    pub use app::*;
 
-    pub mod raw_mesh_data;
+    pub(crate) mod utils;
+
+    pub(crate) mod raw_mesh_data;
+
+    pub(crate) mod plugins;
 }

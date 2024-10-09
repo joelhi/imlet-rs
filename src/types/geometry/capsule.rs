@@ -24,10 +24,7 @@ impl<T> Capsule<T> {
     /// * `line` -Capsule centre line.
     /// * `radius` - Capsule radius.
     pub fn new(line: Line<T>, radius: T) -> Self {
-        Self {
-            line,
-            radius,
-        }
+        Self { line, radius }
     }
     /// Creare a new capsule from start and end points.
     /// # Arguments

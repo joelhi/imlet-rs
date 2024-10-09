@@ -101,7 +101,7 @@ impl<Q: SignedQuery<T>, T: Float> Octree<Q, T> {
 pub(crate) struct OctreeNode<Q, T> {
     pub bounds: BoundingBox<T>,
     pub objects: Vec<Q>,
-    pub children: Option<OctreeChildren<Q, T>>
+    pub children: Option<OctreeChildren<Q, T>>,
 }
 
 impl<Q, T: Float> OctreeNode<Q, T> {
