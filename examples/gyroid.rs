@@ -57,6 +57,6 @@ pub fn main() {
             .generate_iso_surface(&output, &model_space, cell_size)
             .unwrap();
 
-        println!("Enable viewer feature to show the result.")
+        println!("Enable the viewer feature by using (--features viewer) to show the result");
     }
 }

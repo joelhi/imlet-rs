@@ -32,16 +32,9 @@ version = "0.14"
 optional = true
 default-features = false
 features = [
-  # These are the default features:
-  # (re-enable whichever you like)
-
-  # Bevy functionality:
-  "bevy_asset",         # Assets management
   "bevy_scene",         # Scenes management
   "bevy_winit",         # Window management (cross-platform Winit backend)
   "bevy_render",        # Rendering framework core
-  "bevy_core_pipeline", # Common rendering abstractions
-  "bevy_gltf",          # GLTF 3D assets format support
   "bevy_text",          # Text/font rendering
   "default_font",       # Embed a minimal default font for text/UI
 ]
