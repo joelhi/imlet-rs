@@ -2,6 +2,7 @@ use std::{cell::RefCell, time::Instant};
 
 use num_traits::Float;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
+use smallvec::SmallVec;
 
 use crate::{
     types::geometry::{BoundingBox, Vec3i},
@@ -42,9 +43,8 @@ impl<'a, T: Float> ComputationGraph<'a, T> {
             let mut values = values.borrow_mut();
             values.resize(self.components.len());
 
-            let mut inputs = Vec::with_capacity(4);
             for (index, component) in self.components.iter().enumerate() {
-                self.inputs(index, &values, &mut inputs);
+                let inputs = self.inputs(index, &values);
                 let val = component.compute(x, y, z, &inputs);
                 values.set(index, val);
             }
@@ -74,12 +74,12 @@ impl<'a, T: Float> ComputationGraph<'a, T> {
     }
 
     #[inline]
-    pub fn inputs(&self, component_id: usize, values: &ComponentValues, inputs: &mut Vec<T>) {
-        inputs.clear();
-        inputs.resize(self.inputs[component_id].len(), T::zero());
-        for (i, &id) in self.inputs[component_id].iter().enumerate() {
-            inputs[i] = values.get(id);
+    pub fn inputs(&self, component_id: usize, values: &ComponentValues)->SmallVec<[T; 8]> {
+        let mut inputs = SmallVec::<[T; 8]>::new();
+        for &id in self.inputs[component_id].iter() {
+            inputs.push(values.get(id));
         }
+        inputs
     }
 }
 

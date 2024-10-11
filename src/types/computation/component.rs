@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
+use smallvec::SmallVec;
 
 use super::traits::{ImplicitFunction, ImplicitOperation};
 
@@ -31,12 +32,12 @@ impl<T: Float> Component<T> {
 }
 
 pub struct ComponentValues {
-    values: Vec<f64>,
+    values: SmallVec<[f64; 32]>,
 }
 
 impl ComponentValues {
     pub fn new() -> Self {
-        Self { values: Vec::new() }
+        Self { values: SmallVec::<[f64; 32]>::new() }
     }
 
     pub fn resize(&mut self, size: usize) {
