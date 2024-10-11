@@ -10,9 +10,9 @@ pub fn main() {
     utils::logging::init_info();
 
     // Inputs
-    let size = 10.0;
+    let size = 100.0;
     let offset = 5.0;
-    let cell_size = 0.25;
+    let cell_size = 2.5;
     let bounds = BoundingBox::new(
         Vec3::new(offset, offset, offset),
         Vec3::new(offset + size, offset + size, offset + size),

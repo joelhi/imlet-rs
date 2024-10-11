@@ -13,8 +13,8 @@ use imlet::{
 pub fn main() {
     utils::logging::init_info();
 
-    let size: f32 = 10.0;
-    let cell_size = 0.05;
+    let size: f32 = 100.0;
+    let cell_size = 0.5;
     let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
     // Build model
@@ -28,11 +28,11 @@ pub fn main() {
         .unwrap();
 
     let gyroid_tag = model
-        .add_function("Gyroid", Gyroid::with_equal_spacing(2.5, true))
+        .add_function("Gyroid", Gyroid::with_equal_spacing(15., false))
         .unwrap();
 
     let offset_gyroid = model
-        .add_operation_with_inputs("OffsetGyroid", Thickness::new(1.5), &[&gyroid_tag])
+        .add_operation_with_inputs("OffsetGyroid", Thickness::new(10.), &[&gyroid_tag])
         .unwrap();
 
     let output = model
