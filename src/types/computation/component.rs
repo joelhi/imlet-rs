@@ -32,12 +32,12 @@ impl<T: Float> Component<T> {
 }
 
 pub struct ComponentValues {
-    values: SmallVec<[f64; 32]>,
+    values: Vec<f64>,
 }
 
 impl ComponentValues {
     pub fn new() -> Self {
-        Self { values: SmallVec::<[f64; 32]>::new() }
+        Self { values: Vec::new() }
     }
 
     pub fn resize(&mut self, size: usize) {
