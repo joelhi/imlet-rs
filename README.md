@@ -124,12 +124,14 @@
 - [x] Improve SDF (Signed Distance Function) computation, addressing issues with leaking and pseudonormals.
 - [x] Clean up trait bounds across all structs, so they are only specified where needed.
 - [x] More measured and intentional error handling using Result<> in various parts of the code, to make use easier and remove panics
-- [ ] Refactor so implicit geometries can be added directly to the models, based on the SignedDistance trait. Same for collections of geometries.
-- [ ] Enhance the viewer with interactive buttons and runtime script loading (Use bevy?).
-- [ ] Implement serialization for models, potentially using sealed traits (?).
-- [ ] Integrate [Rhai](https://rhai.rs/), or other scripting language for Rust, for enhanced customization.
+- [x] Refactor so implicit geometries can be added directly to the models, based on the SignedDistance trait. Same for collections of geometries.
+- [x] Set up basic viewer with bevy.
+- [ ] Add variable parameters to model components. (Oct)
+- [ ] Implement better topological sort for computation graph / model connectivity. (Oct)
+- [ ] Enhance the viewer with interactive buttons and runtime model generation. (Oct - Dec)
 
-### Future Enhancements
+### Future Enhancements (2025)
+- [ ] Implement serialization for models, potentially using sealed traits (?).
 - [ ] Enable GPU-based computation for faster processing. (For example using [CubeCL](https://github.com/tracel-ai/cubecl))
 - [ ] Develop a node editor for visual programming.
 
