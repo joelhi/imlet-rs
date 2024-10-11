@@ -32,11 +32,10 @@ version = "0.14"
 optional = true
 default-features = false
 features = [
-  "bevy_scene",         # Scenes management
-  "bevy_winit",         # Window management (cross-platform Winit backend)
-  "bevy_render",        # Rendering framework core
-  "bevy_text",          # Text/font rendering
-  "default_font",       # Embed a minimal default font for text/UI
+  "bevy_winit",
+  "bevy_render",
+  "bevy_text",
+  "default_font",
 ]
 
 [dependencies.bevy_panorbit_camera]
