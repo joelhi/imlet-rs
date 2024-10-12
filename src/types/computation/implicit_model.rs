@@ -354,7 +354,7 @@ impl<T> ImplicitModel<T> {
 
     fn assemble_computation_graph(
         &self,
-        sorted_sources: &Vec<String>,
+        sorted_sources: &[String],
     ) -> Result<ComputationGraph<T>, ModelError> {
         let mut graph = ComputationGraph::new();
 
