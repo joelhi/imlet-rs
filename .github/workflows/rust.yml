@@ -20,6 +20,22 @@ jobs:
       run: cargo fmt --all -- --check
     - name: Run tests
       run: cargo test --verbose --release
-    - name: Run Clippy with reviewdog
-      uses: giraffate/clippy-action@v1.0.0
   
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install clippy
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: sksat/action-clippy@v0.7.0
+        if: github.event_name == 'push'
+        with:
+          reporter: github-check
+
+      - uses: sksat/action-clippy@v0.7.0
+        if: github.event_name == 'pull_request'
+        with:
+          reporter: github-pr-review
