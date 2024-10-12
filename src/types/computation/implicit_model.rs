@@ -267,7 +267,10 @@ impl<T> ImplicitModel<T> {
     /// Return all the sources upon which a component depends.
     ///
     /// Returns a HashMap with all dependends by tag and index if valid.
-    fn gather_dependencies_for_component(&self, tag: &String) -> Result<HashSet<String>, ModelError> {
+    fn gather_dependencies_for_component(
+        &self,
+        tag: &String,
+    ) -> Result<HashSet<String>, ModelError> {
         let mut visited = HashSet::new();
         let mut stack = Vec::new();
         stack.push(tag.clone());
@@ -294,7 +297,7 @@ impl<T> ImplicitModel<T> {
     }
 
     /// Perform a topological sort based on a subset of nodes in the graph using kahns algoritm.
-    /// 
+    ///
     /// Will return an error if topological sorting is impossible, for example if cyclical dependencies are present.
     fn topological_sort_subset(
         &self,
@@ -349,31 +352,36 @@ impl<T> ImplicitModel<T> {
         }
     }
 
-    fn assemble_computation_graph(&self, sorted_sources: &Vec<String>) -> Result<ComputationGraph<T>, ModelError>{
-        let mut graph= ComputationGraph::new();
+    fn assemble_computation_graph(
+        &self,
+        sorted_sources: &Vec<String>,
+    ) -> Result<ComputationGraph<T>, ModelError> {
+        let mut graph = ComputationGraph::new();
 
         let tag_to_index: HashMap<String, usize> = sorted_sources
             .iter()
             .enumerate()
             .map(|(i, tag)| (tag.clone(), i))
             .collect();
-    
+
         for component_tag in sorted_sources.iter() {
-            let component = self.components
+            let component = self
+                .components
                 .get(component_tag)
                 .ok_or_else(|| ModelError::MissingTag(component_tag.clone()))?;
-            
+
             let component_inputs = self.valid_inputs(component_tag)?;
-            
+
             let inputs_indices = component_inputs
                 .iter()
                 .map(|s| {
-                    tag_to_index.get(s)
+                    tag_to_index
+                        .get(s)
                         .map(|&idx| ComponentId(idx))
                         .ok_or_else(|| ModelError::MissingTag(s.clone()))
                 })
                 .collect::<Result<Vec<_>, _>>()?;
-    
+
             // Add the component and its inputs to the graph
             graph.add_component(component, inputs_indices);
         }
@@ -384,22 +392,21 @@ impl<T> ImplicitModel<T> {
     fn compile(&self, target: &str) -> Result<ComputationGraph<T>, ModelError> {
         let before = Instant::now();
         let target_output = target.to_string();
-        
+
         let sources = self.gather_dependencies_for_component(&target_output)?;
 
         let sorted_sources = self.topological_sort_subset(sources)?;
-    
+
         let graph = self.assemble_computation_graph(&sorted_sources)?;
-    
+
         log::info!(
             "Computation graph with {} components compiled in {:.2?}",
             sorted_sources.len(),
             before.elapsed()
         );
-    
+
         Ok(graph)
     }
-    
 
     fn valid_inputs(&self, component: &str) -> Result<Vec<String>, ModelError> {
         let default = Vec::new();
