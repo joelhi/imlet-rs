@@ -2,7 +2,6 @@ use std::fmt::Debug;
 
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
-use smallvec::SmallVec;
 
 use super::traits::{ImplicitFunction, ImplicitOperation};
 

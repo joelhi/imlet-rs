@@ -14,6 +14,8 @@ use super::{
     ScalarField,
 };
 
+const INPUT_STACK_BUFFER_SIZE: usize = 8;
+
 pub struct ComputationGraph<'a, T> {
     components: Vec<&'a Component<T>>,
     inputs: Vec<Vec<ComponentId>>,
@@ -74,8 +76,12 @@ impl<'a, T: Float> ComputationGraph<'a, T> {
     }
 
     #[inline]
-    pub fn inputs(&self, component_id: usize, values: &ComponentValues)->SmallVec<[T; 8]> {
-        let mut inputs = SmallVec::<[T; 8]>::new();
+    pub fn inputs(
+        &self,
+        component_id: usize,
+        values: &ComponentValues,
+    ) -> SmallVec<[T; INPUT_STACK_BUFFER_SIZE]> {
+        let mut inputs = SmallVec::<[T; INPUT_STACK_BUFFER_SIZE]>::new();
         for &id in self.inputs[component_id].iter() {
             inputs.push(values.get(id));
         }

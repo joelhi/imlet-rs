@@ -5,7 +5,7 @@ use crate::types::computation::ComputationGraph;
 use crate::types::geometry::traits::SignedDistance;
 use crate::types::geometry::{BoundingBox, Mesh};
 use num_traits::Float;
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::time::Instant;
 
 use super::functions::CustomSDF;
@@ -266,80 +266,126 @@ impl<T> ImplicitModel<T> {
 
     /// Return all the sources upon which a component depends.
     ///
-    /// Returns a HashMap with all dependends by tag and index if valid. Will return an error if a successful traversal is impossible, for example if a cyclical dependecy is found.
-    fn gather_sources_for_component(
-        &self,
-        tag: &str,
-    ) -> Result<HashMap<String, usize>, ModelError> {
-        let mut queue = VecDeque::new();
-        for component in self.valid_inputs(tag)? {
-            queue.push_back(component);
-        }
+    /// Returns a HashMap with all dependends by tag and index if valid.
+    fn gather_sources_for_component(&self, tag: &String) -> Result<HashSet<String>, ModelError> {
+        let mut visited = HashSet::new();
+        let mut stack = Vec::new();
+        stack.push(tag.clone());
 
-        // Find all sources for the target
-        let mut sources = HashMap::new();
-        while let Some(front) = queue.pop_front() {
-            if front.eq(tag) {
-                // Component depends on itself. Return an error.
-                return Err(ModelError::CyclicDependency(tag.to_string()));
-            }
-            if sources.contains_key(&front) {
+        while let Some(node) = stack.pop() {
+            if visited.contains(&node) {
                 continue;
             }
-            sources.insert(front.clone(), sources.len() + 1);
-            for component in self.valid_inputs(&front)? {
-                if !sources.contains_key(&component) {
-                    queue.push_back(component);
+            visited.insert(node.clone());
+
+            // Add all direct inputs of this node to the stack
+            if let Some(inputs) = self.inputs.get(&node) {
+                for input in inputs.iter().filter_map(|opt| opt.as_ref()) {
+                    stack.push(input.clone());
                 }
             }
         }
 
-        sources.insert(tag.to_string(), 0);
-        Ok(sources)
+        if !visited.contains(tag) {
+            return Err(ModelError::MissingTag(tag.to_string()));
+        }
+
+        Ok(visited)
+    }
+
+    /// Perform a topological sort based on a subset of nodes in the graph using kahns algoritm.
+    /// 
+    /// Will return an error if topological sorting is impossible, for example if cyclical dependencies are present.
+    fn topological_sort_subset(
+        &self,
+        relevant_nodes: HashSet<String>,
+    ) -> Result<Vec<String>, ModelError> {
+        let mut in_degree = HashMap::new();
+        let mut graph = HashMap::new();
+
+        // Initialize graph and in-degree for relevant nodes
+        for node in relevant_nodes.iter() {
+            in_degree.insert(node.clone(), 0);
+            if let Some(deps) = self.inputs.get(node) {
+                for dep in deps.iter().filter_map(|opt| opt.as_ref()) {
+                    if relevant_nodes.contains(dep) {
+                        graph
+                            .entry(dep.clone())
+                            .or_insert(Vec::new())
+                            .push(node.clone());
+                        *in_degree.entry(node.clone()).or_insert(0) += 1;
+                    }
+                }
+            }
+        }
+
+        let mut queue = VecDeque::new();
+        for (node, &deg) in &in_degree {
+            if deg == 0 {
+                queue.push_back(node.clone());
+            }
+        }
+
+        let mut result = Vec::new();
+
+        while let Some(node) = queue.pop_front() {
+            result.push(node.clone());
+            if let Some(neighbors) = graph.get(&node) {
+                for neighbor in neighbors {
+                    if let Some(deg) = in_degree.get_mut(neighbor) {
+                        *deg -= 1;
+                        if *deg == 0 {
+                            queue.push_back(neighbor.clone());
+                        }
+                    }
+                }
+            }
+        }
+
+        if result.len() == relevant_nodes.len() {
+            Ok(result)
+        } else {
+            Err(ModelError::CyclicDependency(result[0].clone()))
+        }
     }
 
     fn compile(&self, target: &str) -> Result<ComputationGraph<T>, ModelError> {
         let before = Instant::now();
         let target_output = target.to_string();
-
-        // Traverse model from target to resolve all dependents
         let mut graph = ComputationGraph::new();
-        let mut ordered_components = Vec::new();
-        let mut ordered_inputs = Vec::new();
+        
+        // Traverse model from target to resolve all dependents
+        let sources = self.gather_sources_for_component(&target_output)?;
+        let sorted_sources = self.topological_sort_subset(sources)?;
 
-        let mut sources = self.gather_sources_for_component(&target_output)?;
-        let num_sources = sources.len() - 1;
-        sources
-            .iter_mut()
-            .for_each(|(_, index)| *index = num_sources - *index);
+        let tag_to_index: HashMap<String, usize> = sorted_sources
+            .iter()
+            .enumerate()
+            .map(|(i, tag)| (tag.clone(), i))
+            .collect();
 
-        ordered_components.resize(sources.len(), String::new());
-        ordered_inputs.resize(sources.len(), vec![]);
-
-        // Iterate all the sources into an ordered list and assign indexed input
-        for (component, index) in sources.iter() {
-            ordered_components[*index].insert_str(0, component.as_str());
-            ordered_inputs[*index].extend(self.valid_inputs(component)?.iter().map(|tag| {
-                ComponentId(*sources.get(tag).unwrap_or_else(|| panic!("No component with tag {} found. The model may be corrupt or an invalid target is requested.",
-                    tag)))
-            }));
-        }
-
-        for (index, component) in ordered_components.iter().enumerate() {
+        for component_tag in sorted_sources.iter() {
+            let component_inputs = self.valid_inputs(component_tag)?;
             graph.add_component(
-                self.components.get(component).unwrap_or_else(|| panic!("No component with tag {} found. The model may be corrupt or an invalid target is requested.",
-                    component)),
-                ordered_inputs
-                    .get(index)
-                    .unwrap_or_else(|| panic!("No component with tag {} found. The model may be corrupt or an invalid target is requested.",
-                        component))
-                    .to_vec(),
-            )
+                self.components
+                    .get(component_tag)
+                    .expect("Component should be in the model."),
+                component_inputs
+                    .iter()
+                    .map(|s| {
+                        ComponentId(
+                            *tag_to_index
+                            .get(s)
+                            .expect("Component should be in the model.")
+                        )
+                    })
+                    .collect(),
+            );
         }
 
         log::info!(
             "Computation graph with {} components compiled in {:.2?}",
-            ordered_components.len(),
+            sorted_sources.len(),
             before.elapsed()
         );
 
