@@ -53,8 +53,3 @@ opt-level = 1
 
 [profile.dev.package."*"]
 opt-level = 1  # Default optimization level for dependencies in dev mode
-
-[badges]
-# Badges from continuous integration (CI) services or version control platforms
-travis-ci = { repository = "joelhi/imlet-rs", branch = "master" }
-github-actions = { repository = "joelhi/imlet-rs", workflow = "rust" }
