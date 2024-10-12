@@ -20,3 +20,6 @@ jobs:
       run: cargo fmt --all -- --check
     - name: Run tests
       run: cargo test --verbose --release
+    - name: Run Clippy with reviewdog
+      uses: giraffate/clippy-action@v1.0.0
+  
