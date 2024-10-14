@@ -329,17 +329,9 @@ mod tests {
 
     #[test]
     fn test_compute_angle_opposite() {
-        let v1 = Vec3::new(
-            1.392251041,
-            0.440162188,
-            -0.14818595,
-        );
+        let v1 = Vec3::new(1.392251041, 0.440162188, -0.14818595);
 
-        let v2 = Vec3::new(
-            -0.26339719,
-            -0.08327343,
-            0.028035004,
-        );
+        let v2 = Vec3::new(-0.26339719, -0.08327343, 0.028035004);
 
         let angle = v1.angle(&v2).unwrap();
         assert!((angle - PI).abs() < 0.01);
