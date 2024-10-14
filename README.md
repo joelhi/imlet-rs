@@ -127,7 +127,7 @@
 - [x] Refactor so implicit geometries can be added directly to the models, based on the SignedDistance trait. Same for collections of geometries.
 - [x] Set up basic viewer with bevy.
 - [ ] Add variable parameters to model components. (Oct)
-- [ ] Implement better topological sort for computation graph / model connectivity. (Oct)
+- [x] Implement better topological sort for computation graph / model connectivity. (Oct)
 - [ ] Enhance the viewer with interactive buttons and runtime model generation. (Oct - Dec)
 
 ### Future Enhancements (2025)
