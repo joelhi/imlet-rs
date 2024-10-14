@@ -1,6 +1,6 @@
 use crate::types::geometry::Vec3;
 
-pub fn convert_vec3_to_raw<T: Copy>(vec: &Vec<Vec3<T>>) -> Vec<[T; 3]> {
+pub fn convert_vec3_to_raw<T: Copy>(vec: &[Vec3<T>]) -> Vec<[T; 3]> {
     let len = vec.len();
     let mut new_vec = Vec::<[T; 3]>::with_capacity(len);
 

@@ -102,7 +102,7 @@ mod tests {
     fn test_compute_constant() {
         let component = Component::Constant(1.0);
 
-        let value = component.compute(0.0, 0.0, 0.0, &vec![]);
+        let value = component.compute(0.0, 0.0, 0.0, &[]);
         assert!((1.0 - value).abs() < 0.001);
     }
 
@@ -111,8 +111,8 @@ mod tests {
         let function = Sphere::new(Vec3::origin(), 1.0);
         let component = Component::Function(Box::new(function));
 
-        assert!((-0.5 - component.compute(0.0, 0.5, 0.0, &vec![])).abs() < 0.001);
-        assert!((0.5 - component.compute(0.0, 1.5, 0.0, &vec![])).abs() < 0.001);
+        assert!((-0.5 - component.compute(0.0, 0.5, 0.0, &[])).abs() < 0.001);
+        assert!((0.5 - component.compute(0.0, 1.5, 0.0, &[])).abs() < 0.001);
     }
 
     #[test]
@@ -120,6 +120,6 @@ mod tests {
         let operation = Add::new();
         let component = Component::Operation(Box::new(operation));
 
-        assert!((2.0 - component.compute(0.0, 0.0, 0.0, &vec![1.0, 1.0])).abs() < 0.001);
+        assert!((2.0 - component.compute(0.0, 0.0, 0.0, &[1.0, 1.0])).abs() < 0.001);
     }
 }

@@ -684,12 +684,12 @@ mod tests {
 
         // Only add one when two needed.
         let error1 = model
-            .add_operation_with_inputs("Add", Add::new(), &vec!["Value"])
+            .add_operation_with_inputs("Add", Add::new(), &["Value"])
             .unwrap_err();
 
         // Add three when two needed.
         let error2 = model
-            .add_operation_with_inputs("Add", Add::new(), &vec!["Value"])
+            .add_operation_with_inputs("Add", Add::new(), &["Value"])
             .unwrap_err();
 
         assert!(matches!(error1, ModelError::IncorrectInputCount { .. }));

@@ -92,7 +92,6 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for Line<T> {
 
 #[cfg(test)]
 mod tests {
-    use std::f64::EPSILON;
 
     use super::*;
 
@@ -106,6 +105,6 @@ mod tests {
             line.set_parameter(&param.name, Data::Vec3(Vec3::origin()));
         }
 
-        assert!(line.length().abs() < EPSILON);
+        assert!(line.length().abs() < f64::epsilon());
     }
 }

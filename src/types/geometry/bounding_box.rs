@@ -279,7 +279,6 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for BoundingBox<T> {
 
 #[cfg(test)]
 mod tests {
-    use std::f64::EPSILON;
 
     use crate::{types::geometry::Mesh, utils::io::parse_obj_file};
 
@@ -385,7 +384,7 @@ mod tests {
             aabb.set_parameter(&param.name, Data::Vec3(Vec3::origin()));
         }
 
-        assert!(aabb.min.distance_to_vec3(&Vec3::origin()).abs() < EPSILON);
-        assert!(aabb.max.distance_to_vec3(&Vec3::origin()).abs() < EPSILON);
+        assert!(aabb.min.distance_to_vec3(&Vec3::origin()).abs() < f64::epsilon());
+        assert!(aabb.max.distance_to_vec3(&Vec3::origin()).abs() < f64::epsilon());
     }
 }

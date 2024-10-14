@@ -93,7 +93,6 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for Sphere<T> {
 
 #[cfg(test)]
 mod tests {
-    use std::f64::EPSILON;
 
     use super::*;
 
@@ -113,7 +112,7 @@ mod tests {
             }
         }
 
-        assert!((sphere.radius - 1.).abs() < EPSILON);
-        assert!(sphere.centre.distance_to_coord(1., 1., 1.).abs() < EPSILON);
+        assert!((sphere.radius - 1.).abs() < f64::epsilon());
+        assert!(sphere.centre.distance_to_coord(1., 1., 1.).abs() < f64::epsilon());
     }
 }
