@@ -1,9 +1,10 @@
 use std::fmt::Debug;
 
+use log::error;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::traits::ImplicitFunction;
+use crate::types::computation::{traits::ImplicitFunction, Data, DataType, Parameter};
 
 use super::{traits::SignedDistance, Vec3};
 
@@ -63,5 +64,48 @@ impl<T: Float + Send + Sync> SignedDistance<T> for Line<T> {
 impl<T: Float + Send + Sync> ImplicitFunction<T> for Line<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(x, y, z)
+    }
+
+    fn parameters(&self) -> Vec<Parameter> {
+        vec![
+            Parameter::new("Start", DataType::Vec3),
+            Parameter::new("End", DataType::Vec3),
+        ]
+    }
+
+    fn set_parameter(&mut self, parameter_name: &String, data: Data<T>) {
+        if !(Parameter::set_vec3_from_param(parameter_name, &data, "Start", &mut self.start)
+            || Parameter::set_vec3_from_param(parameter_name, &data, "End", &mut self.end))
+        {
+            error!("Unknown parameter name: {}", parameter_name);
+        }
+    }
+
+    fn read_parameter(&self, parameter_name: &String) -> Option<Data<T>> {
+        match parameter_name.as_str() {
+            "Start" => Some(Data::Vec3(self.start)),
+            "End" => Some(Data::Vec3(self.end)),
+            _ => None,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::f64::EPSILON;
+
+    use super::*;
+
+    #[test]
+    fn test_get_assigns_params() {
+        let mut line = Line::new(Vec3::new(1., 1., 1.), Vec3::new(10., 10., 10.));
+
+        let params = line.parameters();
+
+        for param in params {
+            line.set_parameter(&param.name, Data::Vec3(Vec3::origin()));
+        }
+
+        assert!(line.length().abs() < EPSILON);
     }
 }

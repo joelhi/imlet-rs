@@ -1,6 +1,6 @@
 use num_traits::Float;
 
-use crate::types::computation::traits::ImplicitFunction;
+use crate::types::computation::{traits::ImplicitFunction, Data, Parameter};
 
 use super::{
     traits::{SignedDistance, SignedQuery, SpatialQuery},
@@ -62,6 +62,18 @@ impl<Q: SignedQuery<T> + Send + Sync, T: Float + Send + Sync> ImplicitFunction<T
 {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(x, y, z)
+    }
+
+    fn parameters(&self) -> Vec<Parameter> {
+        vec![]
+    }
+
+    fn set_parameter(&mut self, _: &String, _: Data<T>) {
+        // Void
+    }
+
+    fn read_parameter(&self, _: &String) -> Option<Data<T>> {
+        None
     }
 }
 
