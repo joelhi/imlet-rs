@@ -14,7 +14,7 @@
 //!
 //! ## Custom
 //! - [`CustomFunction`](functions::CustomFunction)
-//! - [`CustomSDF`](functions::CustomSDF)
+//! - [`CustomGeometry`](functions::CustomGeometry)
 
 // Modules
 mod coordinates;

@@ -1,7 +1,9 @@
+use log::error;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::traits::ImplicitFunction;
+use crate::types::computation::{Data, DataType, Parameter};
 use crate::utils::math_helper::Pi;
 use std::fmt::Debug;
 
@@ -65,5 +67,45 @@ impl<T: Float + Send + Sync + Pi> ImplicitFunction<T> for SchwarzP<T> {
         } else {
             scale * normalized_distance
         }
+    }
+
+    fn parameters(&self) -> Vec<Parameter> {
+        vec![
+            Parameter::new("Length X", DataType::Value),
+            Parameter::new("Length Y", DataType::Value),
+            Parameter::new("Length Z", DataType::Value),
+        ]
+    }
+
+    fn set_parameter(&mut self, parameter_name: &String, data: Data<T>) {
+        if !(Parameter::set_value_from_param(parameter_name, &data, "Length X", &mut self.length_x)
+            || Parameter::set_value_from_param(
+                parameter_name,
+                &data,
+                "Length Y",
+                &mut self.length_y,
+            )
+            || Parameter::set_value_from_param(
+                parameter_name,
+                &data,
+                "Length Z",
+                &mut self.length_y,
+            ))
+        {
+            error!("Unknown parameter name: {}", parameter_name);
+        }
+    }
+
+    fn read_parameter(&self, parameter_name: &String) -> Option<Data<T>> {
+        match parameter_name.as_str() {
+            "Length X" => Some(Data::Value(self.length_x)),
+            "Length Y" => Some(Data::Value(self.length_y)),
+            "Length Z" => Some(Data::Value(self.length_z)),
+            _ => None,
+        }
+    }
+
+    fn function_name(&self) -> &'static str {
+        "SchwarzP"
     }
 }
