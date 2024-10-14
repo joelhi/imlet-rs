@@ -43,6 +43,8 @@ pub fn main() {
         )
         .unwrap();
 
+    println!("{}", model);
+
     #[cfg(feature = "viewer")]
     {
         let mesh = model

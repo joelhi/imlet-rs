@@ -1,6 +1,6 @@
 use imlet::{
     types::computation::{
-        functions::{CustomSDF, Gyroid},
+        functions::{CustomGeometry, Gyroid},
         operations::shape::{BooleanIntersection, Thickness},
         ImplicitModel,
     },
@@ -19,7 +19,7 @@ pub fn main() {
     let mut model = ImplicitModel::new();
 
     let mesh_tag = model
-        .add_function("Mesh", CustomSDF::from_mesh(&mesh))
+        .add_function("Mesh", CustomGeometry::from_mesh(&mesh))
         .unwrap();
 
     let gyroid_tag = model
@@ -37,6 +37,8 @@ pub fn main() {
             &[&mesh_tag, &offset_gyroid],
         )
         .unwrap();
+
+    println!("{}", model);
 
     #[cfg(feature = "viewer")]
     {

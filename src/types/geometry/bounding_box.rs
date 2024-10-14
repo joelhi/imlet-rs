@@ -1,9 +1,10 @@
 use std::fmt::Debug;
 
+use log::error;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::traits::ImplicitFunction;
+use crate::types::computation::{traits::ImplicitFunction, Data, DataType, Parameter};
 
 use super::{
     traits::{SignedDistance, SpatialQuery},
@@ -247,10 +248,38 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for BoundingBox<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(&Vec3::new(x, y, z))
     }
+
+    fn parameters(&self) -> Vec<Parameter> {
+        vec![
+            Parameter::new("Min", DataType::Vec3),
+            Parameter::new("Max", DataType::Vec3),
+        ]
+    }
+
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
+        if !(Parameter::set_vec3_from_param(parameter_name, &data, "Min", &mut self.min)
+            || Parameter::set_vec3_from_param(parameter_name, &data, "Max", &mut self.max))
+        {
+            error!("Unknown parameter name: {}", parameter_name);
+        }
+    }
+
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>> {
+        match parameter_name {
+            "Min" => Some(Data::Vec3(self.min)),
+            "Max" => Some(Data::Vec3(self.max)),
+            _ => None,
+        }
+    }
+
+    fn function_name(&self) -> &'static str {
+        "Box"
+    }
 }
 
 #[cfg(test)]
 mod tests {
+
     use crate::{types::geometry::Mesh, utils::io::parse_obj_file};
 
     use super::*;
@@ -343,5 +372,19 @@ mod tests {
             bounds.max,
             union.max
         );
+    }
+
+    #[test]
+    fn test_get_assigns_params() {
+        let mut aabb = BoundingBox::new(Vec3::new(1., 1., 1.), Vec3::new(10., 10., 10.));
+
+        let params = aabb.parameters();
+
+        for param in params {
+            aabb.set_parameter(&param.name, Data::Vec3(Vec3::origin()));
+        }
+
+        assert!(aabb.min.distance_to_vec3(&Vec3::origin()).abs() < f64::epsilon());
+        assert!(aabb.max.distance_to_vec3(&Vec3::origin()).abs() < f64::epsilon());
     }
 }

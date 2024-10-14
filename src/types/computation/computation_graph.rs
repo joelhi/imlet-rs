@@ -45,7 +45,7 @@ impl<'a, T: Float> ComputationGraph<'a, T> {
             let mut values = values.borrow_mut();
             values.resize(self.components.len());
 
-            for (index, component) in self.components.iter().enumerate() {
+            for (index, &component) in self.components.iter().enumerate() {
                 let inputs = self.inputs(index, &values);
                 let val = component.compute(x, y, z, &inputs);
                 values.set(index, val);

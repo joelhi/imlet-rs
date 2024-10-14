@@ -1,9 +1,13 @@
 use std::fmt::Debug;
 
+use log::error;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::{computation::traits::ImplicitFunction, geometry::Vec3};
+use crate::types::{
+    computation::{traits::ImplicitFunction, Data, DataType, Parameter},
+    geometry::Vec3,
+};
 
 /// Distance function for a torus, defined by an a centre point, major radius and minor radius.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -33,5 +37,35 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for Torus<T> {
         (self.r - ((x - self.centre.x).powi(2) + (z - self.centre.z).powi(2)).sqrt()).powi(2)
             + (y - self.centre.y).powi(2)
             - self.t.powi(2)
+    }
+
+    fn parameters(&self) -> Vec<Parameter> {
+        vec![
+            Parameter::new("Centre", DataType::Value),
+            Parameter::new("Radius", DataType::Value),
+            Parameter::new("Thickness", DataType::Value),
+        ]
+    }
+
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
+        if !(Parameter::set_vec3_from_param(parameter_name, &data, "Centre", &mut self.centre)
+            || Parameter::set_value_from_param(parameter_name, &data, "Radius", &mut self.r)
+            || Parameter::set_value_from_param(parameter_name, &data, "Thickness", &mut self.t))
+        {
+            error!("Unknown parameter name: {}", parameter_name);
+        }
+    }
+
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>> {
+        match parameter_name {
+            "Centre" => Some(Data::Vec3(self.centre)),
+            "Radius" => Some(Data::Value(self.r)),
+            "Thickness" => Some(Data::Value(self.t)),
+            _ => None,
+        }
+    }
+
+    fn function_name(&self) -> &'static str {
+        "Torus"
     }
 }

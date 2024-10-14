@@ -1,9 +1,11 @@
+use log::error;
 use std::fmt::Debug;
 
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::traits::ImplicitFunction;
+use crate::types::computation::{Data, DataType, Parameter};
 use crate::utils::math_helper::normalize;
 
 /// Distance function that evaluates to the z-coordinate
@@ -38,6 +40,33 @@ impl<T: Float> ZCoord<T> {
 impl<T: Float + Send + Sync> ImplicitFunction<T> for ZCoord<T> {
     fn eval(&self, _: T, _: T, z: T) -> T {
         normalize(z, self.min, self.max)
+    }
+
+    fn parameters(&self) -> Vec<Parameter> {
+        vec![
+            Parameter::new("Min", DataType::Value),
+            Parameter::new("Max", DataType::Value),
+        ]
+    }
+
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
+        if !(Parameter::set_value_from_param(parameter_name, &data, "Min", &mut self.min)
+            || Parameter::set_value_from_param(parameter_name, &data, "Max", &mut self.max))
+        {
+            error!("Unknown parameter name: {}", parameter_name);
+        }
+    }
+
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>> {
+        match parameter_name {
+            "Min" => Some(Data::Value(self.min)),
+            "Max" => Some(Data::Value(self.max)),
+            _ => None,
+        }
+    }
+
+    fn function_name(&self) -> &'static str {
+        "Z Coord"
     }
 }
 
@@ -74,6 +103,33 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for YCoord<T> {
     fn eval(&self, _: T, y: T, _: T) -> T {
         normalize(y, self.min, self.max)
     }
+
+    fn parameters(&self) -> Vec<Parameter> {
+        vec![
+            Parameter::new("Min", DataType::Value),
+            Parameter::new("Max", DataType::Value),
+        ]
+    }
+
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
+        if !(Parameter::set_value_from_param(parameter_name, &data, "Min", &mut self.min)
+            || Parameter::set_value_from_param(parameter_name, &data, "Max", &mut self.max))
+        {
+            error!("Unknown parameter name: {}", parameter_name);
+        }
+    }
+
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>> {
+        match parameter_name {
+            "Min" => Some(Data::Value(self.min)),
+            "Max" => Some(Data::Value(self.max)),
+            _ => None,
+        }
+    }
+
+    fn function_name(&self) -> &'static str {
+        "Y Coord"
+    }
 }
 
 /// Distance function that evaluates to the x-coordinate
@@ -108,5 +164,32 @@ impl<T: Float> XCoord<T> {
 impl<T: Float + Send + Sync> ImplicitFunction<T> for XCoord<T> {
     fn eval(&self, x: T, _: T, _: T) -> T {
         normalize(x, self.min, self.max)
+    }
+
+    fn parameters(&self) -> Vec<Parameter> {
+        vec![
+            Parameter::new("Min", DataType::Value),
+            Parameter::new("Max", DataType::Value),
+        ]
+    }
+
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
+        if !(Parameter::set_value_from_param(parameter_name, &data, "Min", &mut self.min)
+            || Parameter::set_value_from_param(parameter_name, &data, "Max", &mut self.max))
+        {
+            error!("Unknown parameter name: {}", parameter_name);
+        }
+    }
+
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>> {
+        match parameter_name {
+            "Min" => Some(Data::Value(self.min)),
+            "Max" => Some(Data::Value(self.max)),
+            _ => None,
+        }
+    }
+
+    fn function_name(&self) -> &'static str {
+        "X Coord"
     }
 }

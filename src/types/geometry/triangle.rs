@@ -2,8 +2,6 @@ use num_traits::Float;
 use std::fmt::Debug;
 use std::fmt::{self, Display};
 
-use crate::types::computation::traits::ImplicitFunction;
-
 use super::traits::SignedDistance;
 use super::{
     traits::{SignedQuery, SpatialQuery},
@@ -228,12 +226,6 @@ impl<T: Float + Send + Sync> SignedDistance<T> for Triangle<T> {
             return -distance;
         }
         distance
-    }
-}
-
-impl<T: Float + Send + Sync> ImplicitFunction<T> for Triangle<T> {
-    fn eval(&self, x: T, y: T, z: T) -> T {
-        self.signed_distance(x, y, z)
     }
 }
 

@@ -1,9 +1,10 @@
 use std::fmt::Debug;
 
+use log::error;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::traits::ImplicitFunction;
+use crate::types::computation::{traits::ImplicitFunction, Data, DataType, Parameter};
 
 use super::{traits::SignedDistance, Vec3};
 
@@ -62,5 +63,32 @@ impl<T: Float + Send + Sync> SignedDistance<T> for Plane<T> {
 impl<T: Float + Send + Sync> ImplicitFunction<T> for Plane<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance_coord(x, y, z)
+    }
+
+    fn parameters(&self) -> Vec<Parameter> {
+        vec![
+            Parameter::new("Origin", DataType::Vec3),
+            Parameter::new("Normal", DataType::Vec3),
+        ]
+    }
+
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
+        if !(Parameter::set_vec3_from_param(parameter_name, &data, "Origin", &mut self.origin)
+            || Parameter::set_vec3_from_param(parameter_name, &data, "Normal", &mut self.normal))
+        {
+            error!("Unknown parameter name: {}", parameter_name);
+        }
+    }
+
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>> {
+        match parameter_name {
+            "Origin" => Some(Data::Vec3(self.origin)),
+            "Normal" => Some(Data::Vec3(self.normal)),
+            _ => None,
+        }
+    }
+
+    fn function_name(&self) -> &'static str {
+        "Torus"
     }
 }

@@ -1,9 +1,13 @@
 use std::fmt::Debug;
 
+use log::error;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::{computation::traits::ImplicitFunction, geometry::Vec3};
+use crate::types::{
+    computation::{traits::ImplicitFunction, Data, DataType, Parameter},
+    geometry::Vec3,
+};
 
 use super::{traits::SignedDistance, BoundingBox};
 
@@ -57,5 +61,58 @@ impl<T: Float + Send + Sync> SignedDistance<T> for Sphere<T> {
 impl<T: Float + Send + Sync> ImplicitFunction<T> for Sphere<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.centre.distance_to_coord(x, y, z) - self.radius
+    }
+
+    fn parameters(&self) -> Vec<Parameter> {
+        vec![
+            Parameter::new("Centre", DataType::Vec3),
+            Parameter::new("Radius", DataType::Value),
+        ]
+    }
+
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
+        if !(Parameter::set_vec3_from_param(parameter_name, &data, "Centre", &mut self.centre)
+            || Parameter::set_value_from_param(parameter_name, &data, "Radius", &mut self.radius))
+        {
+            error!("Unknown parameter name: {}", parameter_name);
+        }
+    }
+
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>> {
+        match parameter_name {
+            "Centre" => Some(Data::Vec3(self.centre)),
+            "Radius" => Some(Data::Value(self.radius)),
+            _ => None,
+        }
+    }
+
+    fn function_name(&self) -> &'static str {
+        "Sphere"
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_get_assigns_params() {
+        let mut sphere = Sphere::new(Vec3::new(1., 1., 1.), 10.);
+
+        let params = sphere.parameters();
+
+        for param in params {
+            match param.data_type {
+                DataType::Value => sphere.set_parameter(&param.name, Data::Value(1.)),
+                DataType::Vec3 => {
+                    sphere.set_parameter(&param.name, Data::Vec3(Vec3::new(1., 1., 1.)))
+                }
+                _ => panic!("Error in the param"),
+            }
+        }
+
+        assert!((sphere.radius - 1.).abs() < f64::epsilon());
+        assert!(sphere.centre.distance_to_coord(1., 1., 1.).abs() < f64::epsilon());
     }
 }

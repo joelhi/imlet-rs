@@ -9,14 +9,14 @@ use crate::types::{
 
 /// Distance function for an arbitrary geometry type.
 #[derive(Debug)]
-pub struct CustomSDF<Q, T> {
+pub struct CustomGeometry<Q, T> {
     /// Geometry to use for signed distance computation
     pub geometry: Q,
     /// Additional offset applied to the distance field.
     pub offset: T,
 }
 
-impl<Q, T: Float> CustomSDF<Q, T> {
+impl<Q, T: Float> CustomGeometry<Q, T> {
     /// Create a new custom sdf from a geometry that implements the SignedDistance trait.
     ///
     /// # Arguments
@@ -41,7 +41,7 @@ impl<Q, T: Float> CustomSDF<Q, T> {
     }
 }
 
-impl<T: Float> CustomSDF<GeometryCollection<Triangle<T>, T>, T> {
+impl<T: Float> CustomGeometry<GeometryCollection<Triangle<T>, T>, T> {
     /// Create a custom distance function based on a collection of the triangles in a mesh.
     pub fn from_mesh(mesh: &Mesh<T>) -> Self {
         let collection = GeometryCollection::build(mesh.as_triangles());
@@ -51,9 +51,25 @@ impl<T: Float> CustomSDF<GeometryCollection<Triangle<T>, T>, T> {
 }
 
 impl<Q: SignedDistance<T> + Send + Sync, T: Float + Send + Sync> ImplicitFunction<T>
-    for CustomSDF<Q, T>
+    for CustomGeometry<Q, T>
 {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.geometry.signed_distance(x, y, z) - self.offset
+    }
+
+    fn parameters(&self) -> Vec<crate::types::computation::Parameter> {
+        vec![]
+    }
+
+    fn set_parameter(&mut self, _: &str, _: crate::types::computation::Data<T>) {
+        // Void
+    }
+
+    fn read_parameter(&self, _: &str) -> Option<crate::types::computation::Data<T>> {
+        None
+    }
+
+    fn function_name(&self) -> &'static str {
+        "CustomGeometry"
     }
 }

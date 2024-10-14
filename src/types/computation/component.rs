@@ -3,7 +3,10 @@ use std::fmt::Debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use super::traits::{ImplicitFunction, ImplicitOperation};
+use super::{
+    traits::{ImplicitFunction, ImplicitOperation},
+    Data, DataType, Parameter,
+};
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct ComponentId(pub usize);
@@ -28,6 +31,36 @@ impl<T: Float> Component<T> {
             Component::Operation(operation) => operation.eval(inputs),
         }
     }
+
+    pub fn type_name(&self) -> &'static str {
+        match self {
+            Component::Constant(_) => "Constant",
+            Component::Function(function) => function.function_name(),
+            Component::Operation(operation) => operation.operation_name(),
+        }
+    }
+
+    pub fn get_parameters(&self) -> Vec<(Parameter, Data<T>)> {
+        match self {
+            Component::Constant(value) => vec![(
+                Parameter::new("Value", DataType::Value),
+                Data::Value(*value),
+            )],
+            Component::Function(function) => function
+                .parameters()
+                .iter()
+                .map(|p| {
+                    (
+                        p.clone(),
+                        function
+                            .read_parameter(&p.name)
+                            .expect("Parameter returned from function should be valid."),
+                    )
+                })
+                .collect(),
+            Component::Operation(_) => vec![],
+        }
+    }
 }
 
 pub struct ComponentValues {
@@ -44,16 +77,15 @@ impl ComponentValues {
     }
 
     pub fn get<T: Float>(&self, component_id: ComponentId) -> T {
-        T::from(self.values[component_id.0]).expect("Failed to convert component output to T")
+        T::from(self.values[component_id.0]).expect("Should be able to convert f64 to T")
     }
 
     pub fn set<T: Float>(&mut self, index: usize, value: T) {
-        self.values[index] = value.to_f64().expect("Failed to convert value to f64");
+        self.values[index] = value.to_f64().expect("Should be able to convert T to f64");
     }
 
     pub fn last<T: Float>(&self) -> T {
-        T::from(self.values[self.values.len() - 1])
-            .expect("Failed to convert component output to T")
+        T::from(self.values[self.values.len() - 1]).expect("Should be able to convert f64 to T")
     }
 }
 
@@ -70,7 +102,7 @@ mod tests {
     fn test_compute_constant() {
         let component = Component::Constant(1.0);
 
-        let value = component.compute(0.0, 0.0, 0.0, &vec![]);
+        let value = component.compute(0.0, 0.0, 0.0, &[]);
         assert!((1.0 - value).abs() < 0.001);
     }
 
@@ -79,8 +111,8 @@ mod tests {
         let function = Sphere::new(Vec3::origin(), 1.0);
         let component = Component::Function(Box::new(function));
 
-        assert!((-0.5 - component.compute(0.0, 0.5, 0.0, &vec![])).abs() < 0.001);
-        assert!((0.5 - component.compute(0.0, 1.5, 0.0, &vec![])).abs() < 0.001);
+        assert!((-0.5 - component.compute(0.0, 0.5, 0.0, &[])).abs() < 0.001);
+        assert!((0.5 - component.compute(0.0, 1.5, 0.0, &[])).abs() < 0.001);
     }
 
     #[test]
@@ -88,6 +120,6 @@ mod tests {
         let operation = Add::new();
         let component = Component::Operation(Box::new(operation));
 
-        assert!((2.0 - component.compute(0.0, 0.0, 0.0, &vec![1.0, 1.0])).abs() < 0.001);
+        assert!((2.0 - component.compute(0.0, 0.0, 0.0, &[1.0, 1.0])).abs() < 0.001);
     }
 }
