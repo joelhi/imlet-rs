@@ -47,7 +47,7 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for Torus<T> {
         ]
     }
 
-    fn set_parameter(&mut self, parameter_name: &String, data: Data<T>) {
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
         if !(Parameter::set_vec3_from_param(parameter_name, &data, "Centre", &mut self.centre)
             || Parameter::set_value_from_param(parameter_name, &data, "Radius", &mut self.r)
             || Parameter::set_value_from_param(parameter_name, &data, "Thickness", &mut self.t))
@@ -56,8 +56,8 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for Torus<T> {
         }
     }
 
-    fn read_parameter(&self, parameter_name: &String) -> Option<Data<T>> {
-        match parameter_name.as_str() {
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>> {
+        match parameter_name {
             "Centre" => Some(Data::Vec3(self.centre)),
             "Radius" => Some(Data::Value(self.r)),
             "Thickness" => Some(Data::Value(self.t)),

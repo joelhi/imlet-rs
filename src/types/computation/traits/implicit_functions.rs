@@ -25,10 +25,10 @@ pub trait ImplicitFunction<T>: Sync + Send {
     /// The provided value should be assigned where intended, using the mutable reference to self.
     ///
     /// If there are no parameters exposed, this shoudn't do anything.
-    fn set_parameter(&mut self, parameter_name: &String, data: Data<T>);
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>);
 
     /// Get the value of a parameter.
-    fn read_parameter(&self, parameter_name: &String) -> Option<Data<T>>;
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>>;
 
     /// Name of the function
     fn function_name(&self) -> &'static str {

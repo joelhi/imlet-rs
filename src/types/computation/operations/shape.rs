@@ -34,6 +34,10 @@ impl<T: Float> ImplicitOperation<T> for BooleanUnion {
     fn num_inputs(&self) -> usize {
         2
     }
+
+    fn operation_name(&self) -> &'static str {
+        "BooleanUnion"
+    }
 }
 
 /// Operation to perform a boolean intersection on two distance values -> max(a, b)
@@ -65,6 +69,10 @@ impl<T: Float> ImplicitOperation<T> for BooleanIntersection {
     fn num_inputs(&self) -> usize {
         2
     }
+
+    fn operation_name(&self) -> &'static str {
+        "BooleanIntersection"
+    }
 }
 
 /// Operation to perform a boolean difference on two distance values -> max(a, -b)
@@ -95,6 +103,10 @@ impl<T: Float> ImplicitOperation<T> for BooleanDifference {
 
     fn num_inputs(&self) -> usize {
         2
+    }
+
+    fn operation_name(&self) -> &'static str {
+        "BooleanDifference"
     }
 }
 
@@ -128,6 +140,10 @@ impl<T: Float + Send + Sync> ImplicitOperation<T> for Offset<T> {
     fn num_inputs(&self) -> usize {
         1
     }
+
+    fn operation_name(&self) -> &'static str {
+        "Offset"
+    }
 }
 
 /// Operation to give thickness to a surface. This will offset the input outwards and inwards by half the thickness and perform a difference operation.
@@ -158,5 +174,9 @@ impl<T: Float + Send + Sync> ImplicitOperation<T> for Thickness<T> {
 
     fn num_inputs(&self) -> usize {
         1
+    }
+
+    fn operation_name(&self) -> &'static str {
+        "Thickness"
     }
 }

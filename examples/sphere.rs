@@ -35,6 +35,8 @@ pub fn main() {
         )
         .unwrap();
 
+    println!("{}", model);
+
     // Generate mesh
     #[cfg(feature = "viewer")]
     {

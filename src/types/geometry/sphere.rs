@@ -70,7 +70,7 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for Sphere<T> {
         ]
     }
 
-    fn set_parameter(&mut self, parameter_name: &String, data: Data<T>) {
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
         if !(Parameter::set_vec3_from_param(parameter_name, &data, "Centre", &mut self.centre)
             || Parameter::set_value_from_param(parameter_name, &data, "Radius", &mut self.radius))
         {
@@ -78,17 +78,21 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for Sphere<T> {
         }
     }
 
-    fn read_parameter(&self, parameter_name: &String) -> Option<Data<T>> {
-        match parameter_name.as_str() {
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>> {
+        match parameter_name {
             "Centre" => Some(Data::Vec3(self.centre)),
             "Radius" => Some(Data::Value(self.radius)),
             _ => None,
         }
     }
+
+    fn function_name(&self) -> &'static str {
+        "Sphere"
+    }
 }
 
+#[cfg(test)]
 mod tests {
-
     use std::f64::EPSILON;
 
     use super::*;

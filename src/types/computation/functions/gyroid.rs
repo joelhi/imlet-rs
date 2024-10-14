@@ -78,7 +78,7 @@ impl<T: Pi + Float + Send + Sync> ImplicitFunction<T> for Gyroid<T> {
         ]
     }
 
-    fn set_parameter(&mut self, parameter_name: &String, data: Data<T>) {
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
         if !(Parameter::set_value_from_param(parameter_name, &data, "Length X", &mut self.length_x)
             || Parameter::set_value_from_param(
                 parameter_name,
@@ -97,8 +97,8 @@ impl<T: Pi + Float + Send + Sync> ImplicitFunction<T> for Gyroid<T> {
         }
     }
 
-    fn read_parameter(&self, parameter_name: &String) -> Option<Data<T>> {
-        match parameter_name.as_str() {
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>> {
+        match parameter_name {
             "Length X" => Some(Data::Value(self.length_x)),
             "Length Y" => Some(Data::Value(self.length_y)),
             "Length Z" => Some(Data::Value(self.length_z)),

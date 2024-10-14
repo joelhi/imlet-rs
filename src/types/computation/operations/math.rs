@@ -34,6 +34,10 @@ impl<T: Float> ImplicitOperation<T> for Multiply {
     fn num_inputs(&self) -> usize {
         2
     }
+
+    fn operation_name(&self) -> &'static str {
+        "Multiply"
+    }
 }
 
 /// Operation to add two values -> a+b
@@ -64,6 +68,10 @@ impl<T: Float> ImplicitOperation<T> for Add {
 
     fn num_inputs(&self) -> usize {
         2
+    }
+
+    fn operation_name(&self) -> &'static str {
+        "Add"
     }
 }
 
@@ -96,6 +104,10 @@ impl<T: Float> ImplicitOperation<T> for Subtract {
     fn num_inputs(&self) -> usize {
         2
     }
+
+    fn operation_name(&self) -> &'static str {
+        "Subtract"
+    }
 }
 
 /// Operation to divide a value with another -> a/b.
@@ -127,6 +139,10 @@ impl<T: Float> ImplicitOperation<T> for Divide {
 
     fn num_inputs(&self) -> usize {
         2
+    }
+
+    fn operation_name(&self) -> &'static str {
+        "Divide"
     }
 }
 
@@ -162,5 +178,9 @@ impl<T: Float> ImplicitOperation<T> for LinearInterpolation {
 
     fn num_inputs(&self) -> usize {
         3
+    }
+
+    fn operation_name(&self) -> &'static str {
+        "LinearInterpolation"
     }
 }

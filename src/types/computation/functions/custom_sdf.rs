@@ -61,11 +61,11 @@ impl<Q: SignedDistance<T> + Send + Sync, T: Float + Send + Sync> ImplicitFunctio
         vec![]
     }
 
-    fn set_parameter(&mut self, _: &String, _: crate::types::computation::Data<T>) {
+    fn set_parameter(&mut self, _: &str, _: crate::types::computation::Data<T>) {
         // Void
     }
 
-    fn read_parameter(&self, _: &String) -> Option<crate::types::computation::Data<T>> {
+    fn read_parameter(&self, _: &str) -> Option<crate::types::computation::Data<T>> {
         None
     }
 

@@ -5,7 +5,7 @@ use crate::types::computation::ComputationGraph;
 use crate::types::geometry::traits::SignedDistance;
 use crate::types::geometry::{BoundingBox, Mesh};
 use num_traits::Float;
-use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::{self, Debug, Display};
 use std::time::Instant;
 
@@ -16,7 +16,7 @@ use super::{ModelError, ScalarField};
 ///
 /// This acts as the main interface used to build and compute implicit models.
 pub struct ImplicitModel<T> {
-    components: BTreeMap<String, Component<T>>,
+    components: HashMap<String, Component<T>>,
     inputs: HashMap<String, Vec<Option<String>>>,
 }
 
@@ -30,13 +30,13 @@ impl<T> ImplicitModel<T> {
     /// Create a new empty model.
     pub fn new() -> Self {
         Self {
-            components: BTreeMap::new(),
+            components: HashMap::new(),
             inputs: HashMap::new(),
         }
     }
 
     pub fn all_components(&self) -> Vec<(&String, &Component<T>)> {
-        self.components.iter().map(|e| e).collect()
+        self.components.iter().collect()
     }
 
     /// Add a general distance function component to the model.
@@ -436,7 +436,7 @@ impl<T: Float + Display + Debug> Display for ImplicitModel<T> {
             writeln!(f, "Component: {}", name)?;
             writeln!(f, "Type: {}", component.type_name())?;
             let parameters = component.get_parameters();
-            if parameters.len() > 0 {
+            if !parameters.is_empty() {
                 writeln!(f, "Parameters: ")?;
                 for (param, data) in parameters {
                     writeln!(f, "- {} [{:?}: {:2}]", param.name, param.data_type, data)?;
@@ -451,7 +451,7 @@ impl<T: Float + Display + Debug> Display for ImplicitModel<T> {
                     }
                 }
             }
-            writeln!(f, "")?;
+            writeln!(f)?;
         }
         Ok(())
     }

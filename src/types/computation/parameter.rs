@@ -15,12 +15,12 @@ impl Parameter {
     pub fn new(name: &str, data_type: DataType) -> Self {
         Self {
             name: name.to_string(),
-            data_type: data_type,
+            data_type,
         }
     }
 
     pub fn set_value_from_param<T: Float>(
-        parameter_name: &String,
+        parameter_name: &str,
         data: &Data<T>,
         param: &str,
         target: &mut T,
@@ -35,7 +35,7 @@ impl Parameter {
     }
 
     pub fn set_vec3_from_param<T: Float>(
-        parameter_name: &String,
+        parameter_name: &str,
         data: &Data<T>,
         param: &str,
         target: &mut Vec3<T>,

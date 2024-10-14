@@ -68,11 +68,11 @@ impl<Q: SignedQuery<T> + Send + Sync, T: Float + Send + Sync> ImplicitFunction<T
         vec![]
     }
 
-    fn set_parameter(&mut self, _: &String, _: Data<T>) {
+    fn set_parameter(&mut self, _: &str, _: Data<T>) {
         // Void
     }
 
-    fn read_parameter(&self, _: &String) -> Option<Data<T>> {
+    fn read_parameter(&self, _: &str) -> Option<Data<T>> {
         None
     }
 }

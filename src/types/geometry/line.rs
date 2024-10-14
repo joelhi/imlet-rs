@@ -73,7 +73,7 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for Line<T> {
         ]
     }
 
-    fn set_parameter(&mut self, parameter_name: &String, data: Data<T>) {
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
         if !(Parameter::set_vec3_from_param(parameter_name, &data, "Start", &mut self.start)
             || Parameter::set_vec3_from_param(parameter_name, &data, "End", &mut self.end))
         {
@@ -81,8 +81,8 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for Line<T> {
         }
     }
 
-    fn read_parameter(&self, parameter_name: &String) -> Option<Data<T>> {
-        match parameter_name.as_str() {
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>> {
+        match parameter_name {
             "Start" => Some(Data::Vec3(self.start)),
             "End" => Some(Data::Vec3(self.end)),
             _ => None,

@@ -49,7 +49,7 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for ZCoord<T> {
         ]
     }
 
-    fn set_parameter(&mut self, parameter_name: &String, data: Data<T>) {
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
         if !(Parameter::set_value_from_param(parameter_name, &data, "Min", &mut self.min)
             || Parameter::set_value_from_param(parameter_name, &data, "Max", &mut self.max))
         {
@@ -57,8 +57,8 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for ZCoord<T> {
         }
     }
 
-    fn read_parameter(&self, parameter_name: &String) -> Option<Data<T>> {
-        match parameter_name.as_str() {
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>> {
+        match parameter_name {
             "Min" => Some(Data::Value(self.min)),
             "Max" => Some(Data::Value(self.max)),
             _ => None,
@@ -111,7 +111,7 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for YCoord<T> {
         ]
     }
 
-    fn set_parameter(&mut self, parameter_name: &String, data: Data<T>) {
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
         if !(Parameter::set_value_from_param(parameter_name, &data, "Min", &mut self.min)
             || Parameter::set_value_from_param(parameter_name, &data, "Max", &mut self.max))
         {
@@ -119,8 +119,8 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for YCoord<T> {
         }
     }
 
-    fn read_parameter(&self, parameter_name: &String) -> Option<Data<T>> {
-        match parameter_name.as_str() {
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>> {
+        match parameter_name {
             "Min" => Some(Data::Value(self.min)),
             "Max" => Some(Data::Value(self.max)),
             _ => None,
@@ -173,7 +173,7 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for XCoord<T> {
         ]
     }
 
-    fn set_parameter(&mut self, parameter_name: &String, data: Data<T>) {
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
         if !(Parameter::set_value_from_param(parameter_name, &data, "Min", &mut self.min)
             || Parameter::set_value_from_param(parameter_name, &data, "Max", &mut self.max))
         {
@@ -181,8 +181,8 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for XCoord<T> {
         }
     }
 
-    fn read_parameter(&self, parameter_name: &String) -> Option<Data<T>> {
-        match parameter_name.as_str() {
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>> {
+        match parameter_name {
             "Min" => Some(Data::Value(self.min)),
             "Max" => Some(Data::Value(self.max)),
             _ => None,
