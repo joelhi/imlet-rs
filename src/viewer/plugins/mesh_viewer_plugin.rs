@@ -22,6 +22,7 @@ use bevy::{
     },
     DefaultPlugins,
 };
+use bevy_egui::EguiPlugin;
 use bevy_normal_material::{plugin::NormalMaterialPlugin, prelude::NormalMaterial};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 
@@ -60,6 +61,7 @@ impl Plugin for MeshViewerPlugin {
                 global: true,
                 default_color: Color::WHITE,
             })
+            .add_plugins(EguiPlugin)
             .add_plugins(PanOrbitCameraPlugin)
             .add_plugins(NormalMaterialPlugin)
             .add_systems(Update, update_wireframe);
