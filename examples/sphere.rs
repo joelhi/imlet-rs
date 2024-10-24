@@ -40,11 +40,11 @@ pub fn main() {
     // Generate mesh
     #[cfg(feature = "viewer")]
     {
-        let mesh = model
-            .generate_iso_surface(&output, &bounds, cell_size)
-            .unwrap();
+        // let mesh = model
+        //     .generate_iso_surface(&output, &bounds, cell_size)
+        //     .unwrap();
 
-        imlet::viewer::show_mesh(&mesh);
+        imlet::viewer::run_explorer(model, &bounds);
     }
     #[cfg(not(feature = "viewer"))]
     {

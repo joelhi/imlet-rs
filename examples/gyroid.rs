@@ -14,7 +14,6 @@ pub fn main() {
     utils::logging::init_info();
 
     let size: f32 = 100.0;
-    let cell_size = 0.5;
     let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
     // Build model
@@ -43,15 +42,9 @@ pub fn main() {
         )
         .unwrap();
 
-    println!("{}", model);
-
     #[cfg(feature = "viewer")]
     {
-        let mesh = model
-            .generate_iso_surface(&output, &model_space, cell_size)
-            .unwrap();
-
-        imlet::viewer::show_mesh(&mesh);
+        imlet::viewer::run_explorer(model, &model_space);
     }
     #[cfg(not(feature = "viewer"))]
     {

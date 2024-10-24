@@ -12,7 +12,7 @@ pub fn main() {
 
     let mesh = parse_obj_file("assets/geometry/bunny.obj", false).unwrap();
 
-    let cell_size = 0.3;
+    let cell_size = 0.5;
     let model_space = mesh.bounds().offset(cell_size);
 
     // Build model
@@ -38,15 +38,9 @@ pub fn main() {
         )
         .unwrap();
 
-    println!("{}", model);
-
     #[cfg(feature = "viewer")]
     {
-        let mesh = model
-            .generate_iso_surface(&output, &model_space, cell_size)
-            .unwrap();
-
-        imlet::viewer::show_mesh(&mesh);
+        imlet::viewer::run_explorer(model, &model_space);
     }
     #[cfg(not(feature = "viewer"))]
     {

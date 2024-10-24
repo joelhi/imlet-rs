@@ -89,7 +89,7 @@ impl<T: Float + Send + Sync + Pi> ImplicitFunction<T> for SchwarzP<T> {
                 parameter_name,
                 &data,
                 "Length Z",
-                &mut self.length_y,
+                &mut self.length_z,
             ))
         {
             error!("Unknown parameter name: {}", parameter_name);

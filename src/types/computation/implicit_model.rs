@@ -4,6 +4,7 @@ use crate::types::computation::traits::{ImplicitFunction, ImplicitOperation};
 use crate::types::computation::ComputationGraph;
 use crate::types::geometry::traits::SignedDistance;
 use crate::types::geometry::{BoundingBox, Mesh};
+use log::info;
 use num_traits::Float;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::{self, Debug, Display};
@@ -37,6 +38,18 @@ impl<T> ImplicitModel<T> {
 
     pub fn all_components(&self) -> Vec<(&String, &Component<T>)> {
         self.components.iter().collect()
+    }
+
+    pub fn get_component(&self, tag: &str) -> Option<&Component<T>> {
+        self.components.get(tag)
+    }
+
+    pub fn get_component_mut(&mut self, tag: &str) -> Option<&mut Component<T>> {
+        self.components.get_mut(tag)
+    }
+
+    pub fn get_inputs(&self, tag: &str) -> Option<&Vec<Option<String>>> {
+        self.inputs.get(tag)
     }
 
     /// Add a general distance function component to the model.
@@ -182,6 +195,10 @@ impl<T> ImplicitModel<T> {
             });
         }
 
+        info!(
+            "Input {} assigned to component {} at index {}",
+            source, target, index
+        );
         target_component_inputs[index] = Some(source_string.clone());
 
         Ok(())
@@ -210,6 +227,14 @@ impl<T> ImplicitModel<T> {
             });
         }
 
+        info!(
+            "Input {} at index {} removed from component {}.",
+            component_inputs[index]
+                .clone()
+                .unwrap_or("None".to_string()),
+            index,
+            component
+        );
         component_inputs[index] = None;
         Ok(())
     }

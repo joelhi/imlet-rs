@@ -12,6 +12,7 @@ pub mod operations;
 /// Traits used to define implicit operations and functions.
 pub mod traits;
 
+pub(crate) use component::*;
 pub(crate) use computation_graph::*;
 pub use implicit_model::*;
 pub use model_error::*;

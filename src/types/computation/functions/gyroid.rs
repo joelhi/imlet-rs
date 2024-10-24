@@ -90,7 +90,7 @@ impl<T: Pi + Float + Send + Sync> ImplicitFunction<T> for Gyroid<T> {
                 parameter_name,
                 &data,
                 "Length Z",
-                &mut self.length_y,
+                &mut self.length_z,
             ))
         {
             error!("Unknown parameter name: {}", parameter_name);

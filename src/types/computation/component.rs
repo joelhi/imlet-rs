@@ -61,6 +61,16 @@ impl<T: Float> Component<T> {
             Component::Operation(_) => vec![],
         }
     }
+
+    pub fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
+        match self {
+            Component::Constant(value) => {
+                *value = *data.get_value().expect("This should be a value type.")
+            }
+            Component::Function(function) => function.set_parameter(parameter_name, data),
+            Component::Operation(_) => (),
+        }
+    }
 }
 
 pub struct ComponentValues {
