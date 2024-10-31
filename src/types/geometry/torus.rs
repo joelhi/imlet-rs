@@ -9,6 +9,21 @@ use crate::types::{
     geometry::Vec3,
 };
 
+static TORUS_PARAMS: &[Parameter; 3] = &[
+    Parameter {
+        name: "Centre",
+        data_type: DataType::Vec3,
+    },
+    Parameter {
+        name: "Radius",
+        data_type: DataType::Value,
+    },
+    Parameter {
+        name: "Thickness",
+        data_type: DataType::Value,
+    },
+];
+
 /// Distance function for a torus, defined by an a centre point, major radius and minor radius.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Torus<T> {
@@ -39,12 +54,8 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for Torus<T> {
             - self.t.powi(2)
     }
 
-    fn parameters(&self) -> Vec<Parameter> {
-        vec![
-            Parameter::new("Centre", DataType::Value),
-            Parameter::new("Radius", DataType::Value),
-            Parameter::new("Thickness", DataType::Value),
-        ]
+    fn parameters(&self) -> &[Parameter] {
+        TORUS_PARAMS
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {

@@ -5,18 +5,15 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::geometry::Vec3;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Parameter {
-    pub name: String,
+    pub name: &'static str,
     pub data_type: DataType,
 }
 
 impl Parameter {
-    pub fn new(name: &str, data_type: DataType) -> Self {
-        Self {
-            name: name.to_string(),
-            data_type,
-        }
+    pub fn new(name: &'static str, data_type: DataType) -> Self {
+        Self { name, data_type }
     }
 
     pub fn set_value_from_param<T: Float>(
@@ -28,6 +25,23 @@ impl Parameter {
         if let Data::Value(value) = data {
             if parameter_name == param {
                 *target = *value;
+                return true;
+            }
+        }
+        false
+    }
+
+    pub fn set_clamped_value_from_param<T: Float>(
+        parameter_name: &str,
+        data: &Data<T>,
+        param: &str,
+        target: &mut T,
+        min: T,
+        max: T,
+    ) -> bool {
+        if let Data::Value(value) = data {
+            if parameter_name == param {
+                *target = value.clamp(min, max);
                 return true;
             }
         }
@@ -50,7 +64,7 @@ impl Parameter {
     }
 
     pub fn set_bool_from_param<T: Float>(
-        parameter_name: &String,
+        parameter_name: &str,
         data: &Data<T>,
         param: &str,
         target: &mut bool,
@@ -80,7 +94,7 @@ impl Parameter {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum DataType {
     Value,
     Vec3,

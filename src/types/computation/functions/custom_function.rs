@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::types::computation::traits::ImplicitFunction;
+use crate::types::computation::{traits::ImplicitFunction, Parameter};
 
 /// A wrapper for a closure *(x,y,z)->value* which allows a custom function to be computed.
 #[derive(Debug, Clone, Copy)]
@@ -24,8 +24,8 @@ impl<T: Send + Sync> ImplicitFunction<T> for CustomFunction<T> {
         (self.func)(x, y, z)
     }
 
-    fn parameters(&self) -> Vec<crate::types::computation::Parameter> {
-        vec![]
+    fn parameters(&self) -> &[Parameter] {
+        &[]
     }
 
     fn set_parameter(&mut self, _: &str, _: crate::types::computation::Data<T>) {

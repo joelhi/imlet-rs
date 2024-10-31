@@ -15,6 +15,17 @@ pub struct Plane<T> {
     normal: Vec3<T>,
 }
 
+static PLANE_PARAMS: &[Parameter; 2] = &[
+    Parameter {
+        name: "Origin",
+        data_type: DataType::Vec3,
+    },
+    Parameter {
+        name: "Normal",
+        data_type: DataType::Vec3,
+    },
+];
+
 impl<T: Float> Plane<T> {
     /// Create a new Plane from an origin point and a normal.
     ///
@@ -65,11 +76,8 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for Plane<T> {
         self.signed_distance_coord(x, y, z)
     }
 
-    fn parameters(&self) -> Vec<Parameter> {
-        vec![
-            Parameter::new("Origin", DataType::Vec3),
-            Parameter::new("Normal", DataType::Vec3),
-        ]
+    fn parameters(&self) -> &[Parameter] {
+        PLANE_PARAMS
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {

@@ -8,6 +8,17 @@ use crate::types::computation::traits::ImplicitFunction;
 use crate::types::computation::{Data, DataType, Parameter};
 use crate::utils::math_helper::normalize;
 
+static COORD_PARAMETERS: [Parameter; 2] = [
+    Parameter {
+        name: "Min",
+        data_type: DataType::Value,
+    },
+    Parameter {
+        name: "Max",
+        data_type: DataType::Value,
+    },
+];
+
 /// Distance function that evaluates to the z-coordinate
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ZCoord<T> {
@@ -42,11 +53,8 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for ZCoord<T> {
         normalize(z, self.min, self.max)
     }
 
-    fn parameters(&self) -> Vec<Parameter> {
-        vec![
-            Parameter::new("Min", DataType::Value),
-            Parameter::new("Max", DataType::Value),
-        ]
+    fn parameters(&self) -> &[Parameter] {
+        &COORD_PARAMETERS
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
@@ -104,11 +112,8 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for YCoord<T> {
         normalize(y, self.min, self.max)
     }
 
-    fn parameters(&self) -> Vec<Parameter> {
-        vec![
-            Parameter::new("Min", DataType::Value),
-            Parameter::new("Max", DataType::Value),
-        ]
+    fn parameters(&self) -> &[Parameter] {
+        &COORD_PARAMETERS
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
@@ -166,11 +171,8 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for XCoord<T> {
         normalize(x, self.min, self.max)
     }
 
-    fn parameters(&self) -> Vec<Parameter> {
-        vec![
-            Parameter::new("Min", DataType::Value),
-            Parameter::new("Max", DataType::Value),
-        ]
+    fn parameters(&self) -> &[Parameter] {
+        &COORD_PARAMETERS
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {

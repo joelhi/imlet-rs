@@ -40,12 +40,12 @@ pub fn main() {
 
     #[cfg(feature = "viewer")]
     {
-        imlet::viewer::run_explorer(model, &model_space);
+        imlet::viewer::run_explorer(model, model_space);
     }
     #[cfg(not(feature = "viewer"))]
     {
         let _ = model
-            .generate_iso_surface(&output, &model_space, cell_size)
+            .generate_iso_surface(&output, &model_space, 0.5)
             .unwrap();
 
         println!("Enable the viewer feature by using (--features viewer) to show the result");

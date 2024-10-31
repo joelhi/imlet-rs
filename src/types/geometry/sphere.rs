@@ -11,6 +11,17 @@ use crate::types::{
 
 use super::{traits::SignedDistance, BoundingBox};
 
+static SPHERE_PARAMS: &[Parameter; 2] = &[
+    Parameter {
+        name: "Centre",
+        data_type: DataType::Vec3,
+    },
+    Parameter {
+        name: "Radius",
+        data_type: DataType::Value,
+    },
+];
+
 /// A sphere object, defined by a centre point and a radius.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Sphere<T> {
@@ -63,11 +74,8 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for Sphere<T> {
         self.centre.distance_to_coord(x, y, z) - self.radius
     }
 
-    fn parameters(&self) -> Vec<Parameter> {
-        vec![
-            Parameter::new("Centre", DataType::Vec3),
-            Parameter::new("Radius", DataType::Value),
-        ]
+    fn parameters(&self) -> &[Parameter] {
+        SPHERE_PARAMS
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
@@ -100,7 +108,7 @@ mod tests {
     fn test_get_assigns_params() {
         let mut sphere = Sphere::new(Vec3::new(1., 1., 1.), 10.);
 
-        let params = sphere.parameters();
+        let params: Vec<Parameter> = sphere.parameters().iter().map(|p| p.clone()).collect();
 
         for param in params {
             match param.data_type {

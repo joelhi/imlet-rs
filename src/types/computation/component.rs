@@ -52,13 +52,28 @@ impl<T: Float> Component<T> {
                 .map(|p| {
                     (
                         p.clone(),
-                        function
-                            .read_parameter(&p.name)
-                            .expect("Parameter returned from function should be valid."),
+                        function.read_parameter(&p.name).expect(&format!(
+                            "Parameter {} returned None from function {}, but it should be valid",
+                            p.name.to_string(),
+                            function.function_name().to_string()
+                        )),
                     )
                 })
                 .collect(),
-            Component::Operation(_) => vec![],
+            Component::Operation(operation) => operation
+                .parameters()
+                .iter()
+                .map(|p| {
+                    (
+                        p.clone(),
+                        operation.read_parameter(&p.name).expect(&format!(
+                            "Parameter {} returned None from operation {}, but it should be valid",
+                            p.name.to_string(),
+                            operation.operation_name().to_string()
+                        )),
+                    )
+                })
+                .collect(),
         }
     }
 
@@ -68,7 +83,15 @@ impl<T: Float> Component<T> {
                 *value = *data.get_value().expect("This should be a value type.")
             }
             Component::Function(function) => function.set_parameter(parameter_name, data),
-            Component::Operation(_) => (),
+            Component::Operation(operation) => operation.set_parameter(parameter_name, data),
+        }
+    }
+
+    pub fn input_names(&mut self) -> &[&str] {
+        match self {
+            Component::Constant(_) => &[],
+            Component::Function(_) => &[],
+            Component::Operation(operation) => operation.inputs(),
         }
     }
 }

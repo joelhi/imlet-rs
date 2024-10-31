@@ -8,6 +8,25 @@ use crate::types::computation::traits::ImplicitFunction;
 use crate::types::computation::{Data, DataType, Parameter};
 use crate::utils::math_helper::Pi;
 
+static NEOVIUS_PARAMETERS: &[Parameter; 4] = &[
+    Parameter {
+        name: "Length X",
+        data_type: DataType::Value,
+    },
+    Parameter {
+        name: "Length Y",
+        data_type: DataType::Value,
+    },
+    Parameter {
+        name: "Length Z",
+        data_type: DataType::Value,
+    },
+    Parameter {
+        name: "Linearize",
+        data_type: DataType::Boolean,
+    },
+];
+
 /// Function representing an approximate distance function for a neovius surface.
 ///
 /// This fuction is not a perfect distance function, and values deviate slightly from the true distance away from the surface.
@@ -74,12 +93,8 @@ impl<T: Pi + Float + Send + Sync> ImplicitFunction<T> for Neovius<T> {
         }
     }
 
-    fn parameters(&self) -> Vec<Parameter> {
-        vec![
-            Parameter::new("Length X", DataType::Value),
-            Parameter::new("Length Y", DataType::Value),
-            Parameter::new("Length Z", DataType::Value),
-        ]
+    fn parameters(&self) -> &[Parameter] {
+        NEOVIUS_PARAMETERS
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
@@ -95,7 +110,8 @@ impl<T: Pi + Float + Send + Sync> ImplicitFunction<T> for Neovius<T> {
                 &data,
                 "Length Z",
                 &mut self.length_y,
-            ))
+            )
+            || Parameter::set_bool_from_param(parameter_name, &data, "Linearize", &mut self.linear))
         {
             error!("Unknown parameter name: {}", parameter_name);
         }
@@ -106,6 +122,7 @@ impl<T: Pi + Float + Send + Sync> ImplicitFunction<T> for Neovius<T> {
             "Length X" => Some(Data::Value(self.length_x)),
             "Length Y" => Some(Data::Value(self.length_y)),
             "Length Z" => Some(Data::Value(self.length_z)),
+            "Linearize" => Some(Data::Boolean(self.linear)),
             _ => None,
         }
     }

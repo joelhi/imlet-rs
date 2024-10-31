@@ -44,7 +44,7 @@ pub fn main() {
         //     .generate_iso_surface(&output, &bounds, cell_size)
         //     .unwrap();
 
-        imlet::viewer::run_explorer(model, &bounds);
+        imlet::viewer::run_explorer(model, bounds);
     }
     #[cfg(not(feature = "viewer"))]
     {

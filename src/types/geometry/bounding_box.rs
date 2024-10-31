@@ -244,16 +244,24 @@ impl<T: Float + Send + Sync> SignedDistance<T> for BoundingBox<T> {
     }
 }
 
+static BOUNDING_BOX_PARAMETERS: [Parameter; 2] = [
+    Parameter {
+        name: "Min",
+        data_type: DataType::Vec3,
+    },
+    Parameter {
+        name: "Min",
+        data_type: DataType::Vec3,
+    },
+];
+
 impl<T: Float + Send + Sync> ImplicitFunction<T> for BoundingBox<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(&Vec3::new(x, y, z))
     }
 
-    fn parameters(&self) -> Vec<Parameter> {
-        vec![
-            Parameter::new("Min", DataType::Vec3),
-            Parameter::new("Max", DataType::Vec3),
-        ]
+    fn parameters(&self) -> &[Parameter] {
+        &BOUNDING_BOX_PARAMETERS
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
@@ -378,10 +386,10 @@ mod tests {
     fn test_get_assigns_params() {
         let mut aabb = BoundingBox::new(Vec3::new(1., 1., 1.), Vec3::new(10., 10., 10.));
 
-        let params = aabb.parameters();
+        let parameter_names: Vec<&str> = aabb.parameters().iter().map(|p| p.name).collect();
 
-        for param in params {
-            aabb.set_parameter(&param.name, Data::Vec3(Vec3::origin()));
+        for &param_name in parameter_names.iter() {
+            aabb.set_parameter(param_name, Data::Vec3(Vec3::origin()));
         }
 
         assert!(aabb.min.distance_to_vec3(&Vec3::origin()).abs() < f64::epsilon());

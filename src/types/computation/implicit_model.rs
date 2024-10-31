@@ -91,7 +91,7 @@ impl<T> ImplicitModel<T> {
         self.verify_tag_is_free(&tag_string)?;
 
         self.inputs
-            .insert(tag_string.clone(), vec![None; operation.num_inputs()]);
+            .insert(tag_string.clone(), vec![None; operation.inputs().len()]);
         self.components.insert(
             tag_string.clone(),
             Component::Operation(Box::new(operation)),
@@ -118,11 +118,11 @@ impl<T> ImplicitModel<T> {
         let tag_string = tag.to_string();
         self.verify_tag_is_free(&tag_string)?;
 
-        if operation.num_inputs() != inputs.len() {
+        if operation.inputs().len() != inputs.len() {
             return Err(ModelError::IncorrectInputCount {
                 component: tag_string,
                 num_inputs: inputs.len(),
-                count: operation.num_inputs(),
+                count: operation.inputs().len(),
             });
         }
 
@@ -236,6 +236,36 @@ impl<T> ImplicitModel<T> {
             component
         );
         component_inputs[index] = None;
+        Ok(())
+    }
+
+    /// Remove a component from the model. This will remove the inputs of all dependent components.
+    /// # Arguments
+    ///
+    /// * `component` - The tag of the operation which recieves the input.
+    ///
+    /// # Returns
+    ///      
+    /// * `Result<(), ModelError>` - Returns `Ok(())` if the input is removed successfully, or `Err(String)` if something goes wrong, such as when the tag is not found in the model.
+    pub fn remove_component(&mut self, tag: &str) -> Result<(), ModelError> {
+        self.verify_tag_is_present(tag)?;
+
+        self.components.remove(&tag.to_string());
+
+        let mut inputs_to_remove = Vec::new();
+        for (name, inputs) in self.inputs.iter() {
+            for (index, item) in inputs.iter().enumerate() {
+                let val = item.clone().unwrap_or("None".to_string());
+                if val == tag {
+                    inputs_to_remove.push((name.clone(), index));
+                }
+            }
+        }
+
+        for (component, index) in inputs_to_remove.iter() {
+            self.remove_input(component, *index)?;
+        }
+
         Ok(())
     }
 

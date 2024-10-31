@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use num_traits::Float;
 
 use crate::types::{
-    computation::traits::ImplicitFunction,
+    computation::{traits::ImplicitFunction, Parameter},
     geometry::{traits::SignedDistance, GeometryCollection, Mesh, Triangle},
 };
 
@@ -57,8 +57,8 @@ impl<Q: SignedDistance<T> + Send + Sync, T: Float + Send + Sync> ImplicitFunctio
         self.geometry.signed_distance(x, y, z) - self.offset
     }
 
-    fn parameters(&self) -> Vec<crate::types::computation::Parameter> {
-        vec![]
+    fn parameters(&self) -> &[Parameter] {
+        &[]
     }
 
     fn set_parameter(&mut self, _: &str, _: crate::types::computation::Data<T>) {

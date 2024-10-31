@@ -1,9 +1,12 @@
 use std::fmt::Debug;
 
+use log::error;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::traits::ImplicitOperation;
+use crate::types::computation::{traits::ImplicitOperation, Data, DataType, Parameter};
+
+static INPUT_NAMES: [&str; 2] = ["First Number", "Second Number"];
 
 /// Operation to multiply two values -> a*b
 ///
@@ -31,8 +34,18 @@ impl<T: Float> ImplicitOperation<T> for Multiply {
         inputs[0] * inputs[1]
     }
 
-    fn num_inputs(&self) -> usize {
-        2
+    fn inputs(&self) -> &[&str] {
+        &INPUT_NAMES
+    }
+
+    fn parameters(&self) -> &[Parameter] {
+        &[]
+    }
+
+    fn set_parameter(&mut self, _: &str, _: Data<T>) {}
+
+    fn read_parameter(&self, _: &str) -> Option<Data<T>> {
+        None
     }
 
     fn operation_name(&self) -> &'static str {
@@ -66,8 +79,18 @@ impl<T: Float> ImplicitOperation<T> for Add {
         inputs[0] + inputs[1]
     }
 
-    fn num_inputs(&self) -> usize {
-        2
+    fn inputs(&self) -> &[&str] {
+        &INPUT_NAMES
+    }
+
+    fn parameters(&self) -> &[Parameter] {
+        &[]
+    }
+
+    fn set_parameter(&mut self, _: &str, _: Data<T>) {}
+
+    fn read_parameter(&self, _: &str) -> Option<Data<T>> {
+        None
     }
 
     fn operation_name(&self) -> &'static str {
@@ -101,8 +124,18 @@ impl<T: Float> ImplicitOperation<T> for Subtract {
         inputs[0] - inputs[1]
     }
 
-    fn num_inputs(&self) -> usize {
-        2
+    fn inputs(&self) -> &[&str] {
+        &INPUT_NAMES
+    }
+
+    fn parameters(&self) -> &[Parameter] {
+        &[]
+    }
+
+    fn set_parameter(&mut self, _: &str, _: Data<T>) {}
+
+    fn read_parameter(&self, _: &str) -> Option<Data<T>> {
+        None
     }
 
     fn operation_name(&self) -> &'static str {
@@ -137,8 +170,18 @@ impl<T: Float> ImplicitOperation<T> for Divide {
         inputs[0] / inputs[1]
     }
 
-    fn num_inputs(&self) -> usize {
-        2
+    fn inputs(&self) -> &[&str] {
+        &INPUT_NAMES
+    }
+
+    fn parameters(&self) -> &[Parameter] {
+        &[]
+    }
+
+    fn set_parameter(&mut self, _: &str, _: Data<T>) {}
+
+    fn read_parameter(&self, _: &str) -> Option<Data<T>> {
+        None
     }
 
     fn operation_name(&self) -> &'static str {
@@ -152,35 +195,67 @@ impl<T: Float> ImplicitOperation<T> for Divide {
 /// * First value to interpolate (a)
 /// * Second value to interpolate (b)
 /// * Interpolation parameter (t)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct LinearInterpolation {}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LinearInterpolation<T> {
+    factor: T,
+}
 
-impl Default for LinearInterpolation {
+static LINEAR_INTERPOLATION_PARAMETERS: &[Parameter] = &[Parameter {
+    name: "Factor",
+    data_type: DataType::Value,
+}];
+
+static LINEAR_INTERPOLATION_INPUTS: &[&'static str] = &["First Value", "Second Value"];
+
+impl<T: Float> Default for LinearInterpolation<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl LinearInterpolation {
+impl<T: Float> LinearInterpolation<T> {
     /// Create a new LinearInterpolation operation.
     pub fn new() -> Self {
-        Self {}
+        Self {
+            factor: T::from(0.5).expect("Should be able to conver 0,5 to T"),
+        }
     }
 }
 
-impl<T: Float> ImplicitOperation<T> for LinearInterpolation {
+impl<T: Float + Send + Sync> ImplicitOperation<T> for LinearInterpolation<T> {
     fn eval(&self, inputs: &[T]) -> T {
-        let zero = T::zero();
-        let one = T::one();
-        let t = inputs[2].clamp(zero, one);
-        inputs[0] + t * (inputs[1] - inputs[0])
+        inputs[0] + self.factor * (inputs[1] - inputs[0])
     }
 
-    fn num_inputs(&self) -> usize {
-        3
+    fn inputs(&self) -> &[&str] {
+        &LINEAR_INTERPOLATION_INPUTS
+    }
+
+    fn parameters(&self) -> &[Parameter] {
+        &LINEAR_INTERPOLATION_PARAMETERS
     }
 
     fn operation_name(&self) -> &'static str {
         "LinearInterpolation"
+    }
+
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
+        if !(Parameter::set_clamped_value_from_param(
+            parameter_name,
+            &data,
+            "Factor",
+            &mut self.factor,
+            T::zero(),
+            T::one(),
+        )) {
+            error!("Unknown parameter name: {}", parameter_name);
+        }
+    }
+
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>> {
+        match parameter_name {
+            "Factor" => Some(Data::Value(self.factor)),
+            _ => None,
+        }
     }
 }

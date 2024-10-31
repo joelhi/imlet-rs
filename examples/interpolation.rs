@@ -16,7 +16,7 @@ use imlet::{
 pub fn main() {
     utils::logging::init_info();
 
-    let size: f32 = 100.0;
+    let size: f64 = 100.0;
     let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
     // Build model
@@ -47,15 +47,11 @@ pub fn main() {
         .add_function("Schwarz", SchwarzP::with_equal_spacing(10., false))
         .unwrap();
 
-    let infill_variable = model.add_constant("InfillFactor", 0.5).unwrap();
-
-    let shape_variable = model.add_constant("ShapeFactor", 0.5).unwrap();
-
     let shape_interpolation = model
         .add_operation_with_inputs(
             "ShapeInterpolation",
             LinearInterpolation::new(),
-            &[&box_tag, &sphere_tag, &shape_variable],
+            &[&box_tag, &sphere_tag],
         )
         .unwrap();
 
@@ -63,7 +59,7 @@ pub fn main() {
         .add_operation_with_inputs(
             "InfillInterpolation",
             LinearInterpolation::new(),
-            &[&gyroid_tag, &schwarz_tag, &infill_variable],
+            &[&gyroid_tag, &schwarz_tag],
         )
         .unwrap();
 
@@ -71,7 +67,7 @@ pub fn main() {
         .add_operation_with_inputs("OffsetInfill", Thickness::new(5.), &[&infill_interpolation])
         .unwrap();
 
-    let _ = model
+    let output = model
         .add_operation_with_inputs(
             "Union",
             BooleanIntersection::new(),
@@ -81,12 +77,12 @@ pub fn main() {
 
     #[cfg(feature = "viewer")]
     {
-        imlet::viewer::run_explorer(model, &model_space);
+        imlet::viewer::run_explorer(model, model_space);
     }
     #[cfg(not(feature = "viewer"))]
     {
         let _ = model
-            .generate_iso_surface(&output, &model_space, cell_size)
+            .generate_iso_surface(&output, &model_space, 0.5)
             .unwrap();
 
         println!("Enable the viewer feature by using (--features viewer) to show the result");

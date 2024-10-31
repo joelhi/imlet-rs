@@ -64,8 +64,8 @@ impl<Q: SignedQuery<T> + Send + Sync, T: Float + Send + Sync> ImplicitFunction<T
         self.signed_distance(x, y, z)
     }
 
-    fn parameters(&self) -> Vec<Parameter> {
-        vec![]
+    fn parameters(&self) -> &[Parameter] {
+        &[]
     }
 
     fn set_parameter(&mut self, _: &str, _: Data<T>) {

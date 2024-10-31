@@ -15,10 +15,10 @@ pub trait ImplicitFunction<T>: Sync + Send {
     /// * `z` - Z coordinate to evaluate.
     fn eval(&self, x: T, y: T, z: T) -> T;
 
-    /// Declare variable parameters for the operation.
+    /// Declare variable parameters for the function.
     ///
-    /// If no parameters are applicable, this can just return an empty Vec.
-    fn parameters(&self) -> Vec<Parameter>;
+    /// If no parameters are applicable, this can just return an empty array.
+    fn parameters(&self) -> &[Parameter];
 
     /// Process the input from one of the declared public parameters.
     ///
@@ -49,7 +49,22 @@ pub trait ImplicitOperation<T>: Sync + Send {
     fn eval(&self, inputs: &[T]) -> T;
 
     /// Communicates to the model the number of inputs required for this operation.
-    fn num_inputs(&self) -> usize;
+    fn inputs(&self) -> &[&str];
+
+    /// Declare variable parameters for the function.
+    ///
+    /// If no parameters are applicable, this can just return an empty array.
+    fn parameters(&self) -> &[Parameter];
+
+    /// Process the input from one of the declared public parameters.
+    ///
+    /// The provided value should be assigned where intended, using the mutable reference to self.
+    ///
+    /// If there are no parameters exposed, this shoudn't do anything.
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>);
+
+    /// Get the value of a parameter.
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>>;
 
     /// Name of the operation
     fn operation_name(&self) -> &'static str {
