@@ -50,7 +50,7 @@ fn initialize_model<T: Float + Send + Sync + 'static + Numeric + Display + Debug
     mut config: ResMut<Config<T>>,
 ) {
     if let Some(model) = temp_model.0.take() {
-        log::info!("Initalizing model.\n {}", model);
+        log::info!("Initalizing model.");
         *app_model = AppModel::new(model);
     }
 

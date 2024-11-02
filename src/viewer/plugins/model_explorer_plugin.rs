@@ -4,11 +4,11 @@ use bevy::{
     app::{App, Plugin, Update}, asset::Assets, input::ButtonInput, log::{tracing_subscriber::Layer, BoxedLayer, LogPlugin}, pbr::MaterialMeshBundle, prelude::{default, Commands, KeyCode, Res, ResMut, Resource, Transform}
 };
 use bevy_egui::{
-    egui::{self, emath::Numeric, Color32, Id, Layout, Response, Sense, Stroke, TextureId, Ui},
+    egui::{self, emath::Numeric, text::LayoutJob, Align, Color32, Id, Layout, Response, RichText, ScrollArea, Sense, Stroke, TextureId, Ui, Vec2},
     EguiContexts, EguiPlugin,
 };
 use bevy_normal_material::prelude::NormalMaterial;
-use log::info;
+use log::{debug, error, info};
 use num_traits::Float;
 
 use crate::{
@@ -147,26 +147,56 @@ fn imlet_ui_panel<T: Float + Send + Sync + Numeric + 'static>(
 
             render_components(ui, &mut components, &mut model, &mut config, &icons);
         });
-
+        
         egui::TopBottomPanel::bottom("OutputLogs")
         .resizable(true)
         .default_height(100.)
         .show(ctx, |ui| {
             render_logging_panel(ui, log_handle.messages.clone());
-            ui.allocate_rect(ui.available_rect_before_wrap(), Sense::hover());
         });
 
     model.component_order = components;
 }
 
+fn get_log_color(level: &str) -> Color32 {
+    match level {
+        "ERROR" => Color32::RED,
+        "WARN " => Color32::YELLOW,
+        "INFO " => Color32::DARK_GRAY,
+        "DEBUG" => Color32::BLUE,
+        _ => Color32::WHITE,
+    }
+}
 
 fn render_logging_panel(ui: &mut Ui, log_handle: Arc<Mutex<Vec<String>>>) {
     if let Ok(logs) = log_handle.lock() {
-        ui.vertical(|ui| {
-            for log in logs.iter().rev() {
-                ui.label(log);
-            }
-        });
+        let style = ui.style().text_styles.get(&egui::TextStyle::Body).expect("Should be here").clone();
+        ScrollArea::vertical()
+            .auto_shrink([false; 2])
+            .stick_to_bottom(true)
+            .show(ui, |ui| {
+                ui.vertical( |ui| {
+                    for log in logs.iter() {
+                        let parts: Vec<&str> = log.split(" | ").collect();
+                        if parts.len() == 3 {
+                            let timestamp = parts[0];
+                            let level = parts[1];
+                            let message = parts[2];
+
+                            let color = get_log_color(level);
+
+                            let format = egui::TextFormat{font_id: style.clone(), ..Default::default()};
+                            let mut layout_job = LayoutJob::default();
+                            layout_job.append(timestamp, 0.0, format.clone());
+                            layout_job.append(" ", 0.0, format.clone()); // Space between parts
+                            layout_job.append(level, 0.0, egui::TextFormat { font_id: style.clone(), color: color, ..Default::default() });
+                            layout_job.append(" ", 0.0, format.clone()); // Space between parts
+                            layout_job.append(message, 0.0, format.clone());
+                            ui.label(layout_job);
+                        }
+                    }
+                });
+            });
     }
 }
 
@@ -240,7 +270,7 @@ fn render_components<T: Float + Send + Sync + Numeric + 'static>(
 
                     match result {
                         Ok(_) => (),
-                        Err(model_error) => info!("{}", model_error),
+                        Err(model_error) => error!("{}", model_error),
                     }
 
                     if let (Some(pointer), Some(hovered_payload)) = (
@@ -278,12 +308,12 @@ fn render_components<T: Float + Send + Sync + Numeric + 'static>(
             if removed.0 {
                 // Remove from model.
                 if let Some(pos) = components.iter().position(|x| x == removed.1) {
-                    info!("Removed component {}", removed.1);
+                    debug!("Removed component {}", removed.1);
                     match model.model.remove_component(removed.1) {
                         Ok(_) => {
                             components.remove(pos);
                         }
-                        Err(error) => info!("{}", error),
+                        Err(error) => error!("{}", error),
                     };
                 }
             }
@@ -294,7 +324,7 @@ fn render_components<T: Float + Send + Sync + Numeric + 'static>(
             }
 
             if let (Some(from), Some(mut to)) = (from, to) {
-                info!("Dropped Component -> From: {} To: {}", from, to);
+                debug!("Dropped Component -> From: {} To: {}", from, to);
 
                 // Adjust `to.row` if necessary, in case the dragged element is being moved down the list
                 if to > from {
@@ -383,13 +413,13 @@ fn render_computation_section<T: Float + Send + Sync + Numeric + 'static>(
                             current_mesh_entity,
                         );
                     } else {
-                        info!("No output selected for computation.");
+                        error!("Failed to generate mesh. No output selected for computation.");
                     }
                 }
 
                 // Button to generate mesh
                 if ui.button("Export").clicked() {
-                    info!("Exporting not implemented.");
+                    error!("Exporting not yet implemented.");
                 }
             });
 
@@ -505,6 +535,10 @@ fn render_inputs(
 
                     // Iterate over available components
                     for available_component in components.iter() {
+                        if available_component == component_name{
+                            continue;
+                        }
+
                         let item_response = ui.selectable_value(
                             &mut selected_input,
                             available_component.to_string(),
@@ -673,7 +707,7 @@ fn generate_mesh<T: Float + Send + Sync + 'static>(
 
             current_mesh_entity.0 = Some(mesh_entity);
         }
-        Err(err) => info!("{}", err),
+        Err(err) => error!("{}", err),
     }
 }
 
