@@ -1,12 +1,10 @@
+use std::{collections::VecDeque, sync::{Arc, Mutex}};
+
 use bevy::{
-    app::{App, Plugin, Update},
-    asset::Assets,
-    input::ButtonInput,
-    pbr::MaterialMeshBundle,
-    prelude::{default, Commands, KeyCode, Res, ResMut, Resource, Transform},
+    app::{App, Plugin, Update}, asset::Assets, input::ButtonInput, log::{tracing_subscriber::Layer, BoxedLayer, LogPlugin}, pbr::MaterialMeshBundle, prelude::{default, Commands, KeyCode, Res, ResMut, Resource, Transform}
 };
 use bevy_egui::{
-    egui::{self, emath::Numeric, Color32, Id, Layout, Response, Stroke, TextureId, Ui},
+    egui::{self, emath::Numeric, Color32, Id, Layout, Response, Sense, Stroke, TextureId, Ui},
     EguiContexts, EguiPlugin,
 };
 use bevy_normal_material::prelude::NormalMaterial;
@@ -21,8 +19,7 @@ use crate::{
         geometry::{BoundingBox, Mesh, Vec3},
     },
     viewer::{
-        raw_mesh_data::RawMeshData,
-        utils::{build_mesh_from_data, custom_dnd_drag_source},
+        custom_layer::{CustomLayer, LogMessages}, raw_mesh_data::RawMeshData, utils::{build_mesh_from_data, custom_dnd_drag_source}
     },
 };
 
@@ -61,7 +58,27 @@ where
             .add_plugins(EguiPlugin)
             .add_systems(Update, imlet_ui_panel::<T>)
             .add_systems(Update, compute_fast::<T>);
+
+        app.add_plugins(
+            LogPlugin {
+                custom_layer,
+                ..default()
+            }
+        );
+
     }
+}
+
+fn custom_layer(app: &mut App) -> Option<BoxedLayer> {
+    let log_messages = LogMessages::default();
+    let inner_log_clone = log_messages.messages.clone();
+    app.insert_resource(log_messages);
+    Some(Box::new(vec![
+        bevy::log::tracing_subscriber::fmt::layer()
+            .with_file(true)
+            .boxed(),
+            Box::new(CustomLayer{log_messages: inner_log_clone})
+    ]))
 }
 
 #[derive(Resource)]
@@ -108,6 +125,7 @@ fn imlet_ui_panel<T: Float + Send + Sync + Numeric + 'static>(
     meshes: ResMut<Assets<bevy::prelude::Mesh>>,
     current_mesh_entity: ResMut<CurrentMeshEntity>,
     icons: Res<Icons>,
+    log_handle: Res<LogMessages>
 ) {
     let ctx = contexts.ctx_mut();
     let mut components = model.component_order.clone();
@@ -116,224 +134,267 @@ fn imlet_ui_panel<T: Float + Send + Sync + Numeric + 'static>(
         .resizable(false)
         .min_width(350.)
         .show(ctx, |ui| {
-            egui::TopBottomPanel::top("Top Computation")
-                .resizable(false)
-                .show_inside(ui, |ui| {
-                    // Computation controls
-                    render_computation_controls(ui, &mut config);
+            render_computation_section(
+                ui,
+                &mut config,
+                &components,
+                &model,
+                commands,
+                materials,
+                meshes,
+                current_mesh_entity,
+            );
 
-                    ui.separator();
+            render_components(ui, &mut components, &mut model, &mut config, &icons);
+        });
 
-                    ui.horizontal(|ui| {
-                        ui.with_layout(Layout::left_to_right(egui::Align::Min), |ui| {
-                            ui.label("Output");
-                        });
-
-                        // Get the current input name
-                        let current_input_name = match &config.output {
-                            Some(name) => name.to_string(),
-                            None => "None".to_string(),
-                        };
-                        ui.with_layout(Layout::right_to_left(egui::Align::Min), |ui| {
-                            let mut selected_input: String = current_input_name.clone();
-                            egui::ComboBox::from_id_source(&format!("Output"))
-                                .selected_text(&selected_input)
-                                .show_ui(ui, |ui| {
-                                    for available_component in components.iter() {
-                                        if ui
-                                            .selectable_value(
-                                                &mut selected_input,
-                                                available_component.to_string(),
-                                                available_component,
-                                            )
-                                            .clicked()
-                                        {
-                                            config.output = Some(selected_input.clone());
-                                        };
-                                    }
-
-                                    if ui
-                                        .selectable_value(
-                                            &mut selected_input,
-                                            "None".to_string(),
-                                            "None",
-                                        )
-                                        .clicked()
-                                    {
-                                        config.output = None;
-                                    };
-                                });
-                        });
-                    });
-
-                    ui.add_space(5.);
-
-                    ui.horizontal(|ui| {
-                        // Button to generate mesh
-                        if ui.button("Generate").clicked() {
-                            if let Some(target) = &config.output {
-                                generate_mesh(
-                                    commands,
-                                    materials,
-                                    meshes,
-                                    &model.model,
-                                    &config,
-                                    target,
-                                    current_mesh_entity,
-                                );
-                            } else {
-                                info!("No output selected for computation.");
-                            }
-                        }
-
-                        // Button to generate mesh
-                        if ui.button("Export").clicked() {
-                            info!("Exporting not implemented.");
-                        }
-                    });
-
-                    ui.add_space(10.);
-                });
-
-            ui.heading("Components");
-
-            egui::ScrollArea::vertical()
-                .auto_shrink([false; 2])
-                .show(ui, |ui| {
-                    let mut from: Option<usize> = None;
-                    let mut to: Option<usize> = None;
-
-                    let frame = egui::Frame::dark_canvas(ui.style()).inner_margin(4.0);
-                    let default_fill = Color32::from_rgb(35, 35, 35);
-                    let selected_fill = Color32::from_rgb(35, 70, 65);
-                    let none_string = "None".to_string();
-                    let mut removed = (false, "None");
-                    let (_, dropped_payload) = ui.dnd_drop_zone::<usize, ()>(frame, |ui| {
-                        ui.set_min_width(ui.available_width());
-                        for (row_idx, item) in components.iter().enumerate() {
-                            let mut change = InputChange::None();
-                            let inputs = model.model.get_inputs(item).cloned();
-                            let component = model.model.get_component_mut(item).unwrap();
-                            let current_icon = icons.component_icon(&component);
-                            let item_id = Id::new(("my_drag_and_drop_demo", row_idx));
-                            let item_location = row_idx;
-                            let response =
-                                custom_dnd_drag_source(ui, item_id, item_location, |ui| {
-                                    let mut all_responses = Vec::new(); // Vector to collect all responses
-                                    let selected =
-                                        config.output.as_ref().unwrap_or_else(|| &none_string);
-                                    let current_fill = if *item == *selected {
-                                        selected_fill
-                                    } else {
-                                        default_fill
-                                    };
-                                    let delete = render_collapsible_with_icon(
-                                        ui,
-                                        item,
-                                        component,
-                                        &mut all_responses,
-                                        &current_icon,
-                                        icons.delete_icon(),
-                                        &mut change,
-                                        &components,
-                                        inputs,
-                                        current_fill,
-                                    );
-
-                                    if delete {
-                                        removed = (true, item);
-                                    }
-
-                                    ((), all_responses)
-                                })
-                                .response;
-
-                            let result = match change {
-                                InputChange::Add(component, source, index) => {
-                                    model.model.add_input(&component, &source, index)
-                                }
-                                InputChange::Remove(component, index) => {
-                                    model.model.remove_input(&component, index)
-                                }
-                                InputChange::None() => Ok(()),
-                            };
-
-                            match result {
-                                Ok(_) => (),
-                                Err(model_error) => info!("{}", model_error),
-                            }
-
-                            if let (Some(pointer), Some(hovered_payload)) = (
-                                ui.input(|i| i.pointer.interact_pos()),
-                                response.dnd_hover_payload::<usize>(),
-                            ) {
-                                let rect = response.rect;
-
-                                // Preview insertion:
-                                let stroke = egui::Stroke::new(2.0, egui::Color32::DARK_BLUE);
-                                let insert_row_idx = if *hovered_payload == item_location {
-                                    // We are dragged onto ourselves
-                                    ui.painter().hline(rect.x_range(), rect.center().y, stroke);
-                                    row_idx
-                                } else if pointer.y < rect.center().y {
-                                    // Above us
-                                    ui.painter().hline(rect.x_range(), rect.top() - 5., stroke);
-                                    row_idx
-                                } else {
-                                    // Below us
-                                    ui.painter()
-                                        .hline(rect.x_range(), rect.bottom() + 5., stroke);
-                                    row_idx + 1
-                                };
-
-                                if let Some(dragged_payload) = response.dnd_release_payload() {
-                                    // The user dropped onto this item.
-                                    from = Some(*dragged_payload);
-                                    to = Some(*dragged_payload);
-                                }
-                            }
-
-                            ui.add_space(5.);
-                        }
-                    });
-
-                    if removed.0 {
-                        // Remove from model.
-                        if let Some(pos) = components.iter().position(|x| x == removed.1) {
-                            info!("Removed component {}", removed.1);
-                            match model.model.remove_component(removed.1) {
-                                Ok(_) => {
-                                    components.remove(pos);
-                                }
-                                Err(error) => info!("{}", error),
-                            };
-                        }
-                    }
-                    if let Some(dragged_payload) = dropped_payload {
-                        // The user dropped onto the column, but not on any one item.
-                        from = Some(*dragged_payload);
-                        to = Some(*dragged_payload);
-                    }
-
-                    if let (Some(from), Some(mut to)) = (from, to) {
-                        info!("Dropped Component -> From: {} To: {}", from, to);
-
-                        // Adjust `to.row` if necessary, in case the dragged element is being moved down the list
-                        if to > from {
-                            to = to - 1; // Since removing the element will shift the indices
-                        }
-
-                        // Remove the element from `from.row` and store it
-                        let item = components.remove(from);
-                        // Insert the item at the new location `to.row`
-                        components.insert(to, item);
-
-                        model.component_order = components.clone();
-                    }
-                });
+        egui::TopBottomPanel::bottom("OutputLogs")
+        .resizable(true)
+        .default_height(100.)
+        .show(ctx, |ui| {
+            render_logging_panel(ui, log_handle.messages.clone());
+            ui.allocate_rect(ui.available_rect_before_wrap(), Sense::hover());
         });
 
     model.component_order = components;
+}
+
+
+fn render_logging_panel(ui: &mut Ui, log_handle: Arc<Mutex<Vec<String>>>) {
+    if let Ok(logs) = log_handle.lock() {
+        ui.vertical(|ui| {
+            for log in logs.iter().rev() {
+                ui.label(log);
+            }
+        });
+    }
+}
+
+fn render_components<T: Float + Send + Sync + Numeric + 'static>(
+    ui: &mut Ui,
+    components: &mut Vec<String>,
+    model: &mut ResMut<AppModel<T>>,
+    config: &mut ResMut<Config<T>>,
+    icons: &Res<Icons>,
+) {
+    ui.heading("Components");
+
+    egui::ScrollArea::vertical()
+        .auto_shrink([false; 2])
+        .show(ui, |ui| {
+            let mut from: Option<usize> = None;
+            let mut to: Option<usize> = None;
+
+            let frame = egui::Frame::dark_canvas(ui.style()).inner_margin(4.0);
+            let default_fill = Color32::from_rgb(35, 35, 35);
+            let selected_fill = Color32::from_rgb(35, 70, 65);
+            let none_string = "None".to_string();
+            let mut removed = (false, "None");
+            let (_, dropped_payload) = ui.dnd_drop_zone::<usize, ()>(frame, |ui| {
+                ui.set_min_width(ui.available_width());
+                for (row_idx, item) in components.iter().enumerate() {
+                    let mut change = InputChange::None();
+                    let inputs = model.model.get_inputs(item).cloned();
+                    let component = model.model.get_component_mut(item).unwrap();
+                    let current_icon = icons.component_icon(&component);
+                    let item_id = Id::new(("my_drag_and_drop_demo", row_idx));
+                    let item_location = row_idx;
+                    let response = custom_dnd_drag_source(ui, item_id, item_location, |ui| {
+                        let mut all_responses = Vec::new();
+                        let selected = config.output.as_ref().unwrap_or_else(|| &none_string);
+                        let current_fill = if *item == *selected {
+                            selected_fill
+                        } else {
+                            default_fill
+                        };
+                        let delete = render_collapsible_with_icon(
+                            ui,
+                            item,
+                            component,
+                            &mut all_responses,
+                            &current_icon,
+                            icons.delete_icon(),
+                            &mut change,
+                            &components,
+                            inputs,
+                            current_fill,
+                        );
+
+                        if delete {
+                            removed = (true, item);
+                        }
+
+                        ((), all_responses)
+                    })
+                    .response;
+
+                    let result = match change {
+                        InputChange::Add(component, source, index) => {
+                            model.model.add_input(&component, &source, index)
+                        }
+                        InputChange::Remove(component, index) => {
+                            model.model.remove_input(&component, index)
+                        }
+                        InputChange::None() => Ok(()),
+                    };
+
+                    match result {
+                        Ok(_) => (),
+                        Err(model_error) => info!("{}", model_error),
+                    }
+
+                    if let (Some(pointer), Some(hovered_payload)) = (
+                        ui.input(|i| i.pointer.interact_pos()),
+                        response.dnd_hover_payload::<usize>(),
+                    ) {
+                        let rect = response.rect;
+
+                        let stroke = egui::Stroke::new(2.0, egui::Color32::DARK_BLUE);
+                        let insert_row_idx = if *hovered_payload == item_location {
+                            // We are dragged onto ourselves
+                            ui.painter().hline(rect.x_range(), rect.center().y, stroke);
+                            row_idx
+                        } else if pointer.y < rect.center().y {
+                            // Above us
+                            ui.painter().hline(rect.x_range(), rect.top() - 5., stroke);
+                            row_idx
+                        } else {
+                            // Below us
+                            ui.painter()
+                                .hline(rect.x_range(), rect.bottom() + 5., stroke);
+                            row_idx + 1
+                        };
+
+                        if let Some(dragged_payload) = response.dnd_release_payload() {
+                            from = Some(*dragged_payload);
+                            to = Some(insert_row_idx);
+                        }
+                    }
+
+                    ui.add_space(5.);
+                }
+            });
+
+            if removed.0 {
+                // Remove from model.
+                if let Some(pos) = components.iter().position(|x| x == removed.1) {
+                    info!("Removed component {}", removed.1);
+                    match model.model.remove_component(removed.1) {
+                        Ok(_) => {
+                            components.remove(pos);
+                        }
+                        Err(error) => info!("{}", error),
+                    };
+                }
+            }
+            if let Some(dragged_payload) = dropped_payload {
+                // The user dropped onto the column, but not on any one item.
+                from = Some(*dragged_payload);
+                to = Some(*dragged_payload);
+            }
+
+            if let (Some(from), Some(mut to)) = (from, to) {
+                info!("Dropped Component -> From: {} To: {}", from, to);
+
+                // Adjust `to.row` if necessary, in case the dragged element is being moved down the list
+                if to > from {
+                    to = to - 1; // Since removing the element will shift the indices
+                }
+
+                // Remove the element from `from.row` and store it
+                let item = components.remove(from);
+                // Insert the item at the new location `to.row`
+                components.insert(to, item);
+
+                model.component_order = components.clone();
+            }
+        });
+}
+
+fn render_computation_section<T: Float + Send + Sync + Numeric + 'static>(
+    ui: &mut Ui,
+    mut config: &mut ResMut<Config<T>>,
+    components: &[String],
+    model: &AppModel<T>,
+    commands: Commands,
+    materials: ResMut<Assets<NormalMaterial>>,
+    meshes: ResMut<Assets<bevy::prelude::Mesh>>,
+    current_mesh_entity: ResMut<CurrentMeshEntity>,
+) {
+    egui::TopBottomPanel::top("Top Computation")
+        .resizable(false)
+        .show_inside(ui, |ui| {
+            // Computation controls
+            render_computation_controls(ui, &mut config);
+
+            ui.separator();
+
+            ui.horizontal(|ui| {
+                ui.with_layout(Layout::left_to_right(egui::Align::Min), |ui| {
+                    ui.label("Output");
+                });
+
+                // Get the current input name
+                let current_input_name = match &config.output {
+                    Some(name) => name.to_string(),
+                    None => "None".to_string(),
+                };
+                ui.with_layout(Layout::right_to_left(egui::Align::Min), |ui| {
+                    let mut selected_input: String = current_input_name.clone();
+                    egui::ComboBox::from_id_source(&format!("Output"))
+                        .selected_text(&selected_input)
+                        .show_ui(ui, |ui| {
+                            for available_component in components.iter() {
+                                if ui
+                                    .selectable_value(
+                                        &mut selected_input,
+                                        available_component.to_string(),
+                                        available_component,
+                                    )
+                                    .clicked()
+                                {
+                                    config.output = Some(selected_input.clone());
+                                };
+                            }
+
+                            if ui
+                                .selectable_value(&mut selected_input, "None".to_string(), "None")
+                                .clicked()
+                            {
+                                config.output = None;
+                            };
+                        });
+                });
+            });
+
+            ui.add_space(5.);
+
+            ui.horizontal(|ui| {
+                // Button to generate mesh
+                if ui.button("Generate").clicked() {
+                    if let Some(target) = &config.output {
+                        generate_mesh(
+                            commands,
+                            materials,
+                            meshes,
+                            &model.model,
+                            &config,
+                            target,
+                            current_mesh_entity,
+                        );
+                    } else {
+                        info!("No output selected for computation.");
+                    }
+                }
+
+                // Button to generate mesh
+                if ui.button("Export").clicked() {
+                    info!("Exporting not implemented.");
+                }
+            });
+
+            ui.add_space(10.);
+        });
 }
 
 fn render_computation_controls<T: Float + Send + Sync + 'static + Numeric>(
@@ -460,7 +521,6 @@ fn render_inputs(
                         }
                     }
 
-                    // Handle the "None" option
                     let none_response =
                         ui.selectable_value(&mut selected_input, "None".to_string(), "None");
                     combo_responses.push(none_response.clone());
@@ -499,7 +559,7 @@ fn render_parameters<T: Float + Send + Sync + 'static + Numeric>(
                     let mut value = *val;
                     let response = ui.add(egui::DragValue::new(&mut value).speed(0.1));
                     if response.changed() {
-                        component.set_parameter(&param.name, Data::Value(value));
+                        component.set_parameter(param.name, Data::Value(value));
                     }
                     param_responses.push(response);
                 }
@@ -515,7 +575,7 @@ fn render_parameters<T: Float + Send + Sync + 'static + Numeric>(
                         let x_response = ui.add(egui::DragValue::new(&mut x).speed(0.1));
                         if x_response.changed() {
                             component.set_parameter(
-                                &param.name,
+                                param.name,
                                 Data::Vec3(types::geometry::Vec3::new(x, y, z)),
                             );
                         }
@@ -524,7 +584,7 @@ fn render_parameters<T: Float + Send + Sync + 'static + Numeric>(
                         let y_response = ui.add(egui::DragValue::new(&mut y).speed(0.1));
                         if y_response.changed() {
                             component.set_parameter(
-                                &param.name,
+                                param.name,
                                 Data::Vec3(types::geometry::Vec3::new(x, y, z)),
                             );
                         }
@@ -533,7 +593,7 @@ fn render_parameters<T: Float + Send + Sync + 'static + Numeric>(
                         let z_response = ui.add(egui::DragValue::new(&mut z).speed(0.1));
                         if z_response.changed() {
                             component.set_parameter(
-                                &param.name,
+                                param.name,
                                 Data::Vec3(types::geometry::Vec3::new(x, y, z)),
                             );
                         }
@@ -547,7 +607,7 @@ fn render_parameters<T: Float + Send + Sync + 'static + Numeric>(
                     let mut value = *boolean;
                     let response = ui.checkbox(&mut value, "");
                     if response.changed() {
-                        component.set_parameter(&param.name, Data::Boolean(value));
+                        component.set_parameter(param.name, Data::Boolean(value));
                     }
                     param_responses.push(response);
                 }
@@ -695,7 +755,7 @@ fn render_collapsible_with_icon<T: Float + Send + Sync + 'static + Numeric>(
                     if let Some(inputs) = inputs {
                         let input_names = component.input_names();
                         let (input_change, inner_responses) =
-                            render_inputs(ui, input_names, &inputs, item, &components);
+                            render_inputs(ui, input_names, &inputs, item, components);
                         all_responses.extend_from_slice(&inner_responses);
 
                         *change = input_change;

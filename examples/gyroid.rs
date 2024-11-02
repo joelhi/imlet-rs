@@ -11,7 +11,7 @@ use imlet::{
 };
 
 pub fn main() {
-    utils::logging::init_info();
+    //utils::logging::init_info();
 
     let size: f32 = 100.0;
     let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));

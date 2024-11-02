@@ -187,4 +187,6 @@ pub mod viewer {
     pub(crate) mod raw_mesh_data;
 
     pub(crate) mod plugins;
+
+    pub(crate) mod custom_layer;
 }
