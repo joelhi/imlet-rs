@@ -1,16 +1,23 @@
+use std::{
+    f32::consts::E,
+    sync::{Arc, Mutex},
+    time::{Instant, SystemTime},
+};
 
-use std::{f32::consts::E, sync::{Arc, Mutex}, time::{Instant, SystemTime}};
-
-use bevy::{log::tracing_subscriber::Layer, prelude::Resource, utils::tracing::{self, Subscriber}};
+use bevy::{
+    log::tracing_subscriber::Layer,
+    prelude::Resource,
+    utils::tracing::{self, Subscriber},
+};
 use chrono::{DateTime, Utc};
 use log::info;
 
 #[derive(Default, Resource)]
 pub struct LogMessages {
-    pub messages: Arc<Mutex<Vec<String>>>
+    pub messages: Arc<Mutex<Vec<String>>>,
 }
 
-pub struct CustomLayer{
+pub struct CustomLayer {
     pub log_messages: Arc<Mutex<Vec<String>>>,
 }
 
@@ -24,7 +31,7 @@ impl<S: Subscriber> Layer<S> for CustomLayer {
     ) {
         let mut visitor = EventVisitor::new(event.metadata().level().to_string());
         event.record(&mut visitor);
-        
+
         // Store the log message in the shared log_messages resource
         if !visitor.message.is_empty() {
             let mut log_messages = self.log_messages.lock().unwrap();
@@ -38,13 +45,8 @@ impl<S: Subscriber> Layer<S> for CustomLayer {
             let timestamp = datetime.format("%Y%m%d %H:%M:%S").to_string();
 
             let reset_code = "\x1b[0m";
-        
-            let formatted = format!(
-                "{} | {:<5} | {}",
-                timestamp,
-                visitor.level,
-                visitor.message,
-            );
+
+            let formatted = format!("{} | {:<5} | {}", timestamp, visitor.level, visitor.message,);
 
             log_messages.push(formatted);
         }

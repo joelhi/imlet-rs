@@ -7,7 +7,7 @@ use num_traits::Float;
 use crate::types::{computation::ImplicitModel, geometry::BoundingBox};
 
 use super::plugins::{
-    GraphicsPlugin, MeshViewerPlugin, ModelExplorerPlugin, ModelInitializerPlugin,
+    GraphicsPlugin, LogWindowPlugin, MeshViewerPlugin, ModelExplorerPlugin, ModelInitializerPlugin
 };
 
 pub fn run_explorer<T: Float + Debug + Send + Sync + 'static + Numeric + Debug + Display>(
@@ -18,7 +18,8 @@ pub fn run_explorer<T: Float + Debug + Send + Sync + 'static + Numeric + Debug +
 
     app.add_plugins(MeshViewerPlugin)
         .add_plugins(ModelExplorerPlugin::<T>::new())
-        .add_plugins(GraphicsPlugin);
+        .add_plugins(GraphicsPlugin)
+        .add_plugins(LogWindowPlugin);
 
     ModelInitializerPlugin::<T>::init(model, bounds)(&mut app);
 

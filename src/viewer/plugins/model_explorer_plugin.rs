@@ -1,10 +1,21 @@
-use std::{collections::VecDeque, sync::{Arc, Mutex}};
+use std::{
+    collections::VecDeque,
+    sync::{Arc, Mutex},
+};
 
 use bevy::{
-    app::{App, Plugin, Update}, asset::Assets, input::ButtonInput, log::{tracing_subscriber::Layer, BoxedLayer, LogPlugin}, pbr::MaterialMeshBundle, prelude::{default, Commands, KeyCode, Res, ResMut, Resource, Transform}
+    app::{App, Plugin, Update},
+    asset::Assets,
+    input::ButtonInput,
+    log::{tracing_subscriber::Layer, BoxedLayer, LogPlugin},
+    pbr::MaterialMeshBundle,
+    prelude::{default, Commands, KeyCode, Res, ResMut, Resource, Transform},
 };
 use bevy_egui::{
-    egui::{self, emath::Numeric, text::LayoutJob, Align, Color32, Id, Layout, Response, RichText, ScrollArea, Sense, Stroke, TextureId, Ui, Vec2},
+    egui::{
+        self, emath::Numeric, text::LayoutJob, Align, Color32, Id, Layout, Response, RichText,
+        ScrollArea, Sense, Stroke, TextureId, Ui, Vec2,
+    },
     EguiContexts, EguiPlugin,
 };
 use bevy_normal_material::prelude::NormalMaterial;
@@ -19,7 +30,9 @@ use crate::{
         geometry::{BoundingBox, Mesh, Vec3},
     },
     viewer::{
-        custom_layer::{CustomLayer, LogMessages}, raw_mesh_data::RawMeshData, utils::{build_mesh_from_data, custom_dnd_drag_source}
+        custom_layer::{CustomLayer, LogMessages},
+        raw_mesh_data::RawMeshData,
+        utils::{build_mesh_from_data, custom_dnd_drag_source},
     },
 };
 
@@ -58,27 +71,7 @@ where
             .add_plugins(EguiPlugin)
             .add_systems(Update, imlet_ui_panel::<T>)
             .add_systems(Update, compute_fast::<T>);
-
-        app.add_plugins(
-            LogPlugin {
-                custom_layer,
-                ..default()
-            }
-        );
-
     }
-}
-
-fn custom_layer(app: &mut App) -> Option<BoxedLayer> {
-    let log_messages = LogMessages::default();
-    let inner_log_clone = log_messages.messages.clone();
-    app.insert_resource(log_messages);
-    Some(Box::new(vec![
-        bevy::log::tracing_subscriber::fmt::layer()
-            .with_file(true)
-            .boxed(),
-            Box::new(CustomLayer{log_messages: inner_log_clone})
-    ]))
 }
 
 #[derive(Resource)]
@@ -125,7 +118,6 @@ fn imlet_ui_panel<T: Float + Send + Sync + Numeric + 'static>(
     meshes: ResMut<Assets<bevy::prelude::Mesh>>,
     current_mesh_entity: ResMut<CurrentMeshEntity>,
     icons: Res<Icons>,
-    log_handle: Res<LogMessages>
 ) {
     let ctx = contexts.ctx_mut();
     let mut components = model.component_order.clone();
@@ -147,57 +139,8 @@ fn imlet_ui_panel<T: Float + Send + Sync + Numeric + 'static>(
 
             render_components(ui, &mut components, &mut model, &mut config, &icons);
         });
-        
-        egui::TopBottomPanel::bottom("OutputLogs")
-        .resizable(true)
-        .default_height(100.)
-        .show(ctx, |ui| {
-            render_logging_panel(ui, log_handle.messages.clone());
-        });
 
     model.component_order = components;
-}
-
-fn get_log_color(level: &str) -> Color32 {
-    match level {
-        "ERROR" => Color32::RED,
-        "WARN " => Color32::YELLOW,
-        "INFO " => Color32::DARK_GRAY,
-        "DEBUG" => Color32::BLUE,
-        _ => Color32::WHITE,
-    }
-}
-
-fn render_logging_panel(ui: &mut Ui, log_handle: Arc<Mutex<Vec<String>>>) {
-    if let Ok(logs) = log_handle.lock() {
-        let style = ui.style().text_styles.get(&egui::TextStyle::Body).expect("Should be here").clone();
-        ScrollArea::vertical()
-            .auto_shrink([false; 2])
-            .stick_to_bottom(true)
-            .show(ui, |ui| {
-                ui.vertical( |ui| {
-                    for log in logs.iter() {
-                        let parts: Vec<&str> = log.split(" | ").collect();
-                        if parts.len() == 3 {
-                            let timestamp = parts[0];
-                            let level = parts[1];
-                            let message = parts[2];
-
-                            let color = get_log_color(level);
-
-                            let format = egui::TextFormat{font_id: style.clone(), ..Default::default()};
-                            let mut layout_job = LayoutJob::default();
-                            layout_job.append(timestamp, 0.0, format.clone());
-                            layout_job.append(" ", 0.0, format.clone()); // Space between parts
-                            layout_job.append(level, 0.0, egui::TextFormat { font_id: style.clone(), color: color, ..Default::default() });
-                            layout_job.append(" ", 0.0, format.clone()); // Space between parts
-                            layout_job.append(message, 0.0, format.clone());
-                            ui.label(layout_job);
-                        }
-                    }
-                });
-            });
-    }
 }
 
 fn render_components<T: Float + Send + Sync + Numeric + 'static>(
@@ -535,7 +478,7 @@ fn render_inputs(
 
                     // Iterate over available components
                     for available_component in components.iter() {
-                        if available_component == component_name{
+                        if available_component == component_name {
                             continue;
                         }
 
