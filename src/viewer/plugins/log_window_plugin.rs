@@ -44,6 +44,8 @@ fn logging_panel(mut contexts: EguiContexts, log_handle: Res<LogMessages>) {
         .resizable(true)
         .default_height(100.)
         .show(ctx, |ui| {
+            ui.heading("Log");
+            ui.separator();
             render_logging_panel(ui, log_handle.messages.clone());
         });
 }
