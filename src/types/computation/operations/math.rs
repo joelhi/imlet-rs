@@ -205,7 +205,7 @@ static LINEAR_INTERPOLATION_PARAMETERS: &[Parameter] = &[Parameter {
     data_type: DataType::Value,
 }];
 
-static LINEAR_INTERPOLATION_INPUTS: &[&'static str] = &["First Value", "Second Value"];
+static LINEAR_INTERPOLATION_INPUTS: &[&str] = &["First Value", "Second Value"];
 
 impl<T: Float> Default for LinearInterpolation<T> {
     fn default() -> Self {
@@ -228,11 +228,11 @@ impl<T: Float + Send + Sync> ImplicitOperation<T> for LinearInterpolation<T> {
     }
 
     fn inputs(&self) -> &[&str] {
-        &LINEAR_INTERPOLATION_INPUTS
+        LINEAR_INTERPOLATION_INPUTS
     }
 
     fn parameters(&self) -> &[Parameter] {
-        &LINEAR_INTERPOLATION_PARAMETERS
+        LINEAR_INTERPOLATION_PARAMETERS
     }
 
     fn operation_name(&self) -> &'static str {

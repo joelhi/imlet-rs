@@ -51,12 +51,10 @@ impl<T: Float> Component<T> {
                 .iter()
                 .map(|p| {
                     (
-                        p.clone(),
-                        function.read_parameter(&p.name).expect(&format!(
-                            "Parameter {} returned None from function {}, but it should be valid",
-                            p.name.to_string(),
-                            function.function_name().to_string()
-                        )),
+                        *p,
+                        function.read_parameter(p.name).unwrap_or_else(|| panic!("Parameter {} returned None from function {}, but it should be valid",
+                            p.name,
+                            function.function_name())),
                     )
                 })
                 .collect(),
@@ -65,12 +63,10 @@ impl<T: Float> Component<T> {
                 .iter()
                 .map(|p| {
                     (
-                        p.clone(),
-                        operation.read_parameter(&p.name).expect(&format!(
-                            "Parameter {} returned None from operation {}, but it should be valid",
-                            p.name.to_string(),
-                            operation.operation_name().to_string()
-                        )),
+                        *p,
+                        operation.read_parameter(p.name).unwrap_or_else(|| panic!("Parameter {} returned None from operation {}, but it should be valid",
+                            p.name,
+                            operation.operation_name())),
                     )
                 })
                 .collect(),

@@ -101,7 +101,7 @@ fn render_logging_panel(ui: &mut Ui, log_handle: Arc<Mutex<Vec<String>>>) {
                                 0.0,
                                 egui::TextFormat {
                                     font_id: style.clone(),
-                                    color: color,
+                                    color,
                                     ..Default::default()
                                 },
                             );

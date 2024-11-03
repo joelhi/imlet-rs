@@ -250,7 +250,7 @@ impl<T> ImplicitModel<T> {
     pub fn remove_component(&mut self, tag: &str) -> Result<(), ModelError> {
         self.verify_tag_is_present(tag)?;
 
-        self.components.remove(&tag.to_string());
+        self.components.remove(tag);
 
         let mut inputs_to_remove = Vec::new();
         for (name, inputs) in self.inputs.iter() {

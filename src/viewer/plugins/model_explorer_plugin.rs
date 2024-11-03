@@ -159,12 +159,12 @@ fn render_components<T: Float + Send + Sync + Numeric + 'static>(
                     let mut change = InputChange::None();
                     let inputs = model.model.get_inputs(item).cloned();
                     let component = model.model.get_component_mut(item).unwrap();
-                    let current_icon = icons.component_icon(&component);
+                    let current_icon = icons.component_icon(component);
                     let item_id = Id::new(("my_drag_and_drop_demo", row_idx));
                     let item_location = row_idx;
                     let response = custom_dnd_drag_source(ui, item_id, item_location, |ui| {
                         let mut all_responses = Vec::new();
-                        let selected = config.output.as_ref().unwrap_or_else(|| &none_string);
+                        let selected = config.output.as_ref().unwrap_or(&none_string);
                         let current_fill = if *item == *selected {
                             selected_fill
                         } else {
@@ -175,10 +175,10 @@ fn render_components<T: Float + Send + Sync + Numeric + 'static>(
                             item,
                             component,
                             &mut all_responses,
-                            &current_icon,
+                            current_icon,
                             icons.delete_icon(),
                             &mut change,
-                            &components,
+                            components,
                             inputs,
                             current_fill,
                         );
@@ -259,14 +259,11 @@ fn render_components<T: Float + Send + Sync + Numeric + 'static>(
             if let (Some(from), Some(mut to)) = (from, to) {
                 debug!("Dropped Component -> From: {} To: {}", from, to);
 
-                // Adjust `to.row` if necessary, in case the dragged element is being moved down the list
                 if to > from {
-                    to = to - 1; // Since removing the element will shift the indices
+                    to -= 1;
                 }
-
-                // Remove the element from `from.row` and store it
                 let item = components.remove(from);
-                // Insert the item at the new location `to.row`
+
                 components.insert(to, item);
 
                 model.component_order = components.clone();
@@ -276,7 +273,7 @@ fn render_components<T: Float + Send + Sync + Numeric + 'static>(
 
 fn render_computation_section<T: Float + Send + Sync + Numeric + 'static>(
     ui: &mut Ui,
-    mut config: &mut ResMut<Config<T>>,
+    config: &mut ResMut<Config<T>>,
     components: &[String],
     model: &AppModel<T>,
     commands: Commands,
@@ -288,7 +285,7 @@ fn render_computation_section<T: Float + Send + Sync + Numeric + 'static>(
         .resizable(false)
         .show_inside(ui, |ui| {
             // Computation controls
-            render_computation_controls(ui, &mut config);
+            render_computation_controls(ui, config);
 
             ui.separator();
 
@@ -304,7 +301,7 @@ fn render_computation_section<T: Float + Send + Sync + Numeric + 'static>(
                 };
                 ui.with_layout(Layout::right_to_left(egui::Align::Min), |ui| {
                     let mut selected_input: String = current_input_name.clone();
-                    egui::ComboBox::from_id_source(&format!("Output"))
+                    egui::ComboBox::from_id_source("Output")
                         .selected_text(&selected_input)
                         .show_ui(ui, |ui| {
                             for available_component in components.iter() {
@@ -341,7 +338,7 @@ fn render_computation_section<T: Float + Send + Sync + Numeric + 'static>(
                             materials,
                             meshes,
                             &model.model,
-                            &config,
+                            config,
                             target,
                             current_mesh_entity,
                         );
@@ -439,16 +436,16 @@ fn render_computation_controls<T: Float + Send + Sync + 'static + Numeric>(
 fn render_inputs(
     ui: &mut egui::Ui,
     input_names: &[&str],
-    inputs: &Vec<Option<String>>,
+    inputs: &[Option<String>],
     component_name: &str,
     components: &[String],
 ) -> (InputChange, Vec<egui::Response>) {
     let mut change = InputChange::None();
     let mut input_responses = Vec::new();
-    for (i, input) in inputs.clone().iter().enumerate() {
+    for (i, input) in inputs.iter().enumerate() {
         let response = ui
             .horizontal(|ui| {
-                ui.label(&format!("{}:", input_names[i]));
+                ui.label(format!("{}:", input_names[i]));
 
                 let current_input_name = match input {
                     Some(name) => name.to_string(),
@@ -458,7 +455,7 @@ fn render_inputs(
                 let mut selected_input = current_input_name.clone();
 
                 // Capture the response of the ComboBox
-                let combo_box_response = egui::ComboBox::from_id_source(&format!(
+                egui::ComboBox::from_id_source(format!(
                     "Select input for {}, {}",
                     component_name, i
                 ))
@@ -498,9 +495,7 @@ fn render_inputs(
 
                     combo_responses
                 })
-                .response;
-
-                combo_box_response
+                .response
             })
             .inner;
 
