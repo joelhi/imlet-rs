@@ -19,7 +19,7 @@ pub fn run_explorer<T: Float + Debug + Send + Sync + 'static + Numeric + Debug +
     app.add_plugins(MeshViewerPlugin)
         .add_plugins(ModelExplorerPlugin::<T>::new())
         .add_plugins(GraphicsPlugin)
-        .add_plugins(LogWindowPlugin);
+        .add_plugins(LogWindowPlugin::<T>::new());
 
     ModelInitializerPlugin::<T>::init(model, bounds)(&mut app);
 

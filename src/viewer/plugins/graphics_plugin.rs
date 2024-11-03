@@ -71,9 +71,13 @@ fn configure_fonts(mut contexts: EguiContexts) {
 
 #[derive(Resource)]
 pub struct Icons {
-    function_icon: TextureId,
-    operation_icon: TextureId,
-    delete_icon: TextureId,
+    pub function_icon: TextureId,
+    pub operation_icon: TextureId,
+    pub delete_icon: TextureId,
+    pub compute_icon: TextureId,
+    pub show_bounds: TextureId,
+    pub export: TextureId,
+    pub show_edges: TextureId
 }
 
 impl Icons {
@@ -99,6 +103,10 @@ fn load_icon_files(
         function_icon: contexts.add_image(asset_server.load("icons/function_16x16.png")),
         operation_icon: contexts.add_image(asset_server.load("icons/graph_16x16.png")),
         delete_icon: contexts.add_image(asset_server.load("icons/delete_16x16.png")),
+        compute_icon: contexts.add_image(asset_server.load("icons/compute_24x24.png")),
+        show_bounds: contexts.add_image(asset_server.load("icons/show_bounds_24x24.png")),
+        export: contexts.add_image(asset_server.load("icons/file_export_24x24.png")),
+        show_edges: contexts.add_image(asset_server.load("icons/show_edges_24x24.png")),
     };
 
     commands.insert_resource(icons);

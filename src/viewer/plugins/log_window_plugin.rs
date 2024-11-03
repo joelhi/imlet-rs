@@ -1,26 +1,43 @@
 use std::sync::{Arc, Mutex};
 
 use bevy::{
-    app::{App, Plugin, Update},
-    log::{tracing_subscriber::Layer, BoxedLayer, LogPlugin},
-    prelude::{default, Res},
+    app::{App, Plugin, Update}, asset::Assets, log::{tracing_subscriber::Layer, BoxedLayer, LogPlugin}, pbr::{wireframe::WireframeConfig, MaterialMeshBundle}, prelude::{default, Commands, Res, ResMut, Transform}
 };
 use bevy_egui::{
-    egui::{self, text::LayoutJob, Color32, Layout, ScrollArea, Ui},
+    egui::{self, emath::Numeric, text::LayoutJob, Color32, Layout, ScrollArea, Ui},
     EguiContexts,
 };
+use bevy_normal_material::prelude::NormalMaterial;
+use log::{error, info};
+use num_traits::Float;
 
-use crate::viewer::custom_layer::{CustomLayer, LogMessages};
+use crate::{algorithms::marching_cubes::generate_iso_surface, types::{computation::ImplicitModel, geometry::Mesh}, viewer::{custom_layer::{CustomLayer, LogMessages}, raw_mesh_data::RawMeshData, utils::build_mesh_from_data}};
 
-pub struct LogWindowPlugin;
+use super::{AppModel, Config, CurrentMeshEntity, Icons};
 
-impl Plugin for LogWindowPlugin {
+pub struct LogWindowPlugin<T>{
+    _marker: std::marker::PhantomData<T>,
+}
+
+// Implement a default constructor for ModelExplorerPlugin to make instantiation easier.
+impl<T> LogWindowPlugin<T> {
+    pub fn new() -> Self {
+        LogWindowPlugin {
+            _marker: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<T> Plugin for LogWindowPlugin<T>
+where
+    T: Float + Send + Sync + Numeric + 'static, // Ensure T meets the required constraints (adjust as needed).
+ {
     fn build(&self, app: &mut App) {
         app.add_plugins(LogPlugin {
             custom_layer,
             ..default()
         })
-        .add_systems(Update, logging_panel);
+        .add_systems(Update, logging_panel::<T>);
     }
 }
 
@@ -38,8 +55,78 @@ fn custom_layer(app: &mut App) -> Option<BoxedLayer> {
     ]))
 }
 
-pub fn logging_panel(mut contexts: EguiContexts, log_handle: Res<LogMessages>) {
+const TINT: u8 = 100;
+
+pub fn logging_panel<T: Float + Send + Sync + Numeric + 'static>(
+    mut contexts: EguiContexts, 
+    log_handle: Res<LogMessages>,
+    model: ResMut<AppModel<T>>,
+    model_config: ResMut<Config<T>>,
+    mut wireframe_config: ResMut<WireframeConfig>,
+    commands: Commands,
+    materials: ResMut<Assets<NormalMaterial>>,
+    meshes: ResMut<Assets<bevy::prelude::Mesh>>,
+    current_mesh_entity: ResMut<CurrentMeshEntity>,
+    icons: Res<Icons>,) {
     let ctx = contexts.ctx_mut();
+    egui::TopBottomPanel::top("Toolbar")
+        .resizable(false)
+        .show(ctx, |ui|{
+            ui.add_space(2.);
+            ui.horizontal(|ui| {
+                let edges_tint = if wireframe_config.global { 255 } else {TINT};
+                if ui.add(
+                    egui::widgets::ImageButton::new(egui::load::SizedTexture::new(
+                        icons.compute_icon,
+                        [24.0, 24.0],
+                    )).frame(false)
+                ).on_hover_text("Compute output [ENTER]").clicked(){
+                    if let Some(target) = &model_config.output {
+                        generate_mesh(
+                            commands,
+                            materials,
+                            meshes,
+                            &model.model,
+                            &model_config,
+                            target,
+                            current_mesh_entity,
+                        );
+                    } else {
+                        error!("Failed to generate mesh. No output selected for computation.");
+                    }
+                };
+                ui.add_space(10.);
+                if ui.add(
+                    egui::widgets::ImageButton::new(egui::load::SizedTexture::new(
+                        icons.export,
+                        [24.0, 24.0],
+                    )).frame(false)
+                ).on_hover_text("Export").clicked(){
+                    info!("Export clicked")
+                };
+                ui.add_space(10.);
+                ui.separator();
+                ui.add_space(10.);
+                if ui.add(
+                    egui::widgets::ImageButton::new(egui::load::SizedTexture::new(
+                        icons.show_bounds,
+                        [24.0, 24.0],
+                    )).frame(false)
+                ).on_hover_text("Show bounds [B]").clicked(){
+                    info!("Show bounds clicked.")
+                };
+                ui.add_space(10.);
+                if ui.add(
+                    egui::widgets::ImageButton::new(egui::load::SizedTexture::new(
+                        icons.show_edges,
+                        [24.0, 24.0],
+                    )).frame(false).tint(Color32::from_gray(edges_tint))
+                ).on_hover_text("Show mesh edges [E]").clicked(){
+                    wireframe_config.global = !wireframe_config.global;
+                };
+            });
+            ui.add_space(2.);
+        });
     egui::TopBottomPanel::bottom("OutputLogs")
         .resizable(true)
         .default_height(100.)
@@ -123,5 +210,62 @@ fn get_log_color(level: &str) -> Color32 {
         "INFO " => Color32::DARK_GRAY,
         "DEBUG" => Color32::BLUE,
         _ => Color32::WHITE,
+    }
+}
+
+pub fn generate_mesh<T: Float + Send + Sync + 'static>(
+    mut commands: Commands,
+    mut materials: ResMut<Assets<NormalMaterial>>,
+    mut meshes: ResMut<Assets<bevy::prelude::Mesh>>,
+    model: &ImplicitModel<T>,
+    config: &ResMut<Config<T>>,
+    target: &str,
+    mut current_mesh_entity: ResMut<CurrentMeshEntity>,
+) {
+    info!("---");
+    info!(
+        "Generating output for node {}",
+        config.output.clone().unwrap_or("None".to_string())
+    );
+    let result = model.generate_field(target, &config.bounds, config.cell_size);
+
+    match result {
+        Ok(mut field) => {
+            if let Some(entity) = current_mesh_entity.0 {
+                commands.entity(entity).despawn();
+            }
+
+            field.smooth_par(
+                config.smoothing_factor,
+                config.smoothing_iter.try_into().unwrap(),
+            );
+
+            let mesh = Mesh::from_triangles(&generate_iso_surface(&field, T::zero()), false);
+
+            let bevy_mesh = build_mesh_from_data(RawMeshData::from_mesh(&mesh.convert::<f32>()));
+
+            let target = mesh.centroid().convert::<f32>();
+            let mat = materials.add(NormalMaterial {
+                opacity: 1.,
+                depth_bias: 0.,
+                cull_mode: None,
+                alpha_mode: Default::default(),
+            });
+
+            let mesh_entity = commands
+                .spawn(MaterialMeshBundle {
+                    mesh: meshes.add(bevy_mesh),
+                    material: mat,
+                    transform: Transform::from_translation(bevy::math::Vec3::new(
+                        -target.x, -target.y, -target.z,
+                    )),
+                    ..default()
+                })
+                .id();
+
+            current_mesh_entity.0 = Some(mesh_entity);
+            info!("Successfully generated output.")
+        }
+        Err(err) => error!("{}", err),
     }
 }

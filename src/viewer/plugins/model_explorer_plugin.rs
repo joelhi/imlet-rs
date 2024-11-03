@@ -26,7 +26,7 @@ use crate::{
     },
 };
 
-use super::{logging_panel, CurrentMeshEntity, Icons};
+use super::{generate_mesh, logging_panel, CurrentMeshEntity, Icons};
 
 pub struct ModelExplorerPlugin<T> {
     _marker: std::marker::PhantomData<T>,
@@ -59,7 +59,7 @@ where
         app.insert_resource(AppModel::new(ImplicitModel::<T>::new()))
             .insert_resource(config)
             .add_plugins(EguiPlugin)
-            .add_systems(Update, (imlet_model_panel::<T>).before(logging_panel))
+            .add_systems(Update, (imlet_model_panel::<T>).before(logging_panel::<T>))
             .add_systems(Update, compute_fast::<T>);
     }
 }
@@ -120,11 +120,6 @@ fn imlet_model_panel<T: Float + Send + Sync + Numeric + 'static>(
                 ui,
                 &mut config,
                 &components,
-                &model,
-                commands,
-                materials,
-                meshes,
-                current_mesh_entity,
             );
 
             render_components(ui, &mut components, &mut model, &mut config, &icons);
@@ -150,7 +145,7 @@ fn render_components<T: Float + Send + Sync + Numeric + 'static>(
 
             let frame = egui::Frame::dark_canvas(ui.style()).inner_margin(4.0);
             let default_fill = Color32::from_rgb(35, 35, 35);
-            let selected_fill = Color32::from_rgb(35, 70, 65);
+            let selected_fill = Color32::from_rgb(10,50, 65);
             let none_string = "None".to_string();
             let mut removed = (false, "None");
             let (_, dropped_payload) = ui.dnd_drop_zone::<usize, ()>(frame, |ui| {
@@ -275,11 +270,6 @@ fn render_computation_section<T: Float + Send + Sync + Numeric + 'static>(
     ui: &mut Ui,
     config: &mut ResMut<Config<T>>,
     components: &[String],
-    model: &AppModel<T>,
-    commands: Commands,
-    materials: ResMut<Assets<NormalMaterial>>,
-    meshes: ResMut<Assets<bevy::prelude::Mesh>>,
-    current_mesh_entity: ResMut<CurrentMeshEntity>,
 ) {
     egui::TopBottomPanel::top("Top Computation")
         .resizable(false)
@@ -328,32 +318,6 @@ fn render_computation_section<T: Float + Send + Sync + Numeric + 'static>(
             });
 
             ui.add_space(5.);
-
-            ui.horizontal(|ui| {
-                // Button to generate mesh
-                if ui.button("Generate").clicked() {
-                    if let Some(target) = &config.output {
-                        generate_mesh(
-                            commands,
-                            materials,
-                            meshes,
-                            &model.model,
-                            config,
-                            target,
-                            current_mesh_entity,
-                        );
-                    } else {
-                        error!("Failed to generate mesh. No output selected for computation.");
-                    }
-                }
-
-                // Button to generate mesh
-                if ui.button("Export").clicked() {
-                    error!("Exporting not yet implemented.");
-                }
-            });
-
-            ui.add_space(10.);
         });
 }
 
@@ -586,63 +550,6 @@ fn render_parameters<T: Float + Send + Sync + 'static + Numeric>(
     }
 
     param_responses
-}
-
-fn generate_mesh<T: Float + Send + Sync + 'static>(
-    mut commands: Commands,
-    mut materials: ResMut<Assets<NormalMaterial>>,
-    mut meshes: ResMut<Assets<bevy::prelude::Mesh>>,
-    model: &ImplicitModel<T>,
-    config: &ResMut<Config<T>>,
-    target: &str,
-    mut current_mesh_entity: ResMut<CurrentMeshEntity>,
-) {
-    info!("---");
-    info!(
-        "Generating output for node {}",
-        config.output.clone().unwrap_or("None".to_string())
-    );
-    let result = model.generate_field(target, &config.bounds, config.cell_size);
-
-    match result {
-        Ok(mut field) => {
-            if let Some(entity) = current_mesh_entity.0 {
-                commands.entity(entity).despawn();
-            }
-
-            field.smooth_par(
-                config.smoothing_factor,
-                config.smoothing_iter.try_into().unwrap(),
-            );
-
-            let mesh = Mesh::from_triangles(&generate_iso_surface(&field, T::zero()), false);
-
-            let bevy_mesh = build_mesh_from_data(RawMeshData::from_mesh(&mesh.convert::<f32>()));
-
-            let target = mesh.centroid().convert::<f32>();
-            let mat = materials.add(NormalMaterial {
-                opacity: 1.,
-                depth_bias: 0.,
-                cull_mode: None,
-                alpha_mode: Default::default(),
-            });
-
-            let mesh_entity = commands
-                .spawn(MaterialMeshBundle {
-                    mesh: meshes.add(bevy_mesh),
-                    material: mat,
-                    transform: Transform::from_translation(bevy::math::Vec3::new(
-                        -target.x, -target.y, -target.z,
-                    )),
-                    ..default()
-                })
-                .id();
-
-            current_mesh_entity.0 = Some(mesh_entity);
-            info!("Successfully generated output.")
-        }
-        Err(err) => error!("{}", err),
-    }
 }
 
 fn compute_fast<T: Float + Send + Sync + 'static + Numeric>(
