@@ -63,15 +63,15 @@ pub fn main() {
         )
         .unwrap();
 
-    let _ = model
+    let offset_infill = model
         .add_operation_with_inputs("OffsetInfill", Thickness::new(5.), &[&infill_interpolation])
         .unwrap();
 
-    let output = model
+    let _ = model
         .add_operation_with_inputs(
             "Union",
             BooleanIntersection::new(),
-            &[&infill_interpolation, &shape_interpolation],
+            &[&offset_infill, &shape_interpolation],
         )
         .unwrap();
 
@@ -82,7 +82,7 @@ pub fn main() {
     #[cfg(not(feature = "viewer"))]
     {
         let _ = model
-            .generate_iso_surface(&output, &model_space, 0.5)
+            .generate_iso_surface("Union", &model_space, 0.5)
             .unwrap();
 
         println!("Enable the viewer feature by using (--features viewer) to show the result");

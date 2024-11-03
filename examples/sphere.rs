@@ -12,7 +12,6 @@ pub fn main() {
     // Inputs
     let size = 100.0;
     let offset = 5.0;
-    let cell_size = 2.5;
     let bounds = BoundingBox::new(
         Vec3::new(offset, offset, offset),
         Vec3::new(offset + size, offset + size, offset + size),
@@ -21,7 +20,7 @@ pub fn main() {
     // Function
     let mut model = ImplicitModel::new();
 
-    let output = model
+    let _ = model
         .add_function(
             "Sphere",
             Sphere::new(
@@ -35,8 +34,6 @@ pub fn main() {
         )
         .unwrap();
 
-    println!("{}", model);
-
     // Generate mesh
     #[cfg(feature = "viewer")]
     {
@@ -49,7 +46,7 @@ pub fn main() {
     #[cfg(not(feature = "viewer"))]
     {
         let _ = model
-            .generate_iso_surface(&output, &bounds, cell_size)
+            .generate_iso_surface("Sphere", &bounds, cell_size)
             .unwrap();
 
         println!("Enable the viewer feature by using (--features viewer) to show the result");

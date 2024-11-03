@@ -1,4 +1,4 @@
-use imlet::{
+use imlet::
     types::{
         computation::{
             functions::Gyroid,
@@ -6,9 +6,7 @@ use imlet::{
             ImplicitModel,
         },
         geometry::{BoundingBox, Sphere, Vec3},
-    },
-    utils,
-};
+    };
 
 pub fn main() {
     //utils::logging::init_info();
@@ -34,7 +32,7 @@ pub fn main() {
         .add_operation_with_inputs("OffsetGyroid", Thickness::new(10.), &[&gyroid_tag])
         .unwrap();
 
-    let output = model
+    let _ = model
         .add_operation_with_inputs(
             "Output",
             BooleanIntersection::new(),
@@ -49,7 +47,7 @@ pub fn main() {
     #[cfg(not(feature = "viewer"))]
     {
         let _ = model
-            .generate_iso_surface(&output, &model_space, 0.5)
+            .generate_iso_surface("Output", &model_space, 0.5)
             .unwrap();
 
         println!("Enable the viewer feature by using (--features viewer) to show the result");

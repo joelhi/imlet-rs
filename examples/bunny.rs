@@ -30,7 +30,7 @@ pub fn main() {
         .add_operation_with_inputs("OffsetGyroid", Thickness::new(2.), &[&gyroid_tag])
         .unwrap();
 
-    let output = model
+    let _ = model
         .add_operation_with_inputs(
             "Output",
             BooleanIntersection::new(),
@@ -45,7 +45,7 @@ pub fn main() {
     #[cfg(not(feature = "viewer"))]
     {
         let _ = model
-            .generate_iso_surface(&output, &model_space, 0.5)
+            .generate_iso_surface("Output", &model_space, 0.5)
             .unwrap();
 
         println!("Enable the viewer feature by using (--features viewer) to show the result");

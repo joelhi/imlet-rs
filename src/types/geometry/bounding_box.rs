@@ -250,7 +250,7 @@ static BOUNDING_BOX_PARAMETERS: [Parameter; 2] = [
         data_type: DataType::Vec3,
     },
     Parameter {
-        name: "Min",
+        name: "Max",
         data_type: DataType::Vec3,
     },
 ];
@@ -392,7 +392,7 @@ mod tests {
             aabb.set_parameter(param_name, Data::Vec3(Vec3::origin()));
         }
 
-        assert!(aabb.min.distance_to_vec3(&Vec3::origin()).abs() < f64::epsilon());
-        assert!(aabb.max.distance_to_vec3(&Vec3::origin()).abs() < f64::epsilon());
+        assert!(aabb.min.distance_to_vec3(&Vec3::origin()).abs() < f64::epsilon(),"Expected param to be {} but was {}", Vec3::<f64>::origin(), aabb.min);
+        assert!(aabb.max.distance_to_vec3(&Vec3::origin()).abs() < f64::epsilon(), "Expected param to be {}, but was {}", Vec3::<f64>::origin(), aabb.max);
     }
 }
