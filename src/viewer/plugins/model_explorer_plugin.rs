@@ -1,21 +1,12 @@
-use std::{
-    collections::VecDeque,
-    sync::{Arc, Mutex},
-};
-
 use bevy::{
     app::{App, Plugin, Update},
     asset::Assets,
     input::ButtonInput,
-    log::{tracing_subscriber::Layer, BoxedLayer, LogPlugin},
     pbr::MaterialMeshBundle,
-    prelude::{default, Commands, KeyCode, Res, ResMut, Resource, Transform},
+    prelude::{default, Commands, IntoSystemConfigs, KeyCode, Res, ResMut, Resource, Transform},
 };
 use bevy_egui::{
-    egui::{
-        self, emath::Numeric, text::LayoutJob, Align, Color32, Id, Layout, Response, RichText,
-        ScrollArea, Sense, Stroke, TextureId, Ui, Vec2,
-    },
+    egui::{self, emath::Numeric, Color32, Id, Layout, Response, Stroke, TextureId, Ui},
     EguiContexts, EguiPlugin,
 };
 use bevy_normal_material::prelude::NormalMaterial;
@@ -30,13 +21,12 @@ use crate::{
         geometry::{BoundingBox, Mesh, Vec3},
     },
     viewer::{
-        custom_layer::{CustomLayer, LogMessages},
         raw_mesh_data::RawMeshData,
         utils::{build_mesh_from_data, custom_dnd_drag_source},
     },
 };
 
-use super::{CurrentMeshEntity, Icons};
+use super::{logging_panel, CurrentMeshEntity, Icons};
 
 pub struct ModelExplorerPlugin<T> {
     _marker: std::marker::PhantomData<T>,
@@ -69,7 +59,7 @@ where
         app.insert_resource(AppModel::new(ImplicitModel::<T>::new()))
             .insert_resource(config)
             .add_plugins(EguiPlugin)
-            .add_systems(Update, imlet_ui_panel::<T>)
+            .add_systems(Update, (imlet_model_panel::<T>).before(logging_panel))
             .add_systems(Update, compute_fast::<T>);
     }
 }
@@ -109,7 +99,7 @@ enum InputChange {
     None(),
 }
 
-fn imlet_ui_panel<T: Float + Send + Sync + Numeric + 'static>(
+fn imlet_model_panel<T: Float + Send + Sync + Numeric + 'static>(
     mut contexts: EguiContexts,
     mut model: ResMut<AppModel<T>>,
     mut config: ResMut<Config<T>>,
@@ -612,6 +602,11 @@ fn generate_mesh<T: Float + Send + Sync + 'static>(
     target: &str,
     mut current_mesh_entity: ResMut<CurrentMeshEntity>,
 ) {
+    info!("---");
+    info!(
+        "Generating output for node {}",
+        config.output.clone().unwrap_or("None".to_string())
+    );
     let result = model.generate_field(target, &config.bounds, config.cell_size);
 
     match result {
@@ -649,6 +644,7 @@ fn generate_mesh<T: Float + Send + Sync + 'static>(
                 .id();
 
             current_mesh_entity.0 = Some(mesh_entity);
+            info!("Successfully generated output.")
         }
         Err(err) => error!("{}", err),
     }

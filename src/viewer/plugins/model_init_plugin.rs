@@ -11,11 +11,11 @@ use crate::types::{computation::ImplicitModel, geometry::BoundingBox};
 
 use super::{AppModel, Config};
 
-// Temporary resources to hold model and bounds
+/// Temporary resources to hold model and bounds
 #[derive(Resource)]
 struct TempResource<Q>(Option<Q>);
 
-// Define a plugin that holds the data for initialization
+/// Plugin to initialize the app with an pre-made implicit model and bounds
 pub struct ModelInitializerPlugin<T> {
     _marker: std::marker::PhantomData<T>,
 }

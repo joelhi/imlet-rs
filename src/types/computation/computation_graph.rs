@@ -6,7 +6,7 @@ use smallvec::SmallVec;
 
 use crate::{
     types::geometry::{BoundingBox, Vec3i},
-    utils::math_helper::index3d_from_index1d,
+    utils::{self, math_helper::index3d_from_index1d},
 };
 
 use super::{
@@ -108,7 +108,7 @@ impl<'a, T: Float + Send + Sync> ComputationGraph<'a, T> {
 
         log::info!(
             "Dense value buffer for {} points generated in {:.2?}",
-            n.i * n.j * n.k,
+            utils::math_helper::format_integer(n.i * n.j * n.k,),
             before.elapsed()
         );
 

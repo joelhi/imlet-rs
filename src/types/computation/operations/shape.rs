@@ -167,7 +167,7 @@ impl<T> Offset<T> {
     }
 }
 
-static OFFSET_INPUT_NAMES: [&str; 1] = ["Shape"];
+static OFFSET_INPUT_NAMES: &[&str; 1] = &["Shape"];
 
 static OFFSET_PARAMETERS: &[Parameter] = &[Parameter {
     name: "Distance",
@@ -180,11 +180,11 @@ impl<T: Float + Send + Sync> ImplicitOperation<T> for Offset<T> {
     }
 
     fn inputs(&self) -> &[&str] {
-        &OFFSET_INPUT_NAMES
+        OFFSET_INPUT_NAMES
     }
 
     fn parameters(&self) -> &[Parameter] {
-        &OFFSET_PARAMETERS
+        OFFSET_PARAMETERS
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
@@ -244,7 +244,7 @@ impl<T: Float + Send + Sync> ImplicitOperation<T> for Thickness<T> {
     }
 
     fn parameters(&self) -> &[Parameter] {
-        &THICKNESS_PARAMETERS
+        THICKNESS_PARAMETERS
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {

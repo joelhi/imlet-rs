@@ -10,6 +10,7 @@ use serde::Serialize;
 
 use crate::types::geometry::Vec3;
 use crate::types::geometry::Vec3i;
+use crate::utils;
 use crate::utils::math_helper::index1d_from_index3d;
 use crate::utils::math_helper::index3d_from_index1d;
 
@@ -257,7 +258,7 @@ impl<T: Float> ScalarField<T> {
 
         log::info!(
             "Dense value data for {} points smoothed in {:.2?} for {} iterations",
-            self.num_points(),
+            utils::math_helper::format_integer(self.num_points()),
             before.elapsed(),
             iterations
         );
@@ -292,7 +293,7 @@ impl<T: Float + Send + Sync> ScalarField<T> {
 
         log::info!(
             "Dense value data for {} points smoothed in {:.2?} for {} iterations",
-            self.num_points(),
+            utils::math_helper::format_integer(self.num_points()),
             before.elapsed(),
             iterations
         );

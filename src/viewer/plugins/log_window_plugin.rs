@@ -6,7 +6,7 @@ use bevy::{
     prelude::{default, Res},
 };
 use bevy_egui::{
-    egui::{self, text::LayoutJob, Color32, ScrollArea, Ui},
+    egui::{self, text::LayoutJob, Color32, Layout, ScrollArea, Ui},
     EguiContexts,
 };
 
@@ -38,15 +38,32 @@ fn custom_layer(app: &mut App) -> Option<BoxedLayer> {
     ]))
 }
 
-fn logging_panel(mut contexts: EguiContexts, log_handle: Res<LogMessages>) {
+pub fn logging_panel(mut contexts: EguiContexts, log_handle: Res<LogMessages>) {
     let ctx = contexts.ctx_mut();
     egui::TopBottomPanel::bottom("OutputLogs")
         .resizable(true)
         .default_height(100.)
         .show(ctx, |ui| {
-            ui.heading("Log");
-            ui.separator();
-            render_logging_panel(ui, log_handle.messages.clone());
+            ui.add_space(5.);
+            ui.horizontal(|ui| {
+                ui.with_layout(Layout::left_to_right(egui::Align::Min), |ui| {
+                    ui.heading("Log");
+                });
+                ui.with_layout(Layout::right_to_left(egui::Align::Min), |ui| {
+                    if ui.button("Clear").clicked() {
+                        let mut logs = log_handle
+                            .messages
+                            .lock()
+                            .expect("Should be able to access log list mutex");
+                        logs.clear();
+                    };
+                })
+            });
+            egui::Frame::dark_canvas(ui.style())
+                .outer_margin(0.)
+                .show(ui, |ui| {
+                    render_logging_panel(ui, log_handle.messages.clone());
+                });
         });
 }
 
@@ -93,6 +110,7 @@ fn render_logging_panel(ui: &mut Ui, log_handle: Arc<Mutex<Vec<String>>>) {
                             ui.label(layout_job);
                         }
                     }
+                    ui.label("");
                 });
             });
     }

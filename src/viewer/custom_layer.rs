@@ -1,7 +1,6 @@
 use std::{
-    f32::consts::E,
     sync::{Arc, Mutex},
-    time::{Instant, SystemTime},
+    time::SystemTime,
 };
 
 use bevy::{
@@ -10,7 +9,6 @@ use bevy::{
     utils::tracing::{self, Subscriber},
 };
 use chrono::{DateTime, Utc};
-use log::info;
 
 #[derive(Default, Resource)]
 pub struct LogMessages {
@@ -32,7 +30,6 @@ impl<S: Subscriber> Layer<S> for CustomLayer {
         let mut visitor = EventVisitor::new(event.metadata().level().to_string());
         event.record(&mut visitor);
 
-        // Store the log message in the shared log_messages resource
         if !visitor.message.is_empty() {
             let mut log_messages = self.log_messages.lock().unwrap();
 
@@ -43,8 +40,6 @@ impl<S: Subscriber> Layer<S> for CustomLayer {
             let system_time = SystemTime::now();
             let datetime: DateTime<Utc> = system_time.into();
             let timestamp = datetime.format("%Y%m%d %H:%M:%S").to_string();
-
-            let reset_code = "\x1b[0m";
 
             let formatted = format!("{} | {:<5} | {}", timestamp, visitor.level, visitor.message,);
 

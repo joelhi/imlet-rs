@@ -7,7 +7,7 @@ use num_traits::Float;
 use crate::types::{computation::ImplicitModel, geometry::BoundingBox};
 
 use super::plugins::{
-    GraphicsPlugin, LogWindowPlugin, MeshViewerPlugin, ModelExplorerPlugin, ModelInitializerPlugin
+    GraphicsPlugin, LogWindowPlugin, MeshViewerPlugin, ModelExplorerPlugin, ModelInitializerPlugin,
 };
 
 pub fn run_explorer<T: Float + Debug + Send + Sync + 'static + Numeric + Debug + Display>(
