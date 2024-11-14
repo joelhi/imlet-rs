@@ -1,32 +1,47 @@
 use bevy::{
-    app::{App, Plugin, Update},
+    app::{App, Plugin, Startup, Update},
     asset::Assets,
     input::ButtonInput,
     pbr::MaterialMeshBundle,
-    prelude::{default, Commands, IntoSystemConfigs, KeyCode, Res, ResMut, Resource, Transform},
+    prelude::{Commands, IntoSystemConfigs, KeyCode, Res, ResMut, Resource},
+    utils::default,
 };
 use bevy_egui::{
-    egui::{self, emath::Numeric, Color32, Id, Layout, Response, Stroke, TextureId, Ui},
-    EguiContexts, EguiPlugin,
+    egui::{
+        self, emath::Numeric, load::SizedTexture, Color32, Id, ImageButton, Layout, Response,
+        Stroke, TextureId, Ui,
+    },
+    EguiContexts,
 };
 use bevy_normal_material::prelude::NormalMaterial;
 use log::{debug, error, info};
 use num_traits::Float;
+use rfd::FileDialog;
 
 use crate::{
     algorithms::marching_cubes::generate_iso_surface,
     types::{
         self,
-        computation::{Component, Data, ImplicitModel},
+        computation::{
+            components::{
+                self, function_components::PUBLIC_FUNCTION_COMPONENTS,
+                operation_components::PUBLIC_OPERATIONS, Component, Data, DataType,
+            },
+            ImplicitModel, ModelError,
+        },
         geometry::{BoundingBox, Mesh, Vec3},
     },
+    utils::math_helper::Pi,
     viewer::{
         raw_mesh_data::RawMeshData,
         utils::{build_mesh_from_data, custom_dnd_drag_source},
     },
 };
 
-use super::{generate_mesh, logging_panel, CurrentMeshEntity, Icons};
+use super::{
+    add_remove_bounds_in_scene, logging_panel, CurrentBounds, CurrentMeshEntity, Icons,
+    LineMaterial, ModelMaterial, ViewSettings,
+};
 
 pub struct ModelExplorerPlugin<T> {
     _marker: std::marker::PhantomData<T>,
@@ -44,13 +59,13 @@ impl<T> ModelExplorerPlugin<T> {
 // Implement the Plugin trait for ModelExplorerPlugin with a generic type T.
 impl<T> Plugin for ModelExplorerPlugin<T>
 where
-    T: Float + Send + Sync + Numeric + 'static, // Ensure T meets the required constraints (adjust as needed).
+    T: Float + Send + Sync + Numeric + 'static + Pi, // Ensure T meets the required constraints (adjust as needed).
 {
     fn build(&self, app: &mut App) {
-        let val = T::from(100.).expect("Should be able to convert the value to T");
+        let val = T::from(50.).expect("Should be able to convert the value to T");
         let config = Config {
             cell_size: T::one(),
-            bounds: BoundingBox::new(Vec3::origin(), Vec3::new(val, val, val)),
+            bounds: BoundingBox::new(Vec3::new(-val, -val, -val), Vec3::new(val, val, val)),
             output: None,
             smoothing_iter: 1,
             smoothing_factor: T::from(0.75).expect("Should be able to convert value to T"),
@@ -58,10 +73,18 @@ where
 
         app.insert_resource(AppModel::new(ImplicitModel::<T>::new()))
             .insert_resource(config)
-            .add_plugins(EguiPlugin)
-            .add_systems(Update, (imlet_model_panel::<T>).before(logging_panel::<T>))
-            .add_systems(Update, compute_fast::<T>);
+            .insert_resource(EditingState::default())
+            .add_systems(Startup, init_bounds::<T>)
+            .add_systems(Update, (imlet_model_panel::<T>).before(logging_panel::<T>));
+        //.add_systems(Update, compute_fast::<T>);
     }
+}
+
+fn init_bounds<T: Send + Sync + 'static + Clone>(
+    mut view_settings: ResMut<ViewSettings<T>>,
+    config: Res<Config<T>>,
+) {
+    view_settings.bounds = Some(config.bounds.clone());
 }
 
 #[derive(Resource)]
@@ -84,6 +107,13 @@ impl<T: Float> AppModel<T> {
     }
 }
 
+#[derive(Default, Resource)]
+struct EditingState {
+    item_name: String,
+    edit_text: String,
+    editing: bool,
+}
+
 #[derive(Resource)]
 pub struct Config<T> {
     pub cell_size: T,
@@ -99,15 +129,19 @@ enum InputChange {
     None(),
 }
 
-fn imlet_model_panel<T: Float + Send + Sync + Numeric + 'static>(
+fn imlet_model_panel<T: Float + Send + Sync + Numeric + 'static + Pi>(
     mut contexts: EguiContexts,
     mut model: ResMut<AppModel<T>>,
     mut config: ResMut<Config<T>>,
-    commands: Commands,
-    materials: ResMut<Assets<NormalMaterial>>,
-    meshes: ResMut<Assets<bevy::prelude::Mesh>>,
-    current_mesh_entity: ResMut<CurrentMeshEntity>,
     icons: Res<Icons>,
+    mut view_settings: ResMut<ViewSettings<T>>,
+    current_bounds: ResMut<CurrentBounds>,
+    current_mesh_entity: ResMut<CurrentMeshEntity>,
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<bevy::prelude::Mesh>>,
+    line_material: Res<ModelMaterial<LineMaterial>>,
+    normal_material: Res<ModelMaterial<NormalMaterial>>,
+    mut editing_state: ResMut<EditingState>,
 ) {
     let ctx = contexts.ctx_mut();
     let mut components = model.component_order.clone();
@@ -116,26 +150,51 @@ fn imlet_model_panel<T: Float + Send + Sync + Numeric + 'static>(
         .resizable(false)
         .min_width(350.)
         .show(ctx, |ui| {
-            render_computation_section(
+            ui.heading("Imlet model");
+            ui.separator();
+            if render_computation_section(ui, &mut config) {
+                view_settings.bounds = Some(config.bounds);
+                add_remove_bounds_in_scene(
+                    current_bounds,
+                    view_settings,
+                    &mut commands,
+                    &mut meshes,
+                    line_material,
+                );
+            };
+            ui.separator();
+            ui.add_space(5.);
+            if render_components(
                 ui,
+                &mut components,
+                &mut model,
                 &mut config,
-                &components,
-            );
-
-            render_components(ui, &mut components, &mut model, &mut config, &icons);
+                &icons,
+                &mut editing_state,
+            ) {
+                generate_mesh(
+                    commands,
+                    normal_material,
+                    meshes,
+                    &model.model,
+                    &config,
+                    current_mesh_entity,
+                );
+            }
         });
 
     model.component_order = components;
 }
 
-fn render_components<T: Float + Send + Sync + Numeric + 'static>(
+fn render_components<T: Float + Send + Sync + Numeric + 'static + Pi>(
     ui: &mut Ui,
     components: &mut Vec<String>,
     model: &mut ResMut<AppModel<T>>,
     config: &mut ResMut<Config<T>>,
     icons: &Res<Icons>,
-) {
-    ui.heading("Components");
+    editing_state: &mut ResMut<EditingState>,
+) -> bool {
+    let recompute = render_component_menus(ui, &mut model.model, components, icons);
 
     egui::ScrollArea::vertical()
         .auto_shrink([false; 2])
@@ -145,38 +204,51 @@ fn render_components<T: Float + Send + Sync + Numeric + 'static>(
 
             let frame = egui::Frame::dark_canvas(ui.style()).inner_margin(4.0);
             let default_fill = Color32::from_rgb(35, 35, 35);
-            let selected_fill = Color32::from_rgb(10,50, 65);
+            let selected_fill = Color32::from_rgb(10, 50, 65);
             let none_string = "None".to_string();
             let mut removed = (false, "None");
+            let mut renamed = (false, "None".to_string(), "None".to_string());
+            let cloned_components = components.clone();
             let (_, dropped_payload) = ui.dnd_drop_zone::<usize, ()>(frame, |ui| {
                 ui.set_min_width(ui.available_width());
-                for (row_idx, item) in components.iter().enumerate() {
+                if components.len() == 0 {
+                    ui.label("No components in model. Add one from the bar above.");
+                }
+                for (row_idx, item) in cloned_components.iter().enumerate() {
                     let mut change = InputChange::None();
                     let inputs = model.model.get_inputs(item).cloned();
                     let component = model.model.get_component_mut(item).unwrap();
                     let current_icon = icons.component_icon(component);
-                    let item_id = Id::new(("my_drag_and_drop_demo", row_idx));
+                    let item_id = Id::new(("drag_drop_source", row_idx));
                     let item_location = row_idx;
                     let response = custom_dnd_drag_source(ui, item_id, item_location, |ui| {
                         let mut all_responses = Vec::new();
-                        let selected = config.output.as_ref().unwrap_or(&none_string);
+                        let mut selected = config.output.as_ref().unwrap_or(&none_string).clone();
                         let current_fill = if *item == *selected {
                             selected_fill
                         } else {
                             default_fill
                         };
+                        let mut item_copy = item.clone();
                         let delete = render_collapsible_with_icon(
                             ui,
-                            item,
+                            &mut item_copy,
                             component,
                             &mut all_responses,
                             current_icon,
-                            icons.delete_icon(),
+                            icons,
                             &mut change,
-                            components,
+                            &cloned_components,
                             inputs,
                             current_fill,
+                            &mut selected,
+                            editing_state,
                         );
+
+                        if item_copy.as_str() != item.as_str() {
+                            renamed = (true, item.to_owned(), item_copy);
+                        }
+                        config.output = Some(selected);
 
                         if delete {
                             removed = (true, item);
@@ -232,7 +304,16 @@ fn render_components<T: Float + Send + Sync + Numeric + 'static>(
                     ui.add_space(5.);
                 }
             });
-
+            if renamed.0 {
+                if let Some(pos) = components.iter().position(|x| *x == renamed.1) {
+                    match model.model.rename_component(&renamed.1, &renamed.2) {
+                        Ok(_) => {
+                            components[pos] = renamed.2;
+                        }
+                        Err(error) => error!("{}", error),
+                    };
+                }
+            }
             if removed.0 {
                 // Remove from model.
                 if let Some(pos) = components.iter().position(|x| x == removed.1) {
@@ -264,137 +345,225 @@ fn render_components<T: Float + Send + Sync + Numeric + 'static>(
                 model.component_order = components.clone();
             }
         });
+
+    recompute
+}
+
+fn render_component_menus<T: Float + Send + Sync + Numeric + 'static + Pi>(
+    ui: &mut Ui,
+    implicit_model: &mut ImplicitModel<T>,
+    components: &mut Vec<String>,
+    icons: &Res<Icons>,
+) -> bool {
+    let mut recompute = false;
+    let available_funcs = PUBLIC_FUNCTION_COMPONENTS;
+    let available_ops = PUBLIC_OPERATIONS;
+    egui::menu::bar(ui, |ui| {
+        ui.with_layout(Layout::left_to_right(egui::Align::Min), |ui| {
+            ui.menu_image_button(SizedTexture::new(icons.add, [16., 16.]), |ui| {
+                ui.menu_button("Functions", |ui| {
+                    for &function in available_funcs {
+                        if ui.button(format!("{:?}", function)).clicked() {
+                            let function_component = function.create_default();
+                            let result = implicit_model
+                                .add_component(function_component.type_name(), function_component);
+                            match result {
+                                Ok(tag) => components.push(tag.to_owned()),
+                                Err(error) => error!("{}", error),
+                            }
+                            ui.close_menu();
+                        };
+                    }
+                });
+
+                ui.menu_button("Operations", |ui| {
+                    for &operation in available_ops {
+                        let operation_name = format!("{:?}", operation);
+                        if ui.button(operation_name).clicked() {
+                            let component = operation.create_default();
+                            let result =
+                                implicit_model.add_component(component.type_name(), component);
+                            match result {
+                                Ok(tag) => components.push(tag),
+                                Err(error) => error!("{}", error),
+                            }
+                            ui.close_menu();
+                        };
+                    }
+                });
+                ui.menu_button("Values", |ui| {
+                    if ui.button("Constant").clicked() {
+                        let result =
+                            implicit_model.add_component("Value", Component::Constant(T::zero()));
+                        match result {
+                            Ok(tag) => components.push(tag),
+                            Err(error) => error!("{}", error),
+                        }
+                    };
+                });
+            })
+            .response
+            .on_hover_text("Add new component.");
+        });
+        ui.with_layout(Layout::right_to_left(egui::Align::Min), |ui| {
+            if ui
+                .add(
+                    egui::widgets::ImageButton::new(egui::load::SizedTexture::new(
+                        icons.compute_icon,
+                        [16.0, 16.0],
+                    ))
+                    .frame(true),
+                )
+                .on_hover_text("Compute model")
+                .clicked()
+            {
+                recompute = true;
+            };
+            if ui
+                .add(
+                    egui::widgets::ImageButton::new(egui::load::SizedTexture::new(
+                        icons.export,
+                        [16.0, 16.0],
+                    ))
+                    .frame(true),
+                )
+                .on_hover_text("Export")
+                .clicked()
+            {
+                info!("Export clicked");
+            };
+        });
+    });
+
+    recompute
 }
 
 fn render_computation_section<T: Float + Send + Sync + Numeric + 'static>(
     ui: &mut Ui,
     config: &mut ResMut<Config<T>>,
-    components: &[String],
-) {
-    egui::TopBottomPanel::top("Top Computation")
-        .resizable(false)
-        .show_inside(ui, |ui| {
-            // Computation controls
-            render_computation_controls(ui, config);
+) -> bool {
+    let mut bounds_changed = false;
+    bounds_changed = render_computation_controls(ui, config);
 
-            ui.separator();
-
-            ui.horizontal(|ui| {
-                ui.with_layout(Layout::left_to_right(egui::Align::Min), |ui| {
-                    ui.label("Output");
-                });
-
-                // Get the current input name
-                let current_input_name = match &config.output {
-                    Some(name) => name.to_string(),
-                    None => "None".to_string(),
-                };
-                ui.with_layout(Layout::right_to_left(egui::Align::Min), |ui| {
-                    let mut selected_input: String = current_input_name.clone();
-                    egui::ComboBox::from_id_source("Output")
-                        .selected_text(&selected_input)
-                        .show_ui(ui, |ui| {
-                            for available_component in components.iter() {
-                                if ui
-                                    .selectable_value(
-                                        &mut selected_input,
-                                        available_component.to_string(),
-                                        available_component,
-                                    )
-                                    .clicked()
-                                {
-                                    config.output = Some(selected_input.clone());
-                                };
-                            }
-
-                            if ui
-                                .selectable_value(&mut selected_input, "None".to_string(), "None")
-                                .clicked()
-                            {
-                                config.output = None;
-                            };
-                        });
-                });
-            });
-
-            ui.add_space(5.);
-        });
+    ui.add_space(5.);
+    return bounds_changed;
 }
 
 fn render_computation_controls<T: Float + Send + Sync + 'static + Numeric>(
     ui: &mut Ui,
     config: &mut Config<T>,
-) {
-    ui.heading("Model Space");
-    ui.horizontal(|ui| {
-        ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
-            ui.label("Min Coordinate:");
+) -> bool {
+    let mut bounds_updated = false;
+    egui::CollapsingHeader::new("Model space")
+        .id_salt("Model space")
+        .default_open(true)
+        .show(ui, |ui| {
+            ui.horizontal(|ui| {
+                ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
+                    ui.label("Min Coordinate:");
+                });
+
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
+                    if ui
+                        .add(egui::DragValue::new(&mut config.bounds.min.x).speed(0.1))
+                        .changed()
+                    {
+                        bounds_updated = true;
+                    };
+                    ui.label("x:");
+
+                    if ui
+                        .add(egui::DragValue::new(&mut config.bounds.min.y).speed(0.1))
+                        .changed()
+                    {
+                        bounds_updated = true;
+                    };
+                    ui.label("y:");
+
+                    if ui
+                        .add(egui::DragValue::new(&mut config.bounds.min.z).speed(0.1))
+                        .changed()
+                    {
+                        bounds_updated = true;
+                    };
+                    ui.label("z:");
+                });
+            });
+
+            ui.horizontal(|ui| {
+                ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
+                    ui.label("Max Coordinate:");
+                });
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
+                    if ui
+                        .add(egui::DragValue::new(&mut config.bounds.max.x).speed(0.1))
+                        .changed()
+                    {
+                        bounds_updated = true;
+                    };
+                    ui.label("x:");
+
+                    if ui
+                        .add(egui::DragValue::new(&mut config.bounds.max.y).speed(0.1))
+                        .changed()
+                    {
+                        bounds_updated = true;
+                    };
+                    ui.label("y:");
+
+                    if ui
+                        .add(egui::DragValue::new(&mut config.bounds.max.z).speed(0.1))
+                        .changed()
+                    {
+                        bounds_updated = true;
+                    };
+                    ui.label("z:");
+                });
+            });
+
+            ui.horizontal(|ui| {
+                ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
+                    ui.label("Cell Size:");
+                });
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
+                    let cell_size = &mut config.cell_size;
+                    ui.add(egui::DragValue::new(cell_size).speed(0.1));
+
+                    config.cell_size =
+                        cell_size.max(T::from(0.1).expect("Should be able to convert 0.1 to T"));
+                });
+            });
         });
-        ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
-            ui.add(egui::DragValue::new(&mut config.bounds.min.x).speed(0.1));
-            ui.label("x:");
-
-            ui.add(egui::DragValue::new(&mut config.bounds.min.y).speed(0.1));
-            ui.label("y:");
-
-            ui.add(egui::DragValue::new(&mut config.bounds.min.z).speed(0.1));
-            ui.label("z:");
-        });
-    });
-
-    ui.horizontal(|ui| {
-        ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
-            ui.label("Max Coordinate:");
-        });
-        ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
-            ui.add(egui::DragValue::new(&mut config.bounds.max.x).speed(0.1));
-            ui.label("x:");
-
-            ui.add(egui::DragValue::new(&mut config.bounds.max.y).speed(0.1));
-            ui.label("y:");
-
-            ui.add(egui::DragValue::new(&mut config.bounds.max.z).speed(0.1));
-            ui.label("z:");
-        });
-    });
-
-    ui.horizontal(|ui| {
-        ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
-            ui.label("Cell Size:");
-        });
-        ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
-            let cell_size = &mut config.cell_size;
-            ui.add(egui::DragValue::new(cell_size).speed(0.1));
-
-            config.cell_size =
-                cell_size.max(T::from(0.1).expect("Should be able to convert 0.1 to T"));
-        });
-    });
 
     ui.separator();
 
-    ui.heading("Smoothing");
+    egui::CollapsingHeader::new("Smoothing")
+        .id_salt("Smoothing")
+        .default_open(true)
+        .show(ui, |ui| {
+            ui.horizontal(|ui| {
+                ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
+                    ui.label("Iterations:");
+                });
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
+                    ui.add(egui::DragValue::new(&mut config.smoothing_iter).speed(0.1));
+                });
+            });
 
-    ui.horizontal(|ui| {
-        ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
-            ui.label("Iterations:");
+            // Input for smoothing factor
+            ui.horizontal(|ui| {
+                ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
+                    ui.label("Factor:");
+                });
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
+                    let smmoothing_factor = &mut config.smoothing_factor;
+                    ui.add(egui::DragValue::new(smmoothing_factor).speed(0.1));
+                    config.smoothing_factor = smmoothing_factor.max(T::zero()).min(T::one());
+                });
+            });
         });
-        ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
-            ui.add(egui::DragValue::new(&mut config.smoothing_iter).speed(0.1));
-        });
-    });
 
-    // Input for smoothing factor
-    ui.horizontal(|ui| {
-        ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
-            ui.label("Factor:");
-        });
-        ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
-            let smmoothing_factor = &mut config.smoothing_factor;
-            ui.add(egui::DragValue::new(smmoothing_factor).speed(0.1));
-            config.smoothing_factor = smmoothing_factor.max(T::zero()).min(T::one());
-        });
-    });
+    return bounds_updated;
 }
 
 fn render_inputs(
@@ -419,47 +588,44 @@ fn render_inputs(
                 let mut selected_input = current_input_name.clone();
 
                 // Capture the response of the ComboBox
-                egui::ComboBox::from_id_source(format!(
-                    "Select input for {}, {}",
-                    component_name, i
-                ))
-                .selected_text(&selected_input)
-                .show_ui(ui, |ui| {
-                    let mut combo_responses = Vec::new();
+                egui::ComboBox::from_id_salt(format!("Select input for {}, {}", component_name, i))
+                    .selected_text(&selected_input)
+                    .show_ui(ui, |ui| {
+                        let mut combo_responses = Vec::new();
 
-                    // Iterate over available components
-                    for available_component in components.iter() {
-                        if available_component == component_name {
-                            continue;
-                        }
+                        // Iterate over available components
+                        for available_component in components.iter() {
+                            if available_component == component_name {
+                                continue;
+                            }
 
-                        let item_response = ui.selectable_value(
-                            &mut selected_input,
-                            available_component.to_string(),
-                            available_component,
-                        );
-                        combo_responses.push(item_response.clone());
-
-                        if item_response.clicked() {
-                            change = InputChange::Add(
-                                component_name.to_string(),
-                                selected_input.clone(),
-                                i,
+                            let item_response = ui.selectable_value(
+                                &mut selected_input,
+                                available_component.to_string(),
+                                available_component,
                             );
+                            combo_responses.push(item_response.clone());
+
+                            if item_response.clicked() {
+                                change = InputChange::Add(
+                                    component_name.to_string(),
+                                    selected_input.clone(),
+                                    i,
+                                );
+                            }
                         }
-                    }
 
-                    let none_response =
-                        ui.selectable_value(&mut selected_input, "None".to_string(), "None");
-                    combo_responses.push(none_response.clone());
+                        let none_response =
+                            ui.selectable_value(&mut selected_input, "None".to_string(), "None");
+                        combo_responses.push(none_response.clone());
 
-                    if none_response.clicked() {
-                        change = InputChange::Remove(component_name.to_string(), i);
-                    }
+                        if none_response.clicked() {
+                            change = InputChange::Remove(component_name.to_string(), i);
+                        }
 
-                    combo_responses
-                })
-                .response
+                        combo_responses
+                    })
+                    .response
             })
             .inner;
 
@@ -472,6 +638,9 @@ fn render_inputs(
 fn render_parameters<T: Float + Send + Sync + 'static + Numeric>(
     ui: &mut egui::Ui,
     component: &mut Component<T>,
+    component_name: &str,
+    editing_state: &mut ResMut<EditingState>,
+    icons: &Icons,
 ) -> Vec<egui::Response> {
     let parameters = component.get_parameters();
     let mut param_responses = Vec::new();
@@ -537,11 +706,93 @@ fn render_parameters<T: Float + Send + Sync + 'static + Numeric>(
                     }
                     param_responses.push(response);
                 }
-                Data::Text(text) => {
-                    ui.label(param.name);
-                    let mut value = text.clone();
-                    let response = ui.text_edit_singleline(&mut value);
-                    param_responses.push(response);
+                Data::File(text) => {
+                    egui::menu::bar(ui, |ui| {
+                        ui.label(param.name);
+                        let mut value = text.clone();
+
+                        let response = ui.add(
+                            egui::TextEdit::singleline(&mut value)
+                                .desired_width(140.)
+                                .clip_text(true),
+                        );
+
+                        let show_response = ui
+                            .add(
+                                egui::widgets::ImageButton::new(egui::load::SizedTexture::new(
+                                    icons.show_edges,
+                                    [12.0, 12.0],
+                                ))
+                                .frame(true)
+                                .rounding(2.),
+                            )
+                            .on_hover_text("Show");
+
+                        if show_response.clicked() {
+                            info!("Show mesh");
+                        }
+
+                        let load_response = ui
+                            .add(
+                                egui::widgets::ImageButton::new(egui::load::SizedTexture::new(
+                                    icons.more_options,
+                                    [12.0, 12.0],
+                                ))
+                                .frame(true)
+                                .rounding(2.),
+                            )
+                            .on_hover_text("Select file.");
+
+                        if load_response.clicked() {
+                            if let Some(path) = FileDialog::new().pick_file() {
+                                component.set_parameter(
+                                    param.name,
+                                    Data::File(path.display().to_string()),
+                                );
+                            }
+                        }
+
+                        param_responses.push(load_response);
+                        param_responses.push(show_response);
+                        param_responses.push(response);
+                    });
+                }
+                Data::EnumValue(selected) => {
+                    if let DataType::Enum(options) = param.data_type {
+                        ui.label(param.name);
+                        // Capture the response of the ComboBox
+                        ui.horizontal(|ui| {
+                            let response = egui::ComboBox::from_id_salt(format!(
+                                "Select input for {}, {}",
+                                component.type_name(),
+                                component_name
+                            ))
+                            .selected_text(selected.clone())
+                            .show_ui(ui, |ui| {
+                                let mut combo_responses = Vec::new();
+                                let mut selected_clone = selected.clone();
+                                for &option in options {
+                                    let item_response = ui.selectable_value(
+                                        &mut selected_clone,
+                                        option.to_string(),
+                                        option.to_string(),
+                                    );
+
+                                    combo_responses.push(item_response.clone());
+
+                                    if item_response.clicked() {
+                                        component.set_parameter(
+                                            param.name,
+                                            Data::EnumValue(selected_clone.to_string()),
+                                        );
+                                    }
+                                }
+                                param_responses.extend(combo_responses);
+                            })
+                            .response;
+                            param_responses.push(response);
+                        });
+                    }
                 }
             });
 
@@ -556,22 +807,79 @@ fn compute_fast<T: Float + Send + Sync + 'static + Numeric>(
     model: ResMut<AppModel<T>>,
     config: ResMut<Config<T>>,
     commands: Commands,
-    materials: ResMut<Assets<NormalMaterial>>,
+    materials: Res<ModelMaterial<NormalMaterial>>,
     meshes: ResMut<Assets<bevy::prelude::Mesh>>,
     current_mesh_entity: ResMut<CurrentMeshEntity>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    editing_state: ResMut<EditingState>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::Enter) {
-        if let Some(target) = &config.output {
-            generate_mesh(
-                commands,
-                materials,
-                meshes,
-                &model.model,
-                &config,
-                target,
-                current_mesh_entity,
+    if !editing_state.editing && keyboard_input.just_pressed(KeyCode::Enter) {
+        generate_mesh(
+            commands,
+            materials,
+            meshes,
+            &model.model,
+            &config,
+            current_mesh_entity,
+        );
+    }
+}
+
+pub fn generate_mesh<T: Float + Send + Sync + 'static>(
+    mut commands: Commands,
+    material: Res<ModelMaterial<NormalMaterial>>,
+    mut meshes: ResMut<Assets<bevy::prelude::Mesh>>,
+    model: &ImplicitModel<T>,
+    config: &ResMut<Config<T>>,
+    mut current_mesh_entity: ResMut<CurrentMeshEntity>,
+) {
+    info!("---");
+    info!(
+        "Generating output for node {}",
+        config.output.clone().unwrap_or("None".to_string())
+    );
+    let result = if let Some(target) = &config.output {
+        model.generate_field(target, &config.bounds, config.cell_size)
+    } else {
+        Result::Err(ModelError::MissingOutput())
+    };
+
+    if let Some(entity) = current_mesh_entity.0 {
+        // Remove current mesh
+        commands.entity(entity).despawn();
+        current_mesh_entity.0 = None;
+    }
+
+    match result {
+        Ok(mut field) => {
+            if let Some(entity) = current_mesh_entity.0 {
+                commands.entity(entity).despawn();
+            }
+
+            field.smooth_par(
+                config.smoothing_factor,
+                config.smoothing_iter.try_into().unwrap(),
             );
+
+            field.padding(T::one());
+
+            let mesh = Mesh::from_triangles(&generate_iso_surface(&field, T::zero()), false);
+
+            let bevy_mesh = build_mesh_from_data(RawMeshData::from_mesh(&mesh.convert::<f32>()));
+
+            let mesh_entity = commands
+                .spawn(MaterialMeshBundle {
+                    mesh: meshes.add(bevy_mesh),
+                    material: material.0.clone(),
+                    ..default()
+                })
+                .id();
+
+            current_mesh_entity.0 = Some(mesh_entity);
+            info!("Successfully generated output.")
+        }
+        Err(err) => {
+            error!("{}", err)
         }
     }
 }
@@ -579,15 +887,17 @@ fn compute_fast<T: Float + Send + Sync + 'static + Numeric>(
 // Usage in the UI function
 fn render_collapsible_with_icon<T: Float + Send + Sync + 'static + Numeric>(
     ui: &mut Ui,
-    item: &str,
+    item: &mut String,
     component: &mut Component<T>,
     all_responses: &mut Vec<Response>,
     icon: &TextureId,
-    delete_icon: &TextureId,
+    icons: &Icons,
     change: &mut InputChange,
     components: &[String],
     inputs: Option<Vec<Option<String>>>,
     fill: Color32,
+    current_selection: &mut String,
+    editing_state: &mut ResMut<EditingState>,
 ) -> bool {
     let mut delete = false;
     egui::Frame::group(ui.style())
@@ -597,33 +907,66 @@ fn render_collapsible_with_icon<T: Float + Send + Sync + 'static + Numeric>(
             ui.set_width(ui.available_width());
             ui.add_space(1.5);
 
-            ui.horizontal(|ui| {
+            egui::menu::bar(ui, |ui| {
                 ui.with_layout(Layout::left_to_right(egui::Align::Min), |ui| {
                     ui.add(egui::widgets::Image::new(egui::load::SizedTexture::new(
                         *icon,
                         [16.0, 16.0],
                     )));
-                    ui.heading(format!("{} [{}]", item, component.type_name()));
+                    let heading_resp = ui
+                        .heading(format!("{} [{}]", item, component.type_name()));
+                    all_responses.push(heading_resp);
                 });
 
                 ui.with_layout(Layout::right_to_left(egui::Align::Min), |ui| {
-                    let r = ui.add(
-                        egui::widgets::ImageButton::new(egui::load::SizedTexture::new(
-                            *delete_icon,
-                            [16.0, 16.0],
-                        ))
-                        .frame(false),
+                   let r1 = ui.menu_image_button(egui::load::SizedTexture::new(
+                        icons.more_options,
+                        [16.0, 16.0],
+                    ), |ui|{
+                        if ui.button("Rename").clicked() {
+                            if !editing_state.editing{
+                                editing_state.editing = true;
+                                editing_state.item_name = item.to_string();
+                                editing_state.edit_text = item.to_string();
+                            }else{
+                                error!("Already editing component {}. Please finish before opening a new dialog.", editing_state.item_name);
+                            }
+                        }
+
+                        if ui.button("Delete").clicked(){
+                            delete = true;
+                            ui.close_menu();
+                        }
+                    }).response;
+
+                    if editing_state.editing && editing_state.item_name.as_str() == item{
+                        if let Some(name) = show_text_input_window(ui, editing_state, item) {
+                            info!("Renamed component {} to {}", item, name);
+                            *item = name;
+                        }
+                    }
+
+                    let button_icon = if current_selection == item {
+                        icons.checked
+                    } else {
+                        icons.unchecked
+                    };
+                    let r2 = ui.add(
+                        ImageButton::new(egui::load::SizedTexture::new(
+                            button_icon,
+                            [14.0, 14.0])).rounding(4.)
                     );
 
-                    if r.clicked() {
-                        delete = true;
+                    if r2.clicked() {
+                        *current_selection = item.to_string();
                     }
-                    all_responses.push(r);
+                    all_responses.push(r1);
+                    all_responses.push(r2);
                 });
             });
 
             let response = egui::CollapsingHeader::new("Inputs")
-                .id_source(format!("{} [{}]", item, component.type_name()))
+                .id_salt(format!("{} [{}]", item, component.type_name()))
                 .default_open(false)
                 .show(ui, |ui| {
                     // Expose inputs
@@ -639,7 +982,7 @@ fn render_collapsible_with_icon<T: Float + Send + Sync + 'static + Numeric>(
                     ui.separator();
 
                     // Expose parameters
-                    let param_responses = render_parameters(ui, component);
+                    let param_responses = render_parameters(ui, component, item, editing_state, icons);
 
                     all_responses.extend_from_slice(&param_responses);
                 });
@@ -649,4 +992,45 @@ fn render_collapsible_with_icon<T: Float + Send + Sync + 'static + Numeric>(
         });
 
     delete
+}
+
+fn show_text_input_window(
+    ui: &mut egui::Ui,
+    editing_state: &mut ResMut<EditingState>,
+    item: &str,
+) -> Option<String> {
+    let mut result = None;
+    if editing_state.editing {
+        let screen_rect = ui.ctx().screen_rect();
+
+        let mut center_pos = ui.next_widget_position();
+        center_pos.x += 75.;
+        let blackout_layer_id =
+            egui::LayerId::new(egui::Order::Background, egui::Id::new("blackout_layer"));
+        let blackout_painter = ui.ctx().layer_painter(blackout_layer_id);
+        blackout_painter.rect_filled(screen_rect, 0.0, egui::Color32::from_black_alpha(150));
+
+        egui::Area::new(Id::new("Popup area"))
+            .order(egui::Order::Foreground)
+            .fixed_pos(center_pos)
+            .show(ui.ctx(), |ui| {
+                egui::Frame::window(&ui.ctx().style()).show(ui, |ui| {
+                    ui.label("Enter the new name:");
+                    ui.text_edit_singleline(&mut editing_state.edit_text);
+
+                    if ui.button("OK").clicked() {
+                        result = Some(editing_state.edit_text.clone());
+                        editing_state.edit_text.clear();
+                        editing_state.editing = false;
+                    }
+
+                    if ui.button("Cancel").clicked() {
+                        editing_state.edit_text.clear();
+                        editing_state.editing = false;
+                    }
+                });
+            });
+    }
+
+    result
 }

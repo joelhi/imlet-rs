@@ -4,7 +4,10 @@ use log::error;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::{traits::ImplicitFunction, Data, DataType, Parameter};
+use crate::types::computation::{
+    components::{Data, DataType, Parameter},
+    traits::ImplicitFunction,
+};
 
 use super::{traits::SignedDistance, Vec3};
 

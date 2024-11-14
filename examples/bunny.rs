@@ -8,8 +8,6 @@ use imlet::{
 };
 
 pub fn main() {
-    utils::logging::init_info();
-
     let mesh = parse_obj_file("assets/geometry/bunny.obj", false).unwrap();
 
     let cell_size = 0.5;
@@ -40,7 +38,7 @@ pub fn main() {
 
     #[cfg(feature = "viewer")]
     {
-        imlet::viewer::run_explorer(model, model_space);
+        imlet::viewer::run_explorer_with_model(model, model_space);
     }
     #[cfg(not(feature = "viewer"))]
     {

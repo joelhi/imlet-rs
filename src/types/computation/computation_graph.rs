@@ -10,7 +10,7 @@ use crate::{
 };
 
 use super::{
-    component::{Component, ComponentId, ComponentValues},
+    components::{Component, ComponentId, ComponentValues},
     ScalarField,
 };
 

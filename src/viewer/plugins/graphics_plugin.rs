@@ -8,7 +8,7 @@ use bevy_egui::{
     EguiContexts,
 };
 
-use crate::types::computation::Component;
+use crate::types::computation::components::Component;
 
 const FONT_SIZE: f32 = 12.;
 
@@ -37,7 +37,7 @@ fn configure_fonts(mut contexts: EguiContexts) {
         FontData::from_owned(include_bytes!("../../../assets/fonts/inconsolata-Bold.ttf").to_vec()),
     );
     font_def.families.insert(
-        FontFamily::Proportional,
+        FontFamily::Monospace,
         vec!["Inconsolata-Regular".to_string()],
     );
     font_def.families.insert(
@@ -55,11 +55,11 @@ fn configure_fonts(mut contexts: EguiContexts) {
     ); // Heading size
     style.text_styles.insert(
         TextStyle::Body,
-        FontId::new(FONT_SIZE, FontFamily::Proportional),
+        FontId::new(FONT_SIZE, FontFamily::Monospace),
     ); // Body text size
     style.text_styles.insert(
         TextStyle::Button,
-        FontId::new(FONT_SIZE, FontFamily::Proportional),
+        FontId::new(FONT_SIZE, FontFamily::Monospace),
     ); // Button text size
     style.text_styles.insert(
         TextStyle::Monospace,
@@ -77,20 +77,22 @@ pub struct Icons {
     pub compute_icon: TextureId,
     pub show_bounds: TextureId,
     pub export: TextureId,
-    pub show_edges: TextureId
+    pub show_edges: TextureId,
+    pub numbers: TextureId,
+    pub add: TextureId,
+    pub unchecked: TextureId,
+    pub checked: TextureId,
+    pub more_options: TextureId,
+    pub rename: TextureId,
 }
 
 impl Icons {
     pub(crate) fn component_icon<T>(&self, component: &Component<T>) -> &TextureId {
         match component {
-            Component::Constant(_) => &self.operation_icon,
+            Component::Constant(_) => &self.numbers,
             Component::Function(_) => &self.function_icon,
             Component::Operation(_) => &self.operation_icon,
         }
-    }
-
-    pub(crate) fn delete_icon(&self) -> &TextureId {
-        &self.delete_icon
     }
 }
 
@@ -107,6 +109,12 @@ fn load_icon_files(
         show_bounds: contexts.add_image(asset_server.load("icons/show_bounds_24x24.png")),
         export: contexts.add_image(asset_server.load("icons/file_export_24x24.png")),
         show_edges: contexts.add_image(asset_server.load("icons/show_edges_24x24.png")),
+        add: contexts.add_image(asset_server.load("icons/add_16x16.png")),
+        numbers: contexts.add_image(asset_server.load("icons/numbers_16x16.png")),
+        checked: contexts.add_image(asset_server.load("icons/button_checked_16x16.png")),
+        unchecked: contexts.add_image(asset_server.load("icons/button_unchecked_16x16.png")),
+        more_options: contexts.add_image(asset_server.load("icons/more_16x16.png")),
+        rename: contexts.add_image(asset_server.load("icons/edit_16x16.png")),
     };
 
     commands.insert_resource(icons);

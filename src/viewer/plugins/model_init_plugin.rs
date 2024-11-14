@@ -2,14 +2,20 @@ use std::fmt::{Debug, Display};
 
 use bevy::{
     app::{App, Plugin, Startup},
-    prelude::{Commands, ResMut, Resource},
+    asset::Assets,
+    prelude::{Commands, IntoSystemConfigs, Res, ResMut, Resource},
 };
 use bevy_egui::egui::emath::Numeric;
 use num_traits::Float;
 
-use crate::types::{computation::ImplicitModel, geometry::BoundingBox};
+use crate::{
+    types::{computation::ImplicitModel, geometry::BoundingBox},
+    viewer::plugins::add_remove_bounds_in_scene,
+};
 
-use super::{AppModel, Config};
+use super::{
+    init_materials, AppModel, Config, CurrentBounds, LineMaterial, ModelMaterial, ViewSettings,
+};
 
 /// Temporary resources to hold model and bounds
 #[derive(Resource)]
@@ -37,7 +43,7 @@ impl<T: Float + Send + Sync + 'static + Numeric + Display + Debug> Plugin
     for ModelInitializerPlugin<T>
 {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, initialize_model::<T>);
+        app.add_systems(Startup, (initialize_model::<T>).after(init_materials));
     }
 }
 
@@ -48,6 +54,10 @@ fn initialize_model<T: Float + Send + Sync + 'static + Numeric + Display + Debug
     mut temp_bounds: ResMut<TempResource<BoundingBox<T>>>,
     mut app_model: ResMut<AppModel<T>>,
     mut config: ResMut<Config<T>>,
+    current_bounds: ResMut<CurrentBounds>,
+    mut view_settings: ResMut<ViewSettings<T>>,
+    mut meshes: ResMut<Assets<bevy::prelude::Mesh>>,
+    material: Res<ModelMaterial<LineMaterial>>,
 ) {
     if let Some(model) = temp_model.0.take() {
         log::info!("Initalizing model.");
@@ -57,6 +67,14 @@ fn initialize_model<T: Float + Send + Sync + 'static + Numeric + Display + Debug
     if let Some(bounds) = temp_bounds.0.take() {
         log::info!("Initializing bounds.");
         config.bounds = bounds;
+        view_settings.bounds = Some(bounds);
+        add_remove_bounds_in_scene(
+            current_bounds,
+            view_settings,
+            &mut commands,
+            &mut meshes,
+            material,
+        );
     }
 
     // Remove the temporary resources after assignment to free up memory

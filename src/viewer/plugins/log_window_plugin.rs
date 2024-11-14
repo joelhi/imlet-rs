@@ -1,21 +1,36 @@
 use std::sync::{Arc, Mutex};
 
 use bevy::{
-    app::{App, Plugin, Update}, asset::Assets, log::{tracing_subscriber::Layer, BoxedLayer, LogPlugin}, pbr::{wireframe::WireframeConfig, MaterialMeshBundle}, prelude::{default, Commands, Res, ResMut, Transform}
+    app::{App, Plugin, Update},
+    asset::{Asset, Assets},
+    color::LinearRgba,
+    log::{tracing_subscriber::Layer, BoxedLayer, LogPlugin},
+    pbr::{
+        wireframe::WireframeConfig, Material, MaterialMeshBundle, MaterialPipeline,
+        MaterialPipelineKey,
+    },
+    prelude::{default, Commands, Res, ResMut},
+    reflect::TypePath,
+    render::{
+        mesh::{MeshVertexBufferLayoutRef, PrimitiveTopology},
+        render_asset::RenderAssetUsages,
+        render_resource::{
+            AsBindGroup, PolygonMode, RenderPipelineDescriptor, ShaderRef,
+            SpecializedMeshPipelineError,
+        },
+    },
 };
 use bevy_egui::{
     egui::{self, emath::Numeric, text::LayoutJob, Color32, Layout, ScrollArea, Ui},
     EguiContexts,
 };
-use bevy_normal_material::prelude::NormalMaterial;
-use log::{error, info};
 use num_traits::Float;
 
-use crate::{algorithms::marching_cubes::generate_iso_surface, types::{computation::ImplicitModel, geometry::Mesh}, viewer::{custom_layer::{CustomLayer, LogMessages}, raw_mesh_data::RawMeshData, utils::build_mesh_from_data}};
+use crate::viewer::custom_layer::{CustomLayer, LogMessages};
 
-use super::{AppModel, Config, CurrentMeshEntity, Icons};
+use super::{CurrentBounds, Icons, ModelMaterial, ViewSettings};
 
-pub struct LogWindowPlugin<T>{
+pub struct LogWindowPlugin<T> {
     _marker: std::marker::PhantomData<T>,
 }
 
@@ -31,7 +46,7 @@ impl<T> LogWindowPlugin<T> {
 impl<T> Plugin for LogWindowPlugin<T>
 where
     T: Float + Send + Sync + Numeric + 'static, // Ensure T meets the required constraints (adjust as needed).
- {
+{
     fn build(&self, app: &mut App) {
         app.add_plugins(LogPlugin {
             custom_layer,
@@ -55,73 +70,59 @@ fn custom_layer(app: &mut App) -> Option<BoxedLayer> {
     ]))
 }
 
-const TINT: u8 = 100;
+const TINT: u8 = 155;
 
 pub fn logging_panel<T: Float + Send + Sync + Numeric + 'static>(
-    mut contexts: EguiContexts, 
+    mut contexts: EguiContexts,
     log_handle: Res<LogMessages>,
-    model: ResMut<AppModel<T>>,
-    model_config: ResMut<Config<T>>,
     mut wireframe_config: ResMut<WireframeConfig>,
-    commands: Commands,
-    materials: ResMut<Assets<NormalMaterial>>,
-    meshes: ResMut<Assets<bevy::prelude::Mesh>>,
-    current_mesh_entity: ResMut<CurrentMeshEntity>,
-    icons: Res<Icons>,) {
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<bevy::prelude::Mesh>>,
+    icons: Res<Icons>,
+    mut view_settings: ResMut<ViewSettings<T>>,
+    bounds: ResMut<CurrentBounds>,
+    line_material: Res<ModelMaterial<LineMaterial>>,
+) {
     let ctx = contexts.ctx_mut();
     egui::TopBottomPanel::top("Toolbar")
         .resizable(false)
-        .show(ctx, |ui|{
-            ui.add_space(2.);
-            ui.horizontal(|ui| {
-                let edges_tint = if wireframe_config.global { 255 } else {TINT};
-                if ui.add(
-                    egui::widgets::ImageButton::new(egui::load::SizedTexture::new(
-                        icons.compute_icon,
-                        [24.0, 24.0],
-                    )).frame(false)
-                ).on_hover_text("Compute output [ENTER]").clicked(){
-                    if let Some(target) = &model_config.output {
-                        generate_mesh(
-                            commands,
-                            materials,
-                            meshes,
-                            &model.model,
-                            &model_config,
-                            target,
-                            current_mesh_entity,
-                        );
-                    } else {
-                        error!("Failed to generate mesh. No output selected for computation.");
-                    }
+        .show(ctx, |ui| {
+            egui::menu::bar(ui, |ui| {
+                let edges_tint = if wireframe_config.global { 255 } else { TINT };
+                let bounds_tint = if view_settings.show_bounds { 255 } else { TINT };
+                if ui
+                    .add(
+                        egui::widgets::ImageButton::new(egui::load::SizedTexture::new(
+                            icons.show_bounds,
+                            [24.0, 24.0],
+                        ))
+                        .frame(true)
+                        .tint(Color32::from_gray(bounds_tint)),
+                    )
+                    .on_hover_text("Show bounds")
+                    .clicked()
+                {
+                    view_settings.show_bounds = !view_settings.show_bounds;
+                    add_remove_bounds_in_scene(
+                        bounds,
+                        view_settings,
+                        &mut commands,
+                        &mut meshes,
+                        line_material,
+                    );
                 };
-                ui.add_space(10.);
-                if ui.add(
-                    egui::widgets::ImageButton::new(egui::load::SizedTexture::new(
-                        icons.export,
-                        [24.0, 24.0],
-                    )).frame(false)
-                ).on_hover_text("Export").clicked(){
-                    info!("Export clicked")
-                };
-                ui.add_space(10.);
-                ui.separator();
-                ui.add_space(10.);
-                if ui.add(
-                    egui::widgets::ImageButton::new(egui::load::SizedTexture::new(
-                        icons.show_bounds,
-                        [24.0, 24.0],
-                    )).frame(false)
-                ).on_hover_text("Show bounds [B]").clicked(){
-                    info!("Show bounds clicked.")
-                };
-                ui.add_space(10.);
-                if ui.add(
-                    egui::widgets::ImageButton::new(egui::load::SizedTexture::new(
-                        icons.show_edges,
-                        [24.0, 24.0],
-                    )).frame(false).tint(Color32::from_gray(edges_tint))
-                ).on_hover_text("Show mesh edges [E]").clicked(){
+                if ui
+                    .add(
+                        egui::widgets::ImageButton::new(egui::load::SizedTexture::new(
+                            icons.show_edges,
+                            [24.0, 24.0],
+                        ))
+                        .frame(true)
+                        .tint(Color32::from_gray(edges_tint)),
+                    )
+                    .on_hover_text("Show mesh edges [E]")
+                    .clicked()
+                {
                     wireframe_config.global = !wireframe_config.global;
                 };
             });
@@ -213,59 +214,84 @@ fn get_log_color(level: &str) -> Color32 {
     }
 }
 
-pub fn generate_mesh<T: Float + Send + Sync + 'static>(
-    mut commands: Commands,
-    mut materials: ResMut<Assets<NormalMaterial>>,
-    mut meshes: ResMut<Assets<bevy::prelude::Mesh>>,
-    model: &ImplicitModel<T>,
-    config: &ResMut<Config<T>>,
-    target: &str,
-    mut current_mesh_entity: ResMut<CurrentMeshEntity>,
+pub fn add_remove_bounds_in_scene<T: Send + Sync + 'static + Float>(
+    mut current_bounds: ResMut<CurrentBounds>,
+    view_settings: ResMut<ViewSettings<T>>,
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<bevy::prelude::Mesh>>,
+    material: Res<ModelMaterial<LineMaterial>>,
 ) {
-    info!("---");
-    info!(
-        "Generating output for node {}",
-        config.output.clone().unwrap_or("None".to_string())
-    );
-    let result = model.generate_field(target, &config.bounds, config.cell_size);
-
-    match result {
-        Ok(mut field) => {
-            if let Some(entity) = current_mesh_entity.0 {
-                commands.entity(entity).despawn();
+    if !view_settings.show_bounds {
+        if let Some(bounds) = current_bounds.0 {
+            commands.entity(bounds).despawn();
+            current_bounds.0 = None;
+        }
+    } else {
+        if let Some(bounds) = view_settings.bounds {
+            if let Some(bounds) = current_bounds.0 {
+                commands.entity(bounds).despawn();
             }
 
-            field.smooth_par(
-                config.smoothing_factor,
-                config.smoothing_iter.try_into().unwrap(),
-            );
+            let lines: Vec<[f32; 3]> = bounds
+                .as_wireframe()
+                .iter()
+                .map(|line| {
+                    [
+                        [
+                            line.start.x.to_f32().unwrap(),
+                            line.start.y.to_f32().unwrap(),
+                            line.start.z.to_f32().unwrap(),
+                        ],
+                        [
+                            line.end.x.to_f32().unwrap(),
+                            line.end.y.to_f32().unwrap(),
+                            line.end.z.to_f32().unwrap(),
+                        ],
+                    ]
+                })
+                .flatten()
+                .collect();
 
-            let mesh = Mesh::from_triangles(&generate_iso_surface(&field, T::zero()), false);
+            let mesh = bevy::prelude::Mesh::new(
+                PrimitiveTopology::LineList,
+                RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
+            )
+            .with_inserted_attribute(bevy::prelude::Mesh::ATTRIBUTE_POSITION, lines);
 
-            let bevy_mesh = build_mesh_from_data(RawMeshData::from_mesh(&mesh.convert::<f32>()));
-
-            let target = mesh.centroid().convert::<f32>();
-            let mat = materials.add(NormalMaterial {
-                opacity: 1.,
-                depth_bias: 0.,
-                cull_mode: None,
-                alpha_mode: Default::default(),
-            });
-
-            let mesh_entity = commands
+            let bounds_entity = commands
                 .spawn(MaterialMeshBundle {
-                    mesh: meshes.add(bevy_mesh),
-                    material: mat,
-                    transform: Transform::from_translation(bevy::math::Vec3::new(
-                        -target.x, -target.y, -target.z,
-                    )),
+                    mesh: meshes.add(mesh),
+                    material: material.0.clone(),
                     ..default()
                 })
                 .id();
 
-            current_mesh_entity.0 = Some(mesh_entity);
-            info!("Successfully generated output.")
+            current_bounds.0 = Some(bounds_entity);
         }
-        Err(err) => error!("{}", err),
+    }
+}
+
+#[derive(Asset, TypePath, Default, AsBindGroup, Debug, Clone)]
+pub struct LineMaterial {
+    #[uniform(0)]
+    pub color: LinearRgba,
+}
+
+const SHADER_ASSET_PATH: &str = "shaders/line_material.wgsl";
+
+impl Material for LineMaterial {
+    fn fragment_shader() -> ShaderRef {
+        SHADER_ASSET_PATH.into()
+    }
+
+    fn specialize(
+        _pipeline: &MaterialPipeline<Self>,
+        descriptor: &mut RenderPipelineDescriptor,
+        _layout: &MeshVertexBufferLayoutRef,
+        _key: MaterialPipelineKey<Self>,
+    ) -> Result<(), SpecializedMeshPipelineError> {
+        // This is the important part to tell bevy to render this material as a line between vertices
+        descriptor.primitive.polygon_mode = PolygonMode::Line;
+        Ok(())
     }
 }

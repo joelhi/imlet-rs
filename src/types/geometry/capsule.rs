@@ -5,7 +5,10 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{
-    computation::{traits::ImplicitFunction, Data, DataType, Parameter},
+    computation::{
+        components::{Data, DataType, Parameter},
+        traits::ImplicitFunction,
+    },
     geometry::{Line, Vec3},
 };
 

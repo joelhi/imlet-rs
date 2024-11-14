@@ -1,12 +1,11 @@
-use imlet::
-    types::{
-        computation::{
-            functions::Gyroid,
-            operations::shape::{BooleanIntersection, Thickness},
-            ImplicitModel,
-        },
-        geometry::{BoundingBox, Sphere, Vec3},
-    };
+use imlet::types::{
+    computation::{
+        functions::Gyroid,
+        operations::shape::{BooleanIntersection, Thickness},
+        ImplicitModel,
+    },
+    geometry::{BoundingBox, Sphere, Vec3},
+};
 
 pub fn main() {
     //utils::logging::init_info();

@@ -1,15 +1,15 @@
 use crate::algorithms::marching_cubes::generate_iso_surface;
-use crate::types::computation::component::{Component, ComponentId};
 use crate::types::computation::traits::{ImplicitFunction, ImplicitOperation};
 use crate::types::computation::ComputationGraph;
 use crate::types::geometry::traits::SignedDistance;
 use crate::types::geometry::{BoundingBox, Mesh};
-use log::info;
+use log::{debug, info};
 use num_traits::Float;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::{self, Debug, Display};
 use std::time::Instant;
 
+use super::components::{Component, ComponentId};
 use super::functions::CustomGeometry;
 use super::{ModelError, ScalarField};
 
@@ -267,6 +267,85 @@ impl<T> ImplicitModel<T> {
         }
 
         Ok(())
+    }
+
+    /// Add component to the model
+    pub(crate) fn add_component(
+        &mut self,
+        tag: &str,
+        component: Component<T>,
+    ) -> Result<String, ModelError> {
+        let valid_tag = self.find_free_tag(&tag)?;
+        // Add inputs if applicable
+        match &component {
+            Component::Constant(_) => {}
+            Component::Function(_) => {}
+            Component::Operation(operation) => {
+                self.inputs
+                    .insert(valid_tag.clone(), vec![None; operation.inputs().len()]);
+            }
+        }
+
+        self.components.insert(valid_tag.clone(), component);
+
+        Ok(valid_tag)
+    }
+
+    pub(crate) fn rename_component(
+        &mut self,
+        current_tag: &str,
+        new_tag: &str,
+    ) -> Result<String, ModelError> {
+        let new_tag_string = new_tag.to_string();
+        self.verify_tag_is_free(&new_tag_string)?;
+        self.verify_tag_is_present(current_tag)?;
+
+        let component = self.components.remove(current_tag).expect(&format!(
+            "Should be a valid entry as tag {} is verified.",
+            current_tag
+        ));
+        self.components.insert(new_tag_string.clone(), component);
+
+        if let Some(inputs) = self.inputs.remove(current_tag) {
+            self.inputs.insert(new_tag_string.clone(), inputs);
+        }
+
+        // Update all input references.
+        for (_, inputs) in self.inputs.iter_mut() {
+            let mut to_change = vec![];
+            for (index, item) in inputs.iter().enumerate() {
+                let val = item.clone().unwrap_or("None".to_string());
+                if val == current_tag {
+                    to_change.push(index);
+                }
+            }
+            for index in to_change.iter() {
+                inputs[*index] = Some(new_tag.to_string());
+            }
+        }
+
+        debug!("Component {}, was renamed to {}", current_tag, new_tag);
+
+        Ok(new_tag_string)
+    }
+
+    fn find_free_tag(&mut self, base_tag: &str) -> Result<String, ModelError> {
+        if self.components.contains_key(base_tag) {
+            let mut increment = 1;
+            let mut temp_tag = format!("{}_{}", base_tag, increment);
+            while self.components.contains_key(&temp_tag) {
+                info!("Increment");
+                increment += 1;
+                temp_tag = format!("{}_{}", base_tag, increment);
+
+                if increment > 1000 {
+                    return Err(ModelError::TagGenerationFailed(base_tag.to_owned()));
+                }
+            }
+            return Ok(temp_tag);
+        }
+
+        Ok(base_tag.to_string())
     }
 
     fn verify_tag_is_free(&self, tag: &String) -> Result<(), ModelError> {

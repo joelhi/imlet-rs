@@ -4,7 +4,9 @@ use log::error;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::{traits::ImplicitFunction, Data, DataType, Parameter};
+use crate::types::computation::{
+    components::Data, components::DataType, components::Parameter, traits::ImplicitFunction,
+};
 
 use super::{traits::SignedDistance, Vec3};
 
@@ -37,6 +39,35 @@ impl<T: Float> Plane<T> {
         Plane {
             origin,
             normal: normal.normalize(),
+        }
+    }
+
+    /// Create a new global XY plane at the origin point `{0,0,0}`
+    ///
+    /// # Arguments
+    ///
+    /// * `origin` - The location of the origin.
+    /// * `normal` - The direction of the normal (z) direction.
+    pub fn xy() -> Self {
+        Plane {
+            origin: Vec3::origin(),
+            normal: Vec3::z_axis().normalize(),
+        }
+    }
+
+    /// Create a new global YZ plane at the origin point `{0,0,0}`
+    pub fn yz() -> Self {
+        Plane {
+            origin: Vec3::origin(),
+            normal: Vec3::x_axis().normalize(),
+        }
+    }
+
+    /// Create a new global XZ plane at the origin point `{0,0,0}`
+    pub fn xz() -> Self {
+        Plane {
+            origin: Vec3::origin(),
+            normal: Vec3::y_axis().normalize(),
         }
     }
 

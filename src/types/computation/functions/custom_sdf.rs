@@ -3,7 +3,10 @@ use std::fmt::Debug;
 use num_traits::Float;
 
 use crate::types::{
-    computation::{traits::ImplicitFunction, Parameter},
+    computation::{
+        components::{Data, Parameter},
+        traits::ImplicitFunction,
+    },
     geometry::{traits::SignedDistance, GeometryCollection, Mesh, Triangle},
 };
 
@@ -61,11 +64,11 @@ impl<Q: SignedDistance<T> + Send + Sync, T: Float + Send + Sync> ImplicitFunctio
         &[]
     }
 
-    fn set_parameter(&mut self, _: &str, _: crate::types::computation::Data<T>) {
+    fn set_parameter(&mut self, _: &str, _: Data<T>) {
         // Void
     }
 
-    fn read_parameter(&self, _: &str) -> Option<crate::types::computation::Data<T>> {
+    fn read_parameter(&self, _: &str) -> Option<Data<T>> {
         None
     }
 

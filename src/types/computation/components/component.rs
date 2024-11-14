@@ -3,10 +3,9 @@ use std::fmt::Debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use super::{
-    traits::{ImplicitFunction, ImplicitOperation},
-    Data, DataType, Parameter,
-};
+use crate::types::computation::traits::{ImplicitFunction, ImplicitOperation};
+
+use super::{Data, DataType, Parameter};
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct ComponentId(pub usize);
@@ -51,7 +50,7 @@ impl<T: Float> Component<T> {
                 .iter()
                 .map(|p| {
                     (
-                        *p,
+                        p.clone(),
                         function.read_parameter(p.name).unwrap_or_else(|| panic!("Parameter {} returned None from function {}, but it should be valid",
                             p.name,
                             function.function_name())),
@@ -63,7 +62,7 @@ impl<T: Float> Component<T> {
                 .iter()
                 .map(|p| {
                     (
-                        *p,
+                        p.clone(),
                         operation.read_parameter(p.name).unwrap_or_else(|| panic!("Parameter {} returned None from operation {}, but it should be valid",
                             p.name,
                             operation.operation_name())),

@@ -2,8 +2,8 @@ use log::error;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
+use crate::types::computation::components::{Data, DataType, Parameter};
 use crate::types::computation::traits::ImplicitFunction;
-use crate::types::computation::{Data, DataType, Parameter};
 use crate::utils::math_helper::Pi;
 use std::fmt::Debug;
 

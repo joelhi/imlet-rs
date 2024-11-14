@@ -4,7 +4,9 @@ use log::error;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::{traits::ImplicitOperation, Data, DataType, Parameter};
+use crate::types::computation::{
+    components::Data, components::DataType, components::Parameter, traits::ImplicitOperation,
+};
 
 static INPUT_NAMES: [&str; 2] = ["First Number", "Second Number"];
 

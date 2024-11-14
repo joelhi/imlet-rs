@@ -63,8 +63,19 @@ pub fn parse_obj_file<T: Float + Send + Sync>(
 ) -> Result<Mesh<T>, Box<dyn std::error::Error>> {
     let path = Path::new(file_path);
 
-    if path.extension().unwrap().to_ascii_lowercase() != "obj" {
-        return Err("Cannot read file. Only .obj files are supported.".into());
+    let extension = path.extension().ok_or_else(|| {
+        format!(
+            "Cannot read file {}. Only .obj files are supported.",
+            file_path
+        )
+    })?;
+
+    if extension.to_ascii_lowercase() != "obj" {
+        return Err(format!(
+            "Cannot read file {}. Only .obj files are supported.",
+            file_path
+        )
+        .into());
     }
 
     let file = File::open(path)?;

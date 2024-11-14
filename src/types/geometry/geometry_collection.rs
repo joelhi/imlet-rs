@@ -1,6 +1,9 @@
 use num_traits::Float;
 
-use crate::types::computation::{traits::ImplicitFunction, Data, Parameter};
+use crate::types::computation::{
+    components::{Data, Parameter},
+    traits::ImplicitFunction,
+};
 
 use super::{
     traits::{SignedDistance, SignedQuery, SpatialQuery},

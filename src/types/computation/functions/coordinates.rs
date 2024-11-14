@@ -4,8 +4,8 @@ use std::fmt::Debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
+use crate::types::computation::components::{Data, DataType, Parameter};
 use crate::types::computation::traits::ImplicitFunction;
-use crate::types::computation::{Data, DataType, Parameter};
 use crate::utils::math_helper::normalize;
 
 static COORD_PARAMETERS: [Parameter; 2] = [
@@ -58,9 +58,21 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for ZCoord<T> {
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
-        if !(Parameter::set_value_from_param(parameter_name, &data, "Min", &mut self.min)
-            || Parameter::set_value_from_param(parameter_name, &data, "Max", &mut self.max))
-        {
+        if parameter_name == "Min" {
+            let old_min = self.min;
+            Parameter::set_value_from_param(parameter_name, &data, "Min", &mut self.min);
+            if (self.min - self.max).abs() < T::epsilon() {
+                error!("Min and max can't be same value.");
+                self.min = old_min;
+            }
+        } else if parameter_name == "Max" {
+            let old_max = self.max;
+            Parameter::set_value_from_param(parameter_name, &data, "Max", &mut self.max);
+            if (self.min - self.max).abs() < T::epsilon() {
+                error!("Min and max can't be same value.");
+                self.max = old_max;
+            }
+        } else {
             error!("Unknown parameter name: {}", parameter_name);
         }
     }
@@ -117,9 +129,21 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for YCoord<T> {
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
-        if !(Parameter::set_value_from_param(parameter_name, &data, "Min", &mut self.min)
-            || Parameter::set_value_from_param(parameter_name, &data, "Max", &mut self.max))
-        {
+        if parameter_name == "Min" {
+            let old_min = self.min;
+            Parameter::set_value_from_param(parameter_name, &data, "Min", &mut self.min);
+            if (self.min - self.max).abs() < T::epsilon() {
+                error!("Min and max can't be same value.");
+                self.min = old_min;
+            }
+        } else if parameter_name == "Max" {
+            let old_max = self.max;
+            Parameter::set_value_from_param(parameter_name, &data, "Max", &mut self.max);
+            if (self.min - self.max).abs() < T::epsilon() {
+                error!("Min and max can't be same value.");
+                self.max = old_max;
+            }
+        } else {
             error!("Unknown parameter name: {}", parameter_name);
         }
     }
@@ -176,9 +200,21 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for XCoord<T> {
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
-        if !(Parameter::set_value_from_param(parameter_name, &data, "Min", &mut self.min)
-            || Parameter::set_value_from_param(parameter_name, &data, "Max", &mut self.max))
-        {
+        if parameter_name == "Min" {
+            let old_min = self.min;
+            Parameter::set_value_from_param(parameter_name, &data, "Min", &mut self.min);
+            if (self.min - self.max).abs() < T::epsilon() {
+                error!("Min and max can't be same value.");
+                self.min = old_min;
+            }
+        } else if parameter_name == "Max" {
+            let old_max = self.max;
+            Parameter::set_value_from_param(parameter_name, &data, "Max", &mut self.max);
+            if (self.min - self.max).abs() < T::epsilon() {
+                error!("Min and max can't be same value.");
+                self.max = old_max;
+            }
+        } else {
             error!("Unknown parameter name: {}", parameter_name);
         }
     }
@@ -193,5 +229,159 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for XCoord<T> {
 
     fn function_name(&self) -> &'static str {
         "X Coord"
+    }
+}
+
+pub enum CoordinateValue {
+    X,
+    Y,
+    Z,
+}
+
+pub struct XYZCoordinate {
+    coordinate_value: CoordinateValue,
+}
+
+const GLOBAL_COORD_PARAMETERS: [Parameter; 1] = [Parameter {
+    name: "Coordinate",
+    data_type: DataType::Enum(&["X", "Y", "Z"]),
+}];
+
+impl XYZCoordinate {
+    pub fn new(coordinate_value: CoordinateValue) -> Self {
+        Self { coordinate_value }
+    }
+}
+
+impl<T: Float + Send + Sync> ImplicitFunction<T> for XYZCoordinate {
+    fn eval(&self, x: T, y: T, z: T) -> T {
+        match self.coordinate_value {
+            CoordinateValue::X => x,
+            CoordinateValue::Y => y,
+            CoordinateValue::Z => z,
+        }
+    }
+
+    fn parameters(&self) -> &[Parameter] {
+        &GLOBAL_COORD_PARAMETERS
+    }
+
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
+        if let Some(selection) =
+            Parameter::get_string_from_enum_param(parameter_name, &data, "Coordinate")
+        {
+            match selection.as_str() {
+                "X" => {
+                    self.coordinate_value = CoordinateValue::X;
+                }
+                "Y" => {
+                    self.coordinate_value = CoordinateValue::Y;
+                }
+                "Z" => {
+                    self.coordinate_value = CoordinateValue::Z;
+                }
+                _ => panic!("Error in string option"),
+            };
+        }
+    }
+
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>> {
+        match parameter_name {
+            "Coordinate" => match self.coordinate_value {
+                CoordinateValue::X => Some(Data::EnumValue("X".to_string())),
+                CoordinateValue::Y => Some(Data::EnumValue("Y".to_string())),
+                CoordinateValue::Z => Some(Data::EnumValue("Z".to_string())),
+            },
+            _ => None,
+        }
+    }
+
+    fn function_name(&self) -> &'static str {
+        "Global Coord"
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_natural_z_domain() {
+        let domain: ZCoord<f32> = ZCoord::natural();
+
+        assert!(domain.eval(1., 0., 0.).abs() < f32::epsilon());
+        assert!((domain.eval(1., 0., 0.5) - 0.5).abs() < f32::epsilon());
+        assert!((domain.eval(1., 0., 1.) - 1.).abs() < f32::epsilon());
+    }
+
+    #[test]
+    fn test_natural_y_domain() {
+        let domain: YCoord<f32> = YCoord::natural();
+
+        assert!(domain.eval(1., 0., 0.).abs() < f32::epsilon());
+        assert!((domain.eval(1., 0.5, 0.5) - 0.5).abs() < f32::epsilon());
+        assert!((domain.eval(1., 1., 1.) - 1.).abs() < f32::epsilon());
+    }
+
+    #[test]
+    fn test_natural_x_domain() {
+        let domain: XCoord<f32> = XCoord::natural();
+
+        assert!(domain.eval(0., 1., 0.).abs() < f32::epsilon());
+        assert!((domain.eval(0.5, 0., 1.0) - 0.5).abs() < f32::epsilon());
+        assert!((domain.eval(1., 1., 1.) - 1.).abs() < f32::epsilon());
+    }
+
+    #[test]
+    fn test_handle_zero_size_domain_x() {
+        let mut domain: XCoord<f32> = XCoord::natural();
+
+        domain.set_parameter("Max", Data::Value(0.0));
+
+        //Check that the parameter is still 1.0
+        assert!((domain.max - 1.0).abs() < f32::epsilon());
+
+        domain.set_parameter("Min", Data::Value(1.0));
+
+        //Check that the parameter is still 0.0
+        assert!((domain.min).abs() < f32::epsilon());
+    }
+
+    #[test]
+    fn test_handle_zero_size_domain_y() {
+        let mut domain: YCoord<f32> = YCoord::natural();
+
+        domain.set_parameter("Max", Data::Value(0.0));
+
+        //Check that the parameter is still 1.0
+        assert!(
+            (domain.max - 1.0).abs() < f32::epsilon(),
+            "Invalid value assigned. Should be 1.0 but was {}",
+            domain.max
+        );
+
+        domain.set_parameter("Min", Data::Value(1.0));
+
+        //Check that the parameter is still 0.0
+        assert!(
+            (domain.min).abs() < f32::epsilon(),
+            "Invalid value assigned. Should be 0.0 but was {}",
+            domain.min
+        );
+    }
+
+    #[test]
+    fn test_handle_zero_size_domain_z() {
+        let mut domain: ZCoord<f32> = ZCoord::natural();
+
+        domain.set_parameter("Max", Data::Value(0.0));
+
+        //Check that the parameter is still 1.0
+        assert!((domain.max - 1.0).abs() < f32::epsilon());
+
+        domain.set_parameter("Min", Data::Value(1.0));
+
+        //Check that the parameter is still 0.0
+        assert!((domain.min).abs() < f32::epsilon());
     }
 }

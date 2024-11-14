@@ -37,14 +37,11 @@ pub fn main() {
     // Generate mesh
     #[cfg(feature = "viewer")]
     {
-        // let mesh = model
-        //     .generate_iso_surface(&output, &bounds, cell_size)
-        //     .unwrap();
-
         imlet::viewer::run_explorer(model, bounds);
     }
     #[cfg(not(feature = "viewer"))]
     {
+        let cell_size = 0.5;
         let _ = model
             .generate_iso_surface("Sphere", &bounds, cell_size)
             .unwrap();

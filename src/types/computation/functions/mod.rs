@@ -15,6 +15,9 @@
 //! ## Custom
 //! - [`CustomFunction`](functions::CustomFunction)
 //! - [`CustomGeometry`](functions::CustomGeometry)
+//!
+//! ## From file
+//! - [`MeshFile`](functions::MeshFile)
 
 // Modules
 mod coordinates;
@@ -31,3 +34,5 @@ mod custom_function;
 pub use custom_function::*;
 mod custom_sdf;
 pub use custom_sdf::*;
+mod mesh_file;
+pub use mesh_file::*;

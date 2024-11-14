@@ -4,7 +4,10 @@ use log::error;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::{traits::ImplicitFunction, Data, DataType, Parameter};
+use crate::types::computation::{
+    components::{Data, DataType, Parameter},
+    traits::ImplicitFunction,
+};
 
 use super::{
     traits::{SignedDistance, SpatialQuery},
@@ -392,7 +395,17 @@ mod tests {
             aabb.set_parameter(param_name, Data::Vec3(Vec3::origin()));
         }
 
-        assert!(aabb.min.distance_to_vec3(&Vec3::origin()).abs() < f64::epsilon(),"Expected param to be {} but was {}", Vec3::<f64>::origin(), aabb.min);
-        assert!(aabb.max.distance_to_vec3(&Vec3::origin()).abs() < f64::epsilon(), "Expected param to be {}, but was {}", Vec3::<f64>::origin(), aabb.max);
+        assert!(
+            aabb.min.distance_to_vec3(&Vec3::origin()).abs() < f64::epsilon(),
+            "Expected param to be {} but was {}",
+            Vec3::<f64>::origin(),
+            aabb.min
+        );
+        assert!(
+            aabb.max.distance_to_vec3(&Vec3::origin()).abs() < f64::epsilon(),
+            "Expected param to be {}, but was {}",
+            Vec3::<f64>::origin(),
+            aabb.max
+        );
     }
 }

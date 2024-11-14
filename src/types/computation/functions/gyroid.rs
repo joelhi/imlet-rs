@@ -3,7 +3,10 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    types::computation::{traits::ImplicitFunction, Data, DataType, Parameter},
+    types::computation::{
+        components::{Data, DataType, Parameter},
+        traits::ImplicitFunction,
+    },
     utils::math_helper::Pi,
 };
 use std::fmt::Debug;

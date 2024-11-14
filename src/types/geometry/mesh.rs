@@ -12,6 +12,7 @@ use super::BoundingBox;
 use super::Line;
 use super::Octree;
 use super::SpatialHashGrid;
+use super::Transform;
 use super::Triangle;
 use super::Vec3;
 use std::time::Instant;
@@ -324,5 +325,11 @@ impl<T: Float + Send + Sync> Mesh<T> {
                 v1.cross(&v2).normalize()
             })
             .collect()
+    }
+
+    pub fn transform_self_par(&mut self, transform: Transform<T>) {
+        self.vertices.par_iter_mut().for_each(|pt| {
+            *pt = pt.transform(transform);
+        });
     }
 }

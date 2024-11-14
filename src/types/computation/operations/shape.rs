@@ -4,7 +4,10 @@ use log::error;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::{traits::ImplicitOperation, Data, DataType, Parameter};
+use crate::types::computation::{
+    components::{Data, DataType, Parameter},
+    traits::ImplicitOperation,
+};
 
 /// Operation to perform a boolean union on two distance values -> min(a, b)
 ///
