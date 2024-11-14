@@ -2,8 +2,8 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{
-    computation::traits::ImplicitFunction,
-    geometry::{BoundingBox, Plane, Sphere, Torus, Vec3},
+    computation::{functions::MeshFile, traits::ImplicitFunction},
+    geometry::{BoundingBox, Capsule, Line, Plane, Sphere, Torus, Vec3},
 };
 
 use super::Component;
@@ -22,26 +22,27 @@ pub enum GeometryComponent {
 impl GeometryComponent {
     /// Create a default component of the specific type
     pub fn create_default<T: Float + Send + Sync + 'static>(&self) -> Component<T> {
+        let default_value = T::from(45.).unwrap();
         let geo: Box<dyn ImplicitFunction<T>> = match self {
-            GeometryComponent::Sphere => {
-                Box::new(Sphere::new(Vec3::origin(), T::from(45.).unwrap()))
-            }
+            GeometryComponent::Sphere => Box::new(Sphere::new(Vec3::origin(), default_value)),
             GeometryComponent::Torus => Box::new(Torus::new(
                 Vec3::origin(),
-                T::from(45.).unwrap(),
+                default_value,
                 T::from(7.5).unwrap(),
             )),
             GeometryComponent::Plane => Box::new(Plane::xy()),
             GeometryComponent::Box => Box::new(BoundingBox::new(
                 Vec3::origin(),
-                Vec3::new(
-                    T::from(45.).unwrap(),
-                    T::from(45.).unwrap(),
-                    T::from(45.).unwrap(),
-                ),
+                Vec3::new(default_value, default_value, default_value),
             )),
-            GeometryComponent::Capsule => todo!(),
-            GeometryComponent::MeshFile => todo!(),
+            GeometryComponent::Capsule => Box::new(Capsule::new(
+                Line::new(
+                    Vec3::new(T::zero(), -default_value, T::zero()),
+                    Vec3::new(T::zero(), default_value, T::zero()),
+                ),
+                T::from(5).unwrap(),
+            )),
+            GeometryComponent::MeshFile => Box::new(MeshFile::new()),
         };
 
         Component::Function(geo)

@@ -1,9 +1,8 @@
 use bevy::{
     app::{App, Plugin, Startup, Update},
     asset::Assets,
-    input::ButtonInput,
     pbr::MaterialMeshBundle,
-    prelude::{Commands, IntoSystemConfigs, KeyCode, Res, ResMut, Resource},
+    prelude::{Commands, IntoSystemConfigs, Res, ResMut, Resource},
     utils::default,
 };
 use bevy_egui::{
@@ -24,7 +23,8 @@ use crate::{
         self,
         computation::{
             components::{
-                self, function_components::PUBLIC_FUNCTION_COMPONENTS,
+                function_components::PUBLIC_FUNCTION_COMPONENTS,
+                geometry_components::PUBLIC_GEOMETRY_COMPONENTS,
                 operation_components::PUBLIC_OPERATIONS, Component, Data, DataType,
             },
             ImplicitModel, ModelError,
@@ -357,10 +357,26 @@ fn render_component_menus<T: Float + Send + Sync + Numeric + 'static + Pi>(
 ) -> bool {
     let mut recompute = false;
     let available_funcs = PUBLIC_FUNCTION_COMPONENTS;
+    let available_geo_funcs = PUBLIC_GEOMETRY_COMPONENTS;
     let available_ops = PUBLIC_OPERATIONS;
     egui::menu::bar(ui, |ui| {
         ui.with_layout(Layout::left_to_right(egui::Align::Min), |ui| {
             ui.menu_image_button(SizedTexture::new(icons.add, [16., 16.]), |ui| {
+                ui.menu_button("Primitives", |ui| {
+                    for &function in available_geo_funcs {
+                        if ui.button(format!("{:?}", function)).clicked() {
+                            let function_component = function.create_default();
+                            let result = implicit_model
+                                .add_component(function_component.type_name(), function_component);
+                            match result {
+                                Ok(tag) => components.push(tag.to_owned()),
+                                Err(error) => error!("{}", error),
+                            }
+                            ui.close_menu();
+                        };
+                    }
+                });
+
                 ui.menu_button("Functions", |ui| {
                     for &function in available_funcs {
                         if ui.button(format!("{:?}", function)).clicked() {
@@ -442,10 +458,9 @@ fn render_computation_section<T: Float + Send + Sync + Numeric + 'static>(
     ui: &mut Ui,
     config: &mut ResMut<Config<T>>,
 ) -> bool {
-    let mut bounds_changed = false;
-    bounds_changed = render_computation_controls(ui, config);
-
+    let bounds_changed = render_computation_controls(ui, config);
     ui.add_space(5.);
+
     return bounds_changed;
 }
 
@@ -639,7 +654,6 @@ fn render_parameters<T: Float + Send + Sync + 'static + Numeric>(
     ui: &mut egui::Ui,
     component: &mut Component<T>,
     component_name: &str,
-    editing_state: &mut ResMut<EditingState>,
     icons: &Icons,
 ) -> Vec<egui::Response> {
     let parameters = component.get_parameters();
@@ -803,28 +817,6 @@ fn render_parameters<T: Float + Send + Sync + 'static + Numeric>(
     param_responses
 }
 
-fn compute_fast<T: Float + Send + Sync + 'static + Numeric>(
-    model: ResMut<AppModel<T>>,
-    config: ResMut<Config<T>>,
-    commands: Commands,
-    materials: Res<ModelMaterial<NormalMaterial>>,
-    meshes: ResMut<Assets<bevy::prelude::Mesh>>,
-    current_mesh_entity: ResMut<CurrentMeshEntity>,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    editing_state: ResMut<EditingState>,
-) {
-    if !editing_state.editing && keyboard_input.just_pressed(KeyCode::Enter) {
-        generate_mesh(
-            commands,
-            materials,
-            meshes,
-            &model.model,
-            &config,
-            current_mesh_entity,
-        );
-    }
-}
-
 pub fn generate_mesh<T: Float + Send + Sync + 'static>(
     mut commands: Commands,
     material: Res<ModelMaterial<NormalMaterial>>,
@@ -940,7 +932,7 @@ fn render_collapsible_with_icon<T: Float + Send + Sync + 'static + Numeric>(
                     }).response;
 
                     if editing_state.editing && editing_state.item_name.as_str() == item{
-                        if let Some(name) = show_text_input_window(ui, editing_state, item) {
+                        if let Some(name) = show_text_input_window(ui, editing_state) {
                             info!("Renamed component {} to {}", item, name);
                             *item = name;
                         }
@@ -982,7 +974,7 @@ fn render_collapsible_with_icon<T: Float + Send + Sync + 'static + Numeric>(
                     ui.separator();
 
                     // Expose parameters
-                    let param_responses = render_parameters(ui, component, item, editing_state, icons);
+                    let param_responses = render_parameters(ui, component, item, icons);
 
                     all_responses.extend_from_slice(&param_responses);
                 });
@@ -997,7 +989,6 @@ fn render_collapsible_with_icon<T: Float + Send + Sync + 'static + Numeric>(
 fn show_text_input_window(
     ui: &mut egui::Ui,
     editing_state: &mut ResMut<EditingState>,
-    item: &str,
 ) -> Option<String> {
     let mut result = None;
     if editing_state.editing {

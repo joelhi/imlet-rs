@@ -1,9 +1,7 @@
-use std::default;
-
 use bevy::asset::{Asset, Assets, Handle};
 use bevy::color::LinearRgba;
 use bevy::pbr::MaterialPlugin;
-use bevy::prelude::{Component, Entity, Gizmos, IntoSystemConfigs, PluginGroup, Query, Resource};
+use bevy::prelude::{Entity, Gizmos, PluginGroup, Resource};
 use bevy::{
     app::{App, Plugin, Startup, Update},
     color::Color,
@@ -20,7 +18,7 @@ use bevy::{
     },
     DefaultPlugins,
 };
-use bevy_egui::{EguiPlugin, EguiStartupSet};
+use bevy_egui::EguiPlugin;
 use bevy_normal_material::plugin::NormalMaterialPlugin;
 use bevy_normal_material::prelude::NormalMaterial;
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
