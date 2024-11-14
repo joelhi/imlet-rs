@@ -1,7 +1,4 @@
-use std::{
-    fmt::{self, Display},
-    path::Path,
-};
+use std::fmt::{self, Display};
 
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
