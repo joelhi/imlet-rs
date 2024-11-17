@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
 use crate::types::{
     computation::{
@@ -11,7 +12,7 @@ use crate::types::{
 };
 
 /// Distance function for an arbitrary geometry type.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CustomGeometry<Q, T> {
     /// Geometry to use for signed distance computation
     pub geometry: Q,
@@ -53,7 +54,7 @@ impl<T: Float> CustomGeometry<GeometryCollection<Triangle<T>, T>, T> {
     }
 }
 
-impl<Q: SignedDistance<T> + Send + Sync, T: Float + Send + Sync> ImplicitFunction<T>
+impl<Q: SignedDistance<T> + Send + Sync + Serialize, T: Float + Send + Sync + Serialize> ImplicitFunction<T>
     for CustomGeometry<Q, T>
 {
     fn eval(&self, x: T, y: T, z: T) -> T {

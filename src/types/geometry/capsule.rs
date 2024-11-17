@@ -65,7 +65,7 @@ impl<T: Float + Send + Sync> SignedDistance<T> for Capsule<T> {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitFunction<T> for Capsule<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Capsule<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(x, y, z)
     }

@@ -70,7 +70,7 @@ impl<T: Float> Neovius<T> {
     }
 }
 
-impl<T: Pi + Float + Send + Sync> ImplicitFunction<T> for Neovius<T> {
+impl<T: Pi + Float + Send + Sync + Serialize> ImplicitFunction<T> for Neovius<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         let two = T::from(2.0).expect("Failed to convert number to T");
         let three = T::from(2.0).expect("Failed to convert number to T");

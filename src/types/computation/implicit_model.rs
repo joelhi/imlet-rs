@@ -5,6 +5,7 @@ use crate::types::geometry::traits::SignedDistance;
 use crate::types::geometry::{BoundingBox, Mesh};
 use log::{debug, info};
 use num_traits::Float;
+use serde::Serialize;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::{self, Debug, Display};
 use std::time::Instant;
@@ -672,7 +673,7 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
     }
 }
 
-impl<T: Float + Send + Sync + 'static> ImplicitModel<T> {
+impl<T: Float + Send + Sync + 'static + Serialize> ImplicitModel<T> {
     /// Add a distance function component, from a geometry which implements the `SignedDistance<T>` trait, to the model.
     /// # Arguments
     ///
@@ -681,7 +682,7 @@ impl<T: Float + Send + Sync + 'static> ImplicitModel<T> {
     /// # Returns
     ///
     /// * `Result<String, ModelError>` - Returns `Ok(String)` with the tag of the new component if the function is added successfully, or `Err(ModelError)` if something goes wrong.
-    pub fn add_geometry<G: SignedDistance<T> + Send + Sync + 'static>(
+    pub fn add_geometry<G: SignedDistance<T> + Send + Sync + 'static + Serialize>(
         &mut self,
         tag: &str,
         geometry: G,

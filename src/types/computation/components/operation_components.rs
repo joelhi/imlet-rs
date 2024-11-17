@@ -30,7 +30,7 @@ impl OperationComponent {
     /// Create an instance of the component with default values.
     ///
     /// Used when creating components from a UI or other interface.
-    pub fn create_default<T: Float + Send + Sync + 'static>(&self) -> Component<T> {
+    pub fn create_default<T: Float + Send + Sync + 'static + Serialize>(&self) -> Component<T> {
         let op: Box<dyn ImplicitOperation<T>> = match self {
             // Maths
             OperationComponent::Add => Box::new(Add::new()),

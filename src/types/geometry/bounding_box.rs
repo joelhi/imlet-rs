@@ -258,7 +258,7 @@ static BOUNDING_BOX_PARAMETERS: [Parameter; 2] = [
     },
 ];
 
-impl<T: Float + Send + Sync> ImplicitFunction<T> for BoundingBox<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for BoundingBox<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(&Vec3::new(x, y, z))
     }

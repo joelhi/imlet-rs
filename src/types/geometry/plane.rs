@@ -102,7 +102,7 @@ impl<T: Float + Send + Sync> SignedDistance<T> for Plane<T> {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitFunction<T> for Plane<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Plane<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance_coord(x, y, z)
     }

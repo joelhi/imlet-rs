@@ -2258,6 +2258,7 @@ dependencies = [
  "chrono",
  "egui_extras",
  "env_logger",
+ "erased-serde",
  "image",
  "log",
  "num-traits",

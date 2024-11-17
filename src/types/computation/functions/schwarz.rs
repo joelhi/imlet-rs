@@ -69,7 +69,7 @@ impl<T: Float> SchwarzP<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Pi> ImplicitFunction<T> for SchwarzP<T> {
+impl<T: Float + Send + Sync + Pi + Serialize> ImplicitFunction<T> for SchwarzP<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         let two = T::from(2.0).expect("Failed to convert number to T");
         let x = two * (T::pi() * x / self.length_x) as T;

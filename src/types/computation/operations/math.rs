@@ -224,7 +224,7 @@ impl<T: Float> LinearInterpolation<T> {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitOperation<T> for LinearInterpolation<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for LinearInterpolation<T> {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0] + self.factor * (inputs[1] - inputs[0])
     }

@@ -50,7 +50,7 @@ impl<T> Torus<T> {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitFunction<T> for Torus<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Torus<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         (self.r - ((x - self.centre.x).powi(2) + (z - self.centre.z).powi(2)).sqrt()).powi(2)
             + (y - self.centre.y).powi(2)

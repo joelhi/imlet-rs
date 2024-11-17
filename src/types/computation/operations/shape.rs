@@ -177,7 +177,7 @@ static OFFSET_PARAMETERS: &[Parameter] = &[Parameter {
     data_type: DataType::Value,
 }];
 
-impl<T: Float + Send + Sync> ImplicitOperation<T> for Offset<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Offset<T> {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0] - self.distance
     }
@@ -236,7 +236,7 @@ impl<T> Thickness<T> {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitOperation<T> for Thickness<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Thickness<T> {
     fn eval(&self, inputs: &[T]) -> T {
         let two = T::from(2.0).unwrap();
         (inputs[0] - self.t / two).max(-(inputs[0] + self.t / two))

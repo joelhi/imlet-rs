@@ -1,10 +1,12 @@
+use num_traits::Float;
+
 use crate::types::computation::components::{Data, Parameter};
 use std::any::type_name;
 
 /// Trait to define a distance function in 3d space.
 ///
 /// This trait provides the framework for evaluating distance functions as part of an implicit model.
-pub trait ImplicitFunction<T>: Sync + Send {
+pub trait ImplicitFunction<T>: Sync + Send + erased_serde::Serialize {
     /// Evaluate a function in 3 dimensional space. *f(x,y,z)->value*
     ///
     /// This function will be evaluated at each sample point in an implicit model.
@@ -41,7 +43,7 @@ pub trait ImplicitFunction<T>: Sync + Send {
 /// This is used to define custom operations on data in an implicit model, independent of global coordinates.
 ///
 /// For example simple arithmetic or boolean operations.
-pub trait ImplicitOperation<T>: Sync + Send {
+pub trait ImplicitOperation<T>: Sync + Send + erased_serde::Serialize {
     /// Perform the operation based on the input values.
     /// # Arguments
     ///
@@ -69,5 +71,24 @@ pub trait ImplicitOperation<T>: Sync + Send {
     /// Name of the operation
     fn operation_name(&self) -> &'static str {
         type_name::<Self>()
+    }
+}
+
+
+impl<T: Float + Send + Sync> serde::Serialize for dyn ImplicitFunction<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        todo!("We have to implement this")
+    }
+}
+
+impl<T: Float + Send + Sync> serde::Serialize for dyn ImplicitOperation<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        todo!("We have to implement this")
     }
 }

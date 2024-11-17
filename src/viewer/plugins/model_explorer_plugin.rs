@@ -76,7 +76,6 @@ where
             .insert_resource(EditingState::default())
             .add_systems(Startup, init_bounds::<T>)
             .add_systems(Update, (imlet_model_panel::<T>).before(logging_panel::<T>));
-        //.add_systems(Update, compute_fast::<T>);
     }
 }
 

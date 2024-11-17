@@ -73,7 +73,7 @@ static GYROID_PARAMETERS: &[Parameter; 4] = &[
     },
 ];
 
-impl<T: Pi + Float + Send + Sync> ImplicitFunction<T> for Gyroid<T> {
+impl<T: Pi + Float + Send + Sync + Serialize> ImplicitFunction<T> for Gyroid<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         let two = T::from(2.0).unwrap();
         let normalized_distance = (T::pi() * x / self.length_x).sin()

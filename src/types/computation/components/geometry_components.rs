@@ -20,8 +20,8 @@ pub enum GeometryComponent {
 }
 
 impl GeometryComponent {
-    /// Create a default component of the specific type
-    pub fn create_default<T: Float + Send + Sync + 'static>(&self) -> Component<T> {
+    /// Create a default component of the specific type.
+    pub fn create_default<T: Float + Send + Sync + 'static + Serialize>(&self) -> Component<T> {
         let default_value = T::from(45.).unwrap();
         let geo: Box<dyn ImplicitFunction<T>> = match self {
             GeometryComponent::Sphere => Box::new(Sphere::new(Vec3::origin(), default_value)),

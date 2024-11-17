@@ -72,7 +72,7 @@ impl<T: Float + Send + Sync> SignedDistance<T> for Sphere<T> {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitFunction<T> for Sphere<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Sphere<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.centre.distance_to_coord(x, y, z) - self.radius
     }

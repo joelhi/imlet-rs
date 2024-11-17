@@ -48,7 +48,7 @@ impl<T: Float> ZCoord<T> {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitFunction<T> for ZCoord<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for ZCoord<T> {
     fn eval(&self, _: T, _: T, z: T) -> T {
         normalize(z, self.min, self.max)
     }
@@ -91,7 +91,7 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for ZCoord<T> {
 }
 
 /// Distance function that evaluates to the y-coordinate
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct YCoord<T> {
     min: T,
     max: T,
@@ -119,7 +119,7 @@ impl<T: Float> YCoord<T> {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitFunction<T> for YCoord<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for YCoord<T> {
     fn eval(&self, _: T, y: T, _: T) -> T {
         normalize(y, self.min, self.max)
     }
@@ -162,7 +162,7 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for YCoord<T> {
 }
 
 /// Distance function that evaluates to the x-coordinate
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct XCoord<T> {
     min: T,
     max: T,
@@ -190,7 +190,7 @@ impl<T: Float> XCoord<T> {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitFunction<T> for XCoord<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XCoord<T> {
     fn eval(&self, x: T, _: T, _: T) -> T {
         normalize(x, self.min, self.max)
     }
@@ -232,12 +232,14 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for XCoord<T> {
     }
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum CoordinateValue {
     X,
     Y,
     Z,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct XYZCoordinate {
     coordinate_value: CoordinateValue,
 }
@@ -253,7 +255,7 @@ impl XYZCoordinate {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitFunction<T> for XYZCoordinate {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XYZCoordinate {
     fn eval(&self, x: T, y: T, z: T) -> T {
         match self.coordinate_value {
             CoordinateValue::X => x,

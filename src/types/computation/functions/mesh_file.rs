@@ -2,6 +2,7 @@ use std::{error::Error, fmt::Debug};
 
 use log::{error, info};
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     types::{
@@ -18,7 +19,7 @@ const MAX_LEAF_TRIANGLE_COUNT: usize = 12;
 const MAX_TREE_DEPTH: u32 = 10;
 
 /// Distance function from a mesh loaded from a file.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct MeshFile<T> {
     /// Storing the origin of the file.
     pub file_path: Option<String>,
@@ -91,7 +92,7 @@ static MESH_FILE_PARAMETERS: &[Parameter] = &[
     },
 ];
 
-impl<T: Float + Send + Sync> ImplicitFunction<T> for MeshFile<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for MeshFile<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         if let Some(geometry_data) = &self.geometry_data {
             geometry_data.signed_distance(&Vec3::new(x, y, z))
