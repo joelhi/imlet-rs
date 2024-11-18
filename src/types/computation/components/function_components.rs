@@ -2,12 +2,7 @@ use num_traits::Float;
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::types::computation::functions::CoordinateValue;
-use crate::types::computation::functions::Gyroid;
-use crate::types::computation::functions::MeshFile;
-use crate::types::computation::functions::Neovius;
-use crate::types::computation::functions::SchwarzP;
-use crate::types::computation::functions::XYZCoordinate;
+use crate::types::computation::functions::*;
 use crate::types::computation::traits::ImplicitFunction;
 use crate::types::geometry::*;
 use crate::utils::math_helper::Pi;
@@ -23,6 +18,12 @@ pub enum FunctionComponent {
     SchwarzP,
     /// Function to generate a triply periodic Neovius surface.
     Neovius,
+    /// A remapped domain for the x-coordinate.
+    XDomain,
+    /// A remapped domain for the y-coordinate.
+    YDomain,
+    /// A remapped domain for the z-coordinate.
+    ZDomain,
     /// Simple function which maps to a coordinate, e.g. *f(x,y,z)->x*
     XYZValue,
     /// Represents a component to generate the distance function for a sphere.
@@ -37,6 +38,8 @@ pub enum FunctionComponent {
     Capsule,
     /// Represents a component to generate the distance function for an arbitrary mesh.
     MeshFile,
+    /// Custom mesh container
+    CustomMesh,
 }
 
 impl FunctionComponent {
@@ -77,26 +80,34 @@ impl FunctionComponent {
                 T::from(5).unwrap(),
             )),
             FunctionComponent::MeshFile => Box::new(MeshFile::new()),
+            FunctionComponent::XDomain => Box::new(XDomain::natural()),
+            FunctionComponent::YDomain => Box::new(YDommain::natural()),
+            FunctionComponent::ZDomain => Box::new(ZDomain::natural()),
+            FunctionComponent::CustomMesh => Box::new(CustomMesh::new()),
         };
 
         Component::Function(func)
     }
 }
 
-pub const PUBLIC_FUNCTION_COMPONENTS: &'static [FunctionComponent] = &[
+pub(crate) const FUNCTION_COMPONENTS: &'static [FunctionComponent] = &[
     FunctionComponent::Gyroid,
     FunctionComponent::SchwarzP,
     FunctionComponent::Neovius,
     FunctionComponent::XYZValue,
+    FunctionComponent::XDomain,
+    FunctionComponent::YDomain,
+    FunctionComponent::ZDomain,
 ];
 
 /// A slice with all the available geometry components
-pub const PUBLIC_GEOMETRY_COMPONENTS: &'static [FunctionComponent] = &[
+pub(crate) const GEOMETRY_COMPONENTS: &'static [FunctionComponent] = &[
     FunctionComponent::Sphere,
     FunctionComponent::Torus,
     FunctionComponent::Plane,
     FunctionComponent::Capsule,
     FunctionComponent::MeshFile,
+    FunctionComponent::CustomMesh,
 ];
 
 #[cfg(test)]
@@ -106,7 +117,7 @@ mod tests {
 
     #[test]
     fn test_all_function_components() {
-        let all_functions = PUBLIC_FUNCTION_COMPONENTS;
+        let all_functions = FUNCTION_COMPONENTS;
 
         for &function in all_functions {
             let mut component = function.create_default::<f32>();
@@ -120,7 +131,7 @@ mod tests {
 
     #[test]
     fn test_all_geometry_components() {
-        let all_operations = PUBLIC_GEOMETRY_COMPONENTS;
+        let all_operations = GEOMETRY_COMPONENTS;
 
         for &operation in all_operations {
             let mut component = operation.create_default::<f32>();

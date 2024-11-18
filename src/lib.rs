@@ -189,4 +189,6 @@ pub mod viewer {
     pub(crate) mod plugins;
 
     pub(crate) mod custom_layer;
+
+    pub(crate) mod public_components;
 }

@@ -1,10 +1,10 @@
 use imlet::{
     types::computation::{
-        functions::{CustomGeometry, Gyroid},
+        functions::{CustomMesh, Gyroid},
         operations::shape::{BooleanIntersection, Thickness},
         ImplicitModel,
     },
-    utils::io::parse_obj_file,
+    utils::io::{self, parse_obj_file},
 };
 
 pub fn main() {
@@ -17,7 +17,7 @@ pub fn main() {
     let mut model = ImplicitModel::new();
 
     let mesh_tag = model
-        .add_function("Mesh", CustomGeometry::from_mesh(&mesh))
+        .add_function("Mesh", CustomMesh::build(&mesh))
         .unwrap();
 
     let gyroid_tag = model
@@ -35,6 +35,8 @@ pub fn main() {
             &[&mesh_tag, &offset_gyroid],
         )
         .unwrap();
+
+    io::write_model_to_file(&model, "bunny_model.json").unwrap();
 
     #[cfg(feature = "viewer")]
     {

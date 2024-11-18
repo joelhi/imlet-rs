@@ -5,10 +5,11 @@ use std::{
     path::Path,
 };
 
+use serde::Serialize;
 use num_traits::Float;
 
 use crate::types::{
-    computation::ScalarField,
+    computation::{ImplicitModel, ScalarField},
     geometry::{Mesh, Vec3},
 };
 
@@ -50,6 +51,8 @@ pub fn write_obj_file<T: Display>(mesh: &Mesh<T>, file_name: &str) -> io::Result
 }
 
 use std::fs::File;
+
+use super::math_helper::Pi;
 
 /// Read a mesh from an .obj file.
 ///
@@ -187,4 +190,17 @@ fn field_as_data<T: Float + Display>(field: &ScalarField<T>) -> String {
     }
 
     data
+}
+
+
+/// Write an implicit model to a text file as json.
+pub fn write_model_to_file<T: Float + Send + Sync + Serialize + 'static + Pi>(
+    model: &ImplicitModel<T>,
+    file_name: &str,
+)->io::Result<()>{
+    let json = serde_json::ser::to_string_pretty(&model)?;
+    let file_path = Path::new(file_name).with_extension("json");
+    let mut file = fs::File::create(file_path)?;
+    file.write_all(json.as_bytes())?;
+    Ok(())
 }

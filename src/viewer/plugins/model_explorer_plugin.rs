@@ -24,8 +24,6 @@ use crate::{
         self,
         computation::{
             components::{
-                function_components::{PUBLIC_FUNCTION_COMPONENTS, PUBLIC_GEOMETRY_COMPONENTS},
-                operation_components::PUBLIC_OPERATIONS,
                 Component, Data, DataType,
             },
             ImplicitModel, ModelError,
@@ -34,8 +32,7 @@ use crate::{
     },
     utils::math_helper::Pi,
     viewer::{
-        raw_mesh_data::RawMeshData,
-        utils::{build_mesh_from_data, custom_dnd_drag_source},
+        public_components::{PUBLIC_FUNCTION_COMPONENTS, PUBLIC_GEOMETRY_COMPONENTS, PUBLIC_OPERATION_COMPONENTS}, raw_mesh_data::RawMeshData, utils::{build_mesh_from_data, custom_dnd_drag_source}
     },
 };
 
@@ -358,7 +355,7 @@ fn render_component_menus<T: Float + Send + Sync + Numeric + 'static + Pi + Seri
     let mut recompute = false;
     let available_funcs = PUBLIC_FUNCTION_COMPONENTS;
     let available_geo_funcs = PUBLIC_GEOMETRY_COMPONENTS;
-    let available_ops = PUBLIC_OPERATIONS;
+    let available_ops = PUBLIC_OPERATION_COMPONENTS;
     egui::menu::bar(ui, |ui| {
         ui.with_layout(Layout::left_to_right(egui::Align::Min), |ui| {
             ui.menu_image_button(SizedTexture::new(icons.add, [16., 16.]), |ui| {

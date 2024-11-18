@@ -21,12 +21,12 @@ static COORD_PARAMETERS: [Parameter; 2] = [
 
 /// Distance function that evaluates to the z-coordinate
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct ZCoord<T> {
+pub struct ZDomain<T> {
     min: T,
     max: T,
 }
 
-impl<T: Float> ZCoord<T> {
+impl<T: Float> ZDomain<T> {
     /// Create a distance function for a remapped z domain.
     ///
     /// Can be used for interpolation.
@@ -48,7 +48,7 @@ impl<T: Float> ZCoord<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for ZCoord<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for ZDomain<T> {
     fn eval(&self, _: T, _: T, z: T) -> T {
         normalize(z, self.min, self.max)
     }
@@ -92,12 +92,12 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for ZCoord<T> {
 
 /// Distance function that evaluates to the y-coordinate
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct YCoord<T> {
+pub struct YDommain<T> {
     min: T,
     max: T,
 }
 
-impl<T: Float> YCoord<T> {
+impl<T: Float> YDommain<T> {
     /// Create a distance function for a remapped y domain.
     ///
     /// Can be used for interpolation.
@@ -119,7 +119,7 @@ impl<T: Float> YCoord<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for YCoord<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for YDommain<T> {
     fn eval(&self, _: T, y: T, _: T) -> T {
         normalize(y, self.min, self.max)
     }
@@ -163,12 +163,12 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for YCoord<T> {
 
 /// Distance function that evaluates to the x-coordinate
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct XCoord<T> {
+pub struct XDomain<T> {
     min: T,
     max: T,
 }
 
-impl<T: Float> XCoord<T> {
+impl<T: Float> XDomain<T> {
     /// Create a distance function for a remapped x domain.
     ///
     /// Can be used for interpolation.
@@ -190,7 +190,7 @@ impl<T: Float> XCoord<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XCoord<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XDomain<T> {
     fn eval(&self, x: T, _: T, _: T) -> T {
         normalize(x, self.min, self.max)
     }
@@ -309,7 +309,7 @@ mod tests {
 
     #[test]
     fn test_natural_z_domain() {
-        let domain: ZCoord<f32> = ZCoord::natural();
+        let domain: ZDomain<f32> = ZDomain::natural();
 
         assert!(domain.eval(1., 0., 0.).abs() < f32::epsilon());
         assert!((domain.eval(1., 0., 0.5) - 0.5).abs() < f32::epsilon());
@@ -318,7 +318,7 @@ mod tests {
 
     #[test]
     fn test_natural_y_domain() {
-        let domain: YCoord<f32> = YCoord::natural();
+        let domain: YDommain<f32> = YDommain::natural();
 
         assert!(domain.eval(1., 0., 0.).abs() < f32::epsilon());
         assert!((domain.eval(1., 0.5, 0.5) - 0.5).abs() < f32::epsilon());
@@ -327,7 +327,7 @@ mod tests {
 
     #[test]
     fn test_natural_x_domain() {
-        let domain: XCoord<f32> = XCoord::natural();
+        let domain: XDomain<f32> = XDomain::natural();
 
         assert!(domain.eval(0., 1., 0.).abs() < f32::epsilon());
         assert!((domain.eval(0.5, 0., 1.0) - 0.5).abs() < f32::epsilon());
@@ -336,7 +336,7 @@ mod tests {
 
     #[test]
     fn test_handle_zero_size_domain_x() {
-        let mut domain: XCoord<f32> = XCoord::natural();
+        let mut domain: XDomain<f32> = XDomain::natural();
 
         domain.set_parameter("Max", Data::Value(0.0));
 
@@ -351,7 +351,7 @@ mod tests {
 
     #[test]
     fn test_handle_zero_size_domain_y() {
-        let mut domain: YCoord<f32> = YCoord::natural();
+        let mut domain: YDommain<f32> = YDommain::natural();
 
         domain.set_parameter("Max", Data::Value(0.0));
 
@@ -374,7 +374,7 @@ mod tests {
 
     #[test]
     fn test_handle_zero_size_domain_z() {
-        let mut domain: ZCoord<f32> = ZCoord::natural();
+        let mut domain: ZDomain<f32> = ZDomain::natural();
 
         domain.set_parameter("Max", Data::Value(0.0));
 
