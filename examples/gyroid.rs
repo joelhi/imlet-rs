@@ -42,8 +42,6 @@ pub fn main() {
         )
         .unwrap();
 
-    io::write_model_to_file(&model, "gyroid_model.json").unwrap();
-
     #[cfg(feature = "viewer")]
     {
         imlet::viewer::run_explorer_with_model(model, model_space);
