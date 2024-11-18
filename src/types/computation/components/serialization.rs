@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, str::FromStr};
 
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
@@ -14,6 +14,8 @@ use crate::{
     },
     utils::math_helper::Pi,
 };
+
+use super::function_components::FunctionComponent;
 
 impl<T: Float + Send + Sync> serde::Serialize for dyn ImplicitFunction<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -131,78 +133,122 @@ fn function_runtime_reflection<
 >(
     type_info: &str,
 ) -> Option<DeserializeFunctionFn<'de, T>> {
-    if type_info == "Gyroid" {
-        let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
-            let s: Gyroid<T> = erased_serde::deserialize(deserializer)?;
-            let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
-            Ok(boxed_trait_object)
-        };
-        Some(deserialize_fn)
-    } else if type_info == "SchwarzP" {
-        let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
-            let s: SchwarzP<T> = erased_serde::deserialize(deserializer)?;
-            let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
-            Ok(boxed_trait_object)
-        };
-        Some(deserialize_fn)
-    } else if type_info == "Neovius" {
-        let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
-            let s: Neovius<T> = erased_serde::deserialize(deserializer)?;
-            let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
-            Ok(boxed_trait_object)
-        };
-        Some(deserialize_fn)
-    } else if type_info == "XYZValue" {
-        let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
-            let s: XYZCoordinate = erased_serde::deserialize(deserializer)?;
-            let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
-            Ok(boxed_trait_object)
-        };
-        Some(deserialize_fn)
-    } else if type_info == "Sphere" {
-        let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
-            let s: Sphere<T> = erased_serde::deserialize(deserializer)?;
-            let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
-            Ok(boxed_trait_object)
-        };
-        Some(deserialize_fn)
-    } else if type_info == "Torus" {
-        let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
-            let s: Torus<T> = erased_serde::deserialize(deserializer)?;
-            let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
-            Ok(boxed_trait_object)
-        };
-        Some(deserialize_fn)
-    } else if type_info == "Plane" {
-        let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
-            let s: Plane<T> = erased_serde::deserialize(deserializer)?;
-            let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
-            Ok(boxed_trait_object)
-        };
-        Some(deserialize_fn)
-    } else if type_info == "BoundingBox" {
-        let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
-            let s: BoundingBox<T> = erased_serde::deserialize(deserializer)?;
-            let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
-            Ok(boxed_trait_object)
-        };
-        Some(deserialize_fn)
-    } else if type_info == "Capsule" {
-        let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
-            let s: Capsule<T> = erased_serde::deserialize(deserializer)?;
-            let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
-            Ok(boxed_trait_object)
-        };
-        Some(deserialize_fn)
-    } else if type_info == "MeshFile" {
-        let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
-            let s: MeshFile<T> = erased_serde::deserialize(deserializer)?;
-            let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
-            Ok(boxed_trait_object)
-        };
-        Some(deserialize_fn)
-    } else {
-        None
+    match FunctionComponent::from_str(type_info) {
+        Ok(component) => match component {
+            FunctionComponent::Gyroid => {
+                let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
+                    let s: Gyroid<T> = erased_serde::deserialize(deserializer)?;
+                    let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
+                    Ok(boxed_trait_object)
+                };
+                Some(deserialize_fn)
+            }
+            FunctionComponent::SchwarzP => {
+                let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
+                    let s: SchwarzP<T> = erased_serde::deserialize(deserializer)?;
+                    let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
+                    Ok(boxed_trait_object)
+                };
+                Some(deserialize_fn)
+            }
+            FunctionComponent::Neovius => {
+                let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
+                    let s: Neovius<T> = erased_serde::deserialize(deserializer)?;
+                    let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
+                    Ok(boxed_trait_object)
+                };
+                Some(deserialize_fn)
+            }
+            FunctionComponent::XDomain => {
+                let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
+                    let s: XDomain<T> = erased_serde::deserialize(deserializer)?;
+                    let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
+                    Ok(boxed_trait_object)
+                };
+                Some(deserialize_fn)
+            }
+            FunctionComponent::YDomain => {
+                let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
+                    let s: YDommain<T> = erased_serde::deserialize(deserializer)?;
+                    let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
+                    Ok(boxed_trait_object)
+                };
+                Some(deserialize_fn)
+            }
+            FunctionComponent::ZDomain => {
+                let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
+                    let s: ZDomain<T> = erased_serde::deserialize(deserializer)?;
+                    let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
+                    Ok(boxed_trait_object)
+                };
+                Some(deserialize_fn)
+            }
+            FunctionComponent::XYZValue => {
+                let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
+                    let s: XYZValue = erased_serde::deserialize(deserializer)?;
+                    let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
+                    Ok(boxed_trait_object)
+                };
+                Some(deserialize_fn)
+            }
+            FunctionComponent::Sphere => {
+                let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
+                    let s: Sphere<T> = erased_serde::deserialize(deserializer)?;
+                    let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
+                    Ok(boxed_trait_object)
+                };
+                Some(deserialize_fn)
+            }
+            FunctionComponent::Torus => {
+                let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
+                    let s: Torus<T> = erased_serde::deserialize(deserializer)?;
+                    let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
+                    Ok(boxed_trait_object)
+                };
+                Some(deserialize_fn)
+            }
+            FunctionComponent::Plane => {
+                let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
+                    let s: Plane<T> = erased_serde::deserialize(deserializer)?;
+                    let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
+                    Ok(boxed_trait_object)
+                };
+                Some(deserialize_fn)
+            }
+            FunctionComponent::BoundingBox => {
+                let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
+                    let s: BoundingBox<T> = erased_serde::deserialize(deserializer)?;
+                    let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
+                    Ok(boxed_trait_object)
+                };
+                Some(deserialize_fn)
+            }
+            FunctionComponent::Capsule => {
+                let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
+                    let s: Capsule<T> = erased_serde::deserialize(deserializer)?;
+                    let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
+                    Ok(boxed_trait_object)
+                };
+                Some(deserialize_fn)
+            }
+            FunctionComponent::MeshFile => {
+                let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
+                    let s: MeshFile<T> = erased_serde::deserialize(deserializer)?;
+                    let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
+                    Ok(boxed_trait_object)
+                };
+                Some(deserialize_fn)
+            }
+            FunctionComponent::CustomMesh => {
+                let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
+                    let s: CustomMesh<T> = erased_serde::deserialize(deserializer)?;
+                    let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
+                    Ok(boxed_trait_object)
+                };
+                Some(deserialize_fn)
+            }
+        },
+        Err(_) => None,
     }
 }
 
@@ -356,5 +402,65 @@ fn operation_runtime_reflection<
         Some(deserialize_fn)
     } else {
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use crate::types::computation::{
+        components::{function_components::FUNCTION_COMPONENTS, operation_components::OPERATION_COMPONENTS}, ImplicitModel,
+    };
+
+    use super::*;
+
+    #[test]
+    fn test_serialize_deserialize_functions() {
+        let mut model: ImplicitModel<f32> = ImplicitModel::new();
+        let mut tags: Vec<String> = Vec::new();
+
+        for func in FUNCTION_COMPONENTS {
+            let component = func.create_default();
+            let tag = model
+                .add_component(component.type_name(), component)
+                .unwrap();
+            tags.push(tag);
+        }
+
+        let model_json = serde_json::to_string_pretty(&model).unwrap();
+        let deserialized_model: ImplicitModel<f32> = serde_json::from_str(&model_json).unwrap();
+
+        for tag in &tags {
+            assert!(
+                deserialized_model.get_component(tag).is_some(),
+                "Component with tag '{}' is missing in the deserialized model",
+                tag
+            );
+        }
+    }
+
+    #[test]
+    fn test_serialize_deserialize_operations() {
+        let mut model: ImplicitModel<f32> = ImplicitModel::new();
+        let mut tags: Vec<String> = Vec::new();
+
+        for func in OPERATION_COMPONENTS {
+            let component = func.create_default();
+            let tag = model
+                .add_component(component.type_name(), component)
+                .unwrap();
+            tags.push(tag);
+        }
+
+        let model_json = serde_json::to_string_pretty(&model).unwrap();
+        let deserialized_model: ImplicitModel<f32> = serde_json::from_str(&model_json).unwrap();
+
+        for tag in &tags {
+            assert!(
+                deserialized_model.get_component(tag).is_some(),
+                "Component with tag '{}' is missing in the deserialized model",
+                tag
+            );
+        }
     }
 }

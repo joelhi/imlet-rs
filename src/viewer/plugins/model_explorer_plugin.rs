@@ -23,16 +23,18 @@ use crate::{
     types::{
         self,
         computation::{
-            components::{
-                Component, Data, DataType,
-            },
+            components::{Component, Data, DataType},
             ImplicitModel, ModelError,
         },
         geometry::{BoundingBox, Mesh, Vec3},
     },
     utils::math_helper::Pi,
     viewer::{
-        public_components::{PUBLIC_FUNCTION_COMPONENTS, PUBLIC_GEOMETRY_COMPONENTS, PUBLIC_OPERATION_COMPONENTS}, raw_mesh_data::RawMeshData, utils::{build_mesh_from_data, custom_dnd_drag_source}
+        public_components::{
+            PUBLIC_FUNCTION_COMPONENTS, PUBLIC_GEOMETRY_COMPONENTS, PUBLIC_OPERATION_COMPONENTS,
+        },
+        raw_mesh_data::RawMeshData,
+        utils::{build_mesh_from_data, custom_dnd_drag_source},
     },
 };
 

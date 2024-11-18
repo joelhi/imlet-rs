@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use num_traits::Float;
 use serde::Deserialize;
 use serde::Serialize;
@@ -60,7 +62,7 @@ impl FunctionComponent {
             FunctionComponent::Neovius => {
                 Box::new(Neovius::with_equal_spacing(T::from(15).unwrap(), false))
             }
-            FunctionComponent::XYZValue => Box::new(XYZCoordinate::new(CoordinateValue::X)),
+            FunctionComponent::XYZValue => Box::new(XYZValue::new(CoordinateValue::X)),
             FunctionComponent::Sphere => Box::new(Sphere::new(Vec3::origin(), default_value)),
             FunctionComponent::Torus => Box::new(Torus::new(
                 Vec3::origin(),
@@ -90,7 +92,32 @@ impl FunctionComponent {
     }
 }
 
-pub(crate) const FUNCTION_COMPONENTS: &'static [FunctionComponent] = &[
+impl FromStr for FunctionComponent {
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<FunctionComponent, Self::Err> {
+        match input {
+            "Gyroid" => Ok(FunctionComponent::Gyroid),
+            "SchwarzP" => Ok(FunctionComponent::SchwarzP),
+            "Neovius" => Ok(FunctionComponent::Neovius),
+            "XDomain" => Ok(FunctionComponent::XDomain),
+            "YDomain" => Ok(FunctionComponent::YDomain),
+            "ZDomain" => Ok(FunctionComponent::ZDomain),
+            "XYZValue" => Ok(FunctionComponent::XYZValue),
+            "Sphere" => Ok(FunctionComponent::Sphere),
+            "Torus" => Ok(FunctionComponent::Torus),
+            "Plane" => Ok(FunctionComponent::Plane),
+            "BoundingBox" => Ok(FunctionComponent::BoundingBox),
+            "Capsule" => Ok(FunctionComponent::Capsule),
+            "MeshFile" => Ok(FunctionComponent::MeshFile),
+            "CustomMesh" => Ok(FunctionComponent::CustomMesh),
+            _ => Err(()),
+        }
+    }
+}
+
+/// List of the different function components
+pub const FUNCTION_COMPONENTS: &'static [FunctionComponent] = &[
     FunctionComponent::Gyroid,
     FunctionComponent::SchwarzP,
     FunctionComponent::Neovius,
@@ -98,10 +125,6 @@ pub(crate) const FUNCTION_COMPONENTS: &'static [FunctionComponent] = &[
     FunctionComponent::XDomain,
     FunctionComponent::YDomain,
     FunctionComponent::ZDomain,
-];
-
-/// A slice with all the available geometry components
-pub(crate) const GEOMETRY_COMPONENTS: &'static [FunctionComponent] = &[
     FunctionComponent::Sphere,
     FunctionComponent::Torus,
     FunctionComponent::Plane,
@@ -116,25 +139,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_all_function_components() {
+    fn test_all_function_components_params() {
         let all_functions = FUNCTION_COMPONENTS;
 
         for &function in all_functions {
             let mut component = function.create_default::<f32>();
-            let params = component.get_parameters();
-
-            for (param, data) in params {
-                component.set_parameter(param.name, data);
-            }
-        }
-    }
-
-    #[test]
-    fn test_all_geometry_components() {
-        let all_operations = GEOMETRY_COMPONENTS;
-
-        for &operation in all_operations {
-            let mut component = operation.create_default::<f32>();
             let params = component.get_parameters();
 
             for (param, data) in params {

@@ -1,0 +1,47 @@
+{
+  "components": {
+    "Sphere": {
+      "Function": {
+        "Sphere": {
+          "centre": {
+            "x": 50.0,
+            "y": 50.0,
+            "z": 50.0
+          },
+          "radius": 45.0
+        }
+      }
+    },
+    "OffsetGyroid": {
+      "Operation": {
+        "Thickness": {
+          "t": 10.0
+        }
+      }
+    },
+    "Output": {
+      "Operation": {
+        "BooleanIntersection": {}
+      }
+    },
+    "Gyroid": {
+      "Function": {
+        "Gyroid": {
+          "length_x": 15.0,
+          "length_y": 15.0,
+          "length_z": 15.0,
+          "linear": false
+        }
+      }
+    }
+  },
+  "inputs": {
+    "Output": [
+      "Sphere",
+      "OffsetGyroid"
+    ],
+    "OffsetGyroid": [
+      "Gyroid"
+    ]
+  }
+}

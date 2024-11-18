@@ -86,7 +86,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for ZDomain<T> {
     }
 
     fn function_name(&self) -> &'static str {
-        "Z Coord"
+        "ZDomain"
     }
 }
 
@@ -157,7 +157,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for YDommain<T> {
     }
 
     fn function_name(&self) -> &'static str {
-        "Y Coord"
+        "YDomain"
     }
 }
 
@@ -228,7 +228,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XDomain<T> {
     }
 
     fn function_name(&self) -> &'static str {
-        "X Coord"
+        "XDomain"
     }
 }
 
@@ -240,7 +240,7 @@ pub enum CoordinateValue {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct XYZCoordinate {
+pub struct XYZValue {
     coordinate_value: CoordinateValue,
 }
 
@@ -249,13 +249,13 @@ const GLOBAL_COORD_PARAMETERS: [Parameter; 1] = [Parameter {
     data_type: DataType::Enum(&["X", "Y", "Z"]),
 }];
 
-impl XYZCoordinate {
+impl XYZValue {
     pub fn new(coordinate_value: CoordinateValue) -> Self {
         Self { coordinate_value }
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XYZCoordinate {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XYZValue {
     fn eval(&self, x: T, y: T, z: T) -> T {
         match self.coordinate_value {
             CoordinateValue::X => x,
@@ -299,7 +299,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XYZCoordinate {
     }
 
     fn function_name(&self) -> &'static str {
-        "XYZCoordinate"
+        "XYZValue"
     }
 }
 

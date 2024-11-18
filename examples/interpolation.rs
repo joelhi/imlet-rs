@@ -77,7 +77,7 @@ pub fn main() {
 
     #[cfg(feature = "viewer")]
     {
-        imlet::viewer::run_explorer(model, model_space);
+        imlet::viewer::run_explorer_with_model(model, model_space);
     }
     #[cfg(not(feature = "viewer"))]
     {

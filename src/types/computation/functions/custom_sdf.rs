@@ -8,7 +8,7 @@ use crate::types::{
         components::{Data, Parameter},
         traits::ImplicitFunction,
     },
-    geometry::{traits::SignedDistance, GeometryCollection, Mesh, Octree, Triangle, Vec3},
+    geometry::{traits::SignedDistance, Mesh, Octree, Triangle, Vec3},
 };
 
 /// Distance function for an arbitrary geometry type.
@@ -21,36 +21,37 @@ pub struct CustomMesh<T> {
 }
 
 impl<T: Float> CustomMesh<T> {
-
     /// Create a new empty custom mesh container.
-    pub fn new()->Self{
-        Self { octree: None, offset: T::zero() }
+    pub fn new() -> Self {
+        Self {
+            octree: None,
+            offset: T::zero(),
+        }
     }
 
     /// Create a custom distance function based on a collection of the triangles in a mesh.
     pub fn build(mesh: &Mesh<T>) -> Self {
-        Self{
+        Self {
             octree: Some(mesh.compute_octree(10, 12)),
             offset: T::zero(),
         }
     }
 
-    pub fn with_offset(mesh: &Mesh<T>, offset: T)->Self{
-        Self{
+    /// Create a new custom distance function with a specific offset
+    pub fn with_offset(mesh: &Mesh<T>, offset: T) -> Self {
+        Self {
             octree: Some(mesh.compute_octree(10, 12)),
-            offset: offset
+            offset: offset,
         }
     }
 }
 
-impl<T: Float + Send + Sync + Serialize>
-    ImplicitFunction<T> for CustomMesh<T>
-{
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for CustomMesh<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
-        if let Some(geometry) = &self.octree{
-           return geometry.signed_distance(&Vec3::new(x, y, z)) - self.offset;
+        if let Some(geometry) = &self.octree {
+            return geometry.signed_distance(&Vec3::new(x, y, z)) - self.offset;
         }
-        
+
         T::zero()
     }
 
@@ -67,6 +68,6 @@ impl<T: Float + Send + Sync + Serialize>
     }
 
     fn function_name(&self) -> &'static str {
-        "CustomGeometry"
+        "CustomMesh"
     }
 }

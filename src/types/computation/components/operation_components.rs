@@ -55,7 +55,8 @@ impl OperationComponent {
     }
 }
 
-pub(crate) const OPERATIONS: &'static [OperationComponent] = &[
+/// List of available operation
+pub const OPERATION_COMPONENTS: &'static [OperationComponent] = &[
     // Maths
     OperationComponent::Add,
     OperationComponent::Subtract,
@@ -76,8 +77,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_all_operation_components() {
-        let all_operations = OPERATIONS;
+    fn test_all_operation_components_params() {
+        let all_operations = OPERATION_COMPONENTS;
 
         for &operation in all_operations {
             let mut component = operation.create_default::<f32>();

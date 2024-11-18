@@ -810,35 +810,4 @@ mod tests {
         assert!(matches!(error1, ModelError::IncorrectInputCount { .. }));
         assert!(matches!(error2, ModelError::IncorrectInputCount { .. }));
     }
-
-    #[test]
-    fn test_serialize_deserialize_model() {
-        let mut model: ImplicitModel<f32> = ImplicitModel::new();
-
-        let sphere_geom = model
-            .add_component("Sphere", FunctionComponent::Sphere.create_default())
-            .unwrap();
-
-        let box_geom = model
-            .add_component("Box", FunctionComponent::BoundingBox.create_default())
-            .unwrap();
-
-        let union = model
-            .add_operation_with_inputs("Union", BooleanUnion::new(), &[&sphere_geom, &box_geom])
-            .unwrap();
-
-        let offset_val = model.add_constant("OffsetDistance", 1.0).unwrap();
-
-        let result = model
-            .add_operation_with_inputs("Offset", Add::new(), &[&union, &offset_val])
-            .unwrap();
-
-        let json = serde_json::to_string_pretty(&model).unwrap();
-
-        let model_deserialized: ImplicitModel<f32> = serde_json::de::from_str(&json).unwrap();
-
-        let val = model_deserialized.evaluate_at(&result, 0., 0., 0.).unwrap();
-
-        assert!((val + 44.).abs() < f32::epsilon());
-    }
 }

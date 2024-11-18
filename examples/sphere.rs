@@ -37,7 +37,7 @@ pub fn main() {
     // Generate mesh
     #[cfg(feature = "viewer")]
     {
-        imlet::viewer::run_explorer(model, bounds);
+        imlet::viewer::run_explorer_with_model(model, bounds);
     }
     #[cfg(not(feature = "viewer"))]
     {

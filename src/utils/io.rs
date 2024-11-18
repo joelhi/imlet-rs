@@ -5,8 +5,8 @@ use std::{
     path::Path,
 };
 
-use serde::Serialize;
 use num_traits::Float;
+use serde::Serialize;
 
 use crate::types::{
     computation::{ImplicitModel, ScalarField},
@@ -192,12 +192,11 @@ fn field_as_data<T: Float + Display>(field: &ScalarField<T>) -> String {
     data
 }
 
-
 /// Write an implicit model to a text file as json.
 pub fn write_model_to_file<T: Float + Send + Sync + Serialize + 'static + Pi>(
     model: &ImplicitModel<T>,
     file_name: &str,
-)->io::Result<()>{
+) -> io::Result<()> {
     let json = serde_json::ser::to_string_pretty(&model)?;
     let file_path = Path::new(file_name).with_extension("json");
     let mut file = fs::File::create(file_path)?;

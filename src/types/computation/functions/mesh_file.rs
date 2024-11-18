@@ -136,6 +136,6 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for MeshFile<T> {
     }
 
     fn function_name(&self) -> &'static str {
-        "ObjFile"
+        "MeshFile"
     }
 }
