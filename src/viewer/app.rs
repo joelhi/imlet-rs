@@ -2,6 +2,7 @@ use std::fmt::{Debug, Display};
 
 use bevy::app::App;
 use bevy_egui::egui::emath::Numeric;
+use serde::Serialize;
 use num_traits::Float;
 
 use crate::{
@@ -14,7 +15,7 @@ use super::plugins::{
 };
 
 /// Run the explorer app with an empty model.
-pub fn run_explorer<T: Float + Debug + Send + Sync + 'static + Numeric + Display + Pi>() {
+pub fn run_explorer<T: Float + Debug + Send + Sync + 'static + Numeric + Display + Pi + Serialize>() {
     let mut app = App::new();
 
     app.add_plugins(MeshViewerPlugin::<T>::new())
@@ -27,7 +28,7 @@ pub fn run_explorer<T: Float + Debug + Send + Sync + 'static + Numeric + Display
 
 ///
 pub fn run_explorer_with_model<
-    T: Float + Debug + Send + Sync + 'static + Numeric + Display + Pi,
+    T: Float + Debug + Send + Sync + 'static + Numeric + Display + Pi + Serialize,
 >(
     model: ImplicitModel<T>,
     bounds: BoundingBox<T>,

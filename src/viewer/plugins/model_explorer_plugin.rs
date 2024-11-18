@@ -16,6 +16,7 @@ use bevy_normal_material::prelude::NormalMaterial;
 use log::{debug, error, info};
 use num_traits::Float;
 use rfd::FileDialog;
+use serde::Serialize;
 
 use crate::{
     algorithms::marching_cubes::generate_iso_surface,
@@ -59,7 +60,7 @@ impl<T> ModelExplorerPlugin<T> {
 // Implement the Plugin trait for ModelExplorerPlugin with a generic type T.
 impl<T> Plugin for ModelExplorerPlugin<T>
 where
-    T: Float + Send + Sync + Numeric + 'static + Pi, // Ensure T meets the required constraints (adjust as needed).
+    T: Float + Send + Sync + Numeric + 'static + Pi + Serialize, // Ensure T meets the required constraints (adjust as needed).
 {
     fn build(&self, app: &mut App) {
         let val = T::from(50.).expect("Should be able to convert the value to T");
@@ -128,7 +129,7 @@ enum InputChange {
     None(),
 }
 
-fn imlet_model_panel<T: Float + Send + Sync + Numeric + 'static + Pi>(
+fn imlet_model_panel<T: Float + Send + Sync + Numeric + 'static + Pi + Serialize>(
     mut contexts: EguiContexts,
     mut model: ResMut<AppModel<T>>,
     mut config: ResMut<Config<T>>,
@@ -185,7 +186,7 @@ fn imlet_model_panel<T: Float + Send + Sync + Numeric + 'static + Pi>(
     model.component_order = components;
 }
 
-fn render_components<T: Float + Send + Sync + Numeric + 'static + Pi>(
+fn render_components<T: Float + Send + Sync + Numeric + 'static + Pi + Serialize>(
     ui: &mut Ui,
     components: &mut Vec<String>,
     model: &mut ResMut<AppModel<T>>,
@@ -348,7 +349,7 @@ fn render_components<T: Float + Send + Sync + Numeric + 'static + Pi>(
     recompute
 }
 
-fn render_component_menus<T: Float + Send + Sync + Numeric + 'static + Pi>(
+fn render_component_menus<T: Float + Send + Sync + Numeric + 'static + Pi + Serialize>(
     ui: &mut Ui,
     implicit_model: &mut ImplicitModel<T>,
     components: &mut Vec<String>,
