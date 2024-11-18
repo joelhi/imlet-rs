@@ -8,8 +8,9 @@ use bevy_egui::{
     EguiContexts,
 };
 use num_traits::Float;
+use serde::Serialize;
 
-use crate::types::computation::components::Component;
+use crate::{types::computation::components::Component, utils::math_helper::Pi};
 
 const FONT_SIZE: f32 = 12.;
 
@@ -88,7 +89,7 @@ pub struct Icons {
 }
 
 impl Icons {
-    pub(crate) fn component_icon<T: Float + Send + Sync>(
+    pub(crate) fn component_icon<T: Float + Send + Sync + Serialize + 'static + Pi>(
         &self,
         component: &Component<T>,
     ) -> &TextureId {

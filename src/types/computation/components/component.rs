@@ -3,7 +3,10 @@ use std::fmt::Debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::traits::{ImplicitFunction, ImplicitOperation};
+use crate::{
+    types::computation::traits::{ImplicitFunction, ImplicitOperation},
+    utils::math_helper::Pi,
+};
 
 use super::{Data, DataType, Parameter};
 
@@ -16,14 +19,14 @@ impl From<usize> for ComponentId {
     }
 }
 
-#[derive(Serialize)]
-pub enum Component<T: Float + Send + Sync> {
+#[derive(Serialize, Deserialize)]
+pub enum Component<T: Float + Send + Sync + Serialize + 'static + Pi> {
     Constant(T),
     Function(Box<dyn ImplicitFunction<T>>),
     Operation(Box<dyn ImplicitOperation<T>>),
 }
 
-impl<T: Float + Send + Sync> Component<T> {
+impl<T: Float + Send + Sync + Serialize + Pi> Component<T> {
     pub fn compute(&self, x: T, y: T, z: T, inputs: &[T]) -> T {
         match self {
             Component::Constant(value) => *value,

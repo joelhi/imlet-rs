@@ -1,12 +1,15 @@
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::{
-    operations::{
-        math::{Add, Divide, LinearInterpolation, Multiply, Subtract},
-        shape::{BooleanDifference, BooleanIntersection, BooleanUnion, Offset, Thickness},
+use crate::{
+    types::computation::{
+        operations::{
+            math::{Add, Divide, LinearInterpolation, Multiply, Subtract},
+            shape::{BooleanDifference, BooleanIntersection, BooleanUnion, Offset, Thickness},
+        },
+        traits::ImplicitOperation,
     },
-    traits::ImplicitOperation,
+    utils::math_helper::Pi,
 };
 
 use super::Component;
@@ -30,7 +33,9 @@ impl OperationComponent {
     /// Create an instance of the component with default values.
     ///
     /// Used when creating components from a UI or other interface.
-    pub fn create_default<T: Float + Send + Sync + 'static + Serialize>(&self) -> Component<T> {
+    pub fn create_default<T: Float + Send + Sync + 'static + Serialize + Pi>(
+        &self,
+    ) -> Component<T> {
         let op: Box<dyn ImplicitOperation<T>> = match self {
             // Maths
             OperationComponent::Add => Box::new(Add::new()),

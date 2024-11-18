@@ -1,9 +1,7 @@
-use num_traits::Float;
-
 use crate::types::computation::components::{Data, Parameter};
 use std::any::type_name;
 
-/// Trait to define a distance function in 3d space.
+/// Trait to defin a distance function in 3d space.
 ///
 /// This trait provides the framework for evaluating distance functions as part of an implicit model.
 pub trait ImplicitFunction<T>: Sync + Send + erased_serde::Serialize {
@@ -68,47 +66,8 @@ pub trait ImplicitOperation<T>: Sync + Send + erased_serde::Serialize {
     /// Get the value of a parameter.
     fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>>;
 
-    /// Name of the operation
+    /// Name of the operation. This is used for serialization and deserialization.
     fn operation_name(&self) -> &'static str {
         type_name::<Self>()
-    }
-}
-
-impl<T: Float + Send + Sync> serde::Serialize for dyn ImplicitFunction<T> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::SerializeMap;
-        let mut ser = serializer.serialize_map(Some(1))?;
-        let type_info = self.function_name();
-        ser.serialize_entry(type_info, &Wrap(self))?;
-        ser.end()
-    }
-}
-
-impl<T: Float + Send + Sync> serde::Serialize for dyn ImplicitOperation<T> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        use serde::ser::SerializeMap;
-        let mut ser = serializer.serialize_map(Some(1))?;
-        let type_info = self.operation_name();
-        ser.serialize_entry(type_info, &Wrap(self))?;
-        ser.end()
-    }
-}
-
-struct Wrap<'a, T: ?Sized>(pub &'a T);
-impl<'a, T> serde::Serialize for Wrap<'a, T>
-where
-    T: ?Sized + erased_serde::Serialize + 'a,
-{
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        erased_serde::serialize(self.0, serializer)
     }
 }

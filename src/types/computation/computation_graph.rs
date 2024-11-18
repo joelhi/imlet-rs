@@ -2,11 +2,15 @@ use std::{cell::RefCell, time::Instant};
 
 use num_traits::Float;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
+use serde::Serialize;
 use smallvec::SmallVec;
 
 use crate::{
     types::geometry::{BoundingBox, Vec3i},
-    utils::{self, math_helper::index3d_from_index1d},
+    utils::{
+        self,
+        math_helper::{index3d_from_index1d, Pi},
+    },
 };
 
 use super::{
@@ -16,12 +20,12 @@ use super::{
 
 const INPUT_STACK_BUFFER_SIZE: usize = 8;
 
-pub struct ComputationGraph<'a, T: Float + Send + Sync> {
+pub struct ComputationGraph<'a, T: Float + Send + Sync + Serialize + 'static + Pi> {
     components: Vec<&'a Component<T>>,
     inputs: Vec<Vec<ComponentId>>,
 }
 
-impl<'a, T: Float + Send + Sync> ComputationGraph<'a, T> {
+impl<'a, T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'a, T> {
     pub(crate) fn new() -> Self {
         Self {
             components: Vec::new(),
@@ -35,7 +39,7 @@ impl<'a, T: Float + Send + Sync> ComputationGraph<'a, T> {
     }
 }
 
-impl<'a, T: Float + Send + Sync> ComputationGraph<'a, T> {
+impl<'a, T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'a, T> {
     thread_local! {
         static COMPONENT_VALUES: RefCell<ComponentValues> = RefCell::new(ComponentValues::new());
     }
@@ -89,7 +93,7 @@ impl<'a, T: Float + Send + Sync> ComputationGraph<'a, T> {
     }
 }
 
-impl<'a, T: Float + Send + Sync> ComputationGraph<'a, T> {
+impl<'a, T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'a, T> {
     pub fn evaluate(&self, bounds: &BoundingBox<T>, cell_size: T) -> ScalarField<T> {
         let before = Instant::now();
         let n = Self::point_count(bounds, cell_size);

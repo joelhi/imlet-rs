@@ -299,7 +299,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XYZCoordinate {
     }
 
     fn function_name(&self) -> &'static str {
-        "Global Coord"
+        "XYZCoordinate"
     }
 }
 

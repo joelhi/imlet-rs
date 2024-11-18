@@ -24,9 +24,9 @@ use crate::{
         self,
         computation::{
             components::{
-                function_components::PUBLIC_FUNCTION_COMPONENTS,
-                geometry_components::PUBLIC_GEOMETRY_COMPONENTS,
-                operation_components::PUBLIC_OPERATIONS, Component, Data, DataType,
+                function_components::{PUBLIC_FUNCTION_COMPONENTS, PUBLIC_GEOMETRY_COMPONENTS},
+                operation_components::PUBLIC_OPERATIONS,
+                Component, Data, DataType,
             },
             ImplicitModel, ModelError,
         },
@@ -88,12 +88,12 @@ fn init_bounds<T: Send + Sync + 'static + Clone>(
 }
 
 #[derive(Resource)]
-pub struct AppModel<T: Float + Send + Sync> {
+pub struct AppModel<T: Float + Send + Sync + Serialize + 'static + Pi> {
     pub model: ImplicitModel<T>,
     pub component_order: Vec<String>,
 }
 
-impl<T: Float + Send + Sync> AppModel<T> {
+impl<T: Float + Send + Sync + Serialize + 'static + Pi> AppModel<T> {
     pub fn new(model: ImplicitModel<T>) -> Self {
         let component_order: Vec<String> = model
             .all_components()
@@ -650,7 +650,7 @@ fn render_inputs(
     (change, input_responses)
 }
 
-fn render_parameters<T: Float + Send + Sync + 'static + Numeric>(
+fn render_parameters<T: Float + Send + Sync + 'static + Numeric + Serialize + Pi>(
     ui: &mut egui::Ui,
     component: &mut Component<T>,
     component_name: &str,
@@ -817,7 +817,7 @@ fn render_parameters<T: Float + Send + Sync + 'static + Numeric>(
     param_responses
 }
 
-pub fn generate_mesh<T: Float + Send + Sync + 'static>(
+pub fn generate_mesh<T: Float + Send + Sync + 'static + Serialize + Pi>(
     mut commands: Commands,
     material: Res<ModelMaterial<NormalMaterial>>,
     mut meshes: ResMut<Assets<bevy::prelude::Mesh>>,
@@ -877,7 +877,7 @@ pub fn generate_mesh<T: Float + Send + Sync + 'static>(
 }
 
 // Usage in the UI function
-fn render_collapsible_with_icon<T: Float + Send + Sync + 'static + Numeric>(
+fn render_collapsible_with_icon<T: Float + Send + Sync + 'static + Numeric + Serialize + Pi>(
     ui: &mut Ui,
     item: &mut String,
     component: &mut Component<T>,

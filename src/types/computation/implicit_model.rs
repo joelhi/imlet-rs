@@ -3,9 +3,10 @@ use crate::types::computation::traits::{ImplicitFunction, ImplicitOperation};
 use crate::types::computation::ComputationGraph;
 use crate::types::geometry::traits::SignedDistance;
 use crate::types::geometry::{BoundingBox, Mesh};
+use crate::utils::math_helper::Pi;
 use log::{debug, info};
 use num_traits::Float;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::{self, Debug, Display};
 use std::time::Instant;
@@ -17,19 +18,19 @@ use super::{ModelError, ScalarField};
 /// An implicit model composed of distance functions and operations.
 ///
 /// This acts as the main interface used to build and compute implicit models.
-#[derive(Serialize)]
-pub struct ImplicitModel<T: Float + Send + Sync> {
+#[derive(Serialize, Deserialize)]
+pub struct ImplicitModel<T: Float + Send + Sync + Serialize + 'static + Pi> {
     components: HashMap<String, Component<T>>,
     inputs: HashMap<String, Vec<Option<String>>>,
 }
 
-impl<T: Float + Send + Sync> Default for ImplicitModel<T> {
+impl<T: Float + Send + Sync + Serialize + 'static + Pi> Default for ImplicitModel<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitModel<T> {
+impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     /// Create a new empty model.
     pub fn new() -> Self {
         Self {
@@ -566,7 +567,9 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Display + Debug> Display for ImplicitModel<T> {
+impl<T: Float + Send + Sync + Display + Debug + Serialize + 'static + Pi> Display
+    for ImplicitModel<T>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (name, component) in &self.components {
             writeln!(f, "Component: {}", name)?;
@@ -593,7 +596,7 @@ impl<T: Float + Send + Sync + Display + Debug> Display for ImplicitModel<T> {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitModel<T> {
+impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     /// Evaluate the model at a coordinate *{x, y, z}*.
     /// # Arguments
     ///
@@ -674,7 +677,7 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
     }
 }
 
-impl<T: Float + Send + Sync + 'static + Serialize> ImplicitModel<T> {
+impl<T: Float + Send + Sync + 'static + Serialize + Pi> ImplicitModel<T> {
     /// Add a distance function component, from a geometry which implements the `SignedDistance<T>` trait, to the model.
     /// # Arguments
     ///
@@ -703,7 +706,7 @@ impl<T: Float + Send + Sync + 'static + Serialize> ImplicitModel<T> {
 mod tests {
 
     use crate::types::computation::{
-        components::geometry_components::{self, GeometryComponent},
+        components::function_components::FunctionComponent,
         operations::{math::Add, shape::BooleanUnion},
     };
 
@@ -836,23 +839,33 @@ mod tests {
     }
 
     #[test]
-    fn test_serialize_model() {
+    fn test_serialize_deserialize_model() {
         let mut model: ImplicitModel<f32> = ImplicitModel::new();
 
         let sphere_geom = model
-            .add_component("Sphere", GeometryComponent::Sphere.create_default())
+            .add_component("Sphere", FunctionComponent::Sphere.create_default())
             .unwrap();
 
         let box_geom = model
-            .add_component("Box", GeometryComponent::Box.create_default())
+            .add_component("Box", FunctionComponent::BoundingBox.create_default())
             .unwrap();
 
-        let _ = model
+        let union = model
             .add_operation_with_inputs("Union", BooleanUnion::new(), &[&sphere_geom, &box_geom])
+            .unwrap();
+
+        let offset_val = model.add_constant("OffsetDistance", 1.0).unwrap();
+
+        let result = model
+            .add_operation_with_inputs("Offset", Add::new(), &[&union, &offset_val])
             .unwrap();
 
         let json = serde_json::to_string_pretty(&model).unwrap();
 
-        println!("{}", json);
+        let model_deserialized: ImplicitModel<f32> = serde_json::de::from_str(&json).unwrap();
+
+        let val = model_deserialized.evaluate_at(&result, 0., 0., 0.).unwrap();
+
+        assert!((val + 44.).abs() < f32::epsilon());
     }
 }

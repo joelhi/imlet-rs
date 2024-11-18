@@ -7,9 +7,11 @@ use bevy::{
 };
 use bevy_egui::egui::emath::Numeric;
 use num_traits::Float;
+use serde::Serialize;
 
 use crate::{
     types::{computation::ImplicitModel, geometry::BoundingBox},
+    utils::math_helper::Pi,
     viewer::plugins::add_remove_bounds_in_scene,
 };
 
@@ -26,7 +28,9 @@ pub struct ModelInitializerPlugin<T> {
     _marker: std::marker::PhantomData<T>,
 }
 
-impl<T: Float + Send + Sync + 'static + Numeric + Display + Debug> ModelInitializerPlugin<T> {
+impl<T: Float + Send + Sync + 'static + Numeric + Display + Debug + Serialize + Pi>
+    ModelInitializerPlugin<T>
+{
     pub fn init(model: ImplicitModel<T>, bounds: BoundingBox<T>) -> impl FnOnce(&mut App) {
         move |app: &mut App| {
             app.insert_resource(TempResource(Some(model)));
@@ -39,7 +43,7 @@ impl<T: Float + Send + Sync + 'static + Numeric + Display + Debug> ModelInitiali
     }
 }
 
-impl<T: Float + Send + Sync + 'static + Numeric + Display + Debug> Plugin
+impl<T: Float + Send + Sync + 'static + Numeric + Display + Debug + Serialize + Pi> Plugin
     for ModelInitializerPlugin<T>
 {
     fn build(&self, app: &mut App) {
@@ -48,7 +52,9 @@ impl<T: Float + Send + Sync + 'static + Numeric + Display + Debug> Plugin
 }
 
 // System to move `model` and `bounds` from the temporary resources into `AppModel` and `Config`
-fn initialize_model<T: Float + Send + Sync + 'static + Numeric + Display + Debug>(
+fn initialize_model<
+    T: Float + Send + Sync + 'static + Numeric + Display + Debug + Serialize + Pi,
+>(
     mut commands: Commands,
     mut temp_model: ResMut<TempResource<ImplicitModel<T>>>,
     mut temp_bounds: ResMut<TempResource<BoundingBox<T>>>,

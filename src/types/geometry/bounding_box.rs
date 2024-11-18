@@ -284,7 +284,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for BoundingBox<T> 
     }
 
     fn function_name(&self) -> &'static str {
-        "Box"
+        "BoundingBox"
     }
 }
 
