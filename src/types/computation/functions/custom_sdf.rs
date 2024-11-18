@@ -8,7 +8,7 @@ use crate::types::{
         components::{Data, Parameter},
         traits::ImplicitFunction,
     },
-    geometry::{traits::SignedDistance, Mesh, Octree, Triangle, Vec3},
+    geometry::{Mesh, Octree, Triangle, Vec3},
 };
 
 /// Distance function for an arbitrary geometry type.

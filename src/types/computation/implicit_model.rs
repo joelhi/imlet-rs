@@ -270,6 +270,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         Ok(())
     }
 
+    #[allow(dead_code)]
     /// Add component to the model
     pub(crate) fn add_component(
         &mut self,
@@ -292,6 +293,8 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         Ok(valid_tag)
     }
 
+    #[allow(dead_code)]
+    /// Modify the tag of the
     pub(crate) fn rename_component(
         &mut self,
         current_tag: &str,
@@ -678,10 +681,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
 #[cfg(test)]
 mod tests {
 
-    use crate::types::computation::{
-        components::function_components::FunctionComponent,
-        operations::{math::Add, shape::BooleanUnion},
-    };
+    use crate::types::computation::operations::math::Add;
 
     use super::*;
 
