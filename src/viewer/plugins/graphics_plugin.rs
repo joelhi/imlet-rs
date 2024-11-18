@@ -7,6 +7,7 @@ use bevy_egui::{
     egui::{FontData, FontDefinitions, FontFamily, FontId, TextStyle, TextureId},
     EguiContexts,
 };
+use num_traits::Float;
 
 use crate::types::computation::components::Component;
 
@@ -87,7 +88,10 @@ pub struct Icons {
 }
 
 impl Icons {
-    pub(crate) fn component_icon<T>(&self, component: &Component<T>) -> &TextureId {
+    pub(crate) fn component_icon<T: Float + Send + Sync>(
+        &self,
+        component: &Component<T>,
+    ) -> &TextureId {
         match component {
             Component::Constant(_) => &self.numbers,
             Component::Function(_) => &self.function_icon,

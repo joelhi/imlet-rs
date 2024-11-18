@@ -62,8 +62,8 @@ impl<Q: SignedQuery<T>, T: Float> SignedDistance<T> for GeometryCollection<Q, T>
     }
 }
 
-impl<Q: SignedQuery<T> + Send + Sync + Serialize, T: Float + Send + Sync + Serialize> ImplicitFunction<T>
-    for GeometryCollection<Q, T>
+impl<Q: SignedQuery<T> + Send + Sync + Serialize, T: Float + Send + Sync + Serialize>
+    ImplicitFunction<T> for GeometryCollection<Q, T>
 {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(x, y, z)

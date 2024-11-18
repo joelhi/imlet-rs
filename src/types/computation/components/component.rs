@@ -16,13 +16,14 @@ impl From<usize> for ComponentId {
     }
 }
 
-pub enum Component<T> {
+#[derive(Serialize)]
+pub enum Component<T: Float + Send + Sync> {
     Constant(T),
     Function(Box<dyn ImplicitFunction<T>>),
     Operation(Box<dyn ImplicitOperation<T>>),
 }
 
-impl<T: Float> Component<T> {
+impl<T: Float + Send + Sync> Component<T> {
     pub fn compute(&self, x: T, y: T, z: T, inputs: &[T]) -> T {
         match self {
             Component::Constant(value) => *value,

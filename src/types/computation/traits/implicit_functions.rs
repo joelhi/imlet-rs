@@ -74,13 +74,16 @@ pub trait ImplicitOperation<T>: Sync + Send + erased_serde::Serialize {
     }
 }
 
-
 impl<T: Float + Send + Sync> serde::Serialize for dyn ImplicitFunction<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
     {
-        todo!("We have to implement this")
+        use serde::ser::SerializeMap;
+        let mut ser = serializer.serialize_map(Some(1))?;
+        let type_info = self.function_name();
+        ser.serialize_entry(type_info, &Wrap(self))?;
+        ser.end()
     }
 }
 
@@ -89,6 +92,23 @@ impl<T: Float + Send + Sync> serde::Serialize for dyn ImplicitOperation<T> {
     where
         S: serde::Serializer,
     {
-        todo!("We have to implement this")
+        use serde::ser::SerializeMap;
+        let mut ser = serializer.serialize_map(Some(1))?;
+        let type_info = self.operation_name();
+        ser.serialize_entry(type_info, &Wrap(self))?;
+        ser.end()
+    }
+}
+
+struct Wrap<'a, T: ?Sized>(pub &'a T);
+impl<'a, T> serde::Serialize for Wrap<'a, T>
+where
+    T: ?Sized + erased_serde::Serialize + 'a,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        erased_serde::serialize(self.0, serializer)
     }
 }

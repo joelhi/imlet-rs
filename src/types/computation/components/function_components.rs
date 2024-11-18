@@ -24,7 +24,9 @@ impl FunctionComponent {
     /// Create an instance of the component with default values.
     ///
     /// Used when creating components from a UI or other interface.
-    pub fn create_default<T: Float + Pi + Send + Sync + 'static + Serialize>(&self) -> Component<T> {
+    pub fn create_default<T: Float + Pi + Send + Sync + 'static + Serialize>(
+        &self,
+    ) -> Component<T> {
         let func: Box<dyn ImplicitFunction<T>> = match self {
             FunctionComponent::Gyroid => {
                 Box::new(Gyroid::with_equal_spacing(T::from(15).unwrap(), false))

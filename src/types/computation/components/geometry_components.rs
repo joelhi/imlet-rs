@@ -8,14 +8,23 @@ use crate::types::{
 
 use super::Component;
 
-/// Public enum to list all the geometry types exposed as model components
+/// Public enum to list all the geometry types exposed as model components.
+///
+/// The geometry components are not fundamentally different from the other functions.
+/// Excpect that the in general represent an object of limited size, as opposed to an infinitely periodic surface.
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub enum GeometryComponent {
+    /// Represents a component to generate the distance function for a sphere.
     Sphere,
+    /// Represents a component to generate the distance function for a torus.
     Torus,
+    /// Represents a component to generate the distance function for a torus.
     Plane,
+    /// Represents a component to generate the distance function for a plane.
     Box,
+    /// Represents a component to generate the distance function for a box.
     Capsule,
+    /// Represents a component to generate the distance function for an arbitrary mesh.
     MeshFile,
 }
 

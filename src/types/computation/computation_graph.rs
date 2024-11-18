@@ -16,12 +16,12 @@ use super::{
 
 const INPUT_STACK_BUFFER_SIZE: usize = 8;
 
-pub struct ComputationGraph<'a, T> {
+pub struct ComputationGraph<'a, T: Float + Send + Sync> {
     components: Vec<&'a Component<T>>,
     inputs: Vec<Vec<ComponentId>>,
 }
 
-impl<'a, T> ComputationGraph<'a, T> {
+impl<'a, T: Float + Send + Sync> ComputationGraph<'a, T> {
     pub(crate) fn new() -> Self {
         Self {
             components: Vec::new(),
@@ -35,7 +35,7 @@ impl<'a, T> ComputationGraph<'a, T> {
     }
 }
 
-impl<'a, T: Float> ComputationGraph<'a, T> {
+impl<'a, T: Float + Send + Sync> ComputationGraph<'a, T> {
     thread_local! {
         static COMPONENT_VALUES: RefCell<ComponentValues> = RefCell::new(ComponentValues::new());
     }

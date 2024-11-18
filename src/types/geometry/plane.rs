@@ -128,6 +128,6 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Plane<T> {
     }
 
     fn function_name(&self) -> &'static str {
-        "Torus"
+        "Plane"
     }
 }

@@ -4,7 +4,7 @@ use imlet::{
         operations::shape::{BooleanIntersection, Thickness},
         ImplicitModel,
     },
-    utils::io::parse_obj_file
+    utils::io::parse_obj_file,
 };
 
 pub fn main() {

@@ -17,18 +17,19 @@ use super::{ModelError, ScalarField};
 /// An implicit model composed of distance functions and operations.
 ///
 /// This acts as the main interface used to build and compute implicit models.
-pub struct ImplicitModel<T> {
+#[derive(Serialize)]
+pub struct ImplicitModel<T: Float + Send + Sync> {
     components: HashMap<String, Component<T>>,
     inputs: HashMap<String, Vec<Option<String>>>,
 }
 
-impl<T> Default for ImplicitModel<T> {
+impl<T: Float + Send + Sync> Default for ImplicitModel<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T> ImplicitModel<T> {
+impl<T: Float + Send + Sync> ImplicitModel<T> {
     /// Create a new empty model.
     pub fn new() -> Self {
         Self {
@@ -565,7 +566,7 @@ impl<T> ImplicitModel<T> {
     }
 }
 
-impl<T: Float + Display + Debug> Display for ImplicitModel<T> {
+impl<T: Float + Send + Sync + Display + Debug> Display for ImplicitModel<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (name, component) in &self.components {
             writeln!(f, "Component: {}", name)?;
@@ -701,7 +702,10 @@ impl<T: Float + Send + Sync + 'static + Serialize> ImplicitModel<T> {
 #[cfg(test)]
 mod tests {
 
-    use crate::types::computation::operations::math::Add;
+    use crate::types::computation::{
+        components::geometry_components::{self, GeometryComponent},
+        operations::{math::Add, shape::BooleanUnion},
+    };
 
     use super::*;
 
@@ -829,5 +833,26 @@ mod tests {
 
         assert!(matches!(error1, ModelError::IncorrectInputCount { .. }));
         assert!(matches!(error2, ModelError::IncorrectInputCount { .. }));
+    }
+
+    #[test]
+    fn test_serialize_model() {
+        let mut model: ImplicitModel<f32> = ImplicitModel::new();
+
+        let sphere_geom = model
+            .add_component("Sphere", GeometryComponent::Sphere.create_default())
+            .unwrap();
+
+        let box_geom = model
+            .add_component("Box", GeometryComponent::Box.create_default())
+            .unwrap();
+
+        let _ = model
+            .add_operation_with_inputs("Union", BooleanUnion::new(), &[&sphere_geom, &box_geom])
+            .unwrap();
+
+        let json = serde_json::to_string_pretty(&model).unwrap();
+
+        println!("{}", json);
     }
 }

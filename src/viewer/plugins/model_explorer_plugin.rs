@@ -88,12 +88,12 @@ fn init_bounds<T: Send + Sync + 'static + Clone>(
 }
 
 #[derive(Resource)]
-pub struct AppModel<T> {
+pub struct AppModel<T: Float + Send + Sync> {
     pub model: ImplicitModel<T>,
     pub component_order: Vec<String>,
 }
 
-impl<T: Float> AppModel<T> {
+impl<T: Float + Send + Sync> AppModel<T> {
     pub fn new(model: ImplicitModel<T>) -> Self {
         let component_order: Vec<String> = model
             .all_components()
