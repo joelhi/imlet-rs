@@ -16,7 +16,7 @@ use bevy_normal_material::prelude::NormalMaterial;
 use log::{debug, error, info};
 use num_traits::Float;
 use rfd::FileDialog;
-use serde::Serialize;
+use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     algorithms::marching_cubes::generate_iso_surface,
@@ -28,14 +28,14 @@ use crate::{
         },
         geometry::{BoundingBox, Mesh, Vec3},
     },
-    utils::math_helper::Pi,
+    utils::{io, math_helper::Pi},
     viewer::{
         public_components::{
             PUBLIC_FUNCTION_COMPONENTS, PUBLIC_GEOMETRY_COMPONENTS, PUBLIC_OPERATION_COMPONENTS,
         },
         raw_mesh_data::RawMeshData,
         utils::{build_mesh_from_data, custom_dnd_drag_source},
-    },
+    }, IMLET_VERSION,
 };
 
 use super::{
@@ -59,7 +59,7 @@ impl<T> ModelExplorerPlugin<T> {
 // Implement the Plugin trait for ModelExplorerPlugin with a generic type T.
 impl<T> Plugin for ModelExplorerPlugin<T>
 where
-    T: Float + Send + Sync + Numeric + 'static + Pi + Serialize, // Ensure T meets the required constraints (adjust as needed).
+    T: Float + Send + Sync + Numeric + 'static + Pi + Serialize + DeserializeOwned, // Ensure T meets the required constraints (adjust as needed).
 {
     fn build(&self, app: &mut App) {
         let val = T::from(50.).expect("Should be able to convert the value to T");
@@ -128,7 +128,7 @@ enum InputChange {
     None(),
 }
 
-fn imlet_model_panel<T: Float + Send + Sync + Numeric + 'static + Pi + Serialize>(
+fn imlet_model_panel<T: Float + Send + Sync + Numeric + 'static + Pi + Serialize + DeserializeOwned>(
     mut contexts: EguiContexts,
     mut model: ResMut<AppModel<T>>,
     mut config: ResMut<Config<T>>,
@@ -149,7 +149,7 @@ fn imlet_model_panel<T: Float + Send + Sync + Numeric + 'static + Pi + Serialize
         .resizable(false)
         .min_width(350.)
         .show(ctx, |ui| {
-            ui.heading("Imlet model");
+            ui.heading(format!("Imlet Explorer v{}",  IMLET_VERSION));
             ui.separator();
             if render_computation_section(ui, &mut config) {
                 view_settings.bounds = Some(config.bounds);
@@ -185,7 +185,7 @@ fn imlet_model_panel<T: Float + Send + Sync + Numeric + 'static + Pi + Serialize
     model.component_order = components;
 }
 
-fn render_components<T: Float + Send + Sync + Numeric + 'static + Pi + Serialize>(
+fn render_components<T: Float + Send + Sync + Numeric + 'static + Pi + Serialize + DeserializeOwned>(
     ui: &mut Ui,
     components: &mut Vec<String>,
     model: &mut ResMut<AppModel<T>>,
@@ -348,7 +348,7 @@ fn render_components<T: Float + Send + Sync + Numeric + 'static + Pi + Serialize
     recompute
 }
 
-fn render_component_menus<T: Float + Send + Sync + Numeric + 'static + Pi + Serialize>(
+fn render_component_menus<T: Float + Send + Sync + Numeric + 'static + Pi + Serialize + DeserializeOwned>(
     ui: &mut Ui,
     implicit_model: &mut ImplicitModel<T>,
     components: &mut Vec<String>,
@@ -419,6 +419,53 @@ fn render_component_menus<T: Float + Send + Sync + Numeric + 'static + Pi + Seri
             })
             .response
             .on_hover_text("Add new component.");
+
+            if ui
+                .add(
+                    egui::widgets::ImageButton::new(egui::load::SizedTexture::new(
+                        icons.save_as,
+                        [16.0, 16.0],
+                    ))
+                    .frame(true),
+                )
+                .on_hover_text("Save model to file.")
+                .clicked()
+            {
+                // open file path
+                if let Some(path) = FileDialog::new().add_filter("json", &["json"]).save_file(){
+                    match io::write_model_to_file(implicit_model, &path.display().to_string()) {
+                        Ok(_) => info!("Successfully saved file as {}", path.display()),
+                        Err(err) => error!("{}", err),
+                    }
+                }
+            };
+
+            if ui
+                .add(
+                    egui::widgets::ImageButton::new(egui::load::SizedTexture::new(
+                        icons.load_file,
+                        [16.0, 16.0],
+                    ))
+                    .frame(true),
+                )
+                .on_hover_text("Load model from file.")
+                .clicked()
+            {
+                // open file path
+                if let Some(path) = FileDialog::new().pick_file(){
+                    match io::read_model_from_file::<T>(&path.display().to_string()) {
+                        Ok(model) => {
+                            info!("Successfully loaded model from file {}", path.display());
+                            components.clear();
+                            for (name, _) in model.all_components(){
+                                components.push(name.clone());
+                            }
+                            *implicit_model = model;
+                        },
+                        Err(err) => error!("{}", err),
+                    }
+                }
+            };
         });
         ui.with_layout(Layout::right_to_left(egui::Align::Min), |ui| {
             if ui

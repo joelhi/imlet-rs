@@ -75,7 +75,7 @@ fn configure_fonts(mut contexts: EguiContexts) {
 pub struct Icons {
     pub function_icon: TextureId,
     pub operation_icon: TextureId,
-    pub delete_icon: TextureId,
+    //pub delete_icon: TextureId,
     pub compute_icon: TextureId,
     pub show_bounds: TextureId,
     pub export: TextureId,
@@ -85,7 +85,9 @@ pub struct Icons {
     pub unchecked: TextureId,
     pub checked: TextureId,
     pub more_options: TextureId,
-    pub rename: TextureId,
+    //pub rename: TextureId,
+    pub save_as: TextureId,
+    pub load_file: TextureId,
 }
 
 impl Icons {
@@ -109,7 +111,7 @@ fn load_icon_files(
     let icons = Icons {
         function_icon: contexts.add_image(asset_server.load("icons/function_16x16.png")),
         operation_icon: contexts.add_image(asset_server.load("icons/graph_16x16.png")),
-        delete_icon: contexts.add_image(asset_server.load("icons/delete_16x16.png")),
+        //delete_icon: contexts.add_image(asset_server.load("icons/delete_16x16.png")),
         compute_icon: contexts.add_image(asset_server.load("icons/compute_24x24.png")),
         show_bounds: contexts.add_image(asset_server.load("icons/show_bounds_24x24.png")),
         export: contexts.add_image(asset_server.load("icons/file_export_24x24.png")),
@@ -119,7 +121,9 @@ fn load_icon_files(
         checked: contexts.add_image(asset_server.load("icons/button_checked_16x16.png")),
         unchecked: contexts.add_image(asset_server.load("icons/button_unchecked_16x16.png")),
         more_options: contexts.add_image(asset_server.load("icons/more_16x16.png")),
-        rename: contexts.add_image(asset_server.load("icons/edit_16x16.png")),
+        //rename: contexts.add_image(asset_server.load("icons/edit_16x16.png")),
+        save_as: contexts.add_image(asset_server.load("icons/save_as_16x16.png")),
+        load_file: contexts.add_image(asset_server.load("icons/file_open_16x16.png")),
     };
 
     commands.insert_resource(icons);

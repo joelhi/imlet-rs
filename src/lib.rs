@@ -114,6 +114,9 @@
 //! ```
 //!
 
+/// Version of the library
+pub const IMLET_VERSION: &str = env!("CARGO_PKG_VERSION");
+
 /// Module with algorithms for iso-surface exctraction.
 pub mod algorithms {
     /// Functions for generating iso surface using the marching cubes algorithm.

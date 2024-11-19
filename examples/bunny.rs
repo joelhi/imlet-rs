@@ -46,6 +46,6 @@ pub fn main() {
             .generate_iso_surface("Output", &model_space, 0.5)
             .unwrap();
 
-        println!("Enable the viewer feature by using (--features viewer) to show the result");
+        println!("Enable the viewer feature by using [--features viewer] to show the result");
     }
 }

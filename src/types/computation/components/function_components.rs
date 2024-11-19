@@ -32,11 +32,11 @@ pub enum FunctionComponent {
     Sphere,
     /// Represents a component to generate the distance function for a torus.
     Torus,
-    /// Represents a component to generate the distance function for a torus.
-    Plane,
     /// Represents a component to generate the distance function for a plane.
-    BoundingBox,
+    Plane,
     /// Represents a component to generate the distance function for a box.
+    BoundingBox,
+    /// Represents a component to generate the distance function for a capsule.
     Capsule,
     /// Represents a component to generate the distance function for an arbitrary mesh.
     MeshFile,

@@ -3,6 +3,7 @@ use crate::types::computation::traits::{ImplicitFunction, ImplicitOperation};
 use crate::types::computation::ComputationGraph;
 use crate::types::geometry::{BoundingBox, Mesh};
 use crate::utils::math_helper::Pi;
+use crate::IMLET_VERSION;
 use log::{debug, info};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
@@ -18,6 +19,7 @@ use super::{ModelError, ScalarField};
 /// This acts as the main interface used to build and compute implicit models.
 #[derive(Serialize, Deserialize)]
 pub struct ImplicitModel<T: Float + Send + Sync + Serialize + 'static + Pi> {
+    version: String,
     components: HashMap<String, Component<T>>,
     inputs: HashMap<String, Vec<Option<String>>>,
 }
@@ -32,6 +34,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     /// Create a new empty model.
     pub fn new() -> Self {
         Self {
+            version: IMLET_VERSION.to_string(),
             components: HashMap::new(),
             inputs: HashMap::new(),
         }
@@ -294,7 +297,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     }
 
     #[allow(dead_code)]
-    /// Modify the tag of the
+    /// Modify the tag of the 
     pub(crate) fn rename_component(
         &mut self,
         current_tag: &str,

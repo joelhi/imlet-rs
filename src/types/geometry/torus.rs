@@ -42,9 +42,9 @@ impl<T> Torus<T> {
     /// Create a new sphere.
     /// # Arguments
     ///
-    /// * `centre` -The centre point of the torus.
-    /// * `r` -The major radius of the torus. This is the distance from the centre line to the centre of the torus.
-    /// * `t` -The minor radius of the torus. This is the radius of the cross section.
+    /// * `centre` - The centre point of the torus.
+    /// * `r` - The major radius of the torus. This is the distance from the centre line to the centre of the torus.
+    /// * `t` - The minor radius of the torus. This is the radius of the cross section.
     pub fn new(centre: Vec3<T>, r: T, t: T) -> Self {
         Torus { centre, r, t }
     }
@@ -52,9 +52,14 @@ impl<T> Torus<T> {
 
 impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Torus<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
-        (self.r - ((x - self.centre.x).powi(2) + (z - self.centre.z).powi(2)).sqrt()).powi(2)
+        let squared_value = (self.r - ((x - self.centre.x).powi(2) + (z - self.centre.z).powi(2)).sqrt()).powi(2)
             + (y - self.centre.y).powi(2)
-            - self.t.powi(2)
+            - self.t.powi(2);
+        if squared_value<T::zero(){
+            -(squared_value.abs().sqrt())
+        }else{
+            squared_value.sqrt()
+        }
     }
 
     fn parameters(&self) -> &[Parameter] {
@@ -81,5 +86,18 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Torus<T> {
 
     fn function_name(&self) -> &'static str {
         "Torus"
+    }
+}
+
+
+#[cfg(test)]
+mod tests{
+    use super::*;
+
+    #[test]
+    fn test_torus_centre_distance_value(){
+        let torus = Torus::new(Vec3::origin(), 45., 5.);
+        let val = torus.eval(45., 0., 0.);
+        assert!((val+5.).abs() < f64::epsilon(), "Incorrect signed distance value at tours centre line, value was {}, but radius is {}", val, 5.0);
     }
 }

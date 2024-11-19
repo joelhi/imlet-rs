@@ -3,7 +3,7 @@ use std::fmt::{Debug, Display};
 use bevy::app::App;
 use bevy_egui::egui::emath::Numeric;
 use num_traits::Float;
-use serde::Serialize;
+use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     types::{computation::ImplicitModel, geometry::BoundingBox},
@@ -16,7 +16,7 @@ use super::plugins::{
 
 /// Run the explorer app with an empty model.
 pub fn run_explorer<
-    T: Float + Debug + Send + Sync + 'static + Numeric + Display + Pi + Serialize,
+    T: Float + Debug + Send + Sync + 'static + Numeric + Display + Pi + Serialize + DeserializeOwned,
 >() {
     let mut app = App::new();
 
@@ -30,7 +30,7 @@ pub fn run_explorer<
 
 ///
 pub fn run_explorer_with_model<
-    T: Float + Debug + Send + Sync + 'static + Numeric + Display + Pi + Serialize,
+    T: Float + Debug + Send + Sync + 'static + Numeric + Display + Pi + Serialize + DeserializeOwned,
 >(
     model: ImplicitModel<T>,
     bounds: BoundingBox<T>,

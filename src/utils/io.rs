@@ -1,12 +1,13 @@
+use core::str;
 use std::{
     fmt::Display,
     fs,
-    io::{self, BufRead, Write},
+    io::{self, BufRead, Read, Write},
     path::Path,
 };
 
 use num_traits::Float;
-use serde::Serialize;
+use serde::{de::DeserializeOwned, Serialize};
 
 use crate::types::{
     computation::{ImplicitModel, ScalarField},
@@ -202,4 +203,63 @@ pub fn write_model_to_file<T: Float + Send + Sync + Serialize + 'static + Pi>(
     let mut file = fs::File::create(file_path)?;
     file.write_all(json.as_bytes())?;
     Ok(())
+}
+
+/// Deserialize an implicit model from a json file
+/// 
+/// # Arguments
+///
+/// * `file_name` - Name of the file to read with the `.json` extension.
+/// 
+/// # Returns
+/// 
+/// An error is something went wrong, such as if the file can't be found or the deserialization failed.
+/// 
+/// Returns Ok() with the model if the read was successful.
+pub fn read_model_from_file<'de, T: Float + Send + Sync + Serialize + 'static + Pi + DeserializeOwned>(
+    file_path: &str
+) -> Result<ImplicitModel<T>, Box<dyn std::error::Error>>{
+    let path = Path::new(file_path);
+
+    let extension = path.extension().ok_or_else(|| {
+        format!(
+            "Cannot read file {}. No valid extension provided. Should be .json.",
+            file_path
+        )
+    })?;
+
+    if extension.to_ascii_lowercase() != "json" {
+        return Err(format!(
+            "Cannot read file {}. Only .json files are supported.",
+            file_path
+        )
+        .into());
+    }
+
+    let mut file = File::open(path)?;
+
+    let mut data: Vec<u8> = Vec::new();
+    file.read_to_end(&mut data)?;
+
+    let deserialized: ImplicitModel<T> = serde_json::de::from_slice(&data)?;
+
+    Ok(deserialized)
+
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_deserialize_simple_model(){
+        let model: ImplicitModel<f32> = read_model_from_file("assets/models/gyroid_model.json").unwrap();
+
+       let val = model.evaluate_at("Output", 0., 0., 0.).unwrap();
+
+       let expected_val = 41.60254;
+       assert!((val - expected_val).abs() < f32::epsilon(), "Wrong value returned from model. Was {}, but should have been {}", val, expected_val);
+    }
+
 }

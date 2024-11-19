@@ -44,7 +44,6 @@ impl<T: Float + Send + Sync> serde::Serialize for dyn ImplicitOperation<T> {
 }
 
 // Deserialize function
-
 struct Wrap<'a, T: ?Sized>(pub &'a T);
 impl<'a, T> serde::Serialize for Wrap<'a, T>
 where
@@ -88,7 +87,7 @@ impl<'de, T: Float + Send + Sync + Serialize + Deserialize<'de> + 'static + Pi>
     type Value = Box<dyn ImplicitFunction<T>>;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(formatter, "Trait object 'dyn Trait'")
+        write!(formatter, "Trait object 'dyn ImplicitFunction'")
     }
 
     fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
@@ -96,10 +95,10 @@ impl<'de, T: Float + Send + Sync + Serialize + Deserialize<'de> + 'static + Pi>
         A: serde::de::MapAccess<'de>,
     {
         let type_info = map.next_key::<String>()?.ok_or(serde::de::Error::custom(
-            "Expected externally tagged 'dyn Trait'",
+            "Expected externally tagged 'dyn ImplicitFunction'",
         ))?;
         let deserialize_fn = function_runtime_reflection(&type_info).ok_or(
-            serde::de::Error::custom(format!("Unknown type for 'dyn Trait': {type_info}")),
+            serde::de::Error::custom(format!("Unknown type for 'dyn ImplicitFuction': {type_info}")),
         )?;
         let boxed_trait_object: Box<dyn ImplicitFunction<T>> =
             map.next_value_seed(FunctionTypeVisitor { deserialize_fn })?;
@@ -284,7 +283,7 @@ impl<'de, T: Float + Send + Sync + Serialize + Deserialize<'de> + 'static> serde
     type Value = Box<dyn ImplicitOperation<T>>;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(formatter, "Trait object 'dyn Trait'")
+        write!(formatter, "Trait object 'dyn ImplicitFunction'")
     }
 
     fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
@@ -292,10 +291,10 @@ impl<'de, T: Float + Send + Sync + Serialize + Deserialize<'de> + 'static> serde
         A: serde::de::MapAccess<'de>,
     {
         let type_info = map.next_key::<String>()?.ok_or(serde::de::Error::custom(
-            "Expected externally tagged 'dyn Trait'",
+            "Expected externally tagged 'dyn ImplicitFunction'",
         ))?;
         let deserialize_fn = operation_runtime_reflection(&type_info).ok_or(
-            serde::de::Error::custom(format!("Unknown type for 'dyn Trait': {type_info}")),
+            serde::de::Error::custom(format!("Unknown type for 'dyn ImplicitFunction': {type_info}")),
         )?;
         let boxed_trait_object: Box<dyn ImplicitOperation<T>> =
             map.next_value_seed(OperationTypeVisitor { deserialize_fn })?;
@@ -409,10 +408,7 @@ fn operation_runtime_reflection<
 mod tests {
 
     use crate::types::computation::{
-        components::{
-            function_components::FUNCTION_COMPONENTS, operation_components::OPERATION_COMPONENTS,
-        },
-        ImplicitModel,
+        components::{function_components::FUNCTION_COMPONENTS, operation_components::OPERATION_COMPONENTS}, ImplicitModel,
     };
 
     #[test]

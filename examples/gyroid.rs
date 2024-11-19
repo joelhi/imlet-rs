@@ -1,14 +1,11 @@
-use imlet::{
-    types::{
+use imlet::types::{
         computation::{
             functions::Gyroid,
             operations::shape::{BooleanIntersection, Thickness},
             ImplicitModel,
         },
         geometry::{BoundingBox, Sphere, Vec3},
-    },
-    utils::io,
-};
+    };
 
 pub fn main() {
     //utils::logging::init_info();
