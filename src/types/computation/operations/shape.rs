@@ -5,7 +5,7 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
-    components::{Data, DataType, Parameter},
+    model::{Data, DataType, Parameter},
     traits::ImplicitOperation,
 };
 

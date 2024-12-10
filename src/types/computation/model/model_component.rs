@@ -11,7 +11,7 @@ use crate::{
 use super::{Data, DataType, Parameter};
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
-pub struct ComponentId(pub usize);
+pub(crate) struct ComponentId(pub usize);
 
 impl From<usize> for ComponentId {
     fn from(value: usize) -> Self {
@@ -19,37 +19,55 @@ impl From<usize> for ComponentId {
     }
 }
 
+/// Enum which represents the different types of component that make up a computation model.
+///
+/// The enum represents the high-level types, for which different implementations can be provided.
+/// 
+/// The current component types are:
+/// 
+/// * `Constant` - Representing a constant value across the entire model domain.
+/// * `Function` - Represents a function in 3d space `f(x,y,z)`. This takes no inputs from other components, and is variable across the domain.
+/// * `Operation` - Represents an operation on some values in the model. The operation does not depend on the evaluation coordinate directly, but instead operates on the output of other components.
 #[derive(Serialize, Deserialize)]
-pub enum Component<T: Float + Send + Sync + Serialize + 'static + Pi> {
+pub enum ModelComponent<T: Float + Send + Sync + Serialize + 'static + Pi> {
     Constant(T),
     Function(Box<dyn ImplicitFunction<T>>),
     Operation(Box<dyn ImplicitOperation<T>>),
 }
 
-impl<T: Float + Send + Sync + Serialize + Pi> Component<T> {
+impl<T: Float + Send + Sync + Serialize + Pi> ModelComponent<T> {
+    /// Evaluate the output of the comppnent
+    /// 
+    /// # Arguments
+    /// 
+    /// * `x` - The current x coordinate. Used when the type is [`ModelComponent::Function`].
+    /// * `y` - The current y coordinate. Used when the type is [`ModelComponent::Function`].
+    /// * `z` - The current z coordinate. Used when the type is [`ModelComponent::Function`].
+    /// * `inputs` - The outputs of other components which feed the inputs of this one. Used when the type is [`ModelComponent::Operation`].
     pub fn compute(&self, x: T, y: T, z: T, inputs: &[T]) -> T {
         match self {
-            Component::Constant(value) => *value,
-            Component::Function(function) => function.eval(x, y, z),
-            Component::Operation(operation) => operation.eval(inputs),
+            ModelComponent::Constant(value) => *value,
+            ModelComponent::Function(function) => function.eval(x, y, z),
+            ModelComponent::Operation(operation) => operation.eval(inputs),
         }
     }
 
+    /// Returns the type of the function or operation inside the component.
     pub fn type_name(&self) -> &'static str {
         match self {
-            Component::Constant(_) => "Constant",
-            Component::Function(function) => function.function_name(),
-            Component::Operation(operation) => operation.operation_name(),
+            ModelComponent::Constant(_) => "Constant",
+            ModelComponent::Function(function) => function.function_name(),
+            ModelComponent::Operation(operation) => operation.operation_name(),
         }
     }
 
     pub fn get_parameters(&self) -> Vec<(Parameter, Data<T>)> {
         match self {
-            Component::Constant(value) => vec![(
+            ModelComponent::Constant(value) => vec![(
                 Parameter::new("Value", DataType::Value),
                 Data::Value(*value),
             )],
-            Component::Function(function) => function
+            ModelComponent::Function(function) => function
                 .parameters()
                 .iter()
                 .map(|p| {
@@ -61,7 +79,7 @@ impl<T: Float + Send + Sync + Serialize + Pi> Component<T> {
                     )
                 })
                 .collect(),
-            Component::Operation(operation) => operation
+            ModelComponent::Operation(operation) => operation
                 .parameters()
                 .iter()
                 .map(|p| {
@@ -76,26 +94,29 @@ impl<T: Float + Send + Sync + Serialize + Pi> Component<T> {
         }
     }
 
+    /// Set the value of a parameter for the component.
     pub fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
         match self {
-            Component::Constant(value) => {
+            ModelComponent::Constant(value) => {
                 *value = *data.get_value().expect("This should be a value type.")
             }
-            Component::Function(function) => function.set_parameter(parameter_name, data),
-            Component::Operation(operation) => operation.set_parameter(parameter_name, data),
+            ModelComponent::Function(function) => function.set_parameter(parameter_name, data),
+            ModelComponent::Operation(operation) => operation.set_parameter(parameter_name, data),
         }
     }
 
+    /// Get the tags of the inputs of this component.
     pub fn input_names(&mut self) -> &[&str] {
         match self {
-            Component::Constant(_) => &[],
-            Component::Function(_) => &[],
-            Component::Operation(operation) => operation.inputs(),
+            ModelComponent::Constant(_) => &[],
+            ModelComponent::Function(_) => &[],
+            ModelComponent::Operation(operation) => operation.inputs(),
         }
     }
 }
 
-pub struct ComponentValues {
+/// Struct to handle storing of intermediate outputs of components during computation.
+pub(crate) struct ComponentValues {
     values: Vec<f64>,
 }
 
@@ -132,7 +153,7 @@ mod tests {
 
     #[test]
     fn test_compute_constant() {
-        let component = Component::Constant(1.0);
+        let component = ModelComponent::Constant(1.0);
 
         let value = component.compute(0.0, 0.0, 0.0, &[]);
         assert!((1.0 - value).abs() < 0.001);
@@ -141,17 +162,17 @@ mod tests {
     #[test]
     fn test_compute_function() {
         let function = Sphere::new(Vec3::origin(), 1.0);
-        let component = Component::Function(Box::new(function));
+        let component = ModelComponent::Function(Box::new(function));
 
-        assert!((-0.5 - component.compute(0.0, 0.5, 0.0, &[])).abs() < 0.001);
-        assert!((0.5 - component.compute(0.0, 1.5, 0.0, &[])).abs() < 0.001);
+        assert!((-0.5 - component.compute(0.0, 0.5, 0.0, &[])).abs() < f64::epsilon());
+        assert!((0.5 - component.compute(0.0, 1.5, 0.0, &[])).abs() < f64::epsilon());
     }
 
     #[test]
     fn test_compute_operation() {
         let operation = Add::new();
-        let component = Component::Operation(Box::new(operation));
+        let component = ModelComponent::Operation(Box::new(operation));
 
-        assert!((2.0 - component.compute(0.0, 0.0, 0.0, &[1.0, 1.0])).abs() < 0.001);
+        assert!((2.0 - component.compute(0.0, 0.0, 0.0, &[1.0, 1.0])).abs() < f64::epsilon());
     }
 }

@@ -10,7 +10,7 @@ use bevy_egui::{
 use num_traits::Float;
 use serde::Serialize;
 
-use crate::{types::computation::components::Component, utils::math_helper::Pi};
+use crate::{types::computation::model::ModelComponent, utils::math_helper::Pi};
 
 const FONT_SIZE: f32 = 12.;
 
@@ -93,12 +93,12 @@ pub struct Icons {
 impl Icons {
     pub(crate) fn component_icon<T: Float + Send + Sync + Serialize + 'static + Pi>(
         &self,
-        component: &Component<T>,
+        component: &ModelComponent<T>,
     ) -> &TextureId {
         match component {
-            Component::Constant(_) => &self.numbers,
-            Component::Function(_) => &self.function_icon,
-            Component::Operation(_) => &self.operation_icon,
+            ModelComponent::Constant(_) => &self.numbers,
+            ModelComponent::Function(_) => &self.function_icon,
+            ModelComponent::Operation(_) => &self.operation_icon,
         }
     }
 }

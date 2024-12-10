@@ -5,7 +5,7 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
-    components::Data, components::DataType, components::Parameter, traits::ImplicitFunction,
+    model::Data, model::DataType, model::Parameter, traits::ImplicitFunction,
 };
 
 use super::{traits::SignedDistance, Vec3};

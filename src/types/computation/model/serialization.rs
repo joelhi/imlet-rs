@@ -15,8 +15,6 @@ use crate::{
     utils::math_helper::Pi,
 };
 
-use super::function_components::FunctionComponent;
-
 impl<T: Float + Send + Sync> serde::Serialize for dyn ImplicitFunction<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -97,9 +95,10 @@ impl<'de, T: Float + Send + Sync + Serialize + Deserialize<'de> + 'static + Pi>
         let type_info = map.next_key::<String>()?.ok_or(serde::de::Error::custom(
             "Expected externally tagged 'dyn ImplicitFunction'",
         ))?;
-        let deserialize_fn = function_runtime_reflection(&type_info).ok_or(
-            serde::de::Error::custom(format!("Unknown type for 'dyn ImplicitFuction': {type_info}")),
-        )?;
+        let deserialize_fn =
+            function_runtime_reflection(&type_info).ok_or(serde::de::Error::custom(format!(
+                "Unknown type for 'dyn ImplicitFuction': {type_info}"
+            )))?;
         let boxed_trait_object: Box<dyn ImplicitFunction<T>> =
             map.next_value_seed(FunctionTypeVisitor { deserialize_fn })?;
         Ok(boxed_trait_object)
@@ -168,7 +167,7 @@ fn function_runtime_reflection<
             }
             FunctionComponent::YDomain => {
                 let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
-                    let s: YDommain<T> = erased_serde::deserialize(deserializer)?;
+                    let s: YDomain<T> = erased_serde::deserialize(deserializer)?;
                     let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
                     Ok(boxed_trait_object)
                 };
@@ -293,9 +292,10 @@ impl<'de, T: Float + Send + Sync + Serialize + Deserialize<'de> + 'static> serde
         let type_info = map.next_key::<String>()?.ok_or(serde::de::Error::custom(
             "Expected externally tagged 'dyn ImplicitFunction'",
         ))?;
-        let deserialize_fn = operation_runtime_reflection(&type_info).ok_or(
-            serde::de::Error::custom(format!("Unknown type for 'dyn ImplicitFunction': {type_info}")),
-        )?;
+        let deserialize_fn =
+            operation_runtime_reflection(&type_info).ok_or(serde::de::Error::custom(format!(
+                "Unknown type for 'dyn ImplicitFunction': {type_info}"
+            )))?;
         let boxed_trait_object: Box<dyn ImplicitOperation<T>> =
             map.next_value_seed(OperationTypeVisitor { deserialize_fn })?;
         Ok(boxed_trait_object)
@@ -407,9 +407,9 @@ fn operation_runtime_reflection<
 #[cfg(test)]
 mod tests {
 
-    use crate::types::computation::{
-        components::{function_components::FUNCTION_COMPONENTS, operation_components::OPERATION_COMPONENTS}, ImplicitModel,
-    };
+    use crate::types::computation::{model::ImplicitModel, operations::OPERATION_COMPONENTS};
+
+    use super::FUNCTION_COMPONENTS;
 
     #[test]
     fn test_serialize_deserialize_functions() {

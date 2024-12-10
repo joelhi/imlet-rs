@@ -5,7 +5,7 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
-    components::{Data, DataType, Parameter},
+    model::{Data, DataType, Parameter},
     traits::ImplicitFunction,
 };
 
@@ -291,7 +291,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for BoundingBox<T> 
 #[cfg(test)]
 mod tests {
 
-    use crate::{types::geometry::Mesh, utils::io::parse_obj_file};
+    use crate::{types::geometry::{traits::Bounded, Mesh}, utils::io::parse_obj_file};
 
     use super::*;
 

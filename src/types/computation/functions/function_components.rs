@@ -5,11 +5,10 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::types::computation::functions::*;
+use crate::types::computation::model::ModelComponent;
 use crate::types::computation::traits::ImplicitFunction;
 use crate::types::geometry::*;
 use crate::utils::math_helper::Pi;
-
-use super::Component;
 
 /// Different available function components
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
@@ -50,7 +49,7 @@ impl FunctionComponent {
     /// Used when creating components from a UI or other interface.
     pub fn create_default<T: Float + Pi + Send + Sync + 'static + Serialize>(
         &self,
-    ) -> Component<T> {
+    ) -> ModelComponent<T> {
         let default_value = T::from(45.).unwrap();
         let func: Box<dyn ImplicitFunction<T>> = match self {
             FunctionComponent::Gyroid => {
@@ -83,12 +82,12 @@ impl FunctionComponent {
             )),
             FunctionComponent::MeshFile => Box::new(MeshFile::new()),
             FunctionComponent::XDomain => Box::new(XDomain::natural()),
-            FunctionComponent::YDomain => Box::new(YDommain::natural()),
+            FunctionComponent::YDomain => Box::new(YDomain::natural()),
             FunctionComponent::ZDomain => Box::new(ZDomain::natural()),
             FunctionComponent::CustomMesh => Box::new(CustomMesh::new()),
         };
 
-        Component::Function(func)
+        ModelComponent::Function(func)
     }
 }
 

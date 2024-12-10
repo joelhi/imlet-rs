@@ -22,44 +22,11 @@
  The primary modules of the crate are [`types::geometry`] and [`types::computation`], which supply the tools needed to define geometric types and build implicit models.
 
  At the heart of Imlet is the [`types::computation::ImplicitModel`] struct, which serves as the foundation for creating and evaluating compound functions in 3d space.
- This struct exposes the main methods used to combine functions and operations into a computation graph, which can then be evaluated and used to generate iso surfaces.
+ This struct exposes the main methods used to combine functions and operations into a computation graph, which can then be evaluated and used to generate isosurfaces.
 
  For detailed information on how these components work and interact, refer to the [`types`] module documentation.
 
  ## Examples
-
- **The Very Basic**
-
- The simplest possible computation would be to define two constants, and add them together.
-
- In this example the value is not depending on the x,y,z coordinates, so we just evaluate it once at the origin.
-
- ```rust
- use imlet_engine::types::computation::{ImplicitModel, operations::math::Add};
-
- fn main() {
-     // Create a new empty model.
-     let mut model: ImplicitModel<f64> = ImplicitModel::new();
-
-    // Add a constant with a value 1 to the model.
-    let first_value = model.add_constant("FirstValue", 1.0).unwrap();
-
-    // Add another constant with a value 1 to the model.
-    let second_value = model.add_constant("SecondValue", 1.0).unwrap();
-
-    // Add an addition operation that reads the two constants and adds them together.
-    let sum = model
-        .add_operation_with_inputs("Sum", Add::new(), &[&first_value, &second_value])
-        .unwrap();
-
-    // Evaluate the model reading the output of the Sum operation.
-    let value = model.evaluate_at(&sum, 0.0, 0.0, 0.0).unwrap();
-    assert!((value - 2.0).abs() < 1E-5)
-}
-
- ```
-
- **An Actual Geometry**
 
  Below is an example of how to use Imlet to create a 3D model by combining a sphere and a gyroid using an intersection operation.
 
@@ -126,12 +93,12 @@
 - [x] More measured and intentional error handling using Result<> in various parts of the code, to make use easier and remove panics
 - [x] Refactor so implicit geometries can be added directly to the models, based on the SignedDistance trait. Same for collections of geometries.
 - [x] Set up basic viewer with bevy.
-- [ ] Add variable parameters to model components. (Oct)
-- [x] Implement better topological sort for computation graph / model connectivity. (Oct)
+- [x] Add variable parameters to model components.
+- [x] Implement better topological sort for computation graph / model connectivity.
 - [ ] Enhance the viewer with interactive buttons and runtime model generation. (Oct - Dec)
 
 ### Future Enhancements (2025)
-- [ ] Implement serialization for models, potentially using sealed traits (?).
+- [ ] Make model serialization compatible with external impls.
 - [ ] Enable GPU-based computation for faster processing. (For example using [CubeCL](https://github.com/tracel-ai/cubecl))
 - [ ] Develop a node editor for visual programming.
 

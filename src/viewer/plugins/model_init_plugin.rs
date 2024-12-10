@@ -10,7 +10,7 @@ use num_traits::Float;
 use serde::Serialize;
 
 use crate::{
-    types::{computation::ImplicitModel, geometry::BoundingBox},
+    types::{computation::model::ImplicitModel, geometry::BoundingBox},
     utils::math_helper::Pi,
     viewer::plugins::add_remove_bounds_in_scene,
 };

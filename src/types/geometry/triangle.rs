@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::fmt::{self, Display};
 
-use super::traits::SignedDistance;
+use super::traits::{Bounded, SignedDistance};
 use super::{
     traits::{SignedQuery, SpatialQuery},
     BoundingBox, Vec3,
@@ -80,22 +80,6 @@ impl<T: Float> Triangle<T> {
         let c = self.p3().distance_to_vec3(&self.p1());
         let s = (a + b + c) / T::from(2.0).expect("Failed to convert number to T");
         (s * (s - a) * (s - b) * (s - c)).sqrt()
-    }
-
-    /// Compute the bounding box of the triangle in global coordinates.
-    pub fn bounds(&self) -> BoundingBox<T> {
-        BoundingBox::new(
-            Vec3::new(
-                self.p1().x.min(self.p2().x).min(self.p3().x),
-                self.p1().y.min(self.p2().y).min(self.p3().y),
-                self.p1().z.min(self.p2().z).min(self.p3().z),
-            ),
-            Vec3::new(
-                self.p1().x.max(self.p2().x).max(self.p3().x),
-                self.p1().y.max(self.p2().y).max(self.p3().y),
-                self.p1().z.max(self.p2().z).max(self.p3().z),
-            ),
-        )
     }
 
     /// Compute the normal to the triangle face plane.
@@ -182,10 +166,6 @@ impl<T: Display> fmt::Display for Triangle<T> {
 }
 
 impl<T: Float> SpatialQuery<T> for Triangle<T> {
-    fn bounds(&self) -> BoundingBox<T> {
-        self.bounds()
-    }
-
     fn default() -> Self {
         Triangle::zero()
     }
@@ -227,6 +207,23 @@ impl<T: Float + Send + Sync> SignedDistance<T> for Triangle<T> {
             return -distance;
         }
         distance
+    }
+}
+
+impl<T: Float> Bounded<T> for Triangle<T>{
+    fn bounds(&self) -> BoundingBox<T> {
+        BoundingBox::new(
+            Vec3::new(
+                self.p1().x.min(self.p2().x).min(self.p3().x),
+                self.p1().y.min(self.p2().y).min(self.p3().y),
+                self.p1().z.min(self.p2().z).min(self.p3().z),
+            ),
+            Vec3::new(
+                self.p1().x.max(self.p2().x).max(self.p3().x),
+                self.p1().y.max(self.p2().y).max(self.p3().y),
+                self.p1().z.max(self.p2().z).max(self.p3().z),
+            ),
+        )
     }
 }
 

@@ -1,6 +1,6 @@
 use imlet::{
     types::{
-        computation::ImplicitModel,
+        computation::model::ImplicitModel,
         geometry::{BoundingBox, Sphere, Vec3},
     },
     utils,

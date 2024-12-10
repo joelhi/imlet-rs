@@ -23,8 +23,8 @@ use crate::{
     types::{
         self,
         computation::{
-            components::{Component, Data, DataType},
-            ImplicitModel, ModelError,
+            model::{Data, DataType, ImplicitModel, ModelComponent},
+            ModelError,
         },
         geometry::{BoundingBox, Mesh, Vec3},
     },
@@ -35,7 +35,8 @@ use crate::{
         },
         raw_mesh_data::RawMeshData,
         utils::{build_mesh_from_data, custom_dnd_drag_source},
-    }, IMLET_VERSION,
+    },
+    IMLET_VERSION,
 };
 
 use super::{
@@ -128,7 +129,9 @@ enum InputChange {
     None(),
 }
 
-fn imlet_model_panel<T: Float + Send + Sync + Numeric + 'static + Pi + Serialize + DeserializeOwned>(
+fn imlet_model_panel<
+    T: Float + Send + Sync + Numeric + 'static + Pi + Serialize + DeserializeOwned,
+>(
     mut contexts: EguiContexts,
     mut model: ResMut<AppModel<T>>,
     mut config: ResMut<Config<T>>,
@@ -149,7 +152,7 @@ fn imlet_model_panel<T: Float + Send + Sync + Numeric + 'static + Pi + Serialize
         .resizable(false)
         .min_width(350.)
         .show(ctx, |ui| {
-            ui.heading(format!("Imlet Explorer v{}",  IMLET_VERSION));
+            ui.heading(format!("Imlet Explorer v{}", IMLET_VERSION));
             ui.separator();
             if render_computation_section(ui, &mut config) {
                 view_settings.bounds = Some(config.bounds);
@@ -185,7 +188,9 @@ fn imlet_model_panel<T: Float + Send + Sync + Numeric + 'static + Pi + Serialize
     model.component_order = components;
 }
 
-fn render_components<T: Float + Send + Sync + Numeric + 'static + Pi + Serialize + DeserializeOwned>(
+fn render_components<
+    T: Float + Send + Sync + Numeric + 'static + Pi + Serialize + DeserializeOwned,
+>(
     ui: &mut Ui,
     components: &mut Vec<String>,
     model: &mut ResMut<AppModel<T>>,
@@ -348,7 +353,9 @@ fn render_components<T: Float + Send + Sync + Numeric + 'static + Pi + Serialize
     recompute
 }
 
-fn render_component_menus<T: Float + Send + Sync + Numeric + 'static + Pi + Serialize + DeserializeOwned>(
+fn render_component_menus<
+    T: Float + Send + Sync + Numeric + 'static + Pi + Serialize + DeserializeOwned,
+>(
     ui: &mut Ui,
     implicit_model: &mut ImplicitModel<T>,
     components: &mut Vec<String>,
@@ -408,8 +415,8 @@ fn render_component_menus<T: Float + Send + Sync + Numeric + 'static + Pi + Seri
                 });
                 ui.menu_button("Values", |ui| {
                     if ui.button("Constant").clicked() {
-                        let result =
-                            implicit_model.add_component("Value", Component::Constant(T::zero()));
+                        let result = implicit_model
+                            .add_component("Value", ModelComponent::Constant(T::zero()));
                         match result {
                             Ok(tag) => components.push(tag),
                             Err(error) => error!("{}", error),
@@ -432,7 +439,7 @@ fn render_component_menus<T: Float + Send + Sync + Numeric + 'static + Pi + Seri
                 .clicked()
             {
                 // open file path
-                if let Some(path) = FileDialog::new().add_filter("json", &["json"]).save_file(){
+                if let Some(path) = FileDialog::new().add_filter("json", &["json"]).save_file() {
                     match io::write_model_to_file(implicit_model, &path.display().to_string()) {
                         Ok(_) => info!("Successfully saved file as {}", path.display()),
                         Err(err) => error!("{}", err),
@@ -452,16 +459,16 @@ fn render_component_menus<T: Float + Send + Sync + Numeric + 'static + Pi + Seri
                 .clicked()
             {
                 // open file path
-                if let Some(path) = FileDialog::new().pick_file(){
+                if let Some(path) = FileDialog::new().pick_file() {
                     match io::read_model_from_file::<T>(&path.display().to_string()) {
                         Ok(model) => {
                             info!("Successfully loaded model from file {}", path.display());
                             components.clear();
-                            for (name, _) in model.all_components(){
+                            for (name, _) in model.all_components() {
                                 components.push(name.clone());
                             }
                             *implicit_model = model;
-                        },
+                        }
                         Err(err) => error!("{}", err),
                     }
                 }
@@ -698,7 +705,7 @@ fn render_inputs(
 
 fn render_parameters<T: Float + Send + Sync + 'static + Numeric + Serialize + Pi>(
     ui: &mut egui::Ui,
-    component: &mut Component<T>,
+    component: &mut ModelComponent<T>,
     component_name: &str,
     icons: &Icons,
 ) -> Vec<egui::Response> {
@@ -926,7 +933,7 @@ pub fn generate_mesh<T: Float + Send + Sync + 'static + Serialize + Pi>(
 fn render_collapsible_with_icon<T: Float + Send + Sync + 'static + Numeric + Serialize + Pi>(
     ui: &mut Ui,
     item: &mut String,
-    component: &mut Component<T>,
+    component: &mut ModelComponent<T>,
     all_responses: &mut Vec<Response>,
     icon: &TextureId,
     icons: &Icons,

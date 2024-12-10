@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     types::computation::{
+        model::ModelComponent,
         operations::{
             math::{Add, Divide, LinearInterpolation, Multiply, Subtract},
             shape::{BooleanDifference, BooleanIntersection, BooleanUnion, Offset, Thickness},
@@ -11,8 +12,6 @@ use crate::{
     },
     utils::math_helper::Pi,
 };
-
-use super::Component;
 
 /// Enum listing valid operation components.
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
@@ -35,7 +34,7 @@ impl OperationComponent {
     /// Used when creating components from a UI or other interface.
     pub fn create_default<T: Float + Send + Sync + 'static + Serialize + Pi>(
         &self,
-    ) -> Component<T> {
+    ) -> ModelComponent<T> {
         let op: Box<dyn ImplicitOperation<T>> = match self {
             // Maths
             OperationComponent::Add => Box::new(Add::new()),
@@ -51,7 +50,7 @@ impl OperationComponent {
             OperationComponent::Thickness => Box::new(Thickness::new(T::one())),
         };
 
-        Component::Operation(op)
+        ModelComponent::Operation(op)
     }
 }
 

@@ -1,12 +1,15 @@
 use std::fmt::{self, Display};
 
+use crate::types::geometry::Vec3;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
-use crate::types::geometry::Vec3;
 
-/// Defines an input parameter to change the value of an [`crate::types::computation::traits::ImplicitFunction`] or [`crate::types::computation::traits::ImplicitOperation`].
-/// 
+/// Defines an input parameter to change the value of a [`ModelComponent`](super::ModelComponent).
+///
 /// This offers a public mechanism to change the internal values of functions at runtime. The parameters are defined by a name and a [`DataType`].
+///
+/// These are returned from the [`parameters`](crate::types::computation::traits::ImplicitFunction::parameters) method
+/// on [`ImplicitFunction`](crate::types::computation::traits::ImplicitFunction) or [`ImplicitOperation`](crate::types::computation::traits::ImplicitOperation)
 #[derive(Debug, Clone)]
 pub struct Parameter {
     /// Display name of the parameter.
@@ -21,9 +24,9 @@ impl Parameter {
         Self { name, data_type }
     }
 
-    /// Helper method to assign the value from a matching parameter to a floating point variable. 
+    /// Helper method to assign the value from a matching parameter to a floating point variable.
     /// It will assign the value of the parameter to the target input if the parameter_name matches the target_name and the data provided matches the target type, which in this instance is a Float value.
-    /// 
+    ///
     /// # Arguments
     /// * `parameter_name` - The name of the provided parameter
     /// * `data` - The data contained.
@@ -44,11 +47,11 @@ impl Parameter {
         false
     }
 
-    /// Helper method to get the value from a matching parameter for Enum data. 
-    /// 
+    /// Helper method to get the value from a matching parameter for Enum data.
+    ///
     /// This method will return the string value contained in the parameter if the provided data is of enum type and the name matches the target name.
     /// Otherwise it will return [`None`].
-    /// 
+    ///
     /// # Arguments
     /// * `parameter_name` - The name of the provided parameter
     /// * `data` - The data contained in the parameter.
@@ -66,11 +69,11 @@ impl Parameter {
         None
     }
 
-    /// Helper method to assign the value from a matching parameter to a field. 
+    /// Helper method to assign the value from a matching parameter to a field.
     /// It will assign the value of the parameter to the target input if the parameter_name matches the target_name and the data provided matches the target type, which in this instance is a Float value.
-    /// 
-    /// The difference between this and [`set_value_from_param`] is that this method will ensure the value, if assigned, is kept within the bounds.
-    /// 
+    ///
+    /// The difference between this and [`Parameter::set_value_from_param`] is that this method will ensure the value, if assigned, is kept within the bounds.
+    ///
     /// # Arguments
     /// * `parameter_name` - The name of the provided parameter
     /// * `data` - The data contained.
@@ -95,14 +98,22 @@ impl Parameter {
         false
     }
 
+    /// Helper method to get the value from a matching parameter for Vec3 data.
+    ///
+    /// This method will return the value contained in the parameter if the provided data is of Vec3 type and the name matches the target name.
+    ///
+    /// # Arguments
+    /// * `parameter_name` - The name of the provided parameter
+    /// * `data` - The data contained in the parameter.
+    /// * `target_name` - The name of the current target.
     pub fn set_vec3_from_param<T: Float>(
         parameter_name: &str,
         data: &Data<T>,
-        param: &str,
+        target_name: &str,
         target: &mut Vec3<T>,
     ) -> bool {
         if let Data::Vec3(value) = data {
-            if parameter_name == param {
+            if parameter_name == target_name {
                 *target = *value;
                 return true;
             }
@@ -110,6 +121,14 @@ impl Parameter {
         false
     }
 
+    /// Helper method to get the value from a matching parameter for bool data.
+    ///
+    /// This method will return the value contained in the parameter if the provided data is of Vec3 type and the name matches the target name.
+    ///
+    /// # Arguments
+    /// * `parameter_name` - The name of the provided parameter
+    /// * `data` - The data contained in the parameter.
+    /// * `target_name` - The name of the current target.
     pub fn set_bool_from_param<T: Float>(
         parameter_name: &str,
         data: &Data<T>,
@@ -142,32 +161,40 @@ impl Parameter {
 }
 
 /// Enum to declare the data types which can be passed into the public parameters.
-/// 
+///
 /// This enum holds no data, and only specifies the type of data for a [`Parameter`]. The enum which is used to pass data is called [`Data`].
 #[derive(Debug, Clone)]
 pub enum DataType {
-    /// A floating point value. Can be [`f32`] or [`f64`] 
+    /// A floating point value. Should be [`f32`] or [`f64`]
     Value,
     /// A a 3-dimensional coordinate. Passed as a [`Vec3`]
     Vec3,
     /// A [`bool`] which can be either true or false.
     Boolean,
-    /// An uncontrained string. This can be any text.
+    /// An uncontrained [`String`]. This can be any text.
     Text,
     /// A constrained selection set, defined as a list of possible options.
     Enum(&'static [&'static str]),
 }
 
+/// Enum which holds the various types of data that can be fed to a component parameter.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Data<T> {
+    /// A floating point value. Should be [`f32`] or [`f64`]
     Value(T),
+    /// A a 3-dimensional coordinate. Passed as a [`Vec3`]
     Vec3(Vec3<T>),
+    /// A [`bool`] which can be either true or false.
     Boolean(bool),
+    /// Data coming from a path represented as a [`String`].
     File(String),
     EnumValue(String),
 }
 
 impl<T> Data<T> {
+    /// Get the value stored inside of a [`Data::Value`] container.
+    ///
+    /// If the data is of type [`Data::Value`], the value stored will be returned as a *T*. Any other type will return [`None`].
     pub fn get_value(&self) -> Option<&T> {
         if let Data::Value(ref value) = self {
             Some(value)
@@ -176,6 +203,9 @@ impl<T> Data<T> {
         }
     }
 
+    /// Get the value stored inside of a [`Data::Vec3`] container.
+    ///
+    /// If the data is of type [`Data::Vec3`], the value stored will be returned as a [`Vec3`]. Any other type will return [`None`].
     pub fn get_vec3(&self) -> Option<&Vec3<T>> {
         if let Data::Vec3(ref vec3) = self {
             Some(vec3)
@@ -184,6 +214,9 @@ impl<T> Data<T> {
         }
     }
 
+    /// Get the value stored inside of a [`Data::Boolean`] container.
+    ///
+    /// If the data is of type [`Data::Boolean`], the value stored will be returned as a [`bool`]. Any other type will return [`None`].
     pub fn get_bool(&self) -> Option<bool> {
         if let Data::Boolean(b) = self {
             Some(*b)
@@ -192,6 +225,9 @@ impl<T> Data<T> {
         }
     }
 
+    /// Get the value stored inside of a [`Data::File`] container.
+    ///
+    /// If the data is of type [`Data::File`], the value stored will be returned as a [`String`]. Any other type will return [`None`].
     pub fn get_file(&self) -> Option<String> {
         if let Data::File(ref path) = self {
             Some(path.clone())

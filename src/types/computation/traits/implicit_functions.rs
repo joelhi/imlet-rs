@@ -1,4 +1,4 @@
-use crate::types::computation::components::{Data, Parameter};
+use crate::types::computation::model::{Data, Parameter};
 use std::any::type_name;
 
 /// Trait to defin a distance function in 3d space.

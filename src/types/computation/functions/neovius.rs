@@ -4,7 +4,7 @@ use log::error;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::components::{Data, DataType, Parameter};
+use crate::types::computation::model::{Data, DataType, Parameter};
 use crate::types::computation::traits::ImplicitFunction;
 use crate::utils::math_helper::Pi;
 

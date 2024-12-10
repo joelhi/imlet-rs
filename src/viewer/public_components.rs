@@ -1,6 +1,4 @@
-use crate::types::computation::components::{
-    function_components::FunctionComponent, operation_components::OperationComponent,
-};
+use crate::types::computation::{functions::FunctionComponent, operations::OperationComponent};
 
 /// List of the components exposed in the app under the functions.
 pub const PUBLIC_FUNCTION_COMPONENTS: &'static [FunctionComponent] = &[

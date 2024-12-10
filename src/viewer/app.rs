@@ -6,7 +6,7 @@ use num_traits::Float;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
-    types::{computation::ImplicitModel, geometry::BoundingBox},
+    types::{computation::model::ImplicitModel, geometry::BoundingBox},
     utils::math_helper::Pi,
 };
 

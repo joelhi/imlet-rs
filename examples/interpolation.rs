@@ -2,11 +2,11 @@ use imlet::{
     types::{
         computation::{
             functions::{Gyroid, SchwarzP},
+            model::ImplicitModel,
             operations::{
                 math::LinearInterpolation,
                 shape::{BooleanIntersection, Thickness},
             },
-            ImplicitModel,
         },
         geometry::{BoundingBox, Sphere, Vec3},
     },

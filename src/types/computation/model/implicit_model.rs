@@ -1,6 +1,6 @@
 use crate::algorithms::marching_cubes::generate_iso_surface;
 use crate::types::computation::traits::{ImplicitFunction, ImplicitOperation};
-use crate::types::computation::ComputationGraph;
+use crate::types::computation::{ModelError, ScalarField};
 use crate::types::geometry::{BoundingBox, Mesh};
 use crate::utils::math_helper::Pi;
 use crate::IMLET_VERSION;
@@ -11,16 +11,44 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::{self, Debug, Display};
 use std::time::Instant;
 
-use super::components::{Component, ComponentId};
-use super::{ModelError, ScalarField};
+use super::ComputationGraph;
+use super::{ComponentId, ModelComponent};
 
 /// An implicit model composed of distance functions and operations.
 ///
 /// This acts as the main interface used to build and compute implicit models.
+///
+/// # Example use
+///
+/// ```rust
+/// // Create a new empty model.
+/// 
+/// use imlet::types::computation::model::ImplicitModel;
+/// use imlet::types::computation::operations::math::Add;
+/// 
+/// // Create a new model.
+/// let mut model: ImplicitModel<f64> = ImplicitModel::new();
+///
+/// // Add a constant with a value 1 to the model.
+/// let first_value = model.add_constant("FirstValue", 1.0).unwrap();
+///
+/// // Add another constant with a value 1 to the model.
+/// let second_value = model.add_constant("SecondValue", 1.0).unwrap();
+///
+/// // Add an addition operation that reads the two constants and adds them together.
+/// let sum = model
+///     .add_operation_with_inputs("Sum", Add::new(), &[&first_value, &second_value])
+///     .unwrap();
+///
+/// // Evaluate the model reading the output of the Sum operation.
+/// let value = model.evaluate_at(&sum, 0.0, 0.0, 0.0).unwrap();
+/// assert_eq!(2.0, value)
+///
+/// ```
 #[derive(Serialize, Deserialize)]
 pub struct ImplicitModel<T: Float + Send + Sync + Serialize + 'static + Pi> {
     version: String,
-    components: HashMap<String, Component<T>>,
+    components: HashMap<String, ModelComponent<T>>,
     inputs: HashMap<String, Vec<Option<String>>>,
 }
 
@@ -40,18 +68,28 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         }
     }
 
-    pub fn all_components(&self) -> Vec<(&String, &Component<T>)> {
+    /// Get references to all the components in the model and their tags.
+    pub fn all_components(&self) -> Vec<(&String, &ModelComponent<T>)> {
         self.components.iter().collect()
     }
 
-    pub fn get_component(&self, tag: &str) -> Option<&Component<T>> {
+    /// Get a referenced component from the model by tag. 
+    /// 
+    /// Returns a reference to the component if present, othwerwise [`None`]
+    pub fn get_component(&self, tag: &str) -> Option<&ModelComponent<T>> {
         self.components.get(tag)
     }
 
-    pub fn get_component_mut(&mut self, tag: &str) -> Option<&mut Component<T>> {
+    /// Get a mutable reference to a component from the model by tag.
+    /// 
+    /// Useful when you want to update the value of a [`Parameter`](super::Parameter) of a component.
+    /// 
+    /// Returns a [`&mut`] to the component if present, othwerwise [`None`]
+    pub fn get_component_mut(&mut self, tag: &str) -> Option<&mut ModelComponent<T>> {
         self.components.get_mut(tag)
     }
 
+    /// Get the tags of all the inputs assigned to a component.
     pub fn get_inputs(&self, tag: &str) -> Option<&Vec<Option<String>>> {
         self.inputs.get(tag)
     }
@@ -72,8 +110,10 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         let tag_string = tag.to_string();
         self.verify_tag_is_free(&tag_string)?;
 
-        self.components
-            .insert(tag_string.clone(), Component::Function(Box::new(function)));
+        self.components.insert(
+            tag_string.clone(),
+            ModelComponent::Function(Box::new(function)),
+        );
 
         Ok(tag_string)
     }
@@ -98,7 +138,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
             .insert(tag_string.clone(), vec![None; operation.inputs().len()]);
         self.components.insert(
             tag_string.clone(),
-            Component::Operation(Box::new(operation)),
+            ModelComponent::Operation(Box::new(operation)),
         );
 
         Ok(tag_string)
@@ -137,7 +177,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
 
         self.components.insert(
             tag_string.clone(),
-            Component::Operation(Box::new(operation)),
+            ModelComponent::Operation(Box::new(operation)),
         );
 
         Ok(tag_string)
@@ -156,7 +196,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         self.verify_tag_is_free(&tag_string)?;
 
         self.components
-            .insert(tag_string.clone(), Component::Constant(value));
+            .insert(tag_string.clone(), ModelComponent::Constant(value));
 
         Ok(tag_string)
     }
@@ -278,14 +318,14 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     pub(crate) fn add_component(
         &mut self,
         tag: &str,
-        component: Component<T>,
+        component: ModelComponent<T>,
     ) -> Result<String, ModelError> {
         let valid_tag = self.find_free_tag(&tag)?;
         // Add inputs if applicable
         match &component {
-            Component::Constant(_) => {}
-            Component::Function(_) => {}
-            Component::Operation(operation) => {
+            ModelComponent::Constant(_) => {}
+            ModelComponent::Function(_) => {}
+            ModelComponent::Operation(operation) => {
                 self.inputs
                     .insert(valid_tag.clone(), vec![None; operation.inputs().len()]);
             }
@@ -297,7 +337,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     }
 
     #[allow(dead_code)]
-    /// Modify the tag of the 
+    /// Modify the tag of the
     pub(crate) fn rename_component(
         &mut self,
         current_tag: &str,

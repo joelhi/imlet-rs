@@ -3,9 +3,9 @@
 //! This crate provides various mathematical primitives, periodic surfaces, and custom geometry functions.
 //!
 //! ## Simple
-//! - [`XCoord`](functions::XCoord)
-//! - [`YCoord`](functions::YCoord)
-//! - [`ZCoord`](functions::ZCoord)
+//! - [`XDomain`](functions::XDomain)
+//! - [`YDomain`](functions::YDomain)
+//! - [`ZDomain`](functions::ZDomain)
 //!
 //! ## Periodic Surface Functions
 //! - [`Gyroid`](functions::Gyroid)
@@ -13,10 +13,7 @@
 //! - [`SchwarzP`](functions::SchwarzP)
 //!
 //! ## Custom
-//! - [`CustomFunction`](functions::CustomFunction)
-//! - [`CustomGeometry`](functions::CustomGeometry)
-//!
-//! ## From file
+//! - [`CustomGeometry`](functions::CustomMesh)
 //! - [`MeshFile`](functions::MeshFile)
 
 // Modules
@@ -34,3 +31,6 @@ mod custom_sdf;
 pub use custom_sdf::*;
 mod mesh_file;
 pub use mesh_file::*;
+
+mod function_components;
+pub use function_components::*;

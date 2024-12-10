@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::{
     computation::{
-        components::{Data, Parameter},
+        model::{Data, Parameter},
         traits::ImplicitFunction,
     },
     geometry::{Mesh, Octree, Triangle, Vec3},

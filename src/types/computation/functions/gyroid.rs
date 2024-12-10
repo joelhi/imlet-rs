@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     types::computation::{
-        components::{Data, DataType, Parameter},
+        model::{Data, DataType, Parameter},
         traits::ImplicitFunction,
     },
     utils::math_helper::Pi,

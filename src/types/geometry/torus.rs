@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::{
     computation::{
-        components::{Data, DataType, Parameter},
+        model::{Data, DataType, Parameter},
         traits::ImplicitFunction,
     },
     geometry::Vec3,
@@ -52,12 +52,13 @@ impl<T> Torus<T> {
 
 impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Torus<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
-        let squared_value = (self.r - ((x - self.centre.x).powi(2) + (z - self.centre.z).powi(2)).sqrt()).powi(2)
-            + (y - self.centre.y).powi(2)
-            - self.t.powi(2);
-        if squared_value<T::zero(){
+        let squared_value =
+            (self.r - ((x - self.centre.x).powi(2) + (z - self.centre.z).powi(2)).sqrt()).powi(2)
+                + (y - self.centre.y).powi(2)
+                - self.t.powi(2);
+        if squared_value < T::zero() {
             -(squared_value.abs().sqrt())
-        }else{
+        } else {
             squared_value.sqrt()
         }
     }
@@ -89,15 +90,19 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Torus<T> {
     }
 }
 
-
 #[cfg(test)]
-mod tests{
+mod tests {
     use super::*;
 
     #[test]
-    fn test_torus_centre_distance_value(){
+    fn test_torus_centre_distance_value() {
         let torus = Torus::new(Vec3::origin(), 45., 5.);
         let val = torus.eval(45., 0., 0.);
-        assert!((val+5.).abs() < f64::epsilon(), "Incorrect signed distance value at tours centre line, value was {}, but radius is {}", val, 5.0);
+        assert!(
+            (val + 5.).abs() < f64::epsilon(),
+            "Incorrect signed distance value at tours centre line, value was {}, but radius is {}",
+            val,
+            5.0
+        );
     }
 }

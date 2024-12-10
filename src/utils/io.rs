@@ -10,7 +10,7 @@ use num_traits::Float;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::types::{
-    computation::{ImplicitModel, ScalarField},
+    computation::{model::ImplicitModel, ScalarField},
     geometry::{Mesh, Vec3},
 };
 
@@ -206,19 +206,22 @@ pub fn write_model_to_file<T: Float + Send + Sync + Serialize + 'static + Pi>(
 }
 
 /// Deserialize an implicit model from a json file
-/// 
+///
 /// # Arguments
 ///
 /// * `file_name` - Name of the file to read with the `.json` extension.
-/// 
+///
 /// # Returns
-/// 
+///
 /// An error is something went wrong, such as if the file can't be found or the deserialization failed.
-/// 
+///
 /// Returns Ok() with the model if the read was successful.
-pub fn read_model_from_file<'de, T: Float + Send + Sync + Serialize + 'static + Pi + DeserializeOwned>(
-    file_path: &str
-) -> Result<ImplicitModel<T>, Box<dyn std::error::Error>>{
+pub fn read_model_from_file<
+    'de,
+    T: Float + Send + Sync + Serialize + 'static + Pi + DeserializeOwned,
+>(
+    file_path: &str,
+) -> Result<ImplicitModel<T>, Box<dyn std::error::Error>> {
     let path = Path::new(file_path);
 
     let extension = path.extension().ok_or_else(|| {
@@ -244,22 +247,25 @@ pub fn read_model_from_file<'de, T: Float + Send + Sync + Serialize + 'static + 
     let deserialized: ImplicitModel<T> = serde_json::de::from_slice(&data)?;
 
     Ok(deserialized)
-
 }
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_deserialize_simple_model(){
-        let model: ImplicitModel<f32> = read_model_from_file("assets/models/gyroid_model.json").unwrap();
+    fn test_deserialize_simple_model() {
+        let model: ImplicitModel<f32> =
+            read_model_from_file("assets/models/gyroid_model.json").unwrap();
 
-       let val = model.evaluate_at("Output", 0., 0., 0.).unwrap();
+        let val = model.evaluate_at("Output", 0., 0., 0.).unwrap();
 
-       let expected_val = 41.60254;
-       assert!((val - expected_val).abs() < f32::epsilon(), "Wrong value returned from model. Was {}, but should have been {}", val, expected_val);
+        let expected_val = 41.60254;
+        assert!(
+            (val - expected_val).abs() < f32::epsilon(),
+            "Wrong value returned from model. Was {}, but should have been {}",
+            val,
+            expected_val
+        );
     }
-
 }

@@ -4,7 +4,7 @@ use std::fmt::Debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::components::{Data, DataType, Parameter};
+use crate::types::computation::model::{Data, DataType, Parameter};
 use crate::types::computation::traits::ImplicitFunction;
 use crate::utils::math_helper::normalize;
 
@@ -92,12 +92,12 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for ZDomain<T> {
 
 /// Distance function that evaluates to the y-coordinate
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct YDommain<T> {
+pub struct YDomain<T> {
     min: T,
     max: T,
 }
 
-impl<T: Float> YDommain<T> {
+impl<T: Float> YDomain<T> {
     /// Create a distance function for a remapped y domain.
     ///
     /// Can be used for interpolation.
@@ -119,7 +119,7 @@ impl<T: Float> YDommain<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for YDommain<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for YDomain<T> {
     fn eval(&self, _: T, y: T, _: T) -> T {
         normalize(y, self.min, self.max)
     }
@@ -318,7 +318,7 @@ mod tests {
 
     #[test]
     fn test_natural_y_domain() {
-        let domain: YDommain<f32> = YDommain::natural();
+        let domain: YDomain<f32> = YDomain::natural();
 
         assert!(domain.eval(1., 0., 0.).abs() < f32::epsilon());
         assert!((domain.eval(1., 0.5, 0.5) - 0.5).abs() < f32::epsilon());
@@ -351,7 +351,7 @@ mod tests {
 
     #[test]
     fn test_handle_zero_size_domain_y() {
-        let mut domain: YDommain<f32> = YDommain::natural();
+        let mut domain: YDomain<f32> = YDomain::natural();
 
         domain.set_parameter("Max", Data::Value(0.0));
 
