@@ -3,7 +3,10 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    types::computation::{traits::ImplicitFunction, Data, DataType, Parameter},
+    types::computation::{
+        model::{Data, DataType, Parameter},
+        traits::ImplicitFunction,
+    },
     utils::math_helper::Pi,
 };
 use std::fmt::Debug;
@@ -51,7 +54,26 @@ impl<T: Float> Gyroid<T> {
     }
 }
 
-impl<T: Pi + Float + Send + Sync> ImplicitFunction<T> for Gyroid<T> {
+static GYROID_PARAMETERS: &[Parameter; 4] = &[
+    Parameter {
+        name: "Length X",
+        data_type: DataType::Value,
+    },
+    Parameter {
+        name: "Length Y",
+        data_type: DataType::Value,
+    },
+    Parameter {
+        name: "Length Z",
+        data_type: DataType::Value,
+    },
+    Parameter {
+        name: "Linearize",
+        data_type: DataType::Boolean,
+    },
+];
+
+impl<T: Pi + Float + Send + Sync + Serialize> ImplicitFunction<T> for Gyroid<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         let two = T::from(2.0).unwrap();
         let normalized_distance = (T::pi() * x / self.length_x).sin()
@@ -70,12 +92,8 @@ impl<T: Pi + Float + Send + Sync> ImplicitFunction<T> for Gyroid<T> {
         }
     }
 
-    fn parameters(&self) -> Vec<Parameter> {
-        vec![
-            Parameter::new("Length X", DataType::Value),
-            Parameter::new("Length Y", DataType::Value),
-            Parameter::new("Length Z", DataType::Value),
-        ]
+    fn parameters(&self) -> &[Parameter] {
+        GYROID_PARAMETERS
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
@@ -90,8 +108,9 @@ impl<T: Pi + Float + Send + Sync> ImplicitFunction<T> for Gyroid<T> {
                 parameter_name,
                 &data,
                 "Length Z",
-                &mut self.length_y,
-            ))
+                &mut self.length_z,
+            )
+            || Parameter::set_bool_from_param(parameter_name, &data, "Linearize", &mut self.linear))
         {
             error!("Unknown parameter name: {}", parameter_name);
         }
@@ -102,6 +121,7 @@ impl<T: Pi + Float + Send + Sync> ImplicitFunction<T> for Gyroid<T> {
             "Length X" => Some(Data::Value(self.length_x)),
             "Length Y" => Some(Data::Value(self.length_y)),
             "Length Z" => Some(Data::Value(self.length_z)),
+            "Linearize" => Some(Data::Boolean(self.linear)),
             _ => None,
         }
     }

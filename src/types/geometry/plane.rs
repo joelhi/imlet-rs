@@ -4,7 +4,9 @@ use log::error;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::{traits::ImplicitFunction, Data, DataType, Parameter};
+use crate::types::computation::{
+    model::Data, model::DataType, model::Parameter, traits::ImplicitFunction,
+};
 
 use super::{traits::SignedDistance, Vec3};
 
@@ -14,6 +16,17 @@ pub struct Plane<T> {
     origin: Vec3<T>,
     normal: Vec3<T>,
 }
+
+static PLANE_PARAMS: &[Parameter; 2] = &[
+    Parameter {
+        name: "Origin",
+        data_type: DataType::Vec3,
+    },
+    Parameter {
+        name: "Normal",
+        data_type: DataType::Vec3,
+    },
+];
 
 impl<T: Float> Plane<T> {
     /// Create a new Plane from an origin point and a normal.
@@ -26,6 +39,35 @@ impl<T: Float> Plane<T> {
         Plane {
             origin,
             normal: normal.normalize(),
+        }
+    }
+
+    /// Create a new global XY plane at the origin point `{0,0,0}`
+    ///
+    /// # Arguments
+    ///
+    /// * `origin` - The location of the origin.
+    /// * `normal` - The direction of the normal (z) direction.
+    pub fn xy() -> Self {
+        Plane {
+            origin: Vec3::origin(),
+            normal: Vec3::z_axis().normalize(),
+        }
+    }
+
+    /// Create a new global YZ plane at the origin point `{0,0,0}`
+    pub fn yz() -> Self {
+        Plane {
+            origin: Vec3::origin(),
+            normal: Vec3::x_axis().normalize(),
+        }
+    }
+
+    /// Create a new global XZ plane at the origin point `{0,0,0}`
+    pub fn xz() -> Self {
+        Plane {
+            origin: Vec3::origin(),
+            normal: Vec3::y_axis().normalize(),
         }
     }
 
@@ -60,16 +102,13 @@ impl<T: Float + Send + Sync> SignedDistance<T> for Plane<T> {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitFunction<T> for Plane<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Plane<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance_coord(x, y, z)
     }
 
-    fn parameters(&self) -> Vec<Parameter> {
-        vec![
-            Parameter::new("Origin", DataType::Vec3),
-            Parameter::new("Normal", DataType::Vec3),
-        ]
+    fn parameters(&self) -> &[Parameter] {
+        PLANE_PARAMS
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
@@ -89,6 +128,6 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for Plane<T> {
     }
 
     fn function_name(&self) -> &'static str {
-        "Torus"
+        "Plane"
     }
 }

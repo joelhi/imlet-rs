@@ -54,3 +54,15 @@ pub(crate) fn index3d_from_index1d(
 
     (i, j, k)
 }
+
+#[inline]
+pub(crate) fn format_integer(n: usize) -> String {
+    let mut s = n.to_string();
+    let len = s.len();
+    for i in (1..len).rev() {
+        if (len - i) % 3 == 0 {
+            s.insert(i, ',');
+        }
+    }
+    s
+}

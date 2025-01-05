@@ -1,6 +1,10 @@
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
-use crate::types::computation::{traits::ImplicitFunction, Data, Parameter};
+use crate::types::computation::{
+    model::{Data, Parameter},
+    traits::ImplicitFunction,
+};
 
 use super::{
     traits::{SignedDistance, SignedQuery, SpatialQuery},
@@ -10,6 +14,7 @@ use super::{
 /// Stores a fixed, queryable collection of primitive geometries.
 ///
 /// Internally stores the objects inside an octree.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeometryCollection<Q, T> {
     tree: Octree<Q, T>,
 }
@@ -57,15 +62,15 @@ impl<Q: SignedQuery<T>, T: Float> SignedDistance<T> for GeometryCollection<Q, T>
     }
 }
 
-impl<Q: SignedQuery<T> + Send + Sync, T: Float + Send + Sync> ImplicitFunction<T>
-    for GeometryCollection<Q, T>
+impl<Q: SignedQuery<T> + Send + Sync + Serialize, T: Float + Send + Sync + Serialize>
+    ImplicitFunction<T> for GeometryCollection<Q, T>
 {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(x, y, z)
     }
 
-    fn parameters(&self) -> Vec<Parameter> {
-        vec![]
+    fn parameters(&self) -> &[Parameter] {
+        &[]
     }
 
     fn set_parameter(&mut self, _: &str, _: Data<T>) {

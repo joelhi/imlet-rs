@@ -10,6 +10,7 @@ use serde::Serialize;
 
 use crate::types::geometry::Vec3;
 use crate::types::geometry::Vec3i;
+use crate::utils;
 use crate::utils::math_helper::index1d_from_index3d;
 use crate::utils::math_helper::index3d_from_index1d;
 
@@ -257,9 +258,51 @@ impl<T: Float> ScalarField<T> {
 
         log::info!(
             "Dense value data for {} points smoothed in {:.2?} for {} iterations",
-            self.num_points(),
+            utils::math_helper::format_integer(self.num_points()),
             before.elapsed(),
             iterations
+        );
+    }
+
+    /// Applies padding to the field boundaries. All boundary points will be assigned a specific value.
+    ///
+    /// This can be used to ensure open edges of a solid are capped at the bounds.
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - The value to assign to all boundary points.
+    pub fn padding(&mut self, padding_value: T) {
+        let before = Instant::now();
+        let (num_x, num_y, num_z) = self.n.into();
+        for i in 0..self.n.i {
+            for j in 0..self.n.j {
+                let index_a = index1d_from_index3d(i, j, 0, num_x, num_y, num_z);
+                let index_b = index1d_from_index3d(i, j, num_z - 1, num_x, num_y, num_z);
+                self.data[index_a] = padding_value;
+                self.data[index_b] = padding_value;
+            }
+        }
+        for i in 0..self.n.i {
+            for k in 0..self.n.k {
+                let index_a = index1d_from_index3d(i, 0, k, num_x, num_y, num_z);
+                let index_b = index1d_from_index3d(i, num_y - 1, k, num_x, num_y, num_z);
+                self.data[index_a] = padding_value;
+                self.data[index_b] = padding_value;
+            }
+        }
+        for k in 0..self.n.k {
+            for j in 0..self.n.j {
+                let index_a = index1d_from_index3d(0, j, k, num_x, num_y, num_z);
+                let index_b = index1d_from_index3d(num_x - 1, j, k, num_x, num_y, num_z);
+                self.data[index_a] = padding_value;
+                self.data[index_b] = padding_value;
+            }
+        }
+
+        log::info!(
+            "Dense value data with {} points padded in {:.2?}.",
+            utils::math_helper::format_integer(self.num_points()),
+            before.elapsed()
         );
     }
 }
@@ -291,8 +334,8 @@ impl<T: Float + Send + Sync> ScalarField<T> {
         }
 
         log::info!(
-            "Dense value data for {} points smoothed in {:.2?} for {} iterations",
-            self.num_points(),
+            "Dense value data with {} points smoothed in {:.2?} over {} iterations",
+            utils::math_helper::format_integer(self.num_points()),
             before.elapsed(),
             iterations
         );

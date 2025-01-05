@@ -1,9 +1,13 @@
 use std::fmt::Debug;
 
+use log::error;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::traits::ImplicitOperation;
+use crate::types::computation::{
+    model::{Data, DataType, Parameter},
+    traits::ImplicitOperation,
+};
 
 /// Operation to perform a boolean union on two distance values -> min(a, b)
 ///
@@ -26,13 +30,25 @@ impl BooleanUnion {
     }
 }
 
+static UNION_INPUT_NAMES: [&str; 2] = ["Shape A", "Shape B"];
+
 impl<T: Float> ImplicitOperation<T> for BooleanUnion {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0].min(inputs[1])
     }
 
-    fn num_inputs(&self) -> usize {
-        2
+    fn inputs(&self) -> &[&str] {
+        &UNION_INPUT_NAMES
+    }
+
+    fn parameters(&self) -> &[Parameter] {
+        &[]
+    }
+
+    fn set_parameter(&mut self, _: &str, _: Data<T>) {}
+
+    fn read_parameter(&self, _: &str) -> Option<Data<T>> {
+        None
     }
 
     fn operation_name(&self) -> &'static str {
@@ -66,8 +82,18 @@ impl<T: Float> ImplicitOperation<T> for BooleanIntersection {
         inputs[0].max(inputs[1])
     }
 
-    fn num_inputs(&self) -> usize {
-        2
+    fn inputs(&self) -> &[&str] {
+        &UNION_INPUT_NAMES
+    }
+
+    fn parameters(&self) -> &[Parameter] {
+        &[]
+    }
+
+    fn set_parameter(&mut self, _: &str, _: Data<T>) {}
+
+    fn read_parameter(&self, _: &str) -> Option<Data<T>> {
+        None
     }
 
     fn operation_name(&self) -> &'static str {
@@ -96,13 +122,25 @@ impl BooleanDifference {
     }
 }
 
+static DIFF_INPUT_NAMES: [&str; 2] = ["Base Shape", "Subtract Shape"];
+
 impl<T: Float> ImplicitOperation<T> for BooleanDifference {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0].max(-inputs[1])
     }
 
-    fn num_inputs(&self) -> usize {
-        2
+    fn inputs(&self) -> &[&str] {
+        &DIFF_INPUT_NAMES
+    }
+
+    fn parameters(&self) -> &[Parameter] {
+        &[]
+    }
+
+    fn set_parameter(&mut self, _: &str, _: Data<T>) {}
+
+    fn read_parameter(&self, _: &str) -> Option<Data<T>> {
+        None
     }
 
     fn operation_name(&self) -> &'static str {
@@ -132,13 +170,38 @@ impl<T> Offset<T> {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitOperation<T> for Offset<T> {
+static OFFSET_INPUT_NAMES: &[&str; 1] = &["Shape"];
+
+static OFFSET_PARAMETERS: &[Parameter] = &[Parameter {
+    name: "Distance",
+    data_type: DataType::Value,
+}];
+
+impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Offset<T> {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0] - self.distance
     }
 
-    fn num_inputs(&self) -> usize {
-        1
+    fn inputs(&self) -> &[&str] {
+        OFFSET_INPUT_NAMES
+    }
+
+    fn parameters(&self) -> &[Parameter] {
+        OFFSET_PARAMETERS
+    }
+
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
+        if !(Parameter::set_value_from_param(parameter_name, &data, "Distance", &mut self.distance))
+        {
+            error!("Unknown parameter name: {}", parameter_name);
+        }
+    }
+
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>> {
+        match parameter_name {
+            "Distance" => Some(Data::Value(self.distance)),
+            _ => None,
+        }
     }
 
     fn operation_name(&self) -> &'static str {
@@ -155,6 +218,13 @@ pub struct Thickness<T> {
     t: T,
 }
 
+static THICKNESS_INPUT_NAMES: [&str; 1] = ["Shape"];
+
+static THICKNESS_PARAMETERS: &[Parameter] = &[Parameter {
+    name: "Thickness",
+    data_type: DataType::Value,
+}];
+
 impl<T> Thickness<T> {
     /// Create a new Thickness operation.
     ///
@@ -166,14 +236,31 @@ impl<T> Thickness<T> {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitOperation<T> for Thickness<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Thickness<T> {
     fn eval(&self, inputs: &[T]) -> T {
         let two = T::from(2.0).unwrap();
         (inputs[0] - self.t / two).max(-(inputs[0] + self.t / two))
     }
 
-    fn num_inputs(&self) -> usize {
-        1
+    fn inputs(&self) -> &[&str] {
+        &THICKNESS_INPUT_NAMES
+    }
+
+    fn parameters(&self) -> &[Parameter] {
+        THICKNESS_PARAMETERS
+    }
+
+    fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
+        if !(Parameter::set_value_from_param(parameter_name, &data, "Thickness", &mut self.t)) {
+            error!("Unknown parameter name: {}", parameter_name);
+        }
+    }
+
+    fn read_parameter(&self, parameter_name: &str) -> Option<Data<T>> {
+        match parameter_name {
+            "Thickness" => Some(Data::Value(self.t)),
+            _ => None,
+        }
     }
 
     fn operation_name(&self) -> &'static str {

@@ -1,42 +1,97 @@
 use crate::algorithms::marching_cubes::generate_iso_surface;
-use crate::types::computation::component::{Component, ComponentId};
 use crate::types::computation::traits::{ImplicitFunction, ImplicitOperation};
-use crate::types::computation::ComputationGraph;
-use crate::types::geometry::traits::SignedDistance;
+use crate::types::computation::{ModelError, ScalarField};
 use crate::types::geometry::{BoundingBox, Mesh};
+use crate::utils::math_helper::Pi;
+use crate::IMLET_VERSION;
+use log::{debug, info};
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::{self, Debug, Display};
 use std::time::Instant;
 
-use super::functions::CustomGeometry;
-use super::{ModelError, ScalarField};
+use super::ComputationGraph;
+use super::{ComponentId, ModelComponent};
 
 /// An implicit model composed of distance functions and operations.
 ///
 /// This acts as the main interface used to build and compute implicit models.
-pub struct ImplicitModel<T> {
-    components: HashMap<String, Component<T>>,
+///
+/// # Example use
+///
+/// ```rust
+/// // Create a new empty model.
+///
+/// use imlet::types::computation::model::ImplicitModel;
+/// use imlet::types::computation::operations::math::Add;
+///
+/// // Create a new model.
+/// let mut model: ImplicitModel<f64> = ImplicitModel::new();
+///
+/// // Add a constant with a value 1 to the model.
+/// let first_value = model.add_constant("FirstValue", 1.0).unwrap();
+///
+/// // Add another constant with a value 1 to the model.
+/// let second_value = model.add_constant("SecondValue", 1.0).unwrap();
+///
+/// // Add an addition operation that reads the two constants and adds them together.
+/// let sum = model
+///     .add_operation_with_inputs("Sum", Add::new(), &[&first_value, &second_value])
+///     .unwrap();
+///
+/// // Evaluate the model reading the output of the Sum operation.
+/// let value = model.evaluate_at(&sum, 0.0, 0.0, 0.0).unwrap();
+/// assert_eq!(2.0, value)
+///
+/// ```
+#[derive(Serialize, Deserialize)]
+pub struct ImplicitModel<T: Float + Send + Sync + Serialize + 'static + Pi> {
+    version: String,
+    components: HashMap<String, ModelComponent<T>>,
     inputs: HashMap<String, Vec<Option<String>>>,
 }
 
-impl<T> Default for ImplicitModel<T> {
+impl<T: Float + Send + Sync + Serialize + 'static + Pi> Default for ImplicitModel<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T> ImplicitModel<T> {
+impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     /// Create a new empty model.
     pub fn new() -> Self {
         Self {
+            version: IMLET_VERSION.to_string(),
             components: HashMap::new(),
             inputs: HashMap::new(),
         }
     }
 
-    pub fn all_components(&self) -> Vec<(&String, &Component<T>)> {
+    /// Get references to all the components in the model and their tags.
+    pub fn all_components(&self) -> Vec<(&String, &ModelComponent<T>)> {
         self.components.iter().collect()
+    }
+
+    /// Get a referenced component from the model by tag.
+    ///
+    /// Returns a reference to the component if present, othwerwise [`None`]
+    pub fn get_component(&self, tag: &str) -> Option<&ModelComponent<T>> {
+        self.components.get(tag)
+    }
+
+    /// Get a mutable reference to a component from the model by tag.
+    ///
+    /// Useful when you want to update the value of a [`Parameter`](super::Parameter) of a component.
+    ///
+    /// Returns a [`&mut`] to the component if present, othwerwise [`None`]
+    pub fn get_component_mut(&mut self, tag: &str) -> Option<&mut ModelComponent<T>> {
+        self.components.get_mut(tag)
+    }
+
+    /// Get the tags of all the inputs assigned to a component.
+    pub fn get_inputs(&self, tag: &str) -> Option<&Vec<Option<String>>> {
+        self.inputs.get(tag)
     }
 
     /// Add a general distance function component to the model.
@@ -55,8 +110,10 @@ impl<T> ImplicitModel<T> {
         let tag_string = tag.to_string();
         self.verify_tag_is_free(&tag_string)?;
 
-        self.components
-            .insert(tag_string.clone(), Component::Function(Box::new(function)));
+        self.components.insert(
+            tag_string.clone(),
+            ModelComponent::Function(Box::new(function)),
+        );
 
         Ok(tag_string)
     }
@@ -78,10 +135,10 @@ impl<T> ImplicitModel<T> {
         self.verify_tag_is_free(&tag_string)?;
 
         self.inputs
-            .insert(tag_string.clone(), vec![None; operation.num_inputs()]);
+            .insert(tag_string.clone(), vec![None; operation.inputs().len()]);
         self.components.insert(
             tag_string.clone(),
-            Component::Operation(Box::new(operation)),
+            ModelComponent::Operation(Box::new(operation)),
         );
 
         Ok(tag_string)
@@ -105,11 +162,11 @@ impl<T> ImplicitModel<T> {
         let tag_string = tag.to_string();
         self.verify_tag_is_free(&tag_string)?;
 
-        if operation.num_inputs() != inputs.len() {
+        if operation.inputs().len() != inputs.len() {
             return Err(ModelError::IncorrectInputCount {
                 component: tag_string,
                 num_inputs: inputs.len(),
-                count: operation.num_inputs(),
+                count: operation.inputs().len(),
             });
         }
 
@@ -120,7 +177,7 @@ impl<T> ImplicitModel<T> {
 
         self.components.insert(
             tag_string.clone(),
-            Component::Operation(Box::new(operation)),
+            ModelComponent::Operation(Box::new(operation)),
         );
 
         Ok(tag_string)
@@ -139,7 +196,7 @@ impl<T> ImplicitModel<T> {
         self.verify_tag_is_free(&tag_string)?;
 
         self.components
-            .insert(tag_string.clone(), Component::Constant(value));
+            .insert(tag_string.clone(), ModelComponent::Constant(value));
 
         Ok(tag_string)
     }
@@ -182,6 +239,10 @@ impl<T> ImplicitModel<T> {
             });
         }
 
+        info!(
+            "Input {} assigned to component {} at index {}",
+            source, target, index
+        );
         target_component_inputs[index] = Some(source_string.clone());
 
         Ok(())
@@ -210,8 +271,130 @@ impl<T> ImplicitModel<T> {
             });
         }
 
+        info!(
+            "Input {} at index {} removed from component {}.",
+            component_inputs[index]
+                .clone()
+                .unwrap_or("None".to_string()),
+            index,
+            component
+        );
         component_inputs[index] = None;
         Ok(())
+    }
+
+    /// Remove a component from the model. This will remove the inputs of all dependent components.
+    /// # Arguments
+    ///
+    /// * `component` - The tag of the operation which recieves the input.
+    ///
+    /// # Returns
+    ///      
+    /// * `Result<(), ModelError>` - Returns `Ok(())` if the input is removed successfully, or `Err(String)` if something goes wrong, such as when the tag is not found in the model.
+    pub fn remove_component(&mut self, tag: &str) -> Result<(), ModelError> {
+        self.verify_tag_is_present(tag)?;
+
+        self.components.remove(tag);
+
+        let mut inputs_to_remove = Vec::new();
+        for (name, inputs) in self.inputs.iter() {
+            for (index, item) in inputs.iter().enumerate() {
+                let val = item.clone().unwrap_or("None".to_string());
+                if val == tag {
+                    inputs_to_remove.push((name.clone(), index));
+                }
+            }
+        }
+
+        for (component, index) in inputs_to_remove.iter() {
+            self.remove_input(component, *index)?;
+        }
+
+        Ok(())
+    }
+
+    #[allow(dead_code)]
+    /// Add component to the model
+    pub(crate) fn add_component(
+        &mut self,
+        tag: &str,
+        component: ModelComponent<T>,
+    ) -> Result<String, ModelError> {
+        let valid_tag = self.find_free_tag(tag)?;
+        // Add inputs if applicable
+        match &component {
+            ModelComponent::Constant(_) => {}
+            ModelComponent::Function(_) => {}
+            ModelComponent::Operation(operation) => {
+                self.inputs
+                    .insert(valid_tag.clone(), vec![None; operation.inputs().len()]);
+            }
+        }
+
+        self.components.insert(valid_tag.clone(), component);
+
+        Ok(valid_tag)
+    }
+
+    #[allow(dead_code)]
+    /// Modify the tag of the
+    pub(crate) fn rename_component(
+        &mut self,
+        current_tag: &str,
+        new_tag: &str,
+    ) -> Result<String, ModelError> {
+        let new_tag_string = new_tag.to_string();
+        self.verify_tag_is_free(&new_tag_string)?;
+        self.verify_tag_is_present(current_tag)?;
+
+        let component = self.components.remove(current_tag).unwrap_or_else(|| {
+            panic!(
+                "Should be a valid entry as tag {} is verified.",
+                current_tag
+            )
+        });
+        self.components.insert(new_tag_string.clone(), component);
+
+        if let Some(inputs) = self.inputs.remove(current_tag) {
+            self.inputs.insert(new_tag_string.clone(), inputs);
+        }
+
+        // Update all input references.
+        for (_, inputs) in self.inputs.iter_mut() {
+            let mut to_change = vec![];
+            for (index, item) in inputs.iter().enumerate() {
+                let val = item.clone().unwrap_or("None".to_string());
+                if val == current_tag {
+                    to_change.push(index);
+                }
+            }
+            for index in to_change.iter() {
+                inputs[*index] = Some(new_tag.to_string());
+            }
+        }
+
+        debug!("Component {}, was renamed to {}", current_tag, new_tag);
+
+        Ok(new_tag_string)
+    }
+
+    fn find_free_tag(&mut self, base_tag: &str) -> Result<String, ModelError> {
+        if self.components.contains_key(base_tag) {
+            let mut increment = 1;
+            let mut temp_tag = format!("{}_{}", base_tag, increment);
+            while self.components.contains_key(&temp_tag) {
+                info!("Increment");
+                increment += 1;
+                temp_tag = format!("{}_{}", base_tag, increment);
+
+                if increment > 1000 {
+                    return Err(ModelError::TagGenerationFailed(base_tag.to_owned()));
+                }
+            }
+            return Ok(temp_tag);
+        }
+
+        Ok(base_tag.to_string())
     }
 
     fn verify_tag_is_free(&self, tag: &String) -> Result<(), ModelError> {
@@ -430,7 +613,9 @@ impl<T> ImplicitModel<T> {
     }
 }
 
-impl<T: Float + Display + Debug> Display for ImplicitModel<T> {
+impl<T: Float + Send + Sync + Display + Debug + Serialize + 'static + Pi> Display
+    for ImplicitModel<T>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (name, component) in &self.components {
             writeln!(f, "Component: {}", name)?;
@@ -457,7 +642,7 @@ impl<T: Float + Display + Debug> Display for ImplicitModel<T> {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitModel<T> {
+impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     /// Evaluate the model at a coordinate *{x, y, z}*.
     /// # Arguments
     ///
@@ -535,31 +720,6 @@ impl<T: Float + Send + Sync> ImplicitModel<T> {
 
         let triangles = generate_iso_surface(&field, iso_value);
         Ok(Mesh::from_triangles(&triangles, false))
-    }
-}
-
-impl<T: Float + Send + Sync + 'static> ImplicitModel<T> {
-    /// Add a distance function component, from a geometry which implements the `SignedDistance<T>` trait, to the model.
-    /// # Arguments
-    ///
-    /// * `tag` - The tag of the function component added. This is used to reference the component for input and output assignments.
-    /// * `geometry` - The geometry to add.
-    /// # Returns
-    ///
-    /// * `Result<String, ModelError>` - Returns `Ok(String)` with the tag of the new component if the function is added successfully, or `Err(ModelError)` if something goes wrong.
-    pub fn add_geometry<G: SignedDistance<T> + Send + Sync + 'static>(
-        &mut self,
-        tag: &str,
-        geometry: G,
-    ) -> Result<String, ModelError> {
-        let tag_string = tag.to_string();
-        self.verify_tag_is_free(&tag_string)?;
-
-        let function = CustomGeometry::new(geometry);
-        self.components
-            .insert(tag_string.clone(), Component::Function(Box::new(function)));
-
-        Ok(tag_string)
     }
 }
 

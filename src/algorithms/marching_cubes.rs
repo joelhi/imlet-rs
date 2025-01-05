@@ -7,6 +7,7 @@ use rayon::iter::ParallelIterator;
 use crate::types::computation::ScalarField;
 use crate::types::geometry::Triangle;
 use crate::types::geometry::Vec3;
+use crate::utils;
 
 use super::tables::*;
 
@@ -44,7 +45,7 @@ pub fn generate_iso_surface<T: Float + Send + Sync>(
 
     log::info!(
         "Marching cubes generated {} triangles in {:.2?}",
-        triangles.len(),
+        utils::math_helper::format_integer(triangles.len()),
         before.elapsed()
     );
 
@@ -275,7 +276,7 @@ fn interpolate_vertex<T: Float>(
 mod tests {
 
     use crate::types::{
-        computation::ImplicitModel,
+        computation::model::ImplicitModel,
         geometry::{BoundingBox, Sphere},
     };
 

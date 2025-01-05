@@ -1,7 +1,7 @@
 use num_traits::Float;
 
 use super::Vec3;
-use std::collections::HashMap;
+use hashbrown::HashMap;
 
 /// Simple implementation of a spatial hash grid, not properly checking adjacent bins.
 /// Tolerances may not be guaranteed to be satisfied in the event of close points in adjacent bins.
@@ -29,10 +29,15 @@ impl<T: Float> SpatialHashGrid<T> {
         }
     }
 
+    /// Get the vertices in the hash grid.
     pub fn vertices(&self) -> &Vec<Vec3<T>> {
         &self.vertices
     }
 
+    /// Add a new point to the hash grid.
+    ///
+    /// If the point is in a bin already populated, it will return the index of the existing point.
+    /// If the bin is empty, it will add the point and return the index of the new point.
     pub fn add_point(&mut self, v: Vec3<T>) -> usize {
         let hash = self.spatial_hash(v);
         match self.map.get_mut(&hash) {
@@ -63,13 +68,23 @@ impl<T: Float> SpatialHashGrid<T> {
         id
     }
 
+    /// Compute the hash of a [`Vec3`] based on a tolerance.
     pub fn spatial_hash(&self, v: Vec3<T>) -> i64 {
         let multiplier = T::one() / self.tolerance;
         let mut s_hash: i64 = 23;
 
-        s_hash = s_hash * 37 + (v.x * multiplier).to_i64().unwrap();
-        s_hash = s_hash * 37 + (v.y * multiplier).to_i64().unwrap();
-        s_hash = s_hash * 37 + (v.z * multiplier).to_i64().unwrap();
+        s_hash = s_hash * 37
+            + (v.x * multiplier)
+                .to_i64()
+                .expect("Should be able to hash coordinate.");
+        s_hash = s_hash * 37
+            + (v.y * multiplier)
+                .to_i64()
+                .expect("Should be able to hash coordinate.");
+        s_hash = s_hash * 37
+            + (v.z * multiplier)
+                .to_i64()
+                .expect("Should be able to hash coordinate.");
 
         s_hash
     }

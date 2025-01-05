@@ -6,10 +6,13 @@ use rayon::iter::ParallelIterator;
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::utils;
+
 use super::BoundingBox;
 use super::Line;
 use super::Octree;
 use super::SpatialHashGrid;
+use super::Transform;
 use super::Triangle;
 use super::Vec3;
 use std::time::Instant;
@@ -138,7 +141,7 @@ impl<T: Float> Mesh<T> {
 
         log::info!(
             "!!Mesh normals computed for {} points in {:.2?}",
-            self.num_vertices(),
+            utils::math_helper::format_integer(self.num_vertices()),
             before.elapsed()
         );
     }
@@ -235,7 +238,7 @@ impl<T: Float> Mesh<T> {
 
         log::info!(
             "Octree computed for mesh with {} triangles in {:.2?}",
-            self.num_faces(),
+            utils::math_helper::format_integer(self.num_faces()),
             before.elapsed()
         );
 
@@ -275,13 +278,13 @@ impl<T: Float + Send + Sync> Mesh<T> {
 
         log::info!(
             "Mesh topology generated for {} points and {} triangles in {:.2?}",
-            mesh.num_vertices(),
-            mesh.num_faces(),
+            utils::math_helper::format_integer(mesh.num_vertices()),
+            utils::math_helper::format_integer(mesh.num_faces()),
             before.elapsed()
         );
 
         if compute_normals {
-            log::info!("computing normals");
+            log::info!("Computing normals");
             mesh.compute_vertex_normals_par();
         }
 
@@ -308,7 +311,7 @@ impl<T: Float + Send + Sync> Mesh<T> {
 
         log::info!(
             "Mesh normals computed for {} points in {:.2?}",
-            self.num_vertices(),
+            utils::math_helper::format_integer(self.num_vertices()),
             before.elapsed()
         );
     }
@@ -322,5 +325,11 @@ impl<T: Float + Send + Sync> Mesh<T> {
                 v1.cross(&v2).normalize()
             })
             .collect()
+    }
+
+    pub fn transform_self_par(&mut self, transform: Transform<T>) {
+        self.vertices.par_iter_mut().for_each(|pt| {
+            *pt = pt.transform(transform);
+        });
     }
 }

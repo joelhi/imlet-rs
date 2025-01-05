@@ -20,7 +20,13 @@ pub enum ModelError {
         count: usize,
     },
     /// Model cannot be computed as a component as an input with no source.
-    MissingInput { component: String, index: usize },
+    MissingInput {
+        component: String,
+        index: usize,
+    },
+    TagGenerationFailed(String),
+    /// Can't compute as no output specified.
+    MissingOutput(),
 }
 
 impl std::fmt::Display for ModelError {
@@ -59,6 +65,12 @@ impl std::fmt::Display for ModelError {
                     "Component {} is missing an input at index {}. The model cannot be computed.",
                     component, index
                 )
+            }
+            ModelError::TagGenerationFailed(tag) => {
+                write!(f, "Failed to generate increment for tag {}.", tag)
+            }
+            ModelError::MissingOutput() => {
+                write!(f, "Failed to generate output as no output node specified.")
             }
         }
     }

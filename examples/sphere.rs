@@ -1,6 +1,6 @@
 use imlet::{
     types::{
-        computation::ImplicitModel,
+        computation::model::ImplicitModel,
         geometry::{BoundingBox, Sphere, Vec3},
     },
     utils,
@@ -12,8 +12,7 @@ pub fn main() {
     // Inputs
     let size = 100.0;
     let offset = 5.0;
-    let cell_size = 2.5;
-    let bounds = BoundingBox::new(
+    let model_space = BoundingBox::new(
         Vec3::new(offset, offset, offset),
         Vec3::new(offset + size, offset + size, offset + size),
     );
@@ -21,7 +20,7 @@ pub fn main() {
     // Function
     let mut model = ImplicitModel::new();
 
-    let output = model
+    let sphere_node = model
         .add_function(
             "Sphere",
             Sphere::new(
@@ -35,23 +34,9 @@ pub fn main() {
         )
         .unwrap();
 
-    println!("{}", model);
+    let mesh = model
+        .generate_iso_surface(&sphere_node, &model_space, 0.5)
+        .unwrap();
 
-    // Generate mesh
-    #[cfg(feature = "viewer")]
-    {
-        let mesh = model
-            .generate_iso_surface(&output, &bounds, cell_size)
-            .unwrap();
-
-        imlet::viewer::show_mesh(&mesh);
-    }
-    #[cfg(not(feature = "viewer"))]
-    {
-        let _ = model
-            .generate_iso_surface(&output, &bounds, cell_size)
-            .unwrap();
-
-        println!("Enable the viewer feature by using (--features viewer) to show the result");
-    }
+    utils::io::write_obj_file(&mesh, "sphere_example").unwrap();
 }

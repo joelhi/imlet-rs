@@ -5,11 +5,29 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{
-    computation::{traits::ImplicitFunction, Data, DataType, Parameter},
+    computation::{
+        model::{Data, DataType, Parameter},
+        traits::ImplicitFunction,
+    },
     geometry::{Line, Vec3},
 };
 
 use super::traits::SignedDistance;
+
+static CAPSULE_PARAMS: &[Parameter; 3] = &[
+    Parameter {
+        name: "Start",
+        data_type: DataType::Vec3,
+    },
+    Parameter {
+        name: "End",
+        data_type: DataType::Vec3,
+    },
+    Parameter {
+        name: "Radius",
+        data_type: DataType::Value,
+    },
+];
 
 /// A capsule primitive defined by a line and a radius.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -47,17 +65,13 @@ impl<T: Float + Send + Sync> SignedDistance<T> for Capsule<T> {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitFunction<T> for Capsule<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Capsule<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(x, y, z)
     }
 
-    fn parameters(&self) -> Vec<Parameter> {
-        vec![
-            Parameter::new("Start", DataType::Vec3),
-            Parameter::new("End", DataType::Vec3),
-            Parameter::new("Radius", DataType::Value),
-        ]
+    fn parameters(&self) -> &[Parameter] {
+        CAPSULE_PARAMS
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {

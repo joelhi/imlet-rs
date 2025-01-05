@@ -1,10 +1,13 @@
 use imlet::{
     types::computation::{
-        functions::{CustomGeometry, Gyroid},
+        functions::{CustomMesh, Gyroid},
+        model::ImplicitModel,
         operations::shape::{BooleanIntersection, Thickness},
-        ImplicitModel,
     },
-    utils::{self, io::parse_obj_file},
+    utils::{
+        self,
+        io::{parse_obj_file, write_obj_file},
+    },
 };
 
 pub fn main() {
@@ -12,14 +15,14 @@ pub fn main() {
 
     let mesh = parse_obj_file("assets/geometry/bunny.obj", false).unwrap();
 
-    let cell_size = 0.3;
+    let cell_size = 0.5;
     let model_space = mesh.bounds().offset(cell_size);
 
     // Build model
     let mut model = ImplicitModel::new();
 
     let mesh_tag = model
-        .add_function("Mesh", CustomGeometry::from_mesh(&mesh))
+        .add_function("Mesh", CustomMesh::build(&mesh))
         .unwrap();
 
     let gyroid_tag = model
@@ -38,22 +41,9 @@ pub fn main() {
         )
         .unwrap();
 
-    println!("{}", model);
+    let mesh = model
+        .generate_iso_surface(&output, &model_space, 0.5)
+        .unwrap();
 
-    #[cfg(feature = "viewer")]
-    {
-        let mesh = model
-            .generate_iso_surface(&output, &model_space, cell_size)
-            .unwrap();
-
-        imlet::viewer::show_mesh(&mesh);
-    }
-    #[cfg(not(feature = "viewer"))]
-    {
-        let _ = model
-            .generate_iso_surface(&output, &model_space, cell_size)
-            .unwrap();
-
-        println!("Enable the viewer feature by using (--features viewer) to show the result");
-    }
+    write_obj_file(&mesh, "bunny_example").unwrap();
 }

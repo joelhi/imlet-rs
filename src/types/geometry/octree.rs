@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use log::debug;
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
 use super::{
     traits::{SignedDistance, SignedQuery, SpatialQuery},
@@ -13,7 +14,7 @@ type OctreeChildren<Q, T> = Box<[Option<OctreeNode<Q, T>>; 8]>;
 /// Octree used for storing object and accelerating closest point and distance queries.
 ///
 /// The octree can be built for any geometric object which implements the relevant traits.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Octree<Q, T> {
     root: OctreeNode<Q, T>,
     max_depth: u32,
@@ -97,7 +98,7 @@ impl<Q: SignedQuery<T>, T: Float> Octree<Q, T> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct OctreeNode<Q, T> {
     pub bounds: BoundingBox<T>,
     pub objects: Vec<Q>,

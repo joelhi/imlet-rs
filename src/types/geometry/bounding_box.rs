@@ -4,7 +4,10 @@ use log::error;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::{traits::ImplicitFunction, Data, DataType, Parameter};
+use crate::types::computation::{
+    model::{Data, DataType, Parameter},
+    traits::ImplicitFunction,
+};
 
 use super::{
     traits::{SignedDistance, SpatialQuery},
@@ -244,16 +247,24 @@ impl<T: Float + Send + Sync> SignedDistance<T> for BoundingBox<T> {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitFunction<T> for BoundingBox<T> {
+static BOUNDING_BOX_PARAMETERS: [Parameter; 2] = [
+    Parameter {
+        name: "Min",
+        data_type: DataType::Vec3,
+    },
+    Parameter {
+        name: "Max",
+        data_type: DataType::Vec3,
+    },
+];
+
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for BoundingBox<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(&Vec3::new(x, y, z))
     }
 
-    fn parameters(&self) -> Vec<Parameter> {
-        vec![
-            Parameter::new("Min", DataType::Vec3),
-            Parameter::new("Max", DataType::Vec3),
-        ]
+    fn parameters(&self) -> &[Parameter] {
+        &BOUNDING_BOX_PARAMETERS
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
@@ -273,14 +284,17 @@ impl<T: Float + Send + Sync> ImplicitFunction<T> for BoundingBox<T> {
     }
 
     fn function_name(&self) -> &'static str {
-        "Box"
+        "BoundingBox"
     }
 }
 
 #[cfg(test)]
 mod tests {
 
-    use crate::{types::geometry::Mesh, utils::io::parse_obj_file};
+    use crate::{
+        types::geometry::{traits::Bounded, Mesh},
+        utils::io::parse_obj_file,
+    };
 
     use super::*;
 
@@ -378,13 +392,23 @@ mod tests {
     fn test_get_assigns_params() {
         let mut aabb = BoundingBox::new(Vec3::new(1., 1., 1.), Vec3::new(10., 10., 10.));
 
-        let params = aabb.parameters();
+        let parameter_names: Vec<&str> = aabb.parameters().iter().map(|p| p.name).collect();
 
-        for param in params {
-            aabb.set_parameter(&param.name, Data::Vec3(Vec3::origin()));
+        for &param_name in parameter_names.iter() {
+            aabb.set_parameter(param_name, Data::Vec3(Vec3::origin()));
         }
 
-        assert!(aabb.min.distance_to_vec3(&Vec3::origin()).abs() < f64::epsilon());
-        assert!(aabb.max.distance_to_vec3(&Vec3::origin()).abs() < f64::epsilon());
+        assert!(
+            aabb.min.distance_to_vec3(&Vec3::origin()).abs() < f64::epsilon(),
+            "Expected param to be {} but was {}",
+            Vec3::<f64>::origin(),
+            aabb.min
+        );
+        assert!(
+            aabb.max.distance_to_vec3(&Vec3::origin()).abs() < f64::epsilon(),
+            "Expected param to be {}, but was {}",
+            Vec3::<f64>::origin(),
+            aabb.max
+        );
     }
 }

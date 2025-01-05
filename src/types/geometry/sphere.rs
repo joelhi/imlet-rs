@@ -5,11 +5,25 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{
-    computation::{traits::ImplicitFunction, Data, DataType, Parameter},
+    computation::{
+        model::{Data, DataType, Parameter},
+        traits::ImplicitFunction,
+    },
     geometry::Vec3,
 };
 
 use super::{traits::SignedDistance, BoundingBox};
+
+static SPHERE_PARAMS: &[Parameter; 2] = &[
+    Parameter {
+        name: "Centre",
+        data_type: DataType::Vec3,
+    },
+    Parameter {
+        name: "Radius",
+        data_type: DataType::Value,
+    },
+];
 
 /// A sphere object, defined by a centre point and a radius.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -58,16 +72,13 @@ impl<T: Float + Send + Sync> SignedDistance<T> for Sphere<T> {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitFunction<T> for Sphere<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Sphere<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.centre.distance_to_coord(x, y, z) - self.radius
     }
 
-    fn parameters(&self) -> Vec<Parameter> {
-        vec![
-            Parameter::new("Centre", DataType::Vec3),
-            Parameter::new("Radius", DataType::Value),
-        ]
+    fn parameters(&self) -> &[Parameter] {
+        SPHERE_PARAMS
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
@@ -100,13 +111,13 @@ mod tests {
     fn test_get_assigns_params() {
         let mut sphere = Sphere::new(Vec3::new(1., 1., 1.), 10.);
 
-        let params = sphere.parameters();
+        let params = sphere.parameters().to_vec();
 
         for param in params {
             match param.data_type {
-                DataType::Value => sphere.set_parameter(&param.name, Data::Value(1.)),
+                DataType::Value => sphere.set_parameter(param.name, Data::Value(1.)),
                 DataType::Vec3 => {
-                    sphere.set_parameter(&param.name, Data::Vec3(Vec3::new(1., 1., 1.)))
+                    sphere.set_parameter(param.name, Data::Vec3(Vec3::new(1., 1., 1.)))
                 }
                 _ => panic!("Error in the param"),
             }

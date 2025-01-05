@@ -1,75 +1,79 @@
 use std::fmt::Debug;
 
 use num_traits::Float;
+use serde::{Deserialize, Serialize};
 
 use crate::types::{
-    computation::traits::ImplicitFunction,
-    geometry::{traits::SignedDistance, GeometryCollection, Mesh, Triangle},
+    computation::{
+        model::{Data, Parameter},
+        traits::ImplicitFunction,
+    },
+    geometry::{Mesh, Octree, Triangle, Vec3},
 };
 
 /// Distance function for an arbitrary geometry type.
-#[derive(Debug)]
-pub struct CustomGeometry<Q, T> {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CustomMesh<T> {
     /// Geometry to use for signed distance computation
-    pub geometry: Q,
+    pub octree: Option<Octree<Triangle<T>, T>>,
     /// Additional offset applied to the distance field.
     pub offset: T,
 }
 
-impl<Q, T: Float> CustomGeometry<Q, T> {
-    /// Create a new custom sdf from a geometry that implements the SignedDistance trait.
-    ///
-    /// # Arguments
-    ///
-    /// * `geometry` - Geomtry to use as base for signed distance computation.
-    pub fn new(geometry: Q) -> Self {
+impl<T: Float> Default for CustomMesh<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<T: Float> CustomMesh<T> {
+    /// Create a new empty custom mesh container.
+    pub fn new() -> Self {
         Self {
-            geometry,
+            octree: None,
             offset: T::zero(),
         }
     }
-    /// Create a new custom sdf from a geometry that implements the SignedDistance trait, with an additional offset.
-    ///
-    /// This offset can be useful if the geometry type has no inside, like a Line or a Vec3. Then the offset will define the thickness.
-    ///
-    /// # Arguments
-    ///
-    /// * `geometry` - Geomtry to use as base for signed distance computation.
-    /// * `offset` - Additional offset applied to the distance field.
-    pub fn with_offset(geometry: Q, offset: T) -> Self {
-        Self { geometry, offset }
-    }
-}
 
-impl<T: Float> CustomGeometry<GeometryCollection<Triangle<T>, T>, T> {
     /// Create a custom distance function based on a collection of the triangles in a mesh.
-    pub fn from_mesh(mesh: &Mesh<T>) -> Self {
-        let collection = GeometryCollection::build(mesh.as_triangles());
+    pub fn build(mesh: &Mesh<T>) -> Self {
+        Self {
+            octree: Some(mesh.compute_octree(10, 12)),
+            offset: T::zero(),
+        }
+    }
 
-        Self::new(collection)
+    /// Create a new custom distance function with a specific offset
+    pub fn with_offset(mesh: &Mesh<T>, offset: T) -> Self {
+        Self {
+            octree: Some(mesh.compute_octree(10, 12)),
+            offset,
+        }
     }
 }
 
-impl<Q: SignedDistance<T> + Send + Sync, T: Float + Send + Sync> ImplicitFunction<T>
-    for CustomGeometry<Q, T>
-{
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for CustomMesh<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
-        self.geometry.signed_distance(x, y, z) - self.offset
+        if let Some(geometry) = &self.octree {
+            return geometry.signed_distance(&Vec3::new(x, y, z)) - self.offset;
+        }
+
+        T::zero()
     }
 
-    fn parameters(&self) -> Vec<crate::types::computation::Parameter> {
-        vec![]
+    fn parameters(&self) -> &[Parameter] {
+        &[]
     }
 
-    fn set_parameter(&mut self, _: &str, _: crate::types::computation::Data<T>) {
-        // Void
+    fn set_parameter(&mut self, _: &str, _: Data<T>) {
+        // Void. Need to figure out how to offer the option to set at runtime.
     }
 
-    fn read_parameter(&self, _: &str) -> Option<crate::types::computation::Data<T>> {
+    fn read_parameter(&self, _: &str) -> Option<Data<T>> {
         None
     }
 
     fn function_name(&self) -> &'static str {
-        "CustomGeometry"
+        "CustomMesh"
     }
 }

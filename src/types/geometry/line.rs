@@ -4,9 +4,23 @@ use log::error;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::{traits::ImplicitFunction, Data, DataType, Parameter};
+use crate::types::computation::{
+    model::{Data, DataType, Parameter},
+    traits::ImplicitFunction,
+};
 
 use super::{traits::SignedDistance, Vec3};
+
+static LINE_PARAMS: &[Parameter; 2] = &[
+    Parameter {
+        name: "Start",
+        data_type: DataType::Vec3,
+    },
+    Parameter {
+        name: "End",
+        data_type: DataType::Vec3,
+    },
+];
 
 /// Single line segment defined by a start and end point.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -61,16 +75,13 @@ impl<T: Float + Send + Sync> SignedDistance<T> for Line<T> {
     }
 }
 
-impl<T: Float + Send + Sync> ImplicitFunction<T> for Line<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Line<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(x, y, z)
     }
 
-    fn parameters(&self) -> Vec<Parameter> {
-        vec![
-            Parameter::new("Start", DataType::Vec3),
-            Parameter::new("End", DataType::Vec3),
-        ]
+    fn parameters(&self) -> &[Parameter] {
+        LINE_PARAMS
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
@@ -99,10 +110,10 @@ mod tests {
     fn test_get_assigns_params() {
         let mut line = Line::new(Vec3::new(1., 1., 1.), Vec3::new(10., 10., 10.));
 
-        let params = line.parameters();
+        let params: Vec<&str> = line.parameters().iter().map(|p| p.name).collect();
 
         for param in params {
-            line.set_parameter(&param.name, Data::Vec3(Vec3::origin()));
+            line.set_parameter(param, Data::Vec3(Vec3::origin()));
         }
 
         assert!(line.length().abs() < f64::epsilon());

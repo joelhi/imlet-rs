@@ -2,26 +2,36 @@ use std::{cell::RefCell, time::Instant};
 
 use num_traits::Float;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
+use serde::Serialize;
 use smallvec::SmallVec;
 
 use crate::{
-    types::geometry::{BoundingBox, Vec3i},
-    utils::math_helper::index3d_from_index1d,
+    types::{
+        computation::ScalarField,
+        geometry::{BoundingBox, Vec3i},
+    },
+    utils::{
+        self,
+        math_helper::{index3d_from_index1d, Pi},
+    },
 };
 
-use super::{
-    component::{Component, ComponentId, ComponentValues},
-    ScalarField,
-};
+use super::{ComponentId, ComponentValues, ModelComponent};
 
+/// Number of inputs that are stack-allocated, when collecting the inputs for each component.
+/// If a components has more inputs, they will be on the heap. It's allowed but will probably slow things down a bit.
 const INPUT_STACK_BUFFER_SIZE: usize = 8;
 
-pub struct ComputationGraph<'a, T> {
-    components: Vec<&'a Component<T>>,
+/// Defines a set of components which should be computed to generate an output.
+///
+/// The components are extracted from the model based on the target output.
+pub struct ComputationGraph<'a, T: Float + Send + Sync + Serialize + 'static + Pi> {
+    components: Vec<&'a ModelComponent<T>>,
     inputs: Vec<Vec<ComponentId>>,
 }
 
-impl<'a, T> ComputationGraph<'a, T> {
+impl<'a, T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'a, T> {
+    /// Create a new, empty, computation graph.
     pub(crate) fn new() -> Self {
         Self {
             components: Vec::new(),
@@ -29,17 +39,23 @@ impl<'a, T> ComputationGraph<'a, T> {
         }
     }
 
-    pub(crate) fn add_component(&mut self, component: &'a Component<T>, inputs: Vec<ComponentId>) {
+    /// Add the reference to a [`ModelComponent`] from the main model, which should be computed.
+    pub(crate) fn add_component(
+        &mut self,
+        component: &'a ModelComponent<T>,
+        inputs: Vec<ComponentId>,
+    ) {
         self.components.push(component);
         self.inputs.push(inputs);
     }
 }
 
-impl<'a, T: Float> ComputationGraph<'a, T> {
+impl<T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'_, T> {
     thread_local! {
         static COMPONENT_VALUES: RefCell<ComponentValues> = RefCell::new(ComponentValues::new());
     }
 
+    /// Evaluate the computation graph at a specific coordinate.
     pub fn evaluate_at_coord(&self, x: T, y: T, z: T) -> T {
         Self::COMPONENT_VALUES.with(|values| {
             let mut values = values.borrow_mut();
@@ -75,6 +91,7 @@ impl<'a, T: Float> ComputationGraph<'a, T> {
         )
     }
 
+    /// Retrieve the values for the inputs of a component.
     #[inline]
     pub fn inputs(
         &self,
@@ -89,7 +106,8 @@ impl<'a, T: Float> ComputationGraph<'a, T> {
     }
 }
 
-impl<'a, T: Float + Send + Sync> ComputationGraph<'a, T> {
+impl<T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'_, T> {
+    /// Evaluate the computation graph over a discretized domain.
     pub fn evaluate(&self, bounds: &BoundingBox<T>, cell_size: T) -> ScalarField<T> {
         let before = Instant::now();
         let n = Self::point_count(bounds, cell_size);
@@ -108,7 +126,7 @@ impl<'a, T: Float + Send + Sync> ComputationGraph<'a, T> {
 
         log::info!(
             "Dense value buffer for {} points generated in {:.2?}",
-            n.i * n.j * n.k,
+            utils::math_helper::format_integer(n.i * n.j * n.k,),
             before.elapsed()
         );
 
@@ -133,7 +151,7 @@ mod tests {
         let bounds = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
         // Function
-        let binding = Component::Function(Box::new(Sphere::new(
+        let binding = ModelComponent::Function(Box::new(Sphere::new(
             Vec3::new(size / 2.0, size / 2.0, size / 2.0),
             size * 0.45,
         )));
@@ -160,7 +178,7 @@ mod tests {
         let bounds = BoundingBox::new(Vec3::origin(), Vec3::new(2.0 * size, 1.5 * size, size));
 
         // Function
-        let sphere = Component::Function(Box::new(Sphere::new(
+        let sphere = ModelComponent::Function(Box::new(Sphere::new(
             Vec3::new(size / 2.0, size / 2.0, size / 2.0),
             size * 0.50,
         )));
@@ -185,10 +203,11 @@ mod tests {
         let mut model = ComputationGraph::new();
 
         // Function
-        let sphere_component = Component::Function(Box::new(Sphere::new(Vec3::origin(), 1.0)));
-        let sphere_component2 = Component::Function(Box::new(Sphere::new(Vec3::origin(), 0.5)));
+        let sphere_component = ModelComponent::Function(Box::new(Sphere::new(Vec3::origin(), 1.0)));
+        let sphere_component2 =
+            ModelComponent::Function(Box::new(Sphere::new(Vec3::origin(), 0.5)));
 
-        let difference_component = Component::Operation(Box::new(BooleanDifference::new()));
+        let difference_component = ModelComponent::Operation(Box::new(BooleanDifference::new()));
 
         model.add_component(&sphere_component, vec![]);
         model.add_component(&sphere_component2, vec![]);
@@ -207,8 +226,8 @@ mod tests {
     fn test_evaluate_model_constant_operation() {
         let mut model = ComputationGraph::new();
 
-        model.add_component(&Component::Constant(1.0), vec![]);
-        let addition_component = Component::Operation(Box::new(Add::new()));
+        model.add_component(&ModelComponent::Constant(1.0), vec![]);
+        let addition_component = ModelComponent::Operation(Box::new(Add::new()));
         model.add_component(&addition_component, vec![0.into(), 0.into()]);
 
         let result = model.evaluate_at_coord(0.0, 0.0, 0.0);

@@ -1,20 +1,17 @@
-use imlet::{
-    types::{
-        computation::{
-            functions::Gyroid,
-            operations::shape::{BooleanIntersection, Thickness},
-            ImplicitModel,
-        },
-        geometry::{BoundingBox, Sphere, Vec3},
+use imlet::types::{
+    computation::{
+        functions::Gyroid,
+        model::ImplicitModel,
+        operations::shape::{BooleanIntersection, Thickness},
     },
-    utils,
+    geometry::{BoundingBox, Sphere, Vec3},
 };
+use imlet::utils;
 
 pub fn main() {
     utils::logging::init_info();
 
     let size: f32 = 100.0;
-    let cell_size = 0.5;
     let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
     // Build model
@@ -43,22 +40,9 @@ pub fn main() {
         )
         .unwrap();
 
-    println!("{}", model);
+    let mesh = model
+        .generate_iso_surface(&output, &model_space, 0.5)
+        .unwrap();
 
-    #[cfg(feature = "viewer")]
-    {
-        let mesh = model
-            .generate_iso_surface(&output, &model_space, cell_size)
-            .unwrap();
-
-        imlet::viewer::show_mesh(&mesh);
-    }
-    #[cfg(not(feature = "viewer"))]
-    {
-        let _ = model
-            .generate_iso_surface(&output, &model_space, cell_size)
-            .unwrap();
-
-        println!("Enable the viewer feature by using (--features viewer) to show the result");
-    }
+    utils::io::write_obj_file(&mesh, "gyroid_example").unwrap();
 }
