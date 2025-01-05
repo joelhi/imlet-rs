@@ -320,7 +320,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         tag: &str,
         component: ModelComponent<T>,
     ) -> Result<String, ModelError> {
-        let valid_tag = self.find_free_tag(&tag)?;
+        let valid_tag = self.find_free_tag(tag)?;
         // Add inputs if applicable
         match &component {
             ModelComponent::Constant(_) => {}
@@ -347,10 +347,12 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         self.verify_tag_is_free(&new_tag_string)?;
         self.verify_tag_is_present(current_tag)?;
 
-        let component = self.components.remove(current_tag).expect(&format!(
-            "Should be a valid entry as tag {} is verified.",
-            current_tag
-        ));
+        let component = self.components.remove(current_tag).unwrap_or_else(|| {
+            panic!(
+                "Should be a valid entry as tag {} is verified.",
+                current_tag
+            )
+        });
         self.components.insert(new_tag_string.clone(), component);
 
         if let Some(inputs) = self.inputs.remove(current_tag) {

@@ -217,7 +217,6 @@ pub fn write_model_to_file<T: Float + Send + Sync + Serialize + 'static + Pi>(
 ///
 /// Returns Ok() with the model if the read was successful.
 pub fn read_model_from_file<
-    'de,
     T: Float + Send + Sync + Serialize + 'static + Pi + DeserializeOwned,
 >(
     file_path: &str,

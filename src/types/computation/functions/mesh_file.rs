@@ -29,6 +29,12 @@ pub struct MeshFile<T> {
     pub geometry_data: Option<Octree<Triangle<T>, T>>,
 }
 
+impl<T: Float + Send + Sync> Default for MeshFile<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T: Float + Send + Sync> MeshFile<T> {
     /// Create a new unset reference to some mesh data in a file.
     pub fn new() -> Self {
@@ -55,7 +61,7 @@ impl<T: Float + Send + Sync> MeshFile<T> {
     }
 
     pub fn set_mesh_from_file(&mut self, file_path: &str) {
-        let parse_result = parse_obj_file::<T>(&file_path, false);
+        let parse_result = parse_obj_file::<T>(file_path, false);
 
         match parse_result {
             Ok(mut mesh) => {

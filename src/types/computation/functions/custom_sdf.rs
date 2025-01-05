@@ -20,6 +20,12 @@ pub struct CustomMesh<T> {
     pub offset: T,
 }
 
+impl<T: Float> Default for CustomMesh<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T: Float> CustomMesh<T> {
     /// Create a new empty custom mesh container.
     pub fn new() -> Self {

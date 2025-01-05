@@ -118,7 +118,7 @@ impl<'de, T: Float> serde::de::DeserializeSeed<'de> for FunctionTypeVisitor<'de,
     {
         let mut erased = <dyn erased_serde::Deserializer>::erase(deserializer);
         let deserialize_fn = self.deserialize_fn;
-        deserialize_fn(&mut erased).map_err(|e| serde::de::Error::custom(e))
+        deserialize_fn(&mut erased).map_err(serde::de::Error::custom)
     }
 }
 
@@ -315,7 +315,7 @@ impl<'de, T: Float> serde::de::DeserializeSeed<'de> for OperationTypeVisitor<'de
     {
         let mut erased = <dyn erased_serde::Deserializer>::erase(deserializer);
         let deserialize_fn = self.deserialize_fn;
-        deserialize_fn(&mut erased).map_err(|e| serde::de::Error::custom(e))
+        deserialize_fn(&mut erased).map_err(serde::de::Error::custom)
     }
 }
 
