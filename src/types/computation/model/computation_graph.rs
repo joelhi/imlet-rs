@@ -50,7 +50,7 @@ impl<'a, T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'a,
     }
 }
 
-impl<'a, T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'a, T> {
+impl<T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'_, T> {
     thread_local! {
         static COMPONENT_VALUES: RefCell<ComponentValues> = RefCell::new(ComponentValues::new());
     }
@@ -106,7 +106,7 @@ impl<'a, T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'a,
     }
 }
 
-impl<'a, T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'a, T> {
+impl<T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'_, T> {
     /// Evaluate the computation graph over a discretized domain.
     pub fn evaluate(&self, bounds: &BoundingBox<T>, cell_size: T) -> ScalarField<T> {
         let before = Instant::now();
