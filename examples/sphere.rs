@@ -12,7 +12,7 @@ pub fn main() {
     // Inputs
     let size = 100.0;
     let offset = 5.0;
-    let bounds = BoundingBox::new(
+    let model_space = BoundingBox::new(
         Vec3::new(offset, offset, offset),
         Vec3::new(offset + size, offset + size, offset + size),
     );
@@ -35,8 +35,8 @@ pub fn main() {
         .unwrap();
 
     let mesh = model
-        .generate_iso_surface(&output, &model_space, 0.5)
+        .generate_iso_surface(&sphere_node, &model_space, 0.5)
         .unwrap();
 
-    write_obj_file(&mesh, sphere_node).unwrap();
+    utils::io::write_obj_file(&mesh, "sphere_example").unwrap();
 }

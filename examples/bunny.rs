@@ -4,10 +4,12 @@ use imlet::{
         model::ImplicitModel,
         operations::shape::{BooleanIntersection, Thickness},
     },
-    utils::io::{parse_obj_file, write_obj_file},
+    utils::{self, io::{parse_obj_file, write_obj_file}},
 };
 
 pub fn main() {
+    utils::logging::init_info();
+
     let mesh = parse_obj_file("assets/geometry/bunny.obj", false).unwrap();
 
     let cell_size = 0.5;

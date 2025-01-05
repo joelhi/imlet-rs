@@ -67,9 +67,12 @@ pub fn main() {
         .add_operation_with_inputs("OffsetInfill", Thickness::new(5.), &[&infill_interpolation])
         .unwrap();
 
+    let output = model
+        .add_operation_with_inputs("Output", BooleanIntersection::new(), &[&shape_interpolation, &offset_infill]).unwrap();
+
     let mesh = model
-        .generate_iso_surface(&offset_infill, &model_space, 0.5)
+        .generate_iso_surface(&output, &model_space, 0.5)
         .unwrap();
 
-    write_obj_file(&mesh, "interpolation_example").unwrap();
+    utils::io::write_obj_file(&mesh, "interpolation_example").unwrap();
 }
