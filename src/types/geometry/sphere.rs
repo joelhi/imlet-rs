@@ -111,13 +111,13 @@ mod tests {
     fn test_get_assigns_params() {
         let mut sphere = Sphere::new(Vec3::new(1., 1., 1.), 10.);
 
-        let params: Vec<Parameter> = sphere.parameters().iter().map(|p| p.clone()).collect();
+        let params = sphere.parameters().to_vec();
 
         for param in params {
             match param.data_type {
-                DataType::Value => sphere.set_parameter(&param.name, Data::Value(1.)),
+                DataType::Value => sphere.set_parameter(param.name, Data::Value(1.)),
                 DataType::Vec3 => {
-                    sphere.set_parameter(&param.name, Data::Vec3(Vec3::new(1., 1., 1.)))
+                    sphere.set_parameter(param.name, Data::Vec3(Vec3::new(1., 1., 1.)))
                 }
                 _ => panic!("Error in the param"),
             }
