@@ -145,21 +145,3 @@ pub mod utils {
     /// Additional utilities related to mathematics.
     pub mod math_helper;
 }
-
-#[cfg(feature = "viewer")]
-/// Module for some basic functions to display the generated outputs.
-pub mod viewer {
-
-    mod app;
-    pub use app::*;
-
-    pub(crate) mod utils;
-
-    pub(crate) mod raw_mesh_data;
-
-    pub(crate) mod plugins;
-
-    pub(crate) mod custom_layer;
-
-    pub(crate) mod public_components;
-}

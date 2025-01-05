@@ -1,4 +1,4 @@
-use crate::types::geometry::{BoundingBox, Vec3};
+use crate::types::geometry::Vec3;
 
 use super::Bounded;
 
