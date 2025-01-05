@@ -6,9 +6,10 @@ use imlet::types::{
     },
     geometry::{BoundingBox, Sphere, Vec3},
 };
+use imlet::utils;
 
 pub fn main() {
-    //utils::logging::init_info();
+    utils::logging::init_info();
 
     let size: f32 = 100.0;
     let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
@@ -43,5 +44,5 @@ pub fn main() {
         .generate_iso_surface(&output, &model_space, 0.5)
         .unwrap();
 
-    write_obj_file(&mesh, "output").unwrap();
+    utils::io::write_obj_file(&mesh, "gyroid_example").unwrap();
 }

@@ -1,7 +1,7 @@
 use num_traits::Float;
 
 use super::Vec3;
-use std::collections::HashMap;
+use hashbrown::HashMap;
 
 /// Simple implementation of a spatial hash grid, not properly checking adjacent bins.
 /// Tolerances may not be guaranteed to be satisfied in the event of close points in adjacent bins.

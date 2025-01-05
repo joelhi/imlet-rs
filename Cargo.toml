@@ -17,6 +17,7 @@ exclude = ["assets/geometry/*"]
 chrono = "0.4.38"
 env_logger = "0.11.3"
 erased-serde = "0.4.5"
+hashbrown = "0.15.2"
 log = "0.4.21"
 num-traits = "0.2.19"
 rayon = "1.10.0"
