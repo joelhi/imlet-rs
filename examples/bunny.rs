@@ -4,7 +4,10 @@ use imlet::{
         model::ImplicitModel,
         operations::shape::{BooleanIntersection, Thickness},
     },
-    utils::{self, io::{parse_obj_file, write_obj_file}},
+    utils::{
+        self,
+        io::{parse_obj_file, write_obj_file},
+    },
 };
 
 pub fn main() {

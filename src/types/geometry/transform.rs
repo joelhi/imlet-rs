@@ -3,9 +3,8 @@ use serde::{Deserialize, Serialize};
 
 use super::Vec3;
 
-
 /// A Transform operation.
-/// 
+///
 /// The operation is defined as a translation and rotation component. Can be applied to object implementing the [`Transformable`](super::traits::Transformable) trait.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Transform<T> {

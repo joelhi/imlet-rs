@@ -291,7 +291,10 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for BoundingBox<T> 
 #[cfg(test)]
 mod tests {
 
-    use crate::{types::geometry::{traits::Bounded, Mesh}, utils::io::parse_obj_file};
+    use crate::{
+        types::geometry::{traits::Bounded, Mesh},
+        utils::io::parse_obj_file,
+    };
 
     use super::*;
 

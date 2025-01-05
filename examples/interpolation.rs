@@ -68,7 +68,12 @@ pub fn main() {
         .unwrap();
 
     let output = model
-        .add_operation_with_inputs("Output", BooleanIntersection::new(), &[&shape_interpolation, &offset_infill]).unwrap();
+        .add_operation_with_inputs(
+            "Output",
+            BooleanIntersection::new(),
+            &[&shape_interpolation, &offset_infill],
+        )
+        .unwrap();
 
     let mesh = model
         .generate_iso_surface(&output, &model_space, 0.5)

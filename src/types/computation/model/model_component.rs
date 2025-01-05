@@ -22,9 +22,9 @@ impl From<usize> for ComponentId {
 /// Enum which represents the different types of component that make up a computation model.
 ///
 /// The enum represents the high-level types, for which different implementations can be provided.
-/// 
+///
 /// The current component types are:
-/// 
+///
 /// * `Constant` - Representing a constant value across the entire model domain.
 /// * `Function` - Represents a function in 3d space `f(x,y,z)`. This takes no inputs from other components, and is variable across the domain.
 /// * `Operation` - Represents an operation on some values in the model. The operation does not depend on the evaluation coordinate directly, but instead operates on the output of other components.
@@ -37,9 +37,9 @@ pub enum ModelComponent<T: Float + Send + Sync + Serialize + 'static + Pi> {
 
 impl<T: Float + Send + Sync + Serialize + Pi> ModelComponent<T> {
     /// Evaluate the output of the comppnent
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `x` - The current x coordinate. Used when the type is [`ModelComponent::Function`].
     /// * `y` - The current y coordinate. Used when the type is [`ModelComponent::Function`].
     /// * `z` - The current z coordinate. Used when the type is [`ModelComponent::Function`].

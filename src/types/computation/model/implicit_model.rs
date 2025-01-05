@@ -22,10 +22,10 @@ use super::{ComponentId, ModelComponent};
 ///
 /// ```rust
 /// // Create a new empty model.
-/// 
+///
 /// use imlet::types::computation::model::ImplicitModel;
 /// use imlet::types::computation::operations::math::Add;
-/// 
+///
 /// // Create a new model.
 /// let mut model: ImplicitModel<f64> = ImplicitModel::new();
 ///
@@ -73,17 +73,17 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         self.components.iter().collect()
     }
 
-    /// Get a referenced component from the model by tag. 
-    /// 
+    /// Get a referenced component from the model by tag.
+    ///
     /// Returns a reference to the component if present, othwerwise [`None`]
     pub fn get_component(&self, tag: &str) -> Option<&ModelComponent<T>> {
         self.components.get(tag)
     }
 
     /// Get a mutable reference to a component from the model by tag.
-    /// 
+    ///
     /// Useful when you want to update the value of a [`Parameter`](super::Parameter) of a component.
-    /// 
+    ///
     /// Returns a [`&mut`] to the component if present, othwerwise [`None`]
     pub fn get_component_mut(&mut self, tag: &str) -> Option<&mut ModelComponent<T>> {
         self.components.get_mut(tag)

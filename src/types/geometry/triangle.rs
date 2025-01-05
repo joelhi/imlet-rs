@@ -210,7 +210,7 @@ impl<T: Float + Send + Sync> SignedDistance<T> for Triangle<T> {
     }
 }
 
-impl<T: Float> Bounded<T> for Triangle<T>{
+impl<T: Float> Bounded<T> for Triangle<T> {
     fn bounds(&self) -> BoundingBox<T> {
         BoundingBox::new(
             Vec3::new(
