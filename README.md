@@ -19,7 +19,6 @@
  * Export OBJ of generated iso surfaces.
  * Viewer to show generated geometries with some basic post processing tools (WIP)
 
-
  ## Examples
  
  Below is an example of how to use Imlet to create a 3D model by combining a sphere and a gyroid using an intersection operation.
@@ -81,6 +80,7 @@
 ## Roadmap
 
 ### Base Features
+- [ ] Handle normals in obj import/export.
 - [ ] Improve normal interpolation to reduce leaking.
 - [ ] Improve octree to reduce memory useage.
 - [ ] Simple mesh viewer with wgpu.
@@ -88,6 +88,7 @@
 
 ### Future Enhancements (2025)
 - [ ] Make model serialization compatible with external impls.
+- [ ] Python binding or other scripting interface to build and compute models.
 - [ ] GPU computation of models for faster processing. (For example using [CubeCL](https://github.com/tracel-ai/cubecl))
 - [ ] Develop a node editor for visual programming. (For example using [snarl](https://github.com/zakarumych/egui-snarl))
 
