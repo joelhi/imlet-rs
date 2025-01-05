@@ -40,7 +40,7 @@
 //!
 //! use imlet::types::computation::model::ImplicitModel;
 //!
-//! fn main() {
+//! {
 //!
 //!     // Define some model parameters
 //!     let size: f32 = 10.0;

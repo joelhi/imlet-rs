@@ -41,7 +41,7 @@ impl<T: Float> CustomMesh<T> {
     pub fn with_offset(mesh: &Mesh<T>, offset: T) -> Self {
         Self {
             octree: Some(mesh.compute_octree(10, 12)),
-            offset: offset,
+            offset,
         }
     }
 }

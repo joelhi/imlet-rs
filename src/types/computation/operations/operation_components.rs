@@ -55,7 +55,7 @@ impl OperationComponent {
 }
 
 /// List of available operation
-pub const OPERATION_COMPONENTS: &'static [OperationComponent] = &[
+pub const OPERATION_COMPONENTS: &[OperationComponent] = &[
     // Maths
     OperationComponent::Add,
     OperationComponent::Subtract,

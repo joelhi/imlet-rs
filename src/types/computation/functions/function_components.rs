@@ -116,7 +116,7 @@ impl FromStr for FunctionComponent {
 }
 
 /// List of the different function components
-pub const FUNCTION_COMPONENTS: &'static [FunctionComponent] = &[
+pub const FUNCTION_COMPONENTS: &[FunctionComponent] = &[
     FunctionComponent::Gyroid,
     FunctionComponent::SchwarzP,
     FunctionComponent::Neovius,

@@ -277,7 +277,7 @@ impl<T: Float> Vec3<T> {
 
     pub fn transform(&self, transform: Transform<T>) -> Vec3<T> {
         let rotated = self.rotate(transform.rotation);
-        return rotated + transform.translation;
+        rotated + transform.translation
     }
 
     pub fn rotate(&self, rotation: Vec3<T>) -> Vec3<T> {
