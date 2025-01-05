@@ -4,7 +4,7 @@ use imlet::{
         model::ImplicitModel,
         operations::shape::{BooleanIntersection, Thickness},
     },
-    utils::io::parse_obj_file,
+    utils::io::{parse_obj_file, write_obj_file},
 };
 
 pub fn main() {
@@ -28,7 +28,7 @@ pub fn main() {
         .add_operation_with_inputs("OffsetGyroid", Thickness::new(2.), &[&gyroid_tag])
         .unwrap();
 
-    let _ = model
+    let output = model
         .add_operation_with_inputs(
             "Output",
             BooleanIntersection::new(),
@@ -36,16 +36,9 @@ pub fn main() {
         )
         .unwrap();
 
-    #[cfg(feature = "viewer")]
-    {
-        imlet::viewer::run_explorer_with_model(model, model_space);
-    }
-    #[cfg(not(feature = "viewer"))]
-    {
-        let _ = model
-            .generate_iso_surface("Output", &model_space, 0.5)
-            .unwrap();
+    let mesh = model
+        .generate_iso_surface(&output, &model_space, 0.5)
+        .unwrap();
 
-        println!("Enable the viewer feature by using [--features viewer] to show the result");
-    }
+    write_obj_file(&mesh, "bunny_example").unwrap();
 }

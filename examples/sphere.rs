@@ -20,7 +20,7 @@ pub fn main() {
     // Function
     let mut model = ImplicitModel::new();
 
-    let _ = model
+    let sphere_node = model
         .add_function(
             "Sphere",
             Sphere::new(
@@ -34,18 +34,9 @@ pub fn main() {
         )
         .unwrap();
 
-    // Generate mesh
-    #[cfg(feature = "viewer")]
-    {
-        imlet::viewer::run_explorer_with_model(model, bounds);
-    }
-    #[cfg(not(feature = "viewer"))]
-    {
-        let cell_size = 0.5;
-        let _ = model
-            .generate_iso_surface("Sphere", &bounds, cell_size)
-            .unwrap();
+    let mesh = model
+        .generate_iso_surface(&output, &model_space, 0.5)
+        .unwrap();
 
-        println!("Enable the viewer feature by using (--features viewer) to show the result");
-    }
+    write_obj_file(&mesh, sphere_node).unwrap();
 }

@@ -67,24 +67,9 @@ pub fn main() {
         .add_operation_with_inputs("OffsetInfill", Thickness::new(5.), &[&infill_interpolation])
         .unwrap();
 
-    let _ = model
-        .add_operation_with_inputs(
-            "Union",
-            BooleanIntersection::new(),
-            &[&offset_infill, &shape_interpolation],
-        )
+    let mesh = model
+        .generate_iso_surface(&offset_infill, &model_space, 0.5)
         .unwrap();
 
-    #[cfg(feature = "viewer")]
-    {
-        imlet::viewer::run_explorer_with_model(model, model_space);
-    }
-    #[cfg(not(feature = "viewer"))]
-    {
-        let _ = model
-            .generate_iso_surface("Union", &model_space, 0.5)
-            .unwrap();
-
-        println!("Enable the viewer feature by using (--features viewer) to show the result");
-    }
+    write_obj_file(&mesh, "interpolation_example").unwrap();
 }
