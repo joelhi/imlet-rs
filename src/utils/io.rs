@@ -22,9 +22,16 @@ pub(crate) fn mesh_to_obj<T: Display>(mesh: &Mesh<T>) -> String {
         data.push_str(&v_string);
     }
 
-    for &f in mesh.faces() {
+    for f in mesh.faces() {
         let f_string = format!("f {} {} {}\n", f[0] + 1, f[1] + 1, f[2] + 1);
         data.push_str(&f_string);
+    }
+
+    if let Some(normals) = mesh.normals(){
+        for n in normals.iter(){
+            let v_string = format!("vn {} {} {}\n", n.x, n.y, n.z);
+            data.push_str(&v_string);
+        }
     }
 
     data
@@ -64,6 +71,7 @@ use super::math_helper::Pi;
 pub fn parse_obj_file<T: Float + Send + Sync>(
     file_path: &str,
     flip_yz: bool,
+    read_normals: bool,
 ) -> Result<Mesh<T>, Box<dyn std::error::Error>> {
     let path = Path::new(file_path);
 
@@ -86,6 +94,7 @@ pub fn parse_obj_file<T: Float + Send + Sync>(
 
     let mut vertices: Vec<Vec3<T>> = Vec::new();
     let mut faces: Vec<[usize; 3]> = Vec::new();
+    let mut normals: Vec<Vec3<T>> = Vec::new();
     let mut mesh = Mesh::new();
 
     for line in io::BufReader::new(file).lines() {
@@ -132,13 +141,28 @@ pub fn parse_obj_file<T: Float + Send + Sync>(
                 }
                 faces.push(face);
             }
+            "n" => {
+                if read_normals{
+                    if parts.len() != 4 {
+                        return Err("Invalid vertex format. Make sure file is triangulated.,".into());
+                    }
+                    let n_x: f32 = parts[1].parse()?;
+                    let n_y: f32 = parts[2].parse()?;
+                    let n_z: f32 = parts[3].parse()?;
+                    normals.push(Vec3::new(T::from(n_x).unwrap(), T::from(n_y).unwrap(), T::from(n_z).unwrap()));
+                }
+            }
             _ => continue,
         }
     }
 
     mesh.add_vertices(&vertices);
     mesh.add_faces(&faces);
-    mesh.compute_vertex_normals_par();
+    if read_normals{
+        mesh.set_normals(&normals);
+    }else{
+        mesh.compute_vertex_normals_par();
+    }
 
     log::info!(
         "Obj file {} with {} vertices and {} faces successfully read.",
@@ -193,7 +217,7 @@ fn field_as_data<T: Float + Display>(field: &ScalarField<T>) -> String {
     data
 }
 
-/// Write an implicit model to a text file as json.
+/// Write an imlet model to a text file as json.
 pub fn write_model_to_file<T: Float + Send + Sync + Serialize + 'static + Pi>(
     model: &ImplicitModel<T>,
     file_name: &str,
@@ -205,7 +229,7 @@ pub fn write_model_to_file<T: Float + Send + Sync + Serialize + 'static + Pi>(
     Ok(())
 }
 
-/// Deserialize an implicit model from a json file
+/// Deserialize an imlet model from a json file.
 ///
 /// # Arguments
 ///

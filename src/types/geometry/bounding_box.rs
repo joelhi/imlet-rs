@@ -367,7 +367,7 @@ mod tests {
 
     #[test]
     fn test_create_from_objects() {
-        let mesh: Mesh<f32> = parse_obj_file("assets/geometry/sphere.obj", false).unwrap();
+        let mesh: Mesh<f32> = parse_obj_file("assets/geometry/sphere.obj", false, false).unwrap();
 
         let bounds = mesh.bounds();
 

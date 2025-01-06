@@ -84,6 +84,19 @@ impl<T: Float> Mesh<T> {
         self.faces.extend_from_slice(faces);
     }
 
+    /// Set explicit vertex normals for each vertex.
+    /// 
+    /// Returns true if normals are sucessfully assigned.
+    pub(crate) fn set_normals(&mut self, normals: &[Vec3<T>])->bool{
+        if normals.len() != self.vertices.len(){
+            false
+        }
+        else {
+            self.normals = Some(normals.to_vec());
+            true
+        }
+    }
+
     /// Returns the unique edges of the mesh.
     pub fn edges(&self) -> Vec<Line<T>> {
         let mut edges: Vec<Line<T>> = Vec::with_capacity(self.num_faces());
