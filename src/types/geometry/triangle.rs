@@ -178,37 +178,27 @@ impl<T: Float> Triangle<T> {
 
     /// Spherical interpolation of the vertex normal and a barycentrict coordinate.
     fn interpolate_normals(normals: [Vec3<T>; 3], barycentric_coords: Vec3<T>) -> Vec3<T> {
-        // Ensure normals are normalized
-        let n0 = normals[0].normalize();
-        let n1 = normals[1].normalize();
-        let n2 = normals[2].normalize();
-
-        // Barycentric coordinates
         let w0 = barycentric_coords.x;
         let w1 = barycentric_coords.y;
         let w2 = barycentric_coords.z;
 
-        // Handle cases based on non-zero weights
-        let result = match (
+        match (
             w0.abs() > T::epsilon(),
             w1.abs() > T::epsilon(),
             w2.abs() > T::epsilon(),
         ) {
             (true, true, true) => {
-                // All weights are non-zero
-                let slerp1 = Vec3::slerp(n0, n1, w1 / (w0 + w1));
-                Vec3::slerp(slerp1, n2, w2).normalize()
+                let slerp1 = Vec3::slerp(normals[0], normals[1], w1 / (w0 + w1));
+                Vec3::slerp(slerp1, normals[2], w2).normalize()
             }
-            (true, true, false) => Vec3::slerp(n0, n1, w1 / (w0 + w1)).normalize(),
-            (false, true, true) => Vec3::slerp(n1, n2, w2 / (w1 + w2)).normalize(),
-            (true, false, true) => Vec3::slerp(n0, n2, w2 / (w0 + w2)).normalize(),
-            (true, false, false) => n0,
-            (false, true, false) => n1,
-            (false, false, true) => n2,
-            _ => panic!("Invalid barycentric coordinates: all weights are zero!"),
-        };
-
-        result
+            (true, true, false) => Vec3::slerp(normals[0], normals[1], w1 / (w0 + w1)).normalize(),
+            (false, true, true) => Vec3::slerp(normals[1], normals[2], w2 / (w1 + w2)).normalize(),
+            (true, false, true) => Vec3::slerp(normals[0], normals[2], w2 / (w0 + w2)).normalize(),
+            (true, false, false) => normals[0],
+            (false, true, false) => normals[1],
+            (false, false, true) => normals[2],
+            _ => panic!("Invalid barycentric coordinates: all weights are zero."),
+        }
     }
 }
 
