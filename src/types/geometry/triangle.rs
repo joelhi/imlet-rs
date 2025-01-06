@@ -159,11 +159,11 @@ impl<T: Float> Triangle<T> {
     }
 
     /// Compute the barycentric coordinate for a point on the triangle.
-    /// 
+    ///
     /// # Arguments
     ///
     /// * `query_point` - Point to compute the barycentric coordinate for.
-    pub fn barycentric_coord(&self, query_point: &Vec3<T>)->Vec3<T>{
+    pub fn barycentric_coord(&self, query_point: &Vec3<T>) -> Vec3<T> {
         let v1 = self.p1() - self.p3();
         let v2 = self.p2() - self.p3();
         let cross = v1.cross(&v2);
@@ -173,11 +173,7 @@ impl<T: Float> Triangle<T> {
 
         let a = v2.cross(&v).magnitude() / det;
         let b = v.cross(&v1).magnitude() / det;
-        Vec3::new(
-            a, 
-            b, 
-            T::one() - a - b,
-        )
+        Vec3::new(a, b, T::one() - a - b)
     }
 
     /// Spherical interpolation of the vertex normal and a barycentrict coordinate.
@@ -186,14 +182,18 @@ impl<T: Float> Triangle<T> {
         let n0 = normals[0].normalize();
         let n1 = normals[1].normalize();
         let n2 = normals[2].normalize();
-    
+
         // Barycentric coordinates
         let w0 = barycentric_coords.x;
         let w1 = barycentric_coords.y;
         let w2 = barycentric_coords.z;
-    
+
         // Handle cases based on non-zero weights
-        let result = match (w0.abs() > T::epsilon(), w1.abs() > T::epsilon(), w2.abs() > T::epsilon()) {
+        let result = match (
+            w0.abs() > T::epsilon(),
+            w1.abs() > T::epsilon(),
+            w2.abs() > T::epsilon(),
+        ) {
             (true, true, true) => {
                 // All weights are non-zero
                 let slerp1 = Vec3::slerp(n0, n1, w1 / (w0 + w1));
@@ -207,7 +207,7 @@ impl<T: Float> Triangle<T> {
             (false, false, true) => n2,
             _ => panic!("Invalid barycentric coordinates: all weights are zero!"),
         };
-    
+
         result
     }
 }
@@ -235,7 +235,10 @@ impl<T: Float> SignedQuery<T> for Triangle<T> {
         let barycentric_coord = self.barycentric_coord(&closest_point);
         let normals = self.vertex_normals();
 
-        (closest_point, Triangle::interpolate_normals(normals, barycentric_coord))
+        (
+            closest_point,
+            Triangle::interpolate_normals(normals, barycentric_coord),
+        )
     }
 }
 

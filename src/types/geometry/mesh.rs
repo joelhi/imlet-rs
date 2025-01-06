@@ -85,13 +85,12 @@ impl<T: Float> Mesh<T> {
     }
 
     /// Set explicit vertex normals for each vertex.
-    /// 
+    ///
     /// Returns true if normals are sucessfully assigned.
-    pub(crate) fn set_normals(&mut self, normals: &[Vec3<T>])->bool{
-        if normals.len() != self.vertices.len(){
+    pub(crate) fn set_normals(&mut self, normals: &[Vec3<T>]) -> bool {
+        if normals.len() != self.vertices.len() {
             false
-        }
-        else {
+        } else {
             self.normals = Some(normals.to_vec());
             true
         }

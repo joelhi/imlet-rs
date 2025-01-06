@@ -27,8 +27,8 @@ pub(crate) fn mesh_to_obj<T: Display>(mesh: &Mesh<T>) -> String {
         data.push_str(&f_string);
     }
 
-    if let Some(normals) = mesh.normals(){
-        for n in normals.iter(){
+    if let Some(normals) = mesh.normals() {
+        for n in normals.iter() {
             let v_string = format!("vn {} {} {}\n", n.x, n.y, n.z);
             data.push_str(&v_string);
         }
@@ -142,14 +142,20 @@ pub fn parse_obj_file<T: Float + Send + Sync>(
                 faces.push(face);
             }
             "n" => {
-                if read_normals{
+                if read_normals {
                     if parts.len() != 4 {
-                        return Err("Invalid vertex format. Make sure file is triangulated.,".into());
+                        return Err(
+                            "Invalid vertex format. Make sure file is triangulated.,".into()
+                        );
                     }
                     let n_x: f32 = parts[1].parse()?;
                     let n_y: f32 = parts[2].parse()?;
                     let n_z: f32 = parts[3].parse()?;
-                    normals.push(Vec3::new(T::from(n_x).unwrap(), T::from(n_y).unwrap(), T::from(n_z).unwrap()));
+                    normals.push(Vec3::new(
+                        T::from(n_x).unwrap(),
+                        T::from(n_y).unwrap(),
+                        T::from(n_z).unwrap(),
+                    ));
                 }
             }
             _ => continue,
@@ -158,9 +164,9 @@ pub fn parse_obj_file<T: Float + Send + Sync>(
 
     mesh.add_vertices(&vertices);
     mesh.add_faces(&faces);
-    if read_normals{
+    if read_normals {
         mesh.set_normals(&normals);
-    }else{
+    } else {
         mesh.compute_vertex_normals_par();
     }
 
