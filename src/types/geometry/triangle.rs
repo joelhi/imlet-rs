@@ -179,6 +179,37 @@ impl<T: Float> Triangle<T> {
             T::one() - a - b,
         )
     }
+
+    /// Spherical interpolation of the vertex normal and a barycentrict coordinate.
+    fn interpolate_normals(normals: [Vec3<T>; 3], barycentric_coords: Vec3<T>) -> Vec3<T> {
+        // Ensure normals are normalized
+        let n0 = normals[0].normalize();
+        let n1 = normals[1].normalize();
+        let n2 = normals[2].normalize();
+    
+        // Barycentric coordinates
+        let w0 = barycentric_coords.x;
+        let w1 = barycentric_coords.y;
+        let w2 = barycentric_coords.z;
+    
+        // Handle cases based on non-zero weights
+        let result = match (w0.abs() > T::epsilon(), w1.abs() > T::epsilon(), w2.abs() > T::epsilon()) {
+            (true, true, true) => {
+                // All weights are non-zero
+                let slerp1 = Vec3::slerp(n0, n1, w1 / (w0 + w1));
+                Vec3::slerp(slerp1, n2, w2).normalize()
+            }
+            (true, true, false) => Vec3::slerp(n0, n1, w1 / (w0 + w1)).normalize(),
+            (false, true, true) => Vec3::slerp(n1, n2, w2 / (w1 + w2)).normalize(),
+            (true, false, true) => Vec3::slerp(n0, n2, w2 / (w0 + w2)).normalize(),
+            (true, false, false) => n0,
+            (false, true, false) => n1,
+            (false, false, true) => n2,
+            _ => panic!("Invalid barycentric coordinates: all weights are zero!"),
+        };
+    
+        result
+    }
 }
 
 impl<T: Display> fmt::Display for Triangle<T> {
@@ -199,22 +230,12 @@ impl<T: Float> SpatialQuery<T> for Triangle<T> {
 
 impl<T: Float> SignedQuery<T> for Triangle<T> {
     fn closest_point_with_normal(&self, query_point: &Vec3<T>) -> (Vec3<T>, Vec3<T>) {
-        let (closest_feature, closest_point) = self.closest_point(query_point);
+        let (_, closest_point) = self.closest_point(query_point);
 
-        match closest_feature {
-            TriangleFeature::VERTEX(i) => {
-                let normals = self.vertex_normals();
-                (closest_point, normals[i])
-            }
-            TriangleFeature::EDGE(e) => {
-                let t = closest_point.distance_to_vec3(&self.p[e[0]])
-                    / self.p[e[0]].distance_to_vec3(&self.p[e[1]]);
-                let normals = self.vertex_normals();
+        let barycentric_coord = self.barycentric_coord(&closest_point);
+        let normals = self.vertex_normals();
 
-                (closest_point, Vec3::slerp(normals[e[0]], normals[e[1]], t))
-            }
-            TriangleFeature::FACE => (closest_point, self.face_normal()),
-        }
+        (closest_point, Triangle::interpolate_normals(normals, barycentric_coord))
     }
 }
 
