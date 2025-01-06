@@ -157,6 +157,28 @@ impl<T: Float> Triangle<T> {
         let w = vc * denom;
         (TriangleFeature::FACE, self.p[0] + ab * v + ac * w)
     }
+
+    /// Compute the barycentric coordinate for a point on the triangle.
+    /// 
+    /// # Arguments
+    ///
+    /// * `query_point` - Point to compute the barycentric coordinate for.
+    pub fn barycentric_coord(&self, query_point: &Vec3<T>)->Vec3<T>{
+        let v1 = self.p1() - self.p3();
+        let v2 = self.p2() - self.p3();
+        let cross = v1.cross(&v2);
+        let det = cross.magnitude();
+
+        let v = *query_point - self.p3();
+
+        let a = v2.cross(&v).magnitude() / det;
+        let b = v.cross(&v1).magnitude() / det;
+        Vec3::new(
+            a, 
+            b, 
+            T::one() - a - b,
+        )
+    }
 }
 
 impl<T: Display> fmt::Display for Triangle<T> {
@@ -352,5 +374,37 @@ mod tests {
 
         assert!(matches!(feature, TriangleFeature::VERTEX(_)));
         assert!(closest_point.distance_to_vec3(&v3).abs() < f64::epsilon());
+    }
+
+    #[test]
+    fn test_barycentric_coord() {
+        let v1 = Vec3::new(0.0, 0.0, 0.0);
+        let v2 = Vec3::new(5.0, 0.0, 0.0);
+        let v3 = Vec3::new(0.0, 5.0, 0.0);
+
+        let tri = Triangle::new(v1, v2, v3);
+
+        // At coords
+        let coord_1 = tri.barycentric_coord(&Vec3::new(0.0, 0.0, 0.0));
+        let coord_2 = tri.barycentric_coord(&Vec3::new(5.0, 0.0, 0.0));
+        let coord_3 = tri.barycentric_coord(&Vec3::new(0.0, 5.0, 0.0));
+
+        assert!(coord_1.distance_to_coord(1., 0., 0.) < f64::epsilon());
+        assert!(coord_2.distance_to_coord(0., 1., 0.) < f64::epsilon());
+        assert!(coord_3.distance_to_coord(0., 0., 1.) < f64::epsilon());
+
+        // On edges
+        let coord_4 = tri.barycentric_coord(&Vec3::new(2.5, 0.0, 0.0));
+        let coord_5 = tri.barycentric_coord(&Vec3::new(0.0, 2.5, 0.0));
+        let coord_6 = tri.barycentric_coord(&Vec3::new(2.5, 2.5, 0.0));
+
+        assert!(coord_4.distance_to_coord(0.5, 0.5, 0.) < f64::epsilon());
+        assert!(coord_5.distance_to_coord(0.5, 0., 0.5) < f64::epsilon());
+        assert!(coord_6.distance_to_coord(0., 0.5, 0.5) < f64::epsilon());
+
+        // At centre
+        let coord_7 = tri.barycentric_coord(&Vec3::new(1.67, 1.67, 0.0));
+
+        assert!(coord_7.distance_to_coord(0.33, 0.33, 0.33) < 0.1);
     }
 }
