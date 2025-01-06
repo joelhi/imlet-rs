@@ -81,7 +81,7 @@
 
 ### Base Features
 - [ ] Handle normals in obj import/export.
-- [ ] Improve normal interpolation to reduce leaking.
+- [x] Improve normal interpolation to reduce leaking.
 - [ ] Improve octree to reduce memory useage.
 - [ ] Simple mesh viewer with wgpu.
 - [ ] Some cli tools
