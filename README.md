@@ -80,12 +80,8 @@
 ## Roadmap
 
 ### Base Features
-- [ ] Handle normals in obj import/export.
-<<<<<<< HEAD
+- [x] Handle normals in obj import/export.
 - [x] Improve normal interpolation to reduce leaking.
-=======
-- [ ] Improve normal interpolation to reduce leaking.
->>>>>>> 1b5eb4bee4c6d73248a349242c75991191102a70
 - [ ] Improve octree to reduce memory useage.
 - [ ] Simple mesh viewer with wgpu.
 - [ ] Some cli tools
