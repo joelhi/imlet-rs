@@ -13,7 +13,7 @@ use imlet::{
 pub fn main() {
     utils::logging::init_info();
 
-    let mesh = parse_obj_file("assets/geometry/bunny.obj", false).unwrap();
+    let mesh = parse_obj_file("assets/geometry/bunny.obj", false, false).unwrap();
 
     let cell_size = 0.5;
     let model_space = mesh.bounds().offset(cell_size);
@@ -41,9 +41,11 @@ pub fn main() {
         )
         .unwrap();
 
-    let mesh = model
+    let mut mesh = model
         .generate_iso_surface(&output, &model_space, 0.5)
         .unwrap();
+
+    mesh.compute_vertex_normals_par();
 
     write_obj_file(&mesh, "bunny_example").unwrap();
 }

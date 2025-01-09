@@ -90,7 +90,7 @@ mod tests {
 
     #[test]
     fn test_compute_signed_distance_sphere_mesh() {
-        let m: Mesh<f64> = parse_obj_file("assets/geometry/sphere.obj", false).unwrap();
+        let m: Mesh<f64> = parse_obj_file("assets/geometry/sphere.obj", false, false).unwrap();
 
         let collection = GeometryCollection::from_mesh(&m);
 

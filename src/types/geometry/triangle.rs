@@ -157,6 +157,49 @@ impl<T: Float> Triangle<T> {
         let w = vc * denom;
         (TriangleFeature::FACE, self.p[0] + ab * v + ac * w)
     }
+
+    /// Compute the barycentric coordinate for a point on the triangle.
+    ///
+    /// # Arguments
+    ///
+    /// * `query_point` - Point to compute the barycentric coordinate for.
+    pub fn barycentric_coord(&self, query_point: &Vec3<T>) -> Vec3<T> {
+        let v1 = self.p1() - self.p3();
+        let v2 = self.p2() - self.p3();
+        let cross = v1.cross(&v2);
+        let det = cross.magnitude();
+
+        let v = *query_point - self.p3();
+
+        let a = v2.cross(&v).magnitude() / det;
+        let b = v.cross(&v1).magnitude() / det;
+        Vec3::new(a, b, T::one() - a - b)
+    }
+
+    /// Spherical interpolation of the vertex normal and a barycentrict coordinate.
+    fn interpolate_normals(normals: [Vec3<T>; 3], barycentric_coords: Vec3<T>) -> Vec3<T> {
+        let w0 = barycentric_coords.x;
+        let w1 = barycentric_coords.y;
+        let w2 = barycentric_coords.z;
+
+        match (
+            w0.abs() > T::epsilon(),
+            w1.abs() > T::epsilon(),
+            w2.abs() > T::epsilon(),
+        ) {
+            (true, true, true) => {
+                let slerp1 = Vec3::slerp(normals[0], normals[1], w1 / (w0 + w1));
+                Vec3::slerp(slerp1, normals[2], w2).normalize()
+            }
+            (true, true, false) => Vec3::slerp(normals[0], normals[1], w1 / (w0 + w1)).normalize(),
+            (false, true, true) => Vec3::slerp(normals[1], normals[2], w2 / (w1 + w2)).normalize(),
+            (true, false, true) => Vec3::slerp(normals[0], normals[2], w2 / (w0 + w2)).normalize(),
+            (true, false, false) => normals[0],
+            (false, true, false) => normals[1],
+            (false, false, true) => normals[2],
+            _ => panic!("Invalid barycentric coordinates: all weights are zero."),
+        }
+    }
 }
 
 impl<T: Display> fmt::Display for Triangle<T> {
@@ -177,22 +220,15 @@ impl<T: Float> SpatialQuery<T> for Triangle<T> {
 
 impl<T: Float> SignedQuery<T> for Triangle<T> {
     fn closest_point_with_normal(&self, query_point: &Vec3<T>) -> (Vec3<T>, Vec3<T>) {
-        let (closest_feature, closest_point) = self.closest_point(query_point);
+        let (_, closest_point) = self.closest_point(query_point);
 
-        match closest_feature {
-            TriangleFeature::VERTEX(i) => {
-                let normals = self.vertex_normals();
-                (closest_point, normals[i])
-            }
-            TriangleFeature::EDGE(e) => {
-                let t = closest_point.distance_to_vec3(&self.p[e[0]])
-                    / self.p[e[0]].distance_to_vec3(&self.p[e[1]]);
-                let normals = self.vertex_normals();
+        let barycentric_coord = self.barycentric_coord(&closest_point);
+        let normals = self.vertex_normals();
 
-                (closest_point, Vec3::slerp(normals[e[0]], normals[e[1]], t))
-            }
-            TriangleFeature::FACE => (closest_point, self.face_normal()),
-        }
+        (
+            closest_point,
+            Triangle::interpolate_normals(normals, barycentric_coord),
+        )
     }
 }
 
@@ -352,5 +388,37 @@ mod tests {
 
         assert!(matches!(feature, TriangleFeature::VERTEX(_)));
         assert!(closest_point.distance_to_vec3(&v3).abs() < f64::epsilon());
+    }
+
+    #[test]
+    fn test_barycentric_coord() {
+        let v1 = Vec3::new(0.0, 0.0, 0.0);
+        let v2 = Vec3::new(5.0, 0.0, 0.0);
+        let v3 = Vec3::new(0.0, 5.0, 0.0);
+
+        let tri = Triangle::new(v1, v2, v3);
+
+        // At coords
+        let coord_1 = tri.barycentric_coord(&Vec3::new(0.0, 0.0, 0.0));
+        let coord_2 = tri.barycentric_coord(&Vec3::new(5.0, 0.0, 0.0));
+        let coord_3 = tri.barycentric_coord(&Vec3::new(0.0, 5.0, 0.0));
+
+        assert!(coord_1.distance_to_coord(1., 0., 0.) < f64::epsilon());
+        assert!(coord_2.distance_to_coord(0., 1., 0.) < f64::epsilon());
+        assert!(coord_3.distance_to_coord(0., 0., 1.) < f64::epsilon());
+
+        // On edges
+        let coord_4 = tri.barycentric_coord(&Vec3::new(2.5, 0.0, 0.0));
+        let coord_5 = tri.barycentric_coord(&Vec3::new(0.0, 2.5, 0.0));
+        let coord_6 = tri.barycentric_coord(&Vec3::new(2.5, 2.5, 0.0));
+
+        assert!(coord_4.distance_to_coord(0.5, 0.5, 0.) < f64::epsilon());
+        assert!(coord_5.distance_to_coord(0.5, 0., 0.5) < f64::epsilon());
+        assert!(coord_6.distance_to_coord(0., 0.5, 0.5) < f64::epsilon());
+
+        // At centre
+        let coord_7 = tri.barycentric_coord(&Vec3::new(1.67, 1.67, 0.0));
+
+        assert!(coord_7.distance_to_coord(0.33, 0.33, 0.33) < 0.1);
     }
 }

@@ -51,7 +51,7 @@ impl<T: Float + Send + Sync> MeshFile<T> {
     ///
     /// * `geometry` - Geomtry to use as base for signed distance computation.
     pub fn from_path(file_path: &str) -> Result<Self, Box<dyn Error>> {
-        let mesh = parse_obj_file(file_path, false)?;
+        let mesh = parse_obj_file(file_path, false, false)?;
         let octree = mesh.compute_octree(MAX_TREE_DEPTH, MAX_LEAF_TRIANGLE_COUNT);
         Ok(Self {
             file_path: Some(file_path.to_string()),
@@ -61,7 +61,7 @@ impl<T: Float + Send + Sync> MeshFile<T> {
     }
 
     pub fn set_mesh_from_file(&mut self, file_path: &str) {
-        let parse_result = parse_obj_file::<T>(file_path, false);
+        let parse_result = parse_obj_file::<T>(file_path, false, false);
 
         match parse_result {
             Ok(mut mesh) => {
