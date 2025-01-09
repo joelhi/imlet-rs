@@ -82,7 +82,7 @@ pub fn parse_obj_file<T: Float + Send + Sync>(
         )
     })?;
 
-    if extension.to_ascii_lowercase() != "obj" {
+    if !extension.eq_ignore_ascii_case("obj") {
         return Err(format!(
             "Cannot read file {}. Only .obj files are supported.",
             file_path
@@ -260,7 +260,7 @@ pub fn read_model_from_file<
         )
     })?;
 
-    if extension.to_ascii_lowercase() != "json" {
+    if !extension.eq_ignore_ascii_case("json") {
         return Err(format!(
             "Cannot read file {}. Only .json files are supported.",
             file_path
