@@ -232,6 +232,13 @@ pub fn write_model_to_file<T: Float + Send + Sync + Serialize + 'static + Pi>(
     let file_path = Path::new(file_name).with_extension("json");
     let mut file = fs::File::create(file_path)?;
     file.write_all(json.as_bytes())?;
+
+    log::info!(
+        "Model with {} componets successfully saved as {}.",
+        model.all_components().len(),
+        file_name.to_owned() + ".json"
+    );
+
     Ok(())
 }
 
@@ -290,6 +297,22 @@ mod tests {
         let val = model.evaluate_at("Output", 0., 0., 0.).unwrap();
 
         let expected_val = 41.60254;
+        assert!(
+            (val - expected_val).abs() < f32::epsilon(),
+            "Wrong value returned from model. Was {}, but should have been {}",
+            val,
+            expected_val
+        );
+    }
+
+    #[test]
+    fn test_deserialize_model_with_file() {
+        let model: ImplicitModel<f32> =
+            read_model_from_file("assets/models/bunny_model.json").unwrap();
+
+        let val = model.evaluate_at("Output", 0., 0., 0.).unwrap();
+
+        let expected_val = 13.442741;
         assert!(
             (val - expected_val).abs() < f32::epsilon(),
             "Wrong value returned from model. Was {}, but should have been {}",

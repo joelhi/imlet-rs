@@ -11,8 +11,8 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::{self, Debug, Display};
 use std::time::Instant;
 
-use super::ComputationGraph;
 use super::{ComponentId, ModelComponent};
+use super::{ComputationGraph, ModelConfig};
 
 /// An implicit model composed of distance functions and operations.
 ///
@@ -50,6 +50,7 @@ pub struct ImplicitModel<T: Float + Send + Sync + Serialize + 'static + Pi> {
     version: String,
     components: HashMap<String, ModelComponent<T>>,
     inputs: HashMap<String, Vec<Option<String>>>,
+    config: Option<ModelConfig<T>>,
 }
 
 impl<T: Float + Send + Sync + Serialize + 'static + Pi> Default for ImplicitModel<T> {
@@ -65,7 +66,20 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
             version: IMLET_VERSION.to_string(),
             components: HashMap::new(),
             inputs: HashMap::new(),
+            config: None,
         }
+    }
+
+    /// Create a new empty model with a predefined model domain.
+    pub fn with_bounds(bounds: BoundingBox<T>) -> Self {
+        let mut model = ImplicitModel::new();
+        model.set_config(ModelConfig::new(bounds));
+        model
+    }
+
+    /// Set the model config, which determines model parameters such as bounds and smoothing.
+    pub fn set_config(&mut self, config: ModelConfig<T>) {
+        self.config = Some(config);
     }
 
     /// Get references to all the components in the model and their tags.
@@ -689,13 +703,8 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     /// # Returns
     ///      
     /// * `Result<Mesh<T>, ModelError>` - The iso surface represented as an indexed triangle mesh, or an error if not successful.
-    pub fn generate_iso_surface(
-        &self,
-        output: &str,
-        bounds: &BoundingBox<T>,
-        cell_size: T,
-    ) -> Result<Mesh<T>, ModelError> {
-        self.generate_iso_surface_at(output, bounds, cell_size, T::zero())
+    pub fn generate_iso_surface(&self, output: &str, cell_size: T) -> Result<Mesh<T>, ModelError> {
+        self.generate_iso_surface_at(output, cell_size, T::zero())
     }
 
     /// Extract the iso surface at a specified level.
@@ -712,14 +721,22 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     pub fn generate_iso_surface_at(
         &self,
         output: &str,
-        bounds: &BoundingBox<T>,
         cell_size: T,
         iso_value: T,
     ) -> Result<Mesh<T>, ModelError> {
-        let field = self.generate_field(output, bounds, cell_size)?;
+        if let Some(config) = &self.config {
+            let mut field = self.generate_field(output, &config.bounds, cell_size)?;
+            field.smooth(config.smoothing_factor, config.smoothing_iter);
 
-        let triangles = generate_iso_surface(&field, iso_value);
-        Ok(Mesh::from_triangles(&triangles, false))
+            if config.cap {
+                field.padding(T::one());
+            }
+
+            let triangles = generate_iso_surface(&field, iso_value);
+            return Ok(Mesh::from_triangles(&triangles, false));
+        }
+
+        Err(ModelError::MissingConfig())
     }
 }
 

@@ -10,7 +10,7 @@ use crate::{
             model::{Data, DataType, Parameter},
             traits::ImplicitFunction,
         },
-        geometry::{Octree, Transform, Triangle, Vec3},
+        geometry::{BoundingBox, Octree, Transform, Triangle, Vec3},
     },
     utils::io::parse_obj_file,
 };
@@ -26,6 +26,7 @@ pub struct MeshFile<T> {
     /// Option to center the geometry
     pub center: bool,
     /// Geometry to use for signed distance computation
+    #[serde(skip_serializing)]
     pub geometry_data: Option<Octree<Triangle<T>, T>>,
 }
 
@@ -42,6 +43,13 @@ impl<T: Float + Send + Sync> MeshFile<T> {
             file_path: None,
             center: false,
             geometry_data: None,
+        }
+    }
+
+    /// Rebuild the internal octree based on the file path
+    pub fn build(&mut self) {
+        if let Some(file_path) = self.file_path.clone() {
+            self.set_mesh_from_file(&file_path);
         }
     }
 
@@ -84,6 +92,11 @@ impl<T: Float + Send + Sync> MeshFile<T> {
                 error!("{}", err);
             }
         }
+    }
+
+    /// Return the bounds of the mesh in the file.
+    pub fn bounds(&self) -> Option<BoundingBox<T>> {
+        self.geometry_data.as_ref().map(|tree| tree.bounds())
     }
 }
 

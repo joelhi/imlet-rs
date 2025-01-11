@@ -1,6 +1,16 @@
 {
   "version": "0.1.0",
   "components": {
+    "Gyroid": {
+      "Function": {
+        "Gyroid": {
+          "length_x": 15.0,
+          "length_y": 15.0,
+          "length_z": 15.0,
+          "linear": false
+        }
+      }
+    },
     "Sphere": {
       "Function": {
         "Sphere": {
@@ -13,36 +23,43 @@
         }
       }
     },
+    "Output": {
+      "Operation": {
+        "BooleanIntersection": {}
+      }
+    },
     "OffsetGyroid": {
       "Operation": {
         "Thickness": {
           "t": 10.0
         }
       }
-    },
-    "Output": {
-      "Operation": {
-        "BooleanIntersection": {}
-      }
-    },
-    "Gyroid": {
-      "Function": {
-        "Gyroid": {
-          "length_x": 15.0,
-          "length_y": 15.0,
-          "length_z": 15.0,
-          "linear": false
-        }
-      }
     }
   },
   "inputs": {
+    "OffsetGyroid": [
+      "Gyroid"
+    ],
     "Output": [
       "Sphere",
       "OffsetGyroid"
-    ],
-    "OffsetGyroid": [
-      "Gyroid"
     ]
+  },
+  "config": {
+    "bounds": {
+      "min": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "max": {
+        "x": 100.0,
+        "y": 100.0,
+        "z": 100.0
+      }
+    },
+    "cap": true,
+    "smoothing_iter": 0,
+    "smoothing_factor": 0.75
   }
 }

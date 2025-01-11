@@ -18,7 +18,7 @@ pub fn main() {
     );
 
     // Function
-    let mut model = ImplicitModel::new();
+    let mut model = ImplicitModel::with_bounds(model_space);
 
     let sphere_node = model
         .add_function(
@@ -34,9 +34,7 @@ pub fn main() {
         )
         .unwrap();
 
-    let mesh = model
-        .generate_iso_surface(&sphere_node, &model_space, 0.5)
-        .unwrap();
+    let mesh = model.generate_iso_surface(&sphere_node, 0.5).unwrap();
 
     utils::io::write_obj_file(&mesh, "sphere_example").unwrap();
 }

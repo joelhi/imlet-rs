@@ -27,6 +27,8 @@ pub enum ModelError {
     TagGenerationFailed(String),
     /// Can't compute as no output specified.
     MissingOutput(),
+    /// Can't compute as no model config is defined.
+    MissingConfig(),
 }
 
 impl std::fmt::Display for ModelError {
@@ -72,6 +74,10 @@ impl std::fmt::Display for ModelError {
             ModelError::MissingOutput() => {
                 write!(f, "Failed to generate output as no output node specified.")
             }
+            ModelError::MissingConfig() => write!(
+                f,
+                "Failed to generate output as no config is specified for the model."
+            ),
         }
     }
 }

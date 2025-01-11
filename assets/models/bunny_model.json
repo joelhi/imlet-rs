@@ -1,0 +1,61 @@
+{
+  "version": "0.1.0",
+  "components": {
+    "OffsetGyroid": {
+      "Operation": {
+        "Thickness": {
+          "t": 2.0
+        }
+      }
+    },
+    "Mesh": {
+      "Function": {
+        "MeshFile": {
+          "file_path": "assets/geometry/bunny.obj",
+          "center": false
+        }
+      }
+    },
+    "Gyroid": {
+      "Function": {
+        "Gyroid": {
+          "length_x": 5.0,
+          "length_y": 5.0,
+          "length_z": 5.0,
+          "linear": false
+        }
+      }
+    },
+    "Output": {
+      "Operation": {
+        "BooleanIntersection": {}
+      }
+    }
+  },
+  "inputs": {
+    "Output": [
+      "Mesh",
+      "OffsetGyroid"
+    ],
+    "OffsetGyroid": [
+      "Gyroid"
+    ]
+  },
+  "config": {
+    "bounds": {
+      "min": {
+        "x": -0.6,
+        "y": -0.6,
+        "z": -0.6
+      },
+      "max": {
+        "x": 60.69169387817383,
+        "y": 46.91985855102539,
+        "z": 60.072190856933595
+      }
+    },
+    "cap": true,
+    "smoothing_iter": 0,
+    "smoothing_factor": 0.75
+  }
+}
