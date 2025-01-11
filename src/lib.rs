@@ -48,7 +48,7 @@
 //!     let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 //!
 //!     // Create an empty model
-//!     let mut model = ImplicitModel::new();
+//!     let mut model = ImplicitModel::with_bounds(model_space);
 //!
 //!     // Adda a sphere distance function to the model.
 //!     let sphere = model
@@ -73,7 +73,7 @@
 //!         .unwrap();
 //!
 //!     // Generate an isosurface at the 0 distance.
-//!     let mesh = model.generate_iso_surface(&intersection, &model_space, cell_size)
+//!     let mesh = model.generate_iso_surface(&intersection, cell_size)
 //!         .unwrap();
 //!
 //!     // Write the mesh to an obj file.

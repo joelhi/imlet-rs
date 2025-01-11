@@ -1,7 +1,7 @@
 use imlet::{
     types::computation::{
         functions::{CustomMesh, Gyroid},
-        model::{ImplicitModel, ModelConfig},
+        model::ImplicitModel,
         operations::shape::{BooleanIntersection, Thickness},
     },
     utils::{
@@ -40,9 +40,7 @@ pub fn main() {
         )
         .unwrap();
 
-    let mut mesh = model
-        .generate_iso_surface(&output, 0.5)
-        .unwrap();
+    let mut mesh = model.generate_iso_surface(&output, 0.5).unwrap();
 
     mesh.compute_vertex_normals_par();
 

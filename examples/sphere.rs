@@ -34,9 +34,7 @@ pub fn main() {
         )
         .unwrap();
 
-    let mesh = model
-        .generate_iso_surface(&sphere_node, 0.5)
-        .unwrap();
+    let mesh = model.generate_iso_surface(&sphere_node, 0.5).unwrap();
 
     utils::io::write_obj_file(&mesh, "sphere_example").unwrap();
 }

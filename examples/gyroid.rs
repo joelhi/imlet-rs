@@ -40,9 +40,7 @@ pub fn main() {
         )
         .unwrap();
 
-    let mesh = model
-        .generate_iso_surface(&output, 0.5)
-        .unwrap();
+    let mesh = model.generate_iso_surface(&output, 0.5).unwrap();
 
     utils::io::write_obj_file(&mesh, "gyroid_example").unwrap();
 }
