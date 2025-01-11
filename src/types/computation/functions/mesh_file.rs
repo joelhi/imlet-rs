@@ -47,8 +47,8 @@ impl<T: Float + Send + Sync> MeshFile<T> {
     }
 
     /// Rebuild the internal octree based on the file path
-    pub fn build(&mut self){
-        if let Some(file_path) = self.file_path.clone(){
+    pub fn build(&mut self) {
+        if let Some(file_path) = self.file_path.clone() {
             self.set_mesh_from_file(&file_path);
         }
     }

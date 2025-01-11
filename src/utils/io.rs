@@ -232,6 +232,13 @@ pub fn write_model_to_file<T: Float + Send + Sync + Serialize + 'static + Pi>(
     let file_path = Path::new(file_name).with_extension("json");
     let mut file = fs::File::create(file_path)?;
     file.write_all(json.as_bytes())?;
+
+    log::info!(
+        "Model with {} componets successfully saved as {}.",
+        model.all_components().len(),
+        file_name.to_owned() + ".json"
+    );
+
     Ok(())
 }
 
