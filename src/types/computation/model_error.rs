@@ -74,7 +74,10 @@ impl std::fmt::Display for ModelError {
             ModelError::MissingOutput() => {
                 write!(f, "Failed to generate output as no output node specified.")
             }
-            ModelError::MissingConfig() => write!(f, "Failed to generate output as no config is specified for the model."),
+            ModelError::MissingConfig() => write!(
+                f,
+                "Failed to generate output as no config is specified for the model."
+            ),
         }
     }
 }

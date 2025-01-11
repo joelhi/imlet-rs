@@ -11,8 +11,8 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::{self, Debug, Display};
 use std::time::Instant;
 
-use super::{ComputationGraph, ModelConfig};
 use super::{ComponentId, ModelComponent};
+use super::{ComputationGraph, ModelConfig};
 
 /// An implicit model composed of distance functions and operations.
 ///
@@ -71,14 +71,14 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     }
 
     /// Create a new empty model with a predefined model domain.
-    pub fn with_bounds(bounds: BoundingBox<T>)->Self{
+    pub fn with_bounds(bounds: BoundingBox<T>) -> Self {
         let mut model = ImplicitModel::new();
         model.set_config(ModelConfig::new(bounds));
         model
     }
 
     /// Set the model config, which determines model parameters such as bounds and smoothing.
-    pub fn set_config(&mut self, config: ModelConfig<T>){
+    pub fn set_config(&mut self, config: ModelConfig<T>) {
         self.config = Some(config);
     }
 
@@ -703,11 +703,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     /// # Returns
     ///      
     /// * `Result<Mesh<T>, ModelError>` - The iso surface represented as an indexed triangle mesh, or an error if not successful.
-    pub fn generate_iso_surface(
-        &self,
-        output: &str,
-        cell_size: T,
-    ) -> Result<Mesh<T>, ModelError> {
+    pub fn generate_iso_surface(&self, output: &str, cell_size: T) -> Result<Mesh<T>, ModelError> {
         self.generate_iso_surface_at(output, cell_size, T::zero())
     }
 
@@ -728,9 +724,13 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         cell_size: T,
         iso_value: T,
     ) -> Result<Mesh<T>, ModelError> {
-        if let Some(config) = &self.config{
+        if let Some(config) = &self.config {
             let mut field = self.generate_field(output, &config.bounds, cell_size)?;
             field.smooth(config.smoothing_factor, config.smoothing_iter);
+
+            if config.cap {
+                field.padding(T::one());
+            }
 
             let triangles = generate_iso_surface(&field, iso_value);
             return Ok(Mesh::from_triangles(&triangles, false));
