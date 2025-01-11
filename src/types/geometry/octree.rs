@@ -46,7 +46,7 @@ impl<Q, T: Float> Octree<Q, T> {
 
     /// Returns the full bounds of the octree
     pub fn bounds(&self) -> BoundingBox<T> {
-        self.root.bounds.clone()
+        self.root.bounds
     }
 }
 
