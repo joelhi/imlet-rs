@@ -10,7 +10,7 @@ use crate::{
             model::{Data, DataType, Parameter},
             traits::ImplicitFunction,
         },
-        geometry::{Octree, Transform, Triangle, Vec3},
+        geometry::{BoundingBox, Octree, Transform, Triangle, Vec3},
     },
     utils::io::parse_obj_file,
 };
@@ -91,6 +91,15 @@ impl<T: Float + Send + Sync> MeshFile<T> {
             Err(err) => {
                 error!("{}", err);
             }
+        }
+    }
+
+    /// Return the bounds of the mesh in the file.
+    pub fn bounds(&self)->Option<BoundingBox<T>>{
+        if let Some(tree) = &self.geometry_data{
+            Some(tree.bounds())
+        }else{
+            None
         }
     }
 }

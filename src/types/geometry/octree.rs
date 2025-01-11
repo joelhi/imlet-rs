@@ -43,6 +43,11 @@ impl<Q, T: Float> Octree<Q, T> {
     pub fn all_bounds(&self) -> Vec<BoundingBox<T>> {
         self.root.all_bounds()
     }
+
+    /// Returns the full bounds of the octree
+    pub fn bounds(&self)->BoundingBox<T>{
+        self.root.bounds.clone()
+    }
 }
 
 impl<Q: SpatialQuery<T>, T: Float> Octree<Q, T> {
