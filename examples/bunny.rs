@@ -4,10 +4,7 @@ use imlet::{
         model::ImplicitModel,
         operations::shape::{BooleanIntersection, Thickness},
     },
-    utils::{
-        self,
-        io::write_obj_file,
-    },
+    utils::{self, io::write_obj_file},
 };
 
 pub fn main() {
@@ -19,9 +16,7 @@ pub fn main() {
     // Build model
     let mut model = ImplicitModel::with_bounds(mesh_file.bounds().unwrap().offset(cell_size));
 
-    let mesh_tag = model
-        .add_function("Mesh", mesh_file)
-        .unwrap();
+    let mesh_tag = model.add_function("Mesh", mesh_file).unwrap();
 
     let gyroid_tag = model
         .add_function("Gyroid", Gyroid::with_equal_spacing(5., false))
@@ -38,7 +33,7 @@ pub fn main() {
             &[&mesh_tag, &offset_gyroid],
         )
         .unwrap();
-    
+
     let mut mesh = model.generate_iso_surface(&output, 0.5).unwrap();
 
     mesh.compute_vertex_normals_par();
