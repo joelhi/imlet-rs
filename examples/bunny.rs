@@ -1,7 +1,7 @@
 use imlet::{
     types::computation::{
         functions::{CustomMesh, Gyroid},
-        model::ImplicitModel,
+        model::{ImplicitModel, ModelConfig},
         operations::shape::{BooleanIntersection, Thickness},
     },
     utils::{
@@ -16,10 +16,9 @@ pub fn main() {
     let mesh = parse_obj_file("assets/geometry/bunny.obj", false, false).unwrap();
 
     let cell_size = 0.5;
-    let model_space = mesh.bounds().offset(cell_size);
 
     // Build model
-    let mut model = ImplicitModel::new();
+    let mut model = ImplicitModel::with_bounds(mesh.bounds().offset(cell_size));
 
     let mesh_tag = model
         .add_function("Mesh", CustomMesh::build(&mesh))
@@ -42,7 +41,7 @@ pub fn main() {
         .unwrap();
 
     let mut mesh = model
-        .generate_iso_surface(&output, &model_space, 0.5)
+        .generate_iso_surface(&output, 0.5)
         .unwrap();
 
     mesh.compute_vertex_normals_par();

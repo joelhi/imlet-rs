@@ -15,7 +15,7 @@ pub fn main() {
     let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
     // Build model
-    let mut model = ImplicitModel::new();
+    let mut model = ImplicitModel::with_bounds(model_space);
 
     let sphere_tag = model
         .add_function(
@@ -41,7 +41,7 @@ pub fn main() {
         .unwrap();
 
     let mesh = model
-        .generate_iso_surface(&output, &model_space, 0.5)
+        .generate_iso_surface(&output, 0.5)
         .unwrap();
 
     utils::io::write_obj_file(&mesh, "gyroid_example").unwrap();

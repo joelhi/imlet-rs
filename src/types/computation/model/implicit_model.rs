@@ -70,6 +70,13 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         }
     }
 
+    /// Create a new empty model with a predefined model domain.
+    pub fn with_bounds(bounds: BoundingBox<T>)->Self{
+        let mut model = ImplicitModel::new();
+        model.set_config(ModelConfig::new(bounds));
+        model
+    }
+
     /// Set the model config, which determines model parameters such as bounds and smoothing.
     pub fn set_config(&mut self, config: ModelConfig<T>){
         self.config = Some(config);
@@ -701,7 +708,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         output: &str,
         cell_size: T,
     ) -> Result<Mesh<T>, ModelError> {
-        self.generate_iso_surface_at(output, bounds, cell_size, T::zero())
+        self.generate_iso_surface_at(output, cell_size, T::zero())
     }
 
     /// Extract the iso surface at a specified level.
@@ -718,14 +725,18 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     pub fn generate_iso_surface_at(
         &self,
         output: &str,
-        bounds: &BoundingBox<T>,
         cell_size: T,
         iso_value: T,
     ) -> Result<Mesh<T>, ModelError> {
-        let field = self.generate_field(output, bounds, cell_size)?;
+        if let Some(config) = &self.config{
+            let mut field = self.generate_field(output, &config.bounds, cell_size)?;
+            field.smooth(config.smoothing_factor, config.smoothing_iter);
 
-        let triangles = generate_iso_surface(&field, iso_value);
-        Ok(Mesh::from_triangles(&triangles, false))
+            let triangles = generate_iso_surface(&field, iso_value);
+            return Ok(Mesh::from_triangles(&triangles, false));
+        }
+
+        Err(ModelError::MissingConfig())
     }
 }
 
