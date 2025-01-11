@@ -11,7 +11,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::{self, Debug, Display};
 use std::time::Instant;
 
-use super::ComputationGraph;
+use super::{ComputationGraph, ModelConfig};
 use super::{ComponentId, ModelComponent};
 
 /// An implicit model composed of distance functions and operations.
@@ -50,6 +50,7 @@ pub struct ImplicitModel<T: Float + Send + Sync + Serialize + 'static + Pi> {
     version: String,
     components: HashMap<String, ModelComponent<T>>,
     inputs: HashMap<String, Vec<Option<String>>>,
+    config: Option<ModelConfig<T>>,
 }
 
 impl<T: Float + Send + Sync + Serialize + 'static + Pi> Default for ImplicitModel<T> {
@@ -65,7 +66,13 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
             version: IMLET_VERSION.to_string(),
             components: HashMap::new(),
             inputs: HashMap::new(),
+            config: None,
         }
+    }
+
+    /// Set the model config, which determines model parameters such as bounds and smoothing.
+    pub fn set_config(&mut self, config: ModelConfig<T>){
+        self.config = Some(config);
     }
 
     /// Get references to all the components in the model and their tags.
@@ -692,7 +699,6 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     pub fn generate_iso_surface(
         &self,
         output: &str,
-        bounds: &BoundingBox<T>,
         cell_size: T,
     ) -> Result<Mesh<T>, ModelError> {
         self.generate_iso_surface_at(output, bounds, cell_size, T::zero())
