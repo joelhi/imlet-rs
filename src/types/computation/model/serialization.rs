@@ -231,7 +231,8 @@ fn function_runtime_reflection<
             }
             FunctionComponent::MeshFile => {
                 let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
-                    let s: MeshFile<T> = erased_serde::deserialize(deserializer)?;
+                    let mut s: MeshFile<T> = erased_serde::deserialize(deserializer)?;
+                    s.build();
                     let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
                     Ok(boxed_trait_object)
                 };
