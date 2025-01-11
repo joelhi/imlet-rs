@@ -26,6 +26,7 @@ pub struct MeshFile<T> {
     /// Option to center the geometry
     pub center: bool,
     /// Geometry to use for signed distance computation
+    #[serde(skip_serializing)]
     pub geometry_data: Option<Octree<Triangle<T>, T>>,
 }
 
