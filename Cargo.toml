@@ -10,11 +10,9 @@ documentation = "https://docs.rs/imlet"
 readme = "README.md"
 keywords = ["implicit modeling", "mesh generation", "3d geometry", "marching cubes"]
 categories = ["3d-geometry","3d-modeling"]
-exclude = ["assets/geometry/*"]
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+exclude = ["assets/geometry/*","assets/models/*"]
 
 [dependencies]
-chrono = "0.4.38"
 env_logger = "0.11.3"
 erased-serde = "0.4.5"
 hashbrown = "0.15.2"
@@ -24,3 +22,13 @@ rayon = "1.10.0"
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.120"
 smallvec = "1.13.2"
+
+# Viewer dependencies
+wgpu = { version = "23.0.1", optional = true }
+winit = { version = "0.30.8", optional = true }
+cgmath = { version = "0.18.0", optional = true }
+pollster = { version = "0.3", optional = true }
+bytemuck = { version = "1.12", features = ["derive"], optional = true }
+
+[features]
+viewer = ["winit", "wgpu", "cgmath", "pollster", "bytemuck"]

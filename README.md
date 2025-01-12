@@ -82,9 +82,9 @@
 ### Base Features
 - [x] Handle normals in obj import/export.
 - [x] Improve normal interpolation to reduce leaking.
-- [ ] Improve octree to reduce memory useage.
 - [ ] Simple mesh viewer with wgpu.
-- [ ] Some cli tools
+- [ ] Some cli tools to run and show models.
+- [ ] Finish docs.
 
 ### Future Enhancements (2025)
 - [ ] Make model serialization compatible with external impls.
