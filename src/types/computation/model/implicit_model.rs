@@ -82,6 +82,16 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         self.config = Some(config);
     }
 
+    /// Set the model config, which determines model parameters such as bounds and smoothing.
+    pub fn config(&self)->Option<&ModelConfig<T>>{
+        self.config.as_ref()
+    }
+
+    /// Set the model config, which determines model parameters such as bounds and smoothing.
+    pub fn config_mut(&mut self)->Option<&mut ModelConfig<T>>{
+        self.config.as_mut()
+    }
+
     /// Get references to all the components in the model and their tags.
     pub fn all_components(&self) -> Vec<(&String, &ModelComponent<T>)> {
         self.components.iter().collect()
