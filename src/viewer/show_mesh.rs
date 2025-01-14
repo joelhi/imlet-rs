@@ -9,17 +9,27 @@ use winit::{
 
 use crate::types::geometry::{BoundingBox, Mesh};
 
-use super::state::State;
+use super::{display_settings, material::Material, state::State, DisplaySettings};
 
 /// Show a mesh object in an interactive window.
 pub fn show_mesh(mesh: &Mesh<f32>, bounds: BoundingBox<f32>) {
-    pollster::block_on(run_internal(mesh, bounds)).unwrap()
+    pollster::block_on(run_internal(mesh, bounds, &DisplaySettings::new())).unwrap()
+}
+
+/// Show a mesh object in an interactive window, with a specific material.
+pub fn show_mesh_with_settings(
+    mesh: &Mesh<f32>,
+    bounds: BoundingBox<f32>,
+    display_settings: &DisplaySettings,
+) {
+    pollster::block_on(run_internal(mesh, bounds, display_settings)).unwrap()
 }
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 async fn run_internal(
     mesh: &Mesh<f32>,
     bounds: BoundingBox<f32>,
+    display_settings: &DisplaySettings,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let window_icon = None;
     let event_loop = EventLoop::new()?;
@@ -29,24 +39,22 @@ async fn run_internal(
         .build(&event_loop)
         .unwrap();
 
-    let mut state = State::new(&window, mesh).await;
+    let mut state = State::new(&window, mesh, &display_settings.mesh_material).await;
 
     state.write_mesh_buffers(&[mesh]);
-    state.write_line_buffers(&mesh.edges());
-    state.write_line_buffers(&bounds.as_wireframe());
+
+    if display_settings.show_mesh_edges {
+        state.write_line_buffers(&mesh.edges());
+    }
+
+    if display_settings.show_bounds {
+        state.write_line_buffers(&bounds.as_wireframe())
+    }
 
     let mut last_render_time = Instant::now();
     event_loop
         .run(move |event, control_flow| {
             match event {
-                Event::DeviceEvent {
-                    event: DeviceEvent::MouseMotion { delta },
-                    ..
-                } => {
-                    if state.mouse_pressed {
-                        state.camera_controller.process_mouse(delta.0, delta.1);
-                    }
-                }
                 Event::WindowEvent {
                     ref event,
                     window_id,
@@ -69,7 +77,7 @@ async fn run_internal(
                         WindowEvent::RedrawRequested => {
                             state.window().request_redraw();
                             let now = Instant::now();
-                            let dt = now - last_render_time;
+                            let _ = now - last_render_time;
                             last_render_time = now;
                             state.update();
                             match state.render() {

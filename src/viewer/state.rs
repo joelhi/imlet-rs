@@ -4,7 +4,7 @@ use cgmath::Point3;
 
 use crate::types::geometry::{Line, Mesh, Vec3};
 use wgpu::{util::DeviceExt, Buffer};
-use winit::{dpi::PhysicalSize, event::*, keyboard::PhysicalKey, window::Window};
+use winit::{dpi::{PhysicalPosition, PhysicalSize}, event::*, keyboard::PhysicalKey, window::Window};
 
 use crate::viewer::util::{lines_to_buffer, mesh_to_buffers};
 
@@ -36,10 +36,11 @@ pub struct State<'a> {
     depth_texture: Texture,
     window: &'a Window,
     pub mouse_pressed: bool,
+    pub last_mouse_pos: PhysicalPosition<f64>
 }
 
 impl<'a> State<'a> {
-    pub async fn new(window: &'a Window, mesh: &Mesh<f32>) -> Self {
+    pub async fn new(window: &'a Window, mesh: &Mesh<f32>, material: &Material) -> Self {
         let size = window.inner_size();
         let dim = mesh.bounds().dimensions();
         let centroid = mesh.bounds().centroid().convert::<f32>();
@@ -49,7 +50,7 @@ impl<'a> State<'a> {
             ..Default::default()
         });
 
-        let surface = unsafe { instance.create_surface(window) }.unwrap();
+        let surface = instance.create_surface(window).unwrap();
 
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
@@ -71,7 +72,7 @@ impl<'a> State<'a> {
                     } else {
                         wgpu::Limits::default()
                     },
-                    memory_hints: wgpu::MemoryHints::Performance
+                    memory_hints: wgpu::MemoryHints::Performance,
                 },
                 None, // Trace path
             )
@@ -93,15 +94,11 @@ impl<'a> State<'a> {
             present_mode: surface_caps.present_modes[0],
             alpha_mode: surface_caps.alpha_modes[0],
             view_formats: vec![],
-            desired_maximum_frame_latency: Default::default()
+            desired_maximum_frame_latency: Default::default(),
         };
         surface.configure(&device, &config);
-        let default_position: Point3<f32> = (
-            centroid.x,
-            centroid.z,
-            centroid.y - 2.5 * dim.1,
-        )
-            .into();
+        let default_position: Point3<f32> =
+            (centroid.x, centroid.z, centroid.y - 2.5 * dim.1).into();
         let default_target: Point3<f32> = (centroid.x, centroid.z, centroid.y).into();
         let camera = Camera {
             eye: default_position,
@@ -113,13 +110,7 @@ impl<'a> State<'a> {
             zfar: 1000.0,
         };
         let camera_controller = CameraController::new(
-            0.025
-                * (Vec3::new(
-                    dim.0,
-                    dim.1,
-                    dim.2,
-                ))
-                .distance_to_coord(0.0, 0.0, 0.0),
+            0.025 * (Vec3::new(dim.0, dim.1, dim.2)).distance_to_coord(0.0, 0.0, 0.0),
             default_position,
             default_target,
         );
@@ -160,12 +151,9 @@ impl<'a> State<'a> {
         let depth_texture =
             texture::Texture::create_depth_texture(&device, &config, "depth_texture");
 
-        let material = Material::Normal;
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
-            source: wgpu::ShaderSource::Wgsl(
-                material.load_shader_source().into(),
-            ),
+            source: wgpu::ShaderSource::Wgsl(material.load_shader_source().into()),
         });
 
         let line_material = Material::Line;
@@ -209,9 +197,7 @@ impl<'a> State<'a> {
                 front_face: wgpu::FrontFace::Cw,
                 cull_mode: None,
                 polygon_mode: wgpu::PolygonMode::Fill,
-                // Requires Features::DEPTH_CLIP_CONTROL
                 unclipped_depth: false,
-                // Requires Features::CONSERVATIVE_RASTERIZATION
                 conservative: false,
             },
             depth_stencil: Some(wgpu::DepthStencilState {
@@ -299,9 +285,11 @@ impl<'a> State<'a> {
             depth_texture,
             window,
             mouse_pressed: false,
+            last_mouse_pos: PhysicalPosition::new(0., 0.)
         }
     }
 
+    /// Write some mesh objects to the gpu for rendering.
     pub fn write_mesh_buffers(&mut self, meshes: &[&Mesh<f32>]) {
         let buffers: Vec<(Buffer, Buffer, usize)> = meshes
             .iter()
@@ -338,6 +326,7 @@ impl<'a> State<'a> {
         self.size
     }
 
+    /// Write some line objects to the gpu for rendering.
     pub fn write_line_buffers(&mut self, lines: &[Line<f32>]) {
         let line_buffers = lines_to_buffer(lines);
 
@@ -391,7 +380,21 @@ impl<'a> State<'a> {
                 state,
                 ..
             } => {
-                self.mouse_pressed = *state == ElementState::Pressed;
+                self.camera_controller.is_orbit = state.is_pressed();
+                self.mouse_pressed = state.is_pressed();
+                if !self.mouse_pressed {
+                    self.camera_controller.orbit_horizontal = 0.0;
+                    self.camera_controller.orbit_vertical = 0.0;
+                }
+                true
+            }
+            WindowEvent::CursorMoved { position, .. } => {
+                if self.mouse_pressed {
+                    let delta_x = position.x - self.last_mouse_pos.x;
+                    let delta_y = position.y - self.last_mouse_pos.y;
+                    self.camera_controller.process_mouse(delta_x, delta_y, true);
+                }
+                self.last_mouse_pos = *position;
                 true
             }
             _ => false,

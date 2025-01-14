@@ -147,4 +147,5 @@ pub mod utils {
 }
 
 #[cfg(feature = "viewer")]
+/// Some utilites to show generated geometries.
 pub mod viewer;
