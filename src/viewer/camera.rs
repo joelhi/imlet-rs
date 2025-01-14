@@ -199,12 +199,13 @@ impl CameraController {
             camera.eye += forward_norm * (self.scroll_speed * 0.15);
         }
         if self.is_orbit {
-            let delta= ((forward - camera.up * self.orbit_vertical) + (forward + right * self.orbit_horizontal)).normalize();
+            let delta = ((forward - camera.up * self.orbit_vertical)
+                + (forward + right * self.orbit_horizontal))
+                .normalize();
             camera.eye = camera.target - delta * forward_mag;
 
             self.orbit_horizontal = 0.;
             self.orbit_vertical = 0.;
         }
-        
     }
 }

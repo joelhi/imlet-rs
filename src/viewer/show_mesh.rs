@@ -47,7 +47,7 @@ async fn run_internal(
         state.write_line_buffers(&mesh.edges());
     }
 
-    if let Some(bounds) = bounds{
+    if let Some(bounds) = bounds {
         if display_settings.show_bounds {
             state.write_line_buffers(&bounds.as_wireframe())
         }

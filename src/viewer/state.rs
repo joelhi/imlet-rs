@@ -4,7 +4,12 @@ use cgmath::Point3;
 
 use crate::types::geometry::{Line, Mesh, Vec3};
 use wgpu::{util::DeviceExt, Buffer};
-use winit::{dpi::{PhysicalPosition, PhysicalSize}, event::*, keyboard::PhysicalKey, window::Window};
+use winit::{
+    dpi::{PhysicalPosition, PhysicalSize},
+    event::*,
+    keyboard::PhysicalKey,
+    window::Window,
+};
 
 use crate::viewer::util::{lines_to_buffer, mesh_to_buffers};
 
@@ -36,7 +41,7 @@ pub struct State<'a> {
     depth_texture: Texture,
     window: &'a Window,
     pub mouse_pressed: bool,
-    pub last_mouse_pos: PhysicalPosition<f64>
+    pub last_mouse_pos: PhysicalPosition<f64>,
 }
 
 impl<'a> State<'a> {
@@ -285,7 +290,7 @@ impl<'a> State<'a> {
             depth_texture,
             window,
             mouse_pressed: false,
-            last_mouse_pos: PhysicalPosition::new(0., 0.)
+            last_mouse_pos: PhysicalPosition::new(0., 0.),
         }
     }
 

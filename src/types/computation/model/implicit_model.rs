@@ -83,12 +83,12 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     }
 
     /// Set the model config, which determines model parameters such as bounds and smoothing.
-    pub fn config(&self)->Option<&ModelConfig<T>>{
+    pub fn config(&self) -> Option<&ModelConfig<T>> {
         self.config.as_ref()
     }
 
     /// Set the model config, which determines model parameters such as bounds and smoothing.
-    pub fn config_mut(&mut self)->Option<&mut ModelConfig<T>>{
+    pub fn config_mut(&mut self) -> Option<&mut ModelConfig<T>> {
         self.config.as_mut()
     }
 

@@ -5,7 +5,6 @@ use imlet::{
         operations::shape::{BooleanIntersection, Thickness},
     },
     utils::{self, io::write_obj_file},
-    viewer::{self, material::Material, DisplaySettings},
 };
 
 pub fn main() {
@@ -45,6 +44,10 @@ pub fn main() {
     #[cfg(feature = "viewer")]
     {
         mesh.compute_vertex_normals_par();
-        viewer::show_mesh_with_settings(&mesh, model.config().map(|c| c.bounds), &DisplaySettings::new());
+        imlet::viewer::show_mesh_with_settings(
+            &mesh,
+            model.config().map(|c| c.bounds),
+            &imlet::viewer::DisplaySettings::new(),
+        );
     }
 }

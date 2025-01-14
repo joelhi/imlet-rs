@@ -1,15 +1,12 @@
-use imlet::utils;
-use imlet::{
-    types::{
-        computation::{
-            functions::Gyroid,
-            model::ImplicitModel,
-            operations::shape::{BooleanIntersection, Thickness},
-        },
-        geometry::{BoundingBox, Sphere, Vec3},
+use imlet::types::{
+    computation::{
+        functions::Gyroid,
+        model::ImplicitModel,
+        operations::shape::{BooleanIntersection, Thickness},
     },
-    viewer,
+    geometry::{BoundingBox, Sphere, Vec3},
 };
+use imlet::utils;
 
 pub fn main() {
     utils::logging::init_info();
@@ -44,12 +41,11 @@ pub fn main() {
         .unwrap();
 
     let mut mesh = model.generate_iso_surface(&output, 0.5).unwrap();
-
+    mesh.compute_vertex_normals_par();
     utils::io::write_obj_file(&mesh, "gyroid_example").unwrap();
 
     #[cfg(feature = "viewer")]
     {
-        mesh.compute_vertex_normals_par();
-        viewer::show_mesh(&mesh,Some(mesh.bounds()));
+        imlet::viewer::show_mesh(&mesh, Some(mesh.bounds()));
     }
 }
