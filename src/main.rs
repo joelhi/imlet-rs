@@ -1,8 +1,9 @@
 use std::env;
 
-use imlet::utils::io;
+use imlet::utils::{self, io};
 
 fn main() {
+    utils::logging::init_info();
     let args: Vec<String> = env::args().collect();
 
     if args.len() != 4 {
@@ -25,7 +26,7 @@ fn main() {
         imlet::viewer::show_mesh_with_settings(
             &mesh,
             model.config().map(|c| c.bounds),
-            &imlet::viewer::DisplaySettings::new(),
+            &imlet::viewer::DisplaySettings::with_material(imlet::viewer::material::Material::Arctic),
         );
     }
 }

@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 use winit::{
-    event::{DeviceEvent, ElementState, Event, KeyEvent, WindowEvent},
+    event::{ElementState, Event, KeyEvent, WindowEvent},
     event_loop::EventLoop,
     keyboard::{KeyCode, PhysicalKey},
     window::WindowBuilder,
@@ -9,7 +9,7 @@ use winit::{
 
 use crate::types::geometry::{BoundingBox, Mesh};
 
-use super::{display_settings, material::Material, state::State, DisplaySettings};
+use super::{state::State, DisplaySettings};
 
 /// Show a mesh object in an interactive window.
 pub fn show_mesh(mesh: &Mesh<f32>, bounds: Option<BoundingBox<f32>>) {

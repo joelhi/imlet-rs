@@ -14,4 +14,12 @@ impl DisplaySettings {
             mesh_material: Material::Normal,
         }
     }
+
+    pub fn with_material(material: Material)->Self{
+        Self{
+            show_bounds: true,
+            show_mesh_edges: true,
+            mesh_material: material
+        }
+    }
 }
