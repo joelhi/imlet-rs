@@ -10,6 +10,6 @@ pub fn main() {
     #[cfg(feature = "viewer")]
     {
         let mesh: Mesh<f32> = parse_obj_file("assets/geometry/bunny.obj", false, false).unwrap();
-        viewer::show_mesh(&mesh, mesh.bounds());
+        viewer::show_mesh(&mesh, Some(mesh.bounds()));
     }
 }

@@ -50,6 +50,6 @@ pub fn main() {
     #[cfg(feature = "viewer")]
     {
         mesh.compute_vertex_normals_par();
-        viewer::show_mesh(&mesh, mesh.bounds());
+        viewer::show_mesh(&mesh,Some(mesh.bounds()));
     }
 }
