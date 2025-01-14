@@ -32,6 +32,7 @@ async fn run_internal(
     let mut state = State::new(&window, mesh).await;
 
     state.write_mesh_buffers(&[mesh]);
+    state.write_line_buffers(&mesh.edges());
     state.write_line_buffers(&bounds.as_wireframe());
 
     let mut last_render_time = Instant::now();

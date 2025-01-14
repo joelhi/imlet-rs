@@ -350,8 +350,8 @@ impl<'a> State<'a> {
                     usage: wgpu::BufferUsages::VERTEX,
                 });
 
-            // self.line_vertex_buffers.push(vertex_buffer);
-            // self.num_lines.push(line_buffer.len() as u32);
+            self.line_vertex_buffers.push(vertex_buffer);
+            self.num_lines.push(line_buffer.len() as u32);
         }
     }
 
