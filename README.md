@@ -82,7 +82,7 @@
 ### Base Features
 - [x] Handle normals in obj import/export.
 - [x] Improve normal interpolation to reduce leaking.
-- [ ] Simple mesh viewer with wgpu.
+- [x] Simple mesh viewer with wgpu.
 - [ ] Some cli tools to run and show models.
 - [ ] Finish docs.
 
