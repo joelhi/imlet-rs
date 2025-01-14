@@ -195,7 +195,7 @@ impl CameraController {
             camera.eye = self.default_position;
             camera.target = self.default_target;
         }
-        if self.is_scroll && forward_mag > self.speed {
+        if self.is_scroll && forward_mag > self.scroll_speed * 0.15 {
             camera.eye += forward_norm * (self.scroll_speed * 0.15);
         }
         if self.is_orbit {

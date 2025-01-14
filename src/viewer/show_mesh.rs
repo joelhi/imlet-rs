@@ -12,14 +12,14 @@ use crate::types::geometry::{BoundingBox, Mesh};
 use super::{display_settings, material::Material, state::State, DisplaySettings};
 
 /// Show a mesh object in an interactive window.
-pub fn show_mesh(mesh: &Mesh<f32>, bounds: BoundingBox<f32>) {
+pub fn show_mesh(mesh: &Mesh<f32>, bounds: Option<BoundingBox<f32>>) {
     pollster::block_on(run_internal(mesh, bounds, &DisplaySettings::new())).unwrap()
 }
 
 /// Show a mesh object in an interactive window, with a specific material.
 pub fn show_mesh_with_settings(
     mesh: &Mesh<f32>,
-    bounds: BoundingBox<f32>,
+    bounds: Option<BoundingBox<f32>>,
     display_settings: &DisplaySettings,
 ) {
     pollster::block_on(run_internal(mesh, bounds, display_settings)).unwrap()
@@ -28,7 +28,7 @@ pub fn show_mesh_with_settings(
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen(start))]
 async fn run_internal(
     mesh: &Mesh<f32>,
-    bounds: BoundingBox<f32>,
+    bounds: Option<BoundingBox<f32>>,
     display_settings: &DisplaySettings,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let window_icon = None;
@@ -47,8 +47,10 @@ async fn run_internal(
         state.write_line_buffers(&mesh.edges());
     }
 
-    if display_settings.show_bounds {
-        state.write_line_buffers(&bounds.as_wireframe())
+    if let Some(bounds) = bounds{
+        if display_settings.show_bounds {
+            state.write_line_buffers(&bounds.as_wireframe())
+        }
     }
 
     let mut last_render_time = Instant::now();

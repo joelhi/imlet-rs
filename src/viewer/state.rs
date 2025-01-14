@@ -105,7 +105,7 @@ impl<'a> State<'a> {
             target: default_target,
             up: cgmath::Vector3::unit_y(),
             aspect: config.width as f32 / config.height as f32,
-            fovy: 20.0,
+            fovy: 15.0,
             znear: 0.1,
             zfar: 1000.0,
         };
