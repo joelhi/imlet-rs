@@ -1,5 +1,5 @@
+use crate::types::geometry::{Line, Mesh, Vec3};
 use cgmath::num_traits::Float;
-use imlet_engine::types::geometry::{Line, Mesh, Vec3};
 
 use super::vertex::Vertex;
 

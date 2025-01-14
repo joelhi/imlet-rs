@@ -1,4 +1,4 @@
-use std::{fs, path::Path};
+use std::fs;
 
 pub enum Material {
     Normal,
@@ -18,6 +18,6 @@ impl Material {
     }
 
     pub fn load_shader_source(&self) -> String {
-        fs::read_to_string(path).expect("Failed to read shader source file")
+        fs::read_to_string(self.path()).expect("Failed to read shader source file")
     }
 }

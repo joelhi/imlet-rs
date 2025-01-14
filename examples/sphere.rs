@@ -3,7 +3,7 @@ use imlet::{
         computation::model::ImplicitModel,
         geometry::{BoundingBox, Sphere, Vec3},
     },
-    utils,
+    utils, viewer,
 };
 
 pub fn main() {
@@ -34,7 +34,13 @@ pub fn main() {
         )
         .unwrap();
 
-    let mesh = model.generate_iso_surface(&sphere_node, 0.5).unwrap();
+    let mut mesh = model.generate_iso_surface(&sphere_node, 0.5).unwrap();
 
     utils::io::write_obj_file(&mesh, "sphere_example").unwrap();
+
+    #[cfg(feature = "viewer")]
+    {
+        mesh.compute_vertex_normals_par();
+        viewer::show_mesh(&mesh, mesh.bounds());
+    }
 }

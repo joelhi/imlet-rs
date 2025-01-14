@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use imlet_engine::types::geometry::Vec3;
+use crate::types::geometry::Vec3;
 use num_traits::Float;
 
 #[repr(C)]

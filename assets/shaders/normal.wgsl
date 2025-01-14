@@ -29,7 +29,7 @@ fn vs_main(
 // Fragment shader
 @fragment
 fn fs_main(in: VertexOutput, @builtin(front_facing) front_face: bool) -> @location(0) vec4<f32> {
-    var light_dir = normalize(vec3<f32>(0.0, -1.0, -1.0));
+    var light_dir = normalize(vec3<f32>(0.0, 1.0, 1.0));
     var projection = 0.5*(1.0 + dot(in.normal, light_dir));
 
     let max = 0.85;

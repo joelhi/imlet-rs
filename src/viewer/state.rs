@@ -2,32 +2,25 @@ use std::iter;
 
 use cgmath::Point3;
 
-use imlet_engine::types::geometry::Vec3;
-use num_traits::Float;
+use crate::types::geometry::{Line, Mesh, Vec3};
 use wgpu::{util::DeviceExt, Buffer};
-use winit::{dpi::PhysicalSize, event::*, window::Window};
+use winit::{dpi::PhysicalSize, event::*, keyboard::PhysicalKey, window::Window};
 
-use crate::{
-    scene::{ModelData, Scene},
-    util::{lines_to_buffer, mesh_to_buffers},
-};
+use crate::viewer::util::{lines_to_buffer, mesh_to_buffers};
 
 use super::{
-    camera::{Camera, CameraUniform},
-    camera_controller::CameraController,
+    camera::{Camera, CameraController, CameraUniform},
     material::Material,
     texture::{self, Texture},
     vertex::Vertex,
 };
 
-pub struct State<T> {
-    surface: wgpu::Surface,
+pub struct State<'a> {
+    surface: wgpu::Surface<'a>,
     device: wgpu::Device,
     queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
     size: winit::dpi::PhysicalSize<u32>,
-    scene: Scene<T>,
-    model_data: ModelData<T>,
     render_pipeline: wgpu::RenderPipeline,
     line_pipeline: wgpu::RenderPipeline,
     vertex_buffers: Vec<Buffer>,
@@ -41,21 +34,22 @@ pub struct State<T> {
     camera_buffer: wgpu::Buffer,
     camera_bind_group: wgpu::BindGroup,
     depth_texture: Texture,
-    window: Window,
+    window: &'a Window,
+    pub mouse_pressed: bool,
 }
 
-impl<T: Float + Send + Sync> State<T> {
-    pub async fn new(window: Window, model_data: ModelData<T>, scene: Scene<T>) -> Self {
+impl<'a> State<'a> {
+    pub async fn new(window: &'a Window, mesh: &Mesh<f32>) -> Self {
         let size = window.inner_size();
-        let dim = model_data.bounds().dimensions();
-        let centroid = model_data.bounds().centroid().convert::<f32>();
+        let dim = mesh.bounds().dimensions();
+        let centroid = mesh.bounds().centroid().convert::<f32>();
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::all(),
             ..Default::default()
         });
 
-        let surface = unsafe { instance.create_surface(&window) }.unwrap();
+        let surface = unsafe { instance.create_surface(window) }.unwrap();
 
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
@@ -69,14 +63,15 @@ impl<T: Float + Send + Sync> State<T> {
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: None,
-                    features: wgpu::Features::empty(),
+                    required_features: wgpu::Features::empty(),
                     // WebGL doesn't support all of wgpu's features, so if
                     // we're building for the web we'll have to disable some.
-                    limits: if cfg!(target_arch = "wasm32") {
+                    required_limits: if cfg!(target_arch = "wasm32") {
                         wgpu::Limits::downlevel_webgl2_defaults()
                     } else {
                         wgpu::Limits::default()
                     },
+                    memory_hints: wgpu::MemoryHints::Performance
                 },
                 None, // Trace path
             )
@@ -98,12 +93,13 @@ impl<T: Float + Send + Sync> State<T> {
             present_mode: surface_caps.present_modes[0],
             alpha_mode: surface_caps.alpha_modes[0],
             view_formats: vec![],
+            desired_maximum_frame_latency: Default::default()
         };
         surface.configure(&device, &config);
         let default_position: Point3<f32> = (
             centroid.x,
             centroid.z,
-            centroid.y - 2.5 * dim.1.to_f32().unwrap(),
+            centroid.y - 2.5 * dim.1,
         )
             .into();
         let default_target: Point3<f32> = (centroid.x, centroid.z, centroid.y).into();
@@ -119,9 +115,9 @@ impl<T: Float + Send + Sync> State<T> {
         let camera_controller = CameraController::new(
             0.025
                 * (Vec3::new(
-                    dim.0.to_f32().unwrap(),
-                    dim.1.to_f32().unwrap(),
-                    dim.2.to_f32().unwrap(),
+                    dim.0,
+                    dim.1,
+                    dim.2,
                 ))
                 .distance_to_coord(0.0, 0.0, 0.0),
             default_position,
@@ -164,10 +160,11 @@ impl<T: Float + Send + Sync> State<T> {
         let depth_texture =
             texture::Texture::create_depth_texture(&device, &config, "depth_texture");
 
+        let material = Material::Normal;
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
             source: wgpu::ShaderSource::Wgsl(
-                scene.settings().mesh_material.load_shader_source().into(),
+                material.load_shader_source().into(),
             ),
         });
 
@@ -191,6 +188,7 @@ impl<T: Float + Send + Sync> State<T> {
                 module: &shader,
                 entry_point: "vs_main",
                 buffers: &[Vertex::desc()],
+                compilation_options: Default::default(),
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
@@ -203,6 +201,7 @@ impl<T: Float + Send + Sync> State<T> {
                     }),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
+                compilation_options: Default::default(),
             }),
             primitive: wgpu::PrimitiveState {
                 topology: wgpu::PrimitiveTopology::TriangleList,
@@ -232,6 +231,7 @@ impl<T: Float + Send + Sync> State<T> {
                 alpha_to_coverage_enabled: false,
             },
             multiview: None,
+            cache: Default::default(),
         });
 
         let line_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -241,6 +241,7 @@ impl<T: Float + Send + Sync> State<T> {
                 module: &line_shader,
                 entry_point: "vs_main",
                 buffers: &[Vertex::desc()],
+                compilation_options: Default::default(),
             },
             fragment: Some(wgpu::FragmentState {
                 module: &line_shader,
@@ -250,6 +251,7 @@ impl<T: Float + Send + Sync> State<T> {
                     blend: Some(wgpu::BlendState::REPLACE),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
+                compilation_options: Default::default(),
             }),
             primitive: wgpu::PrimitiveState {
                 topology: wgpu::PrimitiveTopology::LineList,
@@ -273,6 +275,7 @@ impl<T: Float + Send + Sync> State<T> {
             }),
             multisample: wgpu::MultisampleState::default(),
             multiview: None,
+            cache: Default::default(),
         });
 
         Self {
@@ -281,8 +284,6 @@ impl<T: Float + Send + Sync> State<T> {
             queue,
             config,
             size,
-            scene,
-            model_data,
             render_pipeline,
             line_pipeline,
             vertex_buffers: Vec::new(),
@@ -297,58 +298,12 @@ impl<T: Float + Send + Sync> State<T> {
             camera_uniform,
             depth_texture,
             window,
+            mouse_pressed: false,
         }
     }
 
-    pub fn compute_field(&mut self, cell_size: T) {
-        self.model_data.compute(cell_size);
-    }
-
-    pub fn update_scene(&mut self) {
-        self.scene.clear();
-        let result = self.model_data.generate_mesh();
-        let show_bounds = self.scene().settings().show_bounds;
-        let show_edges = self.scene().settings().show_edges;
-
-        if show_bounds {
-            self.scene
-                .add_lines(&self.model_data.bounds().as_wireframe());
-        }
-
-        match result {
-            Some(mesh) => {
-                if show_edges {
-                    self.scene.add_lines(&mesh.edges());
-                }
-                self.scene.add_mesh(mesh);
-            }
-            None => (),
-        }
-    }
-
-    pub fn smooth_geometry(&mut self, iterations: u32, factor: T) {
-        self.model_data.smooth(iterations, factor);
-    }
-
-    pub fn write_geometry(&mut self) {
-        self.clear_geometry();
-
-        self.write_mesh_buffers();
-        self.write_line_buffers();
-    }
-
-    fn clear_geometry(&mut self) {
-        self.vertex_buffers.clear();
-        self.index_buffers.clear();
-        self.num_indices.clear();
-        self.line_vertex_buffers.clear();
-        self.num_lines.clear();
-    }
-
-    fn write_mesh_buffers(&mut self) {
-        let buffers: Vec<(Buffer, Buffer, usize)> = self
-            .scene()
-            .meshes()
+    pub fn write_mesh_buffers(&mut self, meshes: &[&Mesh<f32>]) {
+        let buffers: Vec<(Buffer, Buffer, usize)> = meshes
             .iter()
             .map(|mesh| {
                 let (vertices, indices) = mesh_to_buffers(mesh);
@@ -383,24 +338,20 @@ impl<T: Float + Send + Sync> State<T> {
         self.size
     }
 
-    pub fn scene(&self) -> &Scene<T> {
-        &self.scene
-    }
-
-    fn write_line_buffers(&mut self) {
-        let line_buffers = lines_to_buffer(self.scene().lines());
+    pub fn write_line_buffers(&mut self, lines: &[Line<f32>]) {
+        let line_buffers = lines_to_buffer(lines);
 
         for line_buffer in line_buffers {
             let vertex_buffer = self
                 .device
                 .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                    label: Some("Vertex Buffer"),
+                    label: Some("Line Vertex Buffer"),
                     contents: bytemuck::cast_slice(&line_buffer),
                     usage: wgpu::BufferUsages::VERTEX,
                 });
 
-            self.line_vertex_buffers.push(vertex_buffer);
-            self.num_lines.push(line_buffer.len() as u32);
+            // self.line_vertex_buffers.push(vertex_buffer);
+            // self.num_lines.push(line_buffer.len() as u32);
         }
     }
 
@@ -421,7 +372,30 @@ impl<T: Float + Send + Sync> State<T> {
     }
 
     pub fn input(&mut self, event: &WindowEvent) -> bool {
-        self.camera_controller.process_events(event)
+        match event {
+            WindowEvent::KeyboardInput {
+                event:
+                    KeyEvent {
+                        physical_key: PhysicalKey::Code(key),
+                        state,
+                        ..
+                    },
+                ..
+            } => self.camera_controller.process_keyboard(*key, *state),
+            WindowEvent::MouseWheel { delta, .. } => {
+                self.camera_controller.process_scroll(delta);
+                true
+            }
+            WindowEvent::MouseInput {
+                button: MouseButton::Left,
+                state,
+                ..
+            } => {
+                self.mouse_pressed = *state == ElementState::Pressed;
+                true
+            }
+            _ => false,
+        }
     }
 
     pub fn update(&mut self) {

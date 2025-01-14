@@ -146,7 +146,5 @@ pub mod utils {
     pub mod math_helper;
 }
 
-#[cfg(feature="viewer")]
-pub mod viewer {
-    
-}
+#[cfg(feature = "viewer")]
+pub mod viewer;
