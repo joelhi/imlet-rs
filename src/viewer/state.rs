@@ -29,7 +29,7 @@ pub struct State<'a> {
     line_vertex_buffers: Vec<Buffer>,
     num_lines: Vec<u32>,
     camera: Camera,
-    camera_controller: CameraController,
+    pub camera_controller: CameraController,
     camera_uniform: CameraUniform,
     camera_buffer: wgpu::Buffer,
     camera_bind_group: wgpu::BindGroup,

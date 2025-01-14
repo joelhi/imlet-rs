@@ -86,34 +86,33 @@ impl CameraController {
     }
 
     pub fn process_keyboard(&mut self, key: KeyCode, state: ElementState) -> bool {
-        let amount = if state == ElementState::Pressed {
-            1.0
-        } else {
-            0.0
-        };
         match key {
             KeyCode::KeyW | KeyCode::ArrowUp => {
                 self.is_up_pressed = state == ElementState::Pressed;
                 true
             }
             KeyCode::KeyS | KeyCode::ArrowDown => {
-                //self.amount_backward = amount;
+                self.is_down_pressed = state == ElementState::Pressed;
                 true
             }
             KeyCode::KeyA | KeyCode::ArrowLeft => {
-                //self.amount_left = amount;
+                self.is_left_pressed = state == ElementState::Pressed;
                 true
             }
             KeyCode::KeyD | KeyCode::ArrowRight => {
-                //self.amount_right = amount;
+                self.is_right_pressed = state == ElementState::Pressed;
                 true
             }
             KeyCode::Space => {
-                //self.amount_up = amount;
+                self.is_reset = state == ElementState::Pressed;
                 true
             }
-            KeyCode::ShiftLeft => {
-                //self.amount_down = amount;
+            KeyCode::KeyQ => {
+                self.is_forward_pressed = state == ElementState::Pressed;
+                true
+            }
+            KeyCode::KeyE => {
+                self.is_backward_pressed = state == ElementState::Pressed;
                 true
             }
             _ => false,
@@ -121,11 +120,13 @@ impl CameraController {
     }
 
     pub fn process_mouse(&mut self, mouse_dx: f64, mouse_dy: f64) {
+        println!("Process mouse dx:{}, dy:{}", mouse_dx, mouse_dy);
         // self.rotate_horizontal = mouse_dx as f32;
         // self.rotate_vertical = mouse_dy as f32;
     }
 
     pub fn process_scroll(&mut self, delta: &MouseScrollDelta) {
+        println!("Process scroll delta: {:?}", delta);
         // self.scroll = match delta {
         //     // I'm assuming a line is about 100 pixels
         //     MouseScrollDelta::LineDelta(_, scroll) => -scroll * 0.5,
