@@ -26,7 +26,9 @@ fn main() {
         imlet::viewer::show_mesh_with_settings(
             &mesh,
             model.config().map(|c| c.bounds),
-            &imlet::viewer::DisplaySettings::with_material(imlet::viewer::material::Material::Arctic),
+            &imlet::viewer::DisplaySettings::with_material(
+                imlet::viewer::material::Material::Arctic,
+            ),
         );
     }
 }

@@ -15,11 +15,11 @@ impl DisplaySettings {
         }
     }
 
-    pub fn with_material(material: Material)->Self{
-        Self{
+    pub fn with_material(material: Material) -> Self {
+        Self {
             show_bounds: true,
             show_mesh_edges: true,
-            mesh_material: material
+            mesh_material: material,
         }
     }
 }
