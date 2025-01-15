@@ -10,8 +10,8 @@ impl DisplaySettings {
     pub fn new() -> Self {
         Self {
             show_bounds: true,
-            show_mesh_edges: true,
-            mesh_material: Material::Normal,
+            show_mesh_edges: false,
+            mesh_material: Material::Arctic,
         }
     }
 

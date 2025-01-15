@@ -14,8 +14,8 @@ use winit::{
 use crate::viewer::util::{lines_to_buffer, mesh_to_buffers};
 
 use super::{
-    camera::{Camera, CameraController, CameraUniform},
     material::Material,
+    orbit_camera::{OrbitCamera, OrbitCameraController, OrbitCameraUniform},
     texture::{self, Texture},
     vertex::Vertex,
 };
@@ -33,9 +33,9 @@ pub struct State<'a> {
     num_indices: Vec<u32>,
     line_vertex_buffers: Vec<Buffer>,
     num_lines: Vec<u32>,
-    camera: Camera,
-    pub camera_controller: CameraController,
-    camera_uniform: CameraUniform,
+    camera: OrbitCamera,
+    pub camera_controller: OrbitCameraController,
+    camera_uniform: OrbitCameraUniform,
     camera_buffer: wgpu::Buffer,
     camera_bind_group: wgpu::BindGroup,
     depth_texture: Texture,
@@ -105,7 +105,7 @@ impl<'a> State<'a> {
         let default_position: Point3<f32> =
             (centroid.x, centroid.z, centroid.y - 2.5 * dim.1).into();
         let default_target: Point3<f32> = (centroid.x, centroid.z, centroid.y).into();
-        let camera = Camera {
+        let camera = OrbitCamera {
             eye: default_position,
             target: default_target,
             up: cgmath::Vector3::unit_y(),
@@ -114,13 +114,13 @@ impl<'a> State<'a> {
             znear: 0.1,
             zfar: 1000.0,
         };
-        let camera_controller = CameraController::new(
+        let camera_controller = OrbitCameraController::new(
             0.025 * (Vec3::new(dim.0, dim.1, dim.2)).distance_to_coord(0.0, 0.0, 0.0),
             default_position,
             default_target,
         );
 
-        let mut camera_uniform = CameraUniform::new(default_position);
+        let mut camera_uniform = OrbitCameraUniform::new(default_position);
         camera_uniform.update_view_proj(&camera);
 
         let camera_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
