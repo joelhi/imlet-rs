@@ -10,11 +10,7 @@ fn main() {
         .subcommand(
             Command::new("show-obj")
                 .about("Show an OBJ file")
-                .arg(
-                    Arg::new("file")
-                        .help("Path to the OBJ file")
-                        .required(true),
-                ),
+                .arg(Arg::new("file").help("Path to the OBJ file").required(true)),
         )
         .subcommand(
             Command::new("run-model")
@@ -24,11 +20,7 @@ fn main() {
                         .help("Path to the serialized model file")
                         .required(true),
                 )
-                .arg(
-                    Arg::new("output")
-                        .help("Target node")
-                        .required(true),
-                )
+                .arg(Arg::new("output").help("Target node").required(true))
                 .arg(
                     Arg::new("cell_size")
                         .help("Resolution value")
@@ -58,21 +50,29 @@ fn main() {
 }
 
 fn handle_show_obj(matches: &ArgMatches) {
-    let file_path = matches.get_one::<String>("file").expect("File argument is required");
+    let file_path = matches
+        .get_one::<String>("file")
+        .expect("File argument is required");
     let mut mesh = imlet::utils::io::parse_obj_file::<f32>(file_path, false, false).unwrap();
     mesh.compute_vertex_normals_par();
 
-    #[cfg(feature = "viewer")]{
+    #[cfg(feature = "viewer")]
+    {
         imlet::viewer::show_mesh(&mesh, Some(mesh.bounds()));
     }
-    #[cfg(not(feature = "viewer"))]{
+    #[cfg(not(feature = "viewer"))]
+    {
         log::error!("Enable the viewer feature to see the model.");
     }
 }
 
 fn handle_run_model(matches: &ArgMatches) {
-    let file_path = matches.get_one::<String>("file").expect("File argument is required");
-    let output = matches.get_one::<String>("output").expect("Target argument is required");
+    let file_path = matches
+        .get_one::<String>("file")
+        .expect("File argument is required");
+    let output = matches
+        .get_one::<String>("output")
+        .expect("Target argument is required");
     let cell_size: f32 = matches
         .get_one::<String>("cell_size")
         .expect("Resolution argument is required")
@@ -89,10 +89,12 @@ fn handle_run_model(matches: &ArgMatches) {
     }
 
     if matches.get_flag("show") {
-        #[cfg(feature = "viewer")]{
+        #[cfg(feature = "viewer")]
+        {
             imlet::viewer::show_mesh(&mesh, model.config().map(|c| c.bounds));
         }
-        #[cfg(not(feature = "viewer"))]{
+        #[cfg(not(feature = "viewer"))]
+        {
             log::error!("Enable the viewer feature to see the model.");
         }
     }

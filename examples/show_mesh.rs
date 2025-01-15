@@ -8,7 +8,8 @@ pub fn main() {
             utils::io::parse_obj_file("assets/geometry/bunny.obj", false, false).unwrap();
         imlet::viewer::show_mesh(&mesh, Some(mesh.bounds()));
     }
-    #[cfg(not(feature = "viewer"))]{
+    #[cfg(not(feature = "viewer"))]
+    {
         log::error!("Enable the viewer feature to see the model.");
     }
 }
