@@ -1,3 +1,4 @@
+use hashbrown::HashSet;
 use num_traits::Float;
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelRefIterator;
@@ -98,13 +99,19 @@ impl<T: Float> Mesh<T> {
 
     /// Returns the unique edges of the mesh.
     pub fn edges(&self) -> Vec<Line<T>> {
-        let mut edges: Vec<Line<T>> = Vec::with_capacity(self.num_faces());
+        let mut edges_i = HashSet::with_capacity(self.num_faces());
         for f in self.faces.iter() {
-            edges.push(Line::new(self.vertices[f[0]], self.vertices[f[1]]));
-            edges.push(Line::new(self.vertices[f[1]], self.vertices[f[2]]));
-            edges.push(Line::new(self.vertices[f[2]], self.vertices[f[0]]));
+            let mut sorted = f.clone();
+            sorted.sort();
+            edges_i.insert((f[0], f[1]));
+            edges_i.insert((f[1], f[2]));
+            edges_i.insert((f[2], f[0]));
         }
-        edges
+
+        edges_i
+            .iter()
+            .map(|(i, j)| Line::new(self.vertices[*i], self.vertices[*j]))
+            .collect()
     }
 
     /// Computes the average of all mesh vertices.

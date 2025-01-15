@@ -22,6 +22,7 @@ rayon = "1.10.0"
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.120"
 smallvec = "1.13.2"
+clap = "4.5.26"
 
 # Viewer dependencies
 wgpu = { version = "22.0", optional = true }
@@ -30,5 +31,10 @@ cgmath = { version = "0.18.0", optional = true }
 pollster = { version = "0.3", optional = true }
 bytemuck = { version = "1.12", features = ["derive"], optional = true }
 
+
 [features]
 viewer = ["winit", "wgpu", "cgmath", "pollster", "bytemuck"]
+
+[alias]
+rr = "run --release"
+rrv = "run --release --features viewer"
