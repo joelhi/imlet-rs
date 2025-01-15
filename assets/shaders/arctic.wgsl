@@ -39,20 +39,6 @@ fn vs_main(
 // Fragment shader
 @fragment
 fn fs_main(in: VertexOutput, @builtin(front_facing) front_face: bool) -> @location(0) vec4<f32> {
-
-    // Base shade
-    var light_dir = normalize(vec3<f32>(0.0, -1.0, -1.0));
-    var projection = 0.5*(1.0 + dot(in.normal, light_dir));
-    let max = 0.85;
-    let min = 0.1;
-
-    let num_steps: i32 = 20;
-    let step_size: f32 = 1.0 / f32(num_steps);
-    let step: i32 = i32(round((projection) / step_size));
-
-    var color: f32 = f32(step) * step_size + step_size * 0.5;
-    color = remap(color, 0.0, 1.0, min, max);
-
     // Outline
     var view_dir_proj = dot(in.view_dir, in.normal);
 
@@ -66,9 +52,6 @@ fn fs_main(in: VertexOutput, @builtin(front_facing) front_face: bool) -> @locati
 
     var shade = mix(proj, 0.0, outline);
 
-    if !front_face {
-        color = max - color + min;
-    }
     let final_shade = shade;
     // Output the color
     return vec4<f32>(final_shade - 0.05, final_shade, final_shade + 0.05, 1.0);
