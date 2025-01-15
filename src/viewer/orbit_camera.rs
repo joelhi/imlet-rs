@@ -109,7 +109,7 @@ impl OrbitCameraController {
         };
         if scroll != 0. {
             self.is_scroll = true;
-            self.is_scroll_line_delta = matches!(delta, MouseScrollDelta::LineDelta(_,_));
+            self.is_scroll_line_delta = matches!(delta, MouseScrollDelta::LineDelta(_, _));
             self.scroll_speed = scroll;
         } else {
             self.is_scroll = false;
@@ -128,10 +128,10 @@ impl OrbitCameraController {
             camera.eye = self.default_position;
             camera.target = self.default_target;
         }
-        let factor = if self.is_scroll_line_delta { 1.0 } else {0.15};
+        let factor = if self.is_scroll_line_delta { 1.0 } else { 0.15 };
         if self.is_scroll && forward_mag > self.scroll_speed * factor {
             camera.eye += forward_norm * (self.scroll_speed * factor);
-            if self.is_scroll_line_delta{
+            if self.is_scroll_line_delta {
                 self.is_scroll = false;
             }
         }

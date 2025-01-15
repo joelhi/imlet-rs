@@ -7,12 +7,15 @@ use winit::{
     window::WindowBuilder,
 };
 
-use crate::{types::geometry::{BoundingBox, Mesh}, IMLET_VERSION};
+use crate::{
+    types::geometry::{BoundingBox, Mesh},
+    IMLET_VERSION,
+};
 
 use super::{state::State, DisplaySettings};
 
 /// Show a mesh object in an interactive window.
-/// 
+///
 /// # Arguments
 /// * `mesh` - The geometry to show.
 /// * `bounds` - Optional bounding box.
@@ -21,8 +24,8 @@ pub fn show_mesh(mesh: &Mesh<f32>, bounds: Option<BoundingBox<f32>>) {
 }
 
 /// Show a mesh object in an interactive window, with custom settings.
-/// 
-/// 
+///
+///
 /// # Arguments
 /// * `mesh` - The geometry to show.
 /// * `bounds` - Optional bounding box.
