@@ -114,10 +114,7 @@ impl<'a> State<'a> {
             znear: 0.1,
             zfar: 1000.0,
         };
-        let camera_controller = OrbitCameraController::new(
-            default_position,
-            default_target,
-        );
+        let camera_controller = OrbitCameraController::new(default_position, default_target);
 
         let mut camera_uniform = OrbitCameraUniform::new(default_position);
         camera_uniform.update_view_proj(&camera);
