@@ -34,7 +34,3 @@ bytemuck = { version = "1.12", features = ["derive"], optional = true }
 
 [features]
 viewer = ["winit", "wgpu", "cgmath", "pollster", "bytemuck"]
-
-[alias]
-rr = "run --release"
-rrv = "run --release --features viewer"

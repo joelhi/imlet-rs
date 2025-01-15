@@ -101,7 +101,7 @@ impl<T: Float> Mesh<T> {
     pub fn edges(&self) -> Vec<Line<T>> {
         let mut edges_i = HashSet::with_capacity(self.num_faces());
         for f in self.faces.iter() {
-            let mut sorted = f.clone();
+            let mut sorted = *f;
             sorted.sort();
             edges_i.insert((f[0], f[1]));
             edges_i.insert((f[1], f[2]));

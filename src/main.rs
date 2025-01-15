@@ -81,11 +81,11 @@ fn handle_run_model(matches: &ArgMatches) {
 
     let model = io::read_model_from_file::<f32>(file_path).unwrap();
 
-    let mut mesh = model.generate_iso_surface(&output, cell_size).unwrap();
+    let mut mesh = model.generate_iso_surface(output, cell_size).unwrap();
     mesh.compute_vertex_normals_par();
 
     if let Some(save_path) = matches.get_one::<String>("save") {
-        io::write_obj_file(&mesh, &save_path).unwrap();
+        io::write_obj_file(&mesh, save_path).unwrap();
     }
 
     if matches.get_flag("show") {
