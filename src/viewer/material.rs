@@ -1,6 +1,6 @@
 use std::fs;
 
-/// Materials that can be used for renderin meshes.
+/// Materials that can be used for rendering meshes.
 pub enum Material {
     /// Shading based on mesh normals.
     Normal,

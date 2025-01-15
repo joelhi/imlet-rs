@@ -12,11 +12,21 @@ use crate::types::geometry::{BoundingBox, Mesh};
 use super::{state::State, DisplaySettings};
 
 /// Show a mesh object in an interactive window.
+/// 
+/// # Arguments
+/// * `mesh` - The geometry to show.
+/// * `bounds` - Optional bounding box.
 pub fn show_mesh(mesh: &Mesh<f32>, bounds: Option<BoundingBox<f32>>) {
     pollster::block_on(run_internal(mesh, bounds, &DisplaySettings::new())).unwrap()
 }
 
-/// Show a mesh object in an interactive window, with a specific material.
+/// Show a mesh object in an interactive window, with custom settings.
+/// 
+/// 
+/// # Arguments
+/// * `mesh` - The geometry to show.
+/// * `bounds` - Optional bounding box.
+/// * `display_settings` - The settings used when rendering the mesh.
 pub fn show_mesh_with_settings(
     mesh: &Mesh<f32>,
     bounds: Option<BoundingBox<f32>>,
