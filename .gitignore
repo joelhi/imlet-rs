@@ -1,5 +1,6 @@
 /target
 .vscode
+.cargo
 .DS_Store
 .idea/*
 *.obj
