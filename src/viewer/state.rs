@@ -2,7 +2,7 @@ use std::iter;
 
 use cgmath::Point3;
 
-use crate::types::geometry::{Line, Mesh, Vec3};
+use crate::types::geometry::{Line, Mesh};
 use wgpu::{util::DeviceExt, Buffer};
 use winit::{
     dpi::{PhysicalPosition, PhysicalSize},
@@ -115,7 +115,6 @@ impl<'a> State<'a> {
             zfar: 1000.0,
         };
         let camera_controller = OrbitCameraController::new(
-            0.025 * (Vec3::new(dim.0, dim.1, dim.2)).distance_to_coord(0.0, 0.0, 0.0),
             default_position,
             default_target,
         );

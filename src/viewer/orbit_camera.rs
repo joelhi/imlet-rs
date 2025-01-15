@@ -67,7 +67,7 @@ pub struct OrbitCameraController {
 }
 
 impl OrbitCameraController {
-    pub fn new(speed: f32, default_position: Point3<f32>, default_target: Point3<f32>) -> Self {
+    pub fn new(default_position: Point3<f32>, default_target: Point3<f32>) -> Self {
         Self {
             is_reset: false,
             is_scroll: false,
