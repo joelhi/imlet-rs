@@ -58,6 +58,7 @@ impl OrbitCameraUniform {
 pub struct OrbitCameraController {
     pub is_reset: bool,
     pub is_scroll: bool,
+    pub is_scroll_line_delta: bool,
     pub scroll_speed: f32,
     pub is_orbit: bool,
     pub orbit_horizontal: f32,
@@ -71,6 +72,7 @@ impl OrbitCameraController {
         Self {
             is_reset: false,
             is_scroll: false,
+            is_scroll_line_delta: false,
             scroll_speed: 0.,
             is_orbit: false,
             orbit_horizontal: 0.,
@@ -102,11 +104,12 @@ impl OrbitCameraController {
 
     pub fn process_scroll(&mut self, delta: &MouseScrollDelta) {
         let scroll = match delta {
-            MouseScrollDelta::LineDelta(_, scroll) => -scroll * 0.5,
+            MouseScrollDelta::LineDelta(_, scroll) => -scroll * 1.0,
             MouseScrollDelta::PixelDelta(PhysicalPosition { y: scroll, .. }) => -*scroll as f32,
         };
         if scroll != 0. {
             self.is_scroll = true;
+            self.is_scroll_line_delta = matches!(delta, MouseScrollDelta::LineDelta(_,_));
             self.scroll_speed = scroll;
         } else {
             self.is_scroll = false;
@@ -125,8 +128,12 @@ impl OrbitCameraController {
             camera.eye = self.default_position;
             camera.target = self.default_target;
         }
-        if self.is_scroll && forward_mag > self.scroll_speed * 0.15 {
-            camera.eye += forward_norm * (self.scroll_speed * 0.15);
+        let factor = if self.is_scroll_line_delta { 1.0 } else {0.15};
+        if self.is_scroll && forward_mag > self.scroll_speed * factor {
+            camera.eye += forward_norm * (self.scroll_speed * factor);
+            if self.is_scroll_line_delta{
+                self.is_scroll = false;
+            }
         }
         if self.is_orbit {
             let delta = ((forward - camera.up * self.orbit_vertical)

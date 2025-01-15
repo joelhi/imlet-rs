@@ -16,7 +16,7 @@ impl DisplaySettings {
         Self {
             show_bounds: true,
             show_mesh_edges: false,
-            mesh_material: Material::Arctic,
+            mesh_material: Material::Normal,
         }
     }
 

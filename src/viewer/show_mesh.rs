@@ -7,7 +7,7 @@ use winit::{
     window::WindowBuilder,
 };
 
-use crate::types::geometry::{BoundingBox, Mesh};
+use crate::{types::geometry::{BoundingBox, Mesh}, IMLET_VERSION};
 
 use super::{state::State, DisplaySettings};
 
@@ -44,7 +44,7 @@ async fn run_internal(
     let window_icon = None;
     let event_loop = EventLoop::new()?;
     let window = WindowBuilder::new()
-        .with_title("Imlet viewer")
+        .with_title(format!("Imlet viewer v{}", IMLET_VERSION))
         .with_window_icon(window_icon)
         .build(&event_loop)
         .unwrap();
