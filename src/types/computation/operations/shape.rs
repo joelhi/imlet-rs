@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
     model::{Data, DataType, Parameter},
-    traits::ImplicitOperation,
+    traits::{ImplicitComponent, ImplicitOperation},
 };
 
 /// Operation to perform a boolean union on two distance values -> min(a, b)
@@ -40,18 +40,10 @@ impl<T: Float> ImplicitOperation<T> for BooleanUnion {
     fn inputs(&self) -> &[&str] {
         &UNION_INPUT_NAMES
     }
+}
 
-    fn parameters(&self) -> &[Parameter] {
-        &[]
-    }
-
-    fn set_parameter(&mut self, _: &str, _: Data<T>) {}
-
-    fn read_parameter(&self, _: &str) -> Option<Data<T>> {
-        None
-    }
-
-    fn operation_name(&self) -> &'static str {
+impl<T> ImplicitComponent<T> for BooleanUnion{
+    fn name(&self) -> &'static str {
         "BooleanUnion"
     }
 }
@@ -85,18 +77,10 @@ impl<T: Float> ImplicitOperation<T> for BooleanIntersection {
     fn inputs(&self) -> &[&str] {
         &UNION_INPUT_NAMES
     }
+}
 
-    fn parameters(&self) -> &[Parameter] {
-        &[]
-    }
-
-    fn set_parameter(&mut self, _: &str, _: Data<T>) {}
-
-    fn read_parameter(&self, _: &str) -> Option<Data<T>> {
-        None
-    }
-
-    fn operation_name(&self) -> &'static str {
+impl<T: Float> ImplicitComponent<T> for BooleanIntersection {
+    fn name(&self) -> &'static str {
         "BooleanIntersection"
     }
 }
@@ -132,18 +116,10 @@ impl<T: Float> ImplicitOperation<T> for BooleanDifference {
     fn inputs(&self) -> &[&str] {
         &DIFF_INPUT_NAMES
     }
+}
 
-    fn parameters(&self) -> &[Parameter] {
-        &[]
-    }
-
-    fn set_parameter(&mut self, _: &str, _: Data<T>) {}
-
-    fn read_parameter(&self, _: &str) -> Option<Data<T>> {
-        None
-    }
-
-    fn operation_name(&self) -> &'static str {
+impl<T: Float> ImplicitComponent<T> for BooleanDifference {
+    fn name(&self) -> &'static str {
         "BooleanDifference"
     }
 }
@@ -185,7 +161,9 @@ impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Offset<T> {
     fn inputs(&self) -> &[&str] {
         OFFSET_INPUT_NAMES
     }
+}
 
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Offset<T> {
     fn parameters(&self) -> &[Parameter] {
         OFFSET_PARAMETERS
     }
@@ -204,7 +182,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Offset<T> {
         }
     }
 
-    fn operation_name(&self) -> &'static str {
+    fn name(&self) -> &'static str {
         "Offset"
     }
 }
@@ -245,7 +223,9 @@ impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Thickness<T> {
     fn inputs(&self) -> &[&str] {
         &THICKNESS_INPUT_NAMES
     }
+}
 
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Thickness<T>{
     fn parameters(&self) -> &[Parameter] {
         THICKNESS_PARAMETERS
     }
@@ -263,7 +243,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Thickness<T> {
         }
     }
 
-    fn operation_name(&self) -> &'static str {
+    fn name(&self) -> &'static str {
         "Thickness"
     }
 }

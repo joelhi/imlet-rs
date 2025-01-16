@@ -83,7 +83,7 @@
 - [x] Handle normals in obj import/export.
 - [x] Improve normal interpolation to reduce leaking.
 - [x] Simple mesh viewer with wgpu.
-- [ ] Some cli tools to run and show models.
+- [x] Some cli tools to run and show models.
 - [ ] Finish docs.
 
 ### Future Enhancements (2025)

@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
     model::{Data, DataType, Parameter},
-    traits::ImplicitFunction,
+    traits::{ImplicitComponent, ImplicitFunction},
 };
 
 use super::{traits::SignedDistance, Vec3};
@@ -79,7 +79,9 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Line<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(x, y, z)
     }
+}
 
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Line<T>{
     fn parameters(&self) -> &[Parameter] {
         LINE_PARAMS
     }
@@ -98,6 +100,10 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Line<T> {
             "End" => Some(Data::Vec3(self.end)),
             _ => None,
         }
+    }
+
+    fn name(&self) -> &'static str {
+        "Line"
     }
 }
 

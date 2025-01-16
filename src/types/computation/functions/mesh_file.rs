@@ -8,7 +8,7 @@ use crate::{
     types::{
         computation::{
             model::{Data, DataType, Parameter},
-            traits::ImplicitFunction,
+            traits::{ImplicitComponent, ImplicitFunction},
         },
         geometry::{BoundingBox, Octree, Transform, Triangle, Vec3},
     },
@@ -119,7 +119,9 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for MeshFile<T> {
             T::zero()
         }
     }
+}
 
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for MeshFile<T>{
     fn parameters(&self) -> &[Parameter] {
         MESH_FILE_PARAMETERS
     }
@@ -154,7 +156,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for MeshFile<T> {
         }
     }
 
-    fn function_name(&self) -> &'static str {
+    fn name(&self) -> &'static str {
         "MeshFile"
     }
 }

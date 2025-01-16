@@ -27,8 +27,6 @@ pub use neovius::*;
 mod schwarz;
 pub use schwarz::*;
 
-mod custom_sdf;
-pub use custom_sdf::*;
 mod mesh_file;
 pub use mesh_file::*;
 

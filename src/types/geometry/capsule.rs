@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::types::{
     computation::{
         model::{Data, DataType, Parameter},
-        traits::ImplicitFunction,
+        traits::{ImplicitComponent, ImplicitFunction},
     },
     geometry::{Line, Vec3},
 };
@@ -69,7 +69,9 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Capsule<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(x, y, z)
     }
+}
 
+impl <T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Capsule<T> {
     fn parameters(&self) -> &[Parameter] {
         CAPSULE_PARAMS
     }
@@ -92,7 +94,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Capsule<T> {
         }
     }
 
-    fn function_name(&self) -> &'static str {
+    fn name(&self) -> &'static str {
         "Capsule"
     }
 }

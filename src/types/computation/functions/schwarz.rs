@@ -3,7 +3,7 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::model::{Data, DataType, Parameter};
-use crate::types::computation::traits::ImplicitFunction;
+use crate::types::computation::traits::{ImplicitComponent, ImplicitFunction};
 use crate::utils::math_helper::Pi;
 use std::fmt::Debug;
 
@@ -87,7 +87,9 @@ impl<T: Float + Send + Sync + Pi + Serialize> ImplicitFunction<T> for SchwarzP<T
             scale * normalized_distance
         }
     }
+}
 
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for SchwarzP<T>{
     fn parameters(&self) -> &[Parameter] {
         SCHWARZ_PARAMETERS
     }
@@ -122,7 +124,7 @@ impl<T: Float + Send + Sync + Pi + Serialize> ImplicitFunction<T> for SchwarzP<T
         }
     }
 
-    fn function_name(&self) -> &'static str {
+    fn name(&self) -> &'static str {
         "SchwarzP"
     }
 }
