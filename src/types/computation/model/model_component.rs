@@ -56,12 +56,12 @@ impl<T: Float + Send + Sync + Serialize + Pi> ModelComponent<T> {
     pub fn type_name(&self) -> &'static str {
         match self {
             ModelComponent::Constant(_) => "Constant",
-            ModelComponent::Function(function) => function.function_name(),
-            ModelComponent::Operation(operation) => operation.operation_name(),
+            ModelComponent::Function(function) => function.name(),
+            ModelComponent::Operation(operation) => operation.name(),
         }
     }
 
-    pub fn get_parameters(&self) -> Vec<(Parameter, Data<T>)> {
+    pub fn read_parameters(&self) -> Vec<(Parameter, Data<T>)> {
         match self {
             ModelComponent::Constant(value) => vec![(
                 Parameter::new("Value", DataType::Value),
@@ -75,7 +75,7 @@ impl<T: Float + Send + Sync + Serialize + Pi> ModelComponent<T> {
                         p.clone(),
                         function.read_parameter(p.name).unwrap_or_else(|| panic!("Parameter {} returned None from function {}, but it should be valid",
                             p.name,
-                            function.function_name())),
+                            function.name())),
                     )
                 })
                 .collect(),
@@ -87,7 +87,7 @@ impl<T: Float + Send + Sync + Serialize + Pi> ModelComponent<T> {
                         p.clone(),
                         operation.read_parameter(p.name).unwrap_or_else(|| panic!("Parameter {} returned None from operation {}, but it should be valid",
                             p.name,
-                            operation.operation_name())),
+                            operation.name())),
                     )
                 })
                 .collect(),

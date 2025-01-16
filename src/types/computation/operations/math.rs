@@ -5,7 +5,8 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
-    model::Data, model::DataType, model::Parameter, traits::ImplicitOperation,
+    model::{Data, DataType, Parameter},
+    traits::{ImplicitComponent, ImplicitOperation},
 };
 
 static INPUT_NAMES: [&str; 2] = ["First Number", "Second Number"];
@@ -39,18 +40,10 @@ impl<T: Float> ImplicitOperation<T> for Multiply {
     fn inputs(&self) -> &[&str] {
         &INPUT_NAMES
     }
+}
 
-    fn parameters(&self) -> &[Parameter] {
-        &[]
-    }
-
-    fn set_parameter(&mut self, _: &str, _: Data<T>) {}
-
-    fn read_parameter(&self, _: &str) -> Option<Data<T>> {
-        None
-    }
-
-    fn operation_name(&self) -> &'static str {
+impl<T: Float> ImplicitComponent<T> for Multiply {
+    fn name(&self) -> &'static str {
         "Multiply"
     }
 }
@@ -84,18 +77,10 @@ impl<T: Float> ImplicitOperation<T> for Add {
     fn inputs(&self) -> &[&str] {
         &INPUT_NAMES
     }
+}
 
-    fn parameters(&self) -> &[Parameter] {
-        &[]
-    }
-
-    fn set_parameter(&mut self, _: &str, _: Data<T>) {}
-
-    fn read_parameter(&self, _: &str) -> Option<Data<T>> {
-        None
-    }
-
-    fn operation_name(&self) -> &'static str {
+impl<T: Float> ImplicitComponent<T> for Add {
+    fn name(&self) -> &'static str {
         "Add"
     }
 }
@@ -129,18 +114,10 @@ impl<T: Float> ImplicitOperation<T> for Subtract {
     fn inputs(&self) -> &[&str] {
         &INPUT_NAMES
     }
+}
 
-    fn parameters(&self) -> &[Parameter] {
-        &[]
-    }
-
-    fn set_parameter(&mut self, _: &str, _: Data<T>) {}
-
-    fn read_parameter(&self, _: &str) -> Option<Data<T>> {
-        None
-    }
-
-    fn operation_name(&self) -> &'static str {
+impl<T> ImplicitComponent<T> for Subtract {
+    fn name(&self) -> &'static str {
         "Subtract"
     }
 }
@@ -175,18 +152,10 @@ impl<T: Float> ImplicitOperation<T> for Divide {
     fn inputs(&self) -> &[&str] {
         &INPUT_NAMES
     }
+}
 
-    fn parameters(&self) -> &[Parameter] {
-        &[]
-    }
-
-    fn set_parameter(&mut self, _: &str, _: Data<T>) {}
-
-    fn read_parameter(&self, _: &str) -> Option<Data<T>> {
-        None
-    }
-
-    fn operation_name(&self) -> &'static str {
+impl<T: Float> ImplicitComponent<T> for Divide {
+    fn name(&self) -> &'static str {
         "Divide"
     }
 }
@@ -232,12 +201,14 @@ impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for LinearInterpol
     fn inputs(&self) -> &[&str] {
         LINEAR_INTERPOLATION_INPUTS
     }
+}
 
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for LinearInterpolation<T> {
     fn parameters(&self) -> &[Parameter] {
         LINEAR_INTERPOLATION_PARAMETERS
     }
 
-    fn operation_name(&self) -> &'static str {
+    fn name(&self) -> &'static str {
         "LinearInterpolation"
     }
 

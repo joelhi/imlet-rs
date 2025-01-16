@@ -82,13 +82,13 @@
 ### Base Features
 - [x] Handle normals in obj import/export.
 - [x] Improve normal interpolation to reduce leaking.
-- [ ] Improve octree to reduce memory useage.
-- [ ] Simple mesh viewer with wgpu.
-- [ ] Some cli tools
+- [x] Simple mesh viewer with wgpu.
+- [x] Some cli tools to run and show models.
+- [ ] Finish docs.
 
 ### Future Enhancements (2025)
 - [ ] Make model serialization compatible with external impls.
-- [ ] Python binding or other scripting interface to build and compute models.
+- [ ] Python binding or other scripting interface to build and compute models. 
 - [ ] GPU computation of models for faster processing. (For example using [CubeCL](https://github.com/tracel-ai/cubecl))
 - [ ] Develop a node editor for visual programming. (For example using [snarl](https://github.com/zakarumych/egui-snarl))
 

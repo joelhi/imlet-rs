@@ -4,7 +4,7 @@
     "OffsetGyroid": {
       "Operation": {
         "Thickness": {
-          "t": 2.0
+          "t": 3.0
         }
       }
     },
@@ -49,13 +49,13 @@
         "z": -0.6
       },
       "max": {
-        "x": 60.69169387817383,
-        "y": 46.91985855102539,
-        "z": 60.072190856933595
+        "x": 65.0,
+        "y": 47.0,
+        "z": 61.0
       }
     },
     "cap": true,
-    "smoothing_iter": 0,
+    "smoothing_iter": 2,
     "smoothing_factor": 0.75
   }
 }

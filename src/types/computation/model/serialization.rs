@@ -22,7 +22,7 @@ impl<T: Float + Send + Sync> serde::Serialize for dyn ImplicitFunction<T> {
     {
         use serde::ser::SerializeMap;
         let mut ser = serializer.serialize_map(Some(1))?;
-        let type_info = self.function_name();
+        let type_info = self.name();
         ser.serialize_entry(type_info, &Wrap(self))?;
         ser.end()
     }
@@ -35,7 +35,7 @@ impl<T: Float + Send + Sync> serde::Serialize for dyn ImplicitOperation<T> {
     {
         use serde::ser::SerializeMap;
         let mut ser = serializer.serialize_map(Some(1))?;
-        let type_info = self.operation_name();
+        let type_info = self.name();
         ser.serialize_entry(type_info, &Wrap(self))?;
         ser.end()
     }
@@ -233,14 +233,6 @@ fn function_runtime_reflection<
                 let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
                     let mut s: MeshFile<T> = erased_serde::deserialize(deserializer)?;
                     s.build();
-                    let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
-                    Ok(boxed_trait_object)
-                };
-                Some(deserialize_fn)
-            }
-            FunctionComponent::CustomMesh => {
-                let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
-                    let s: CustomMesh<T> = erased_serde::deserialize(deserializer)?;
                     let boxed_trait_object: Box<dyn ImplicitFunction<T>> = Box::new(s);
                     Ok(boxed_trait_object)
                 };

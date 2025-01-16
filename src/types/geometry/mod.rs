@@ -1,6 +1,5 @@
 mod bounding_box;
 mod capsule;
-mod geometry_collection;
 mod hash_grid;
 mod line;
 mod mesh;
@@ -18,7 +17,6 @@ pub mod traits;
 
 pub use bounding_box::*;
 pub use capsule::*;
-pub use geometry_collection::*;
 use hash_grid::*;
 pub use line::*;
 pub use mesh::*;

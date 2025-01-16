@@ -258,7 +258,8 @@ fn interpolate_vertex<T: Float>(
     first_value: T,
     second_value: T,
 ) -> Vec3<T> {
-    let iso_threshold = T::from(0.00001).unwrap();
+    let iso_threshold =
+        T::from(0.00001).expect("Should be able to convert number into generic type.");
 
     if (iso_val - first_value).abs() < iso_threshold
         || (first_value - second_value).abs() < iso_threshold
@@ -289,7 +290,8 @@ mod tests {
             1.0,
             (2, 2, 2).into(),
             vec![1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0],
-        );
+        )
+        .unwrap();
         let triangles = generate_iso_surface(&field, 0.0);
 
         assert_eq!(2, triangles.len());
@@ -310,7 +312,8 @@ mod tests {
             vec![
                 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0,
             ],
-        );
+        )
+        .unwrap();
         let triangles = generate_iso_surface(&field, 0.0);
 
         assert_eq!(4, triangles.len());

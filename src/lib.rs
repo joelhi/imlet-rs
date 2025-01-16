@@ -145,3 +145,7 @@ pub mod utils {
     /// Additional utilities related to mathematics.
     pub mod math_helper;
 }
+
+#[cfg(feature = "viewer")]
+/// Some utilites to show generated geometries.
+pub mod viewer;

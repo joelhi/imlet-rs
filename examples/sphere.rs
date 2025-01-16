@@ -34,7 +34,13 @@ pub fn main() {
         )
         .unwrap();
 
-    let mesh = model.generate_iso_surface(&sphere_node, 0.5).unwrap();
+    let mut mesh = model.generate_iso_surface(&sphere_node, 0.5).unwrap();
+    mesh.compute_vertex_normals_par();
 
     utils::io::write_obj_file(&mesh, "sphere_example").unwrap();
+
+    #[cfg(feature = "viewer")]
+    {
+        imlet::viewer::show_mesh(&mesh, Some(mesh.bounds()));
+    }
 }

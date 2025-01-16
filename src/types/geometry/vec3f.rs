@@ -1,5 +1,4 @@
 use std::{
-    any,
     fmt::{self, Debug, Display},
     ops,
 };
@@ -242,37 +241,15 @@ impl<T: Float> Vec3<T> {
         start.scale(a) + end.scale(b)
     }
 
-    /// Convert the internal data type to a new type *Q*.
+    /// Convert the internal data type to a new type *Q*. Returns [`None`] if the type conversion fails.
     ///
-    /// This assumes both types are a [`Float`] and expects the conversion between types to succeed.
     /// Mainly to convert from [`f64`] to [`f32`] or to go from generic description to a concrete type.
-    ///
-    /// # Panics
-    /// If the conversion fails,
-    pub fn convert<Q: Float>(&self) -> Vec3<Q> {
-        Vec3::new(
-            Q::from(self.x).unwrap_or_else(|| {
-                panic!(
-                    "Failed to convert from {} to {}",
-                    any::type_name::<Q>(),
-                    any::type_name::<T>()
-                )
-            }),
-            Q::from(self.y).unwrap_or_else(|| {
-                panic!(
-                    "Failed to convert from {} to {}",
-                    any::type_name::<Q>(),
-                    any::type_name::<T>()
-                )
-            }),
-            Q::from(self.z).unwrap_or_else(|| {
-                panic!(
-                    "Failed to convert from {} to {}",
-                    any::type_name::<Q>(),
-                    any::type_name::<T>()
-                )
-            }),
-        )
+    pub fn convert<Q: Float>(&self) -> Option<Vec3<Q>> {
+        Some(Vec3::new(
+            Q::from(self.x)?,
+            Q::from(self.y)?,
+            Q::from(self.z)?,
+        ))
     }
 
     pub fn transform(&self, transform: Transform<T>) -> Vec3<T> {

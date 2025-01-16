@@ -29,6 +29,8 @@ pub enum ModelError {
     MissingOutput(),
     /// Can't compute as no model config is defined.
     MissingConfig(),
+    /// A generic error with a custom message.
+    Custom(String),
 }
 
 impl std::fmt::Display for ModelError {
@@ -78,6 +80,7 @@ impl std::fmt::Display for ModelError {
                 f,
                 "Failed to generate output as no config is specified for the model."
             ),
+            ModelError::Custom(message) => write!(f, "{}", message),
         }
     }
 }

@@ -5,7 +5,7 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::model::{Data, DataType, Parameter};
-use crate::types::computation::traits::ImplicitFunction;
+use crate::types::computation::traits::{ImplicitComponent, ImplicitFunction};
 use crate::utils::math_helper::Pi;
 
 static NEOVIUS_PARAMETERS: &[Parameter; 4] = &[
@@ -92,7 +92,9 @@ impl<T: Pi + Float + Send + Sync + Serialize> ImplicitFunction<T> for Neovius<T>
             scale * normalized_distance
         }
     }
+}
 
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Neovius<T> {
     fn parameters(&self) -> &[Parameter] {
         NEOVIUS_PARAMETERS
     }
@@ -127,7 +129,7 @@ impl<T: Pi + Float + Send + Sync + Serialize> ImplicitFunction<T> for Neovius<T>
         }
     }
 
-    fn function_name(&self) -> &'static str {
+    fn name(&self) -> &'static str {
         "Neovius"
     }
 }

@@ -1,3 +1,4 @@
+use hashbrown::HashSet;
 use num_traits::Float;
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelRefIterator;
@@ -98,13 +99,19 @@ impl<T: Float> Mesh<T> {
 
     /// Returns the unique edges of the mesh.
     pub fn edges(&self) -> Vec<Line<T>> {
-        let mut edges: Vec<Line<T>> = Vec::with_capacity(self.num_faces());
+        let mut edges_i = HashSet::with_capacity(self.num_faces());
         for f in self.faces.iter() {
-            edges.push(Line::new(self.vertices[f[0]], self.vertices[f[1]]));
-            edges.push(Line::new(self.vertices[f[1]], self.vertices[f[2]]));
-            edges.push(Line::new(self.vertices[f[2]], self.vertices[f[0]]));
+            let mut sorted = *f;
+            sorted.sort();
+            edges_i.insert((f[0], f[1]));
+            edges_i.insert((f[1], f[2]));
+            edges_i.insert((f[2], f[0]));
         }
-        edges
+
+        edges_i
+            .iter()
+            .map(|(i, j)| Line::new(self.vertices[*i], self.vertices[*j]))
+            .collect()
     }
 
     /// Computes the average of all mesh vertices.
@@ -203,8 +210,18 @@ impl<T: Float> Mesh<T> {
     }
 
     /// Convert the vertex data type from the current type to a new type Q.
-    pub fn convert<Q: Float>(&self) -> Mesh<Q> {
-        let converted_v: Vec<Vec3<Q>> = self.vertices.iter().map(|v| v.convert::<Q>()).collect();
+    pub fn convert<Q: Float>(&self) -> Option<Mesh<Q>> {
+        let converted_v: Vec<Vec3<Q>> = self
+            .vertices
+            .iter()
+            .filter_map(|v| v.convert::<Q>())
+            .collect();
+
+        if converted_v.len() != self.vertices.len() {
+            // Conversion failed for some vertices.
+            return None;
+        }
+
         let mut m = Mesh::<Q>::new();
 
         m.add_vertices(&converted_v);
@@ -214,7 +231,7 @@ impl<T: Float> Mesh<T> {
             m.compute_vertex_normals();
         }
 
-        m
+        Some(m)
     }
 
     /// Convert the mesh into a list of triangles. The triangles will store the mesh vertex normals if present.

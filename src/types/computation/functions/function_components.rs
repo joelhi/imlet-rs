@@ -39,8 +39,6 @@ pub enum FunctionComponent {
     Capsule,
     /// Represents a component to generate the distance function for an arbitrary mesh.
     MeshFile,
-    /// Custom mesh container
-    CustomMesh,
 }
 
 impl FunctionComponent {
@@ -84,7 +82,6 @@ impl FunctionComponent {
             FunctionComponent::XDomain => Box::new(XDomain::natural()),
             FunctionComponent::YDomain => Box::new(YDomain::natural()),
             FunctionComponent::ZDomain => Box::new(ZDomain::natural()),
-            FunctionComponent::CustomMesh => Box::new(CustomMesh::new()),
         };
 
         ModelComponent::Function(func)
@@ -109,7 +106,6 @@ impl FromStr for FunctionComponent {
             "BoundingBox" => Ok(FunctionComponent::BoundingBox),
             "Capsule" => Ok(FunctionComponent::Capsule),
             "MeshFile" => Ok(FunctionComponent::MeshFile),
-            "CustomMesh" => Ok(FunctionComponent::CustomMesh),
             _ => Err(()),
         }
     }
@@ -129,7 +125,6 @@ pub const FUNCTION_COMPONENTS: &[FunctionComponent] = &[
     FunctionComponent::Plane,
     FunctionComponent::Capsule,
     FunctionComponent::MeshFile,
-    FunctionComponent::CustomMesh,
 ];
 
 #[cfg(test)]
@@ -143,7 +138,7 @@ mod tests {
 
         for &function in all_functions {
             let mut component = function.create_default::<f32>();
-            let params = component.get_parameters();
+            let params = component.read_parameters();
 
             for (param, data) in params {
                 component.set_parameter(param.name, data);

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     types::computation::{
         model::{Data, DataType, Parameter},
-        traits::ImplicitFunction,
+        traits::{ImplicitComponent, ImplicitFunction},
     },
     utils::math_helper::Pi,
 };
@@ -91,7 +91,9 @@ impl<T: Pi + Float + Send + Sync + Serialize> ImplicitFunction<T> for Gyroid<T> 
             scale * normalized_distance
         }
     }
+}
 
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Gyroid<T> {
     fn parameters(&self) -> &[Parameter] {
         GYROID_PARAMETERS
     }
@@ -126,7 +128,7 @@ impl<T: Pi + Float + Send + Sync + Serialize> ImplicitFunction<T> for Gyroid<T> 
         }
     }
 
-    fn function_name(&self) -> &'static str {
+    fn name(&self) -> &'static str {
         "Gyroid"
     }
 }

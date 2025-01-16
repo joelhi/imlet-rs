@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::types::{
     computation::{
         model::{Data, DataType, Parameter},
-        traits::ImplicitFunction,
+        traits::{ImplicitComponent, ImplicitFunction},
     },
     geometry::Vec3,
 };
@@ -62,7 +62,9 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Torus<T> {
             squared_value.sqrt()
         }
     }
+}
 
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Torus<T> {
     fn parameters(&self) -> &[Parameter] {
         TORUS_PARAMS
     }
@@ -85,7 +87,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Torus<T> {
         }
     }
 
-    fn function_name(&self) -> &'static str {
+    fn name(&self) -> &'static str {
         "Torus"
     }
 }

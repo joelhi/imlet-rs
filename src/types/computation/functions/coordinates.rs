@@ -5,7 +5,7 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::model::{Data, DataType, Parameter};
-use crate::types::computation::traits::ImplicitFunction;
+use crate::types::computation::traits::{ImplicitComponent, ImplicitFunction};
 use crate::utils::math_helper::normalize;
 
 static COORD_PARAMETERS: [Parameter; 2] = [
@@ -52,7 +52,9 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for ZDomain<T> {
     fn eval(&self, _: T, _: T, z: T) -> T {
         normalize(z, self.min, self.max)
     }
+}
 
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for ZDomain<T> {
     fn parameters(&self) -> &[Parameter] {
         &COORD_PARAMETERS
     }
@@ -85,7 +87,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for ZDomain<T> {
         }
     }
 
-    fn function_name(&self) -> &'static str {
+    fn name(&self) -> &'static str {
         "ZDomain"
     }
 }
@@ -123,7 +125,9 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for YDomain<T> {
     fn eval(&self, _: T, y: T, _: T) -> T {
         normalize(y, self.min, self.max)
     }
+}
 
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for YDomain<T> {
     fn parameters(&self) -> &[Parameter] {
         &COORD_PARAMETERS
     }
@@ -156,7 +160,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for YDomain<T> {
         }
     }
 
-    fn function_name(&self) -> &'static str {
+    fn name(&self) -> &'static str {
         "YDomain"
     }
 }
@@ -194,7 +198,9 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XDomain<T> {
     fn eval(&self, x: T, _: T, _: T) -> T {
         normalize(x, self.min, self.max)
     }
+}
 
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for XDomain<T> {
     fn parameters(&self) -> &[Parameter] {
         &COORD_PARAMETERS
     }
@@ -227,7 +233,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XDomain<T> {
         }
     }
 
-    fn function_name(&self) -> &'static str {
+    fn name(&self) -> &'static str {
         "XDomain"
     }
 }
@@ -263,7 +269,9 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XYZValue {
             CoordinateValue::Z => z,
         }
     }
+}
 
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for XYZValue {
     fn parameters(&self) -> &[Parameter] {
         &GLOBAL_COORD_PARAMETERS
     }
@@ -282,7 +290,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XYZValue {
                 "Z" => {
                     self.coordinate_value = CoordinateValue::Z;
                 }
-                _ => panic!("Error in string option"),
+                _ => (),
             };
         }
     }
@@ -298,7 +306,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XYZValue {
         }
     }
 
-    fn function_name(&self) -> &'static str {
+    fn name(&self) -> &'static str {
         "XYZValue"
     }
 }

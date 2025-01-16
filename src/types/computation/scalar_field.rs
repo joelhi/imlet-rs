@@ -14,6 +14,8 @@ use crate::utils;
 use crate::utils::math_helper::index1d_from_index3d;
 use crate::utils::math_helper::index3d_from_index1d;
 
+use super::ModelError;
+
 /// 3-dimensional field for scalar values.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScalarField<T> {
@@ -34,16 +36,28 @@ impl<T> ScalarField<T> {
     /// * `cell_size` - The size of each cell in the field.
     /// * `num_pts` - Number of points in each direction.
     /// * `data` - The data buffer.
-    pub fn with_data(origin: Vec3<T>, cell_size: T, num_pts: Vec3i, data: Vec<T>) -> Self {
+    ///
+    /// # Returns
+    ///
+    /// [`Ok`] with the generated [`ScalarField`] if the data matches the point count, or [`Err`] if the data doesn't match.
+    pub fn with_data(
+        origin: Vec3<T>,
+        cell_size: T,
+        num_pts: Vec3i,
+        data: Vec<T>,
+    ) -> Result<Self, ModelError> {
         if num_pts.product() != data.len() {
-            panic!("Incorrect size of data buffer");
+            return Err(ModelError::Custom(
+                "Failed to generate field from data. Point count and data length must match"
+                    .to_owned(),
+            ));
         }
-        Self {
+        Ok(Self {
             origin,
             cell_size,
             n: num_pts,
             data,
-        }
+        })
     }
 
     /// Returns the origin of the field.
@@ -67,10 +81,6 @@ impl<T> ScalarField<T> {
     }
 
     fn cell_ids(&self, i: usize, j: usize, k: usize) -> [usize; 8] {
-        // Get the ids of the vertices at a certain cell
-        if !i < self.n.i - 1 || !j < self.n.j - 1 || !k < self.n.k - 1 {
-            panic!("Index out of bounds");
-        }
         [
             self.point_index1d(i, j, k),
             self.point_index1d(i + 1, j, k),
@@ -350,7 +360,8 @@ mod tests {
     fn test_smooth_field_half() {
         let mut data = vec![1.0; 27];
         data[13] = 2.0;
-        let mut field = ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field =
+            ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
         field.smooth(0.5, 1);
 
         let field_data = field.copy_data();
@@ -368,7 +379,8 @@ mod tests {
     fn test_smooth_field_full() {
         let mut data = vec![1.0; 27];
         data[13] = 2.0;
-        let mut field = ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field =
+            ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
         field.smooth(1.0, 1);
 
         let field_data = field.copy_data();
@@ -387,7 +399,8 @@ mod tests {
         data[14] = 20.0;
         data[16] = 15.0;
         data[22] = 20.0;
-        let mut field = ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field =
+            ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
         field.smooth(1.0, 1);
 
         let field_data = field.copy_data();
@@ -403,7 +416,8 @@ mod tests {
         data[14] = 20.0;
         data[16] = 15.0;
         data[22] = 20.0;
-        let mut field = ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field =
+            ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
         field.smooth(0.5, 1);
 
         let field_data = field.copy_data();
@@ -417,7 +431,8 @@ mod tests {
         data[20] = 1.0;
         data[21] = 1.5;
 
-        let mut field = ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data);
+        let mut field =
+            ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
         field.threshold(0.1);
 
         let field_data = field.copy_data();
