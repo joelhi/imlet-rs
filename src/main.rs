@@ -98,4 +98,8 @@ fn handle_run_model(matches: &ArgMatches) {
             log::error!("Enable the viewer feature to see the model.");
         }
     }
+
+    if !matches.get_flag("show") && !matches.get_one::<String>("save").is_some(){
+        log::warn!("To see the geometry use the --show flag. To save it to a file use --save.");
+    }
 }
