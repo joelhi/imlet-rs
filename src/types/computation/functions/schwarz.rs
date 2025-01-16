@@ -89,7 +89,7 @@ impl<T: Float + Send + Sync + Pi + Serialize> ImplicitFunction<T> for SchwarzP<T
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for SchwarzP<T>{
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for SchwarzP<T> {
     fn parameters(&self) -> &[Parameter] {
         SCHWARZ_PARAMETERS
     }

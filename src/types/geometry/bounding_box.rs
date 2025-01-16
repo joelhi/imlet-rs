@@ -264,7 +264,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for BoundingBox<T> 
     }
 }
 
-impl <T: Float + Send + Sync + Serialize> ImplicitComponent<T> for BoundingBox<T>{
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for BoundingBox<T> {
     fn parameters(&self) -> &[Parameter] {
         &BOUNDING_BOX_PARAMETERS
     }

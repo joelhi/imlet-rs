@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::types::{
     computation::{
         model::{Data, DataType, Parameter},
-        traits::{ImplicitFunction, ImplicitComponent},
+        traits::{ImplicitComponent, ImplicitFunction},
     },
     geometry::Vec3,
 };
@@ -78,7 +78,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Sphere<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Sphere<T>{
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Sphere<T> {
     fn parameters(&self) -> &[Parameter] {
         SPHERE_PARAMS
     }

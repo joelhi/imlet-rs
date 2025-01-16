@@ -121,7 +121,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for MeshFile<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for MeshFile<T>{
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for MeshFile<T> {
     fn parameters(&self) -> &[Parameter] {
         MESH_FILE_PARAMETERS
     }

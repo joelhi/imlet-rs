@@ -54,7 +54,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for ZDomain<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for ZDomain<T>{
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for ZDomain<T> {
     fn parameters(&self) -> &[Parameter] {
         &COORD_PARAMETERS
     }
@@ -127,7 +127,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for YDomain<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for YDomain<T>{
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for YDomain<T> {
     fn parameters(&self) -> &[Parameter] {
         &COORD_PARAMETERS
     }
@@ -200,7 +200,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XDomain<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for XDomain<T>{
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for XDomain<T> {
     fn parameters(&self) -> &[Parameter] {
         &COORD_PARAMETERS
     }
@@ -271,7 +271,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XYZValue {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for XYZValue{
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for XYZValue {
     fn parameters(&self) -> &[Parameter] {
         &GLOBAL_COORD_PARAMETERS
     }

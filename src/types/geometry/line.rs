@@ -81,7 +81,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Line<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Line<T>{
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Line<T> {
     fn parameters(&self) -> &[Parameter] {
         LINE_PARAMS
     }

@@ -94,7 +94,7 @@ impl<T: Pi + Float + Send + Sync + Serialize> ImplicitFunction<T> for Neovius<T>
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Neovius<T>{
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Neovius<T> {
     fn parameters(&self) -> &[Parameter] {
         NEOVIUS_PARAMETERS
     }

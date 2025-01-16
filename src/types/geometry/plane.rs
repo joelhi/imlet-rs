@@ -5,7 +5,8 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
-    model::{Data, DataType, Parameter}, traits::{ImplicitComponent, ImplicitFunction},
+    model::{Data, DataType, Parameter},
+    traits::{ImplicitComponent, ImplicitFunction},
 };
 
 use super::{traits::SignedDistance, Vec3};
@@ -108,7 +109,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Plane<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Plane<T>{
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Plane<T> {
     fn parameters(&self) -> &[Parameter] {
         PLANE_PARAMS
     }

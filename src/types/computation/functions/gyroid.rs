@@ -93,7 +93,7 @@ impl<T: Pi + Float + Send + Sync + Serialize> ImplicitFunction<T> for Gyroid<T> 
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Gyroid<T>{
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Gyroid<T> {
     fn parameters(&self) -> &[Parameter] {
         GYROID_PARAMETERS
     }

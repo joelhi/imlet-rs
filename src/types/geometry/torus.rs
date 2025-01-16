@@ -64,7 +64,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Torus<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Torus<T>{
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Torus<T> {
     fn parameters(&self) -> &[Parameter] {
         TORUS_PARAMS
     }

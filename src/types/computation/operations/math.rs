@@ -5,7 +5,8 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
-    model::{Data, DataType, Parameter}, traits::{ImplicitComponent, ImplicitOperation},
+    model::{Data, DataType, Parameter},
+    traits::{ImplicitComponent, ImplicitOperation},
 };
 
 static INPUT_NAMES: [&str; 2] = ["First Number", "Second Number"];
@@ -41,7 +42,7 @@ impl<T: Float> ImplicitOperation<T> for Multiply {
     }
 }
 
-impl<T: Float> ImplicitComponent<T> for Multiply{
+impl<T: Float> ImplicitComponent<T> for Multiply {
     fn name(&self) -> &'static str {
         "Multiply"
     }
@@ -78,7 +79,7 @@ impl<T: Float> ImplicitOperation<T> for Add {
     }
 }
 
-impl <T: Float> ImplicitComponent<T> for Add {
+impl<T: Float> ImplicitComponent<T> for Add {
     fn name(&self) -> &'static str {
         "Add"
     }
@@ -116,7 +117,7 @@ impl<T: Float> ImplicitOperation<T> for Subtract {
 }
 
 impl<T> ImplicitComponent<T> for Subtract {
-        fn name(&self) -> &'static str {
+    fn name(&self) -> &'static str {
         "Subtract"
     }
 }
@@ -153,9 +154,9 @@ impl<T: Float> ImplicitOperation<T> for Divide {
     }
 }
 
-impl <T: Float> ImplicitComponent<T> for Divide {
+impl<T: Float> ImplicitComponent<T> for Divide {
     fn name(&self) -> &'static str {
-         "Divide"
+        "Divide"
     }
 }
 
@@ -202,7 +203,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for LinearInterpol
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for LinearInterpolation<T>{
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for LinearInterpolation<T> {
     fn parameters(&self) -> &[Parameter] {
         LINEAR_INTERPOLATION_PARAMETERS
     }
@@ -230,4 +231,4 @@ impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for LinearInterpol
             _ => None,
         }
     }
-} 
+}

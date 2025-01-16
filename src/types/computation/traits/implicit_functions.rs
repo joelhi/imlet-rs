@@ -33,14 +33,14 @@ pub trait ImplicitOperation<T>: ImplicitComponent<T> {
 }
 
 /// Trait for general functionality of an implicit component.
-/// 
+///
 /// The trait offers the ability to expose parameters, which can be manipulated at runtime.
 /// By default nothing is exposed.
-pub trait ImplicitComponent<T>: Sync + Send + erased_serde::Serialize  {
+pub trait ImplicitComponent<T>: Sync + Send + erased_serde::Serialize {
     /// Declare variable parameters for the component.
     ///
     /// If no parameters are applicable, this can just return an empty array.
-    fn parameters(&self) -> &[Parameter]{
+    fn parameters(&self) -> &[Parameter] {
         &[]
     }
 
@@ -49,10 +49,10 @@ pub trait ImplicitComponent<T>: Sync + Send + erased_serde::Serialize  {
     /// The provided value should be assigned where intended, using the mutable reference to self.
     ///
     /// If there are no parameters exposed, this shoudn't do anything.
-    fn set_parameter(&mut self, _parameter_name: &str, _data: Data<T>){}
+    fn set_parameter(&mut self, _parameter_name: &str, _data: Data<T>) {}
 
     /// Get the value of a parameter.
-    fn read_parameter(&self, _parameter_name: &str) -> Option<Data<T>>{
+    fn read_parameter(&self, _parameter_name: &str) -> Option<Data<T>> {
         None
     }
 

@@ -42,7 +42,7 @@ impl<T: Float> ImplicitOperation<T> for BooleanUnion {
     }
 }
 
-impl<T> ImplicitComponent<T> for BooleanUnion{
+impl<T> ImplicitComponent<T> for BooleanUnion {
     fn name(&self) -> &'static str {
         "BooleanUnion"
     }
@@ -225,7 +225,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Thickness<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Thickness<T>{
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Thickness<T> {
     fn parameters(&self) -> &[Parameter] {
         THICKNESS_PARAMETERS
     }

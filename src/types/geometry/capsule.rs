@@ -71,7 +71,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Capsule<T> {
     }
 }
 
-impl <T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Capsule<T> {
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Capsule<T> {
     fn parameters(&self) -> &[Parameter] {
         CAPSULE_PARAMS
     }
