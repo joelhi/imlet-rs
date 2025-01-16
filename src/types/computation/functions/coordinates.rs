@@ -290,7 +290,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for XYZValue {
                 "Z" => {
                     self.coordinate_value = CoordinateValue::Z;
                 }
-                _ => panic!("Error in string option"),
+                _ => (),
             };
         }
     }

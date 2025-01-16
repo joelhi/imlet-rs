@@ -61,7 +61,7 @@ impl<T: Float + Send + Sync + Serialize + Pi> ModelComponent<T> {
         }
     }
 
-    pub fn get_parameters(&self) -> Vec<(Parameter, Data<T>)> {
+    pub fn read_parameters(&self) -> Vec<(Parameter, Data<T>)> {
         match self {
             ModelComponent::Constant(value) => vec![(
                 Parameter::new("Value", DataType::Value),

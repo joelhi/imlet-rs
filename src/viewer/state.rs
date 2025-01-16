@@ -48,7 +48,7 @@ impl<'a> State<'a> {
     pub async fn new(window: &'a Window, mesh: &Mesh<f32>, material: &Material) -> Self {
         let size = window.inner_size();
         let dim = mesh.bounds().dimensions();
-        let centroid = mesh.bounds().centroid().convert::<f32>();
+        let centroid = mesh.bounds().centroid();
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::all(),
@@ -70,10 +70,8 @@ impl<'a> State<'a> {
                 &wgpu::DeviceDescriptor {
                     label: None,
                     required_features: wgpu::Features::empty(),
-                    // WebGL doesn't support all of wgpu's features, so if
-                    // we're building for the web we'll have to disable some.
                     required_limits: if cfg!(target_arch = "wasm32") {
-                        wgpu::Limits::downlevel_webgl2_defaults()
+                        wgpu::Limits::downlevel_defaults()
                     } else {
                         wgpu::Limits::default()
                     },

@@ -131,6 +131,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'_, T> 
         );
 
         ScalarField::with_data(bounds.min, cell_size, n, data)
+            .expect("Generated field should have the correct data size")
     }
 }
 

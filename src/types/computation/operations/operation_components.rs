@@ -81,7 +81,7 @@ mod tests {
 
         for &operation in all_operations {
             let mut component = operation.create_default::<f32>();
-            let params = component.get_parameters();
+            let params = component.read_parameters();
 
             for (param, data) in params {
                 component.set_parameter(param.name, data);

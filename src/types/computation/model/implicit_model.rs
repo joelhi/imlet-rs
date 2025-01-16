@@ -644,7 +644,7 @@ impl<T: Float + Send + Sync + Display + Debug + Serialize + 'static + Pi> Displa
         for (name, component) in &self.components {
             writeln!(f, "Component: {}", name)?;
             writeln!(f, "Type: {}", component.type_name())?;
-            let parameters = component.get_parameters();
+            let parameters = component.read_parameters();
             if !parameters.is_empty() {
                 writeln!(f, "Parameters: ")?;
                 for (param, data) in parameters {

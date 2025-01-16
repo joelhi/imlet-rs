@@ -3,14 +3,14 @@ name = "imlet"
 version = "0.1.0"
 edition = "2021"
 authors = ["Joel Hilmersson <d.j.hilmersson@gmail.com>"]
-description = "A lightweight engine for implicit modeling"
+description = "A lightweight engine for implicit modeling."
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/joelhi/imlet-rs"
 documentation = "https://docs.rs/imlet"
 readme = "README.md"
-keywords = ["implicit modeling", "mesh generation", "3d geometry", "marching cubes"]
+keywords = ["implicit geometry", "mesh generation", "3d geometry", "marching cubes"]
 categories = ["3d-geometry","3d-modeling"]
-exclude = ["assets/geometry/*","assets/models/*"]
+exclude = ["assets/geometry/*","assets/models/*","examples","media"]
 
 [dependencies]
 env_logger = "0.11.3"

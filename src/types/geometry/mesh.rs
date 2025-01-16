@@ -210,8 +210,18 @@ impl<T: Float> Mesh<T> {
     }
 
     /// Convert the vertex data type from the current type to a new type Q.
-    pub fn convert<Q: Float>(&self) -> Mesh<Q> {
-        let converted_v: Vec<Vec3<Q>> = self.vertices.iter().map(|v| v.convert::<Q>()).collect();
+    pub fn convert<Q: Float>(&self) -> Option<Mesh<Q>> {
+        let converted_v: Vec<Vec3<Q>> = self
+            .vertices
+            .iter()
+            .filter_map(|v| v.convert::<Q>())
+            .collect();
+
+        if converted_v.len() != self.vertices.len() {
+            // Conversion failed for some vertices.
+            return None;
+        }
+
         let mut m = Mesh::<Q>::new();
 
         m.add_vertices(&converted_v);
@@ -221,7 +231,7 @@ impl<T: Float> Mesh<T> {
             m.compute_vertex_normals();
         }
 
-        m
+        Some(m)
     }
 
     /// Convert the mesh into a list of triangles. The triangles will store the mesh vertex normals if present.
