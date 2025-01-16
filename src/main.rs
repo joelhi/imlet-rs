@@ -99,7 +99,7 @@ fn handle_run_model(matches: &ArgMatches) {
         }
     }
 
-    if !matches.get_flag("show") && !matches.get_one::<String>("save").is_some(){
+    if !matches.get_flag("show") && matches.get_one::<String>("save").is_none() {
         log::warn!("To see the geometry use the --show flag. To save it to a file use --save.");
     }
 }
