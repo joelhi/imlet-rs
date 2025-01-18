@@ -19,7 +19,6 @@ static INPUT_NAMES: [&str; 2] = ["First Number", "Second Number"];
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Multiply {}
 
-/// Create a new Multiply operator
 impl Default for Multiply {
     fn default() -> Self {
         Self::new()
@@ -27,6 +26,7 @@ impl Default for Multiply {
 }
 
 impl Multiply {
+    /// Create a new Multiply operator
     pub fn new() -> Self {
         Self {}
     }

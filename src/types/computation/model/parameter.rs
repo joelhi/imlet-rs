@@ -8,8 +8,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// This offers a public mechanism to change the internal values of functions at runtime. The parameters are defined by a name and a [`DataType`].
 ///
-/// These are returned from the [`parameters`](crate::types::computation::traits::ImplicitFunction::parameters) method
-/// on [`ImplicitFunction`](crate::types::computation::traits::ImplicitFunction) or [`ImplicitOperation`](crate::types::computation::traits::ImplicitOperation)
+/// These are returned from the [`parameters`](crate::types::computation::traits::ImplicitComponent::parameters) method.
 #[derive(Debug, Clone)]
 pub struct Parameter {
     /// Display name of the parameter.

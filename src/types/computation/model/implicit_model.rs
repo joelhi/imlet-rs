@@ -20,31 +20,50 @@ use super::{ComputationGraph, ModelConfig};
 ///
 /// # Example use
 ///
-/// ```rust
-/// // Create a new empty model.
+///```rust
+/// use imlet::types::geometry::{Vec3, BoundingBox, Sphere, Torus};
+/// use imlet::types::computation::{
+///     operations::shape::BooleanUnion,
+///     model::ImplicitModel,
+/// };
 ///
-/// use imlet::types::computation::model::ImplicitModel;
-/// use imlet::types::computation::operations::math::Add;
+/// // Define the model space and parameters
+/// let size = 10.0;
+/// let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
+/// let cell_size = 0.1;
 ///
-/// // Create a new model.
-/// let mut model: ImplicitModel<f64> = ImplicitModel::new();
+/// // Create an empty implicit model
+/// let mut model = ImplicitModel::with_bounds(model_space);
 ///
-/// // Add a constant with a value 1 to the model.
-/// let first_value = model.add_constant("FirstValue", 1.0).unwrap();
-///
-/// // Add another constant with a value 1 to the model.
-/// let second_value = model.add_constant("SecondValue", 1.0).unwrap();
-///
-/// // Add an addition operation that reads the two constants and adds them together.
-/// let sum = model
-///     .add_operation_with_inputs("Sum", Add::new(), &[&first_value, &second_value])
+/// // Add a sphere function
+/// let sphere = model
+///     .add_function(
+///         "Sphere",
+///         Sphere::new(Vec3::new(size / 2.0, size / 2.0, size / 2.0), size / 3.0),
+///     )
 ///     .unwrap();
 ///
-/// // Evaluate the model reading the output of the Sum operation.
-/// let value = model.evaluate_at(&sum, 0.0, 0.0, 0.0).unwrap();
-/// assert_eq!(2.0, value)
+/// // Add a torus function
+/// let torus = model
+///     .add_function(
+///         "Torus",
+///         Torus::new(Vec3::new(size / 2.0, size / 2.0, size / 2.0), size / 5.0, size / 10.0),
+///     )
+///     .unwrap();
 ///
+/// // Combine the sphere and torus using a union operation
+/// let union = model
+///     .add_operation_with_inputs(
+///         "Union",
+///         BooleanUnion::new(),
+///         &[&sphere, &torus],
+///     )
+///     .unwrap();
+///
+/// // Evaluate the model and generate a scalar field
+/// let mesh = model.generate_iso_surface(&union, cell_size).unwrap();
 /// ```
+///
 #[derive(Serialize, Deserialize)]
 pub struct ImplicitModel<T: Float + Send + Sync + Serialize + 'static + Pi> {
     version: String,

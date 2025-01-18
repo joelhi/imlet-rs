@@ -1,11 +1,14 @@
 //! # Distance Functions
 //!
-//! This crate provides various mathematical primitives, periodic surfaces, and custom geometry functions.
+//! This module provide some general functions utils such as coordinates and Triply-Periodic-Surface (TPS) definitions. 
+//! 
+//! The [`MeshFile`] can be used to load an external [.obj] inside an [`ImplicitModel`](crate::types::computation::model::ImplicitModel).
 //!
 //! ## Simple
 //! - [`XDomain`](functions::XDomain)
 //! - [`YDomain`](functions::YDomain)
 //! - [`ZDomain`](functions::ZDomain)
+//! - [`XYZValue`](functions::XYZValue)
 //!
 //! ## Periodic Surface Functions
 //! - [`Gyroid`](functions::Gyroid)
@@ -13,7 +16,6 @@
 //! - [`SchwarzP`](functions::SchwarzP)
 //!
 //! ## Custom
-//! - [`CustomGeometry`](functions::CustomMesh)
 //! - [`MeshFile`](functions::MeshFile)
 
 // Modules
