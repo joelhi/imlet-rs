@@ -7,31 +7,33 @@
  # Imlet
 
  `Imlet` (Implicit Modeling Lightweight Exploration Toolkit) is a lightweight and flexible engine for creating 3D geometries through implicit modeling, written in Rust. 
- It enables the construction of compound spatial functions that can be evaluated and polygonized to generate complex geometries.
+ It enables the construction of compound spatial functions that can be evaluated and polygonized to generate geometric objects.
 
  ## Overview
 
- `Imlet` provides tools for defining and combining distance functions, transforming these into geometric representations, and exporting the results. At its core, it offers a high-level interface for implicit modeling, including:
+ `Imlet` provides tools for defining and combining distance functions, extracting iso-surfaces, and exporting or vieweing the results. At its core, it offers a high-level interface for implicit modeling, including:
 
- ### Key Features
-
- - **Compositional Modeling**: Create complex functions by combining primitives (e.g., spheres, toruses) and operations (e.g., intersections, unions).
- - **Versatile Geometric Types**: Work with [planes](crate::types::geometry::Plane), [lines](crate::types::geometry::Line), [triangle meshes](crate::types::geometry::Mesh), and more.
+ - **Functional Modeling**: Create complex functions by combining primitives (e.g., spheres, toruses) and operations (e.g., intersections, unions).
+ - **Geometric Types**: Work with [planes](crate::types::geometry::Plane), [lines](crate::types::geometry::Line), [triangle meshes](crate::types::geometry::Mesh), and more.
  - **Custom Distance Functions**: Define distance functions mathematically or derive them from external triangle meshes.
  - **Model Serialization**: Save and load models using the `.json` format for easy sharing and reuse.
- - **Mesh Export/Import**: Export results to `.obj` files or import external `.obj` files for custom modeling.
- - **Marching Cubes Algorithm**: Efficient iso-surface extraction for polygonization.
+ - **Mesh Export/Import**: Export results to `.obj` files or import external `.obj` files for custom distance functions.
+ - **Iso-surface extraction**: Efficient iso-surface extraction from discretized scalar fields.
  - **CLI Interface**: Run models and manage `.obj` files directly from the command line.
  - **Built-in Viewer** *(optional)*: Visualize results quickly using the `viewer` feature built on top of `wgpu`.
+
+ For a more in-depth explanation, see the [docs]()
 
 ## How to use
 
 ### Examples
+
 To run a basic example via the terminal and show the result, run the following.
 
 ```cmd
 cargo run --release --example $example --features viewer
 ```
+
 where `$example` is any of the examples in the example dir, like `gyroid` or `bunny`.
 
 ### CLI

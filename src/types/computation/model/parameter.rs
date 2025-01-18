@@ -8,6 +8,9 @@ use serde::{Deserialize, Serialize};
 ///
 /// This offers a public mechanism to change the internal values of functions at runtime. The parameters are defined by a name and a [`DataType`].
 ///
+/// *The main use for the parameters is to change the parameters of models at runtime.*
+/// *The main usecase for this is when building a UI for model building.*
+///
 /// These are returned from the [`parameters`](crate::types::computation::traits::ImplicitComponent::parameters) method.
 #[derive(Debug, Clone)]
 pub struct Parameter {
