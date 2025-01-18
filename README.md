@@ -60,54 +60,46 @@ The model is then evaluated over a 3D space and saved as a mesh in an OBJ file.
 
  ```rust
  use imlet::utils::io::write_obj_file;
-
- use imlet::types::geometry::{Vec3, BoundingBox};
+ use imlet::types::geometry::{Vec3, BoundingBox, Sphere};
  use imlet::types::computation::{
-     distance_functions::{Gyroid, Sphere},
+     functions::Gyroid,
      operations::shape::BooleanIntersection,
  };
+ use imlet::types::computation::model::ImplicitModel;
 
- use imlet_engine::types::computation::ImplicitModel;
+ // Define the model parameters
+ let size = 10.0;
+ let cell_size = 0.1;
+ let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
- fn main() {
+ // Create an implicit model
+ let mut model = ImplicitModel::with_bounds(model_space);
 
-     // Define some model parameters
-     let size: f32 = 10.0;
-     let cell_size = 0.1;
-     let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
+ // Add a sphere to the model
+ let sphere = model
+     .add_function(
+         "Sphere",
+         Sphere::new(Vec3::new(0.5 * size, 0.5 * size, 0.5 * size), 0.45 * size),
+     )
+     .unwrap();
 
-     // Create an empty model
-     let mut model = ImplicitModel::new();
+ // Add a gyroid function to the model
+ let gyroid = model
+     .add_function("Gyroid", Gyroid::with_equal_spacing(2.5, true))
+     .unwrap();
 
-     // Adda a sphere distance function to the model.
-     let sphere = model
-         .add_function(
-             "Sphere",
-             Sphere::new(Vec3::new(0.5 * size, 0.5 * size, 0.5 * size), 0.45 * size),
-         )
-         .unwrap();
-     
-     // Add a gyroid distance function to the model.
-     let gyroid = model
-         .add_function("Gyroid", Gyroid::with_equal_spacing(2.5, true))
-         .unwrap();
+ // Combine the sphere and gyroid using a Boolean intersection
+ let intersection = model
+     .add_operation_with_inputs(
+         "Intersection",
+         BooleanIntersection::new(),
+         &[&sphere, &gyroid],
+     )
+     .unwrap();
 
-     // Add a difference operation to the model, and feed it the output of the sphere and gyroid distance functions.
-     let intersection = model
-         .add_operation_with_inputs(
-             "Intersection",
-             BooleanIntersection::new(),
-             &[&sphere, &gyroid],
-         )
-         .unwrap();
-
-     // Generate an isosurface at the 0 distance.
-     let mesh = model.generate_iso_surface(&intersection, &model_space, cell_size)
-         .unwrap();
-
-     // Write the mesh to an obj file.
-     write_obj_file(&mesh, "output.obj").unwrap();
- }
+ // Generate the iso-surface and save it to an OBJ file
+ let mesh = model.generate_iso_surface(&intersection, cell_size).unwrap();
+ write_obj_file(&mesh, "output.obj").unwrap();
  ```
 
 ## Roadmap
