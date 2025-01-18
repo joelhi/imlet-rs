@@ -24,11 +24,37 @@
  - **CLI Interface**: Run models and manage `.obj` files directly from the command line.
  - **Built-in Viewer** *(optional)*: Visualize results quickly using the `viewer` feature built on top of `wgpu`.
 
- ## Examples
- 
- Below is an example of how to use Imlet to create a 3D model by combining a sphere and a gyroid using an intersection operation.
+## How to use
 
- The model is then evaluated over a 3D space and saved as a mesh in an OBJ file.
+### Examples
+To run a basic example via the terminal and show the result, run the following.
+
+```cmd
+cargo run --release --example $example --features viewer
+```
+where `$example` is any of the examples in the example dir, like `gyroid` or `bunny`.
+
+### CLI
+
+To run a serialized model and show an output you can run the binary, for example
+
+```cmd
+cargo run --release --features viewer -- run-model assets/model/gyroid_model.json Output 0.5 --show
+```
+
+to run the output node of the serialized model `gyroid_model.json` with a cell size of 0.5mm.
+
+### Build a model
+
+Add via cargo.
+
+```
+cargo add imlet
+```
+ 
+Below is an example of how to use Imlet to create a 3D model by combining a sphere and a gyroid using an intersection operation.
+
+The model is then evaluated over a 3D space and saved as a mesh in an OBJ file.
 
  ```rust
  use imlet::utils::io::write_obj_file;
@@ -93,7 +119,7 @@
 
 ### Future Enhancements (2025)
 - [ ] Make model serialization compatible with external impls.
-- [ ] Python binding or other scripting interface to build and compute models. 
+- [ ] Python binding or other scripting interface to build and compute models. (For example using [PyO3](https://github.com/PyO3/pyo3))
 - [ ] GPU computation of models for faster processing. (For example using [CubeCL](https://github.com/tracel-ai/cubecl))
 - [ ] Develop a node editor for visual programming. (For example using [snarl](https://github.com/zakarumych/egui-snarl))
 
