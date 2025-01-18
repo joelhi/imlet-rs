@@ -26,9 +26,9 @@ pub struct ScalarField<T> {
 }
 
 impl<T> ScalarField<T> {
-    /// Create a new field and populate it with data.
+    /// Create a new field from a data buffer.
     ///
-    /// The size of the data buffer must match the point count.
+    /// The size of the data buffer must match the specified point count.
     ///
     /// # Arguments
     ///
@@ -40,7 +40,7 @@ impl<T> ScalarField<T> {
     /// # Returns
     ///
     /// [`Ok`] with the generated [`ScalarField`] if the data matches the point count, or [`Err`] if the data doesn't match.
-    pub fn with_data(
+    pub fn from_data(
         origin: Vec3<T>,
         cell_size: T,
         num_pts: Vec3i,
@@ -361,7 +361,7 @@ mod tests {
         let mut data = vec![1.0; 27];
         data[13] = 2.0;
         let mut field =
-            ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
+            ScalarField::from_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
         field.smooth(0.5, 1);
 
         let field_data = field.copy_data();
@@ -380,7 +380,7 @@ mod tests {
         let mut data = vec![1.0; 27];
         data[13] = 2.0;
         let mut field =
-            ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
+            ScalarField::from_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
         field.smooth(1.0, 1);
 
         let field_data = field.copy_data();
@@ -400,7 +400,7 @@ mod tests {
         data[16] = 15.0;
         data[22] = 20.0;
         let mut field =
-            ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
+            ScalarField::from_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
         field.smooth(1.0, 1);
 
         let field_data = field.copy_data();
@@ -417,7 +417,7 @@ mod tests {
         data[16] = 15.0;
         data[22] = 20.0;
         let mut field =
-            ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
+            ScalarField::from_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
         field.smooth(0.5, 1);
 
         let field_data = field.copy_data();
@@ -432,7 +432,7 @@ mod tests {
         data[21] = 1.5;
 
         let mut field =
-            ScalarField::with_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
+            ScalarField::from_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
         field.threshold(0.1);
 
         let field_data = field.copy_data();

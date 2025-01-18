@@ -32,7 +32,7 @@ pub struct ComputationGraph<'a, T: Float + Send + Sync + Serialize + 'static + P
 
 impl<'a, T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'a, T> {
     /// Create a new, empty, computation graph.
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             components: Vec::new(),
             inputs: Vec::new(),
@@ -40,7 +40,7 @@ impl<'a, T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'a,
     }
 
     /// Add the reference to a [`ModelComponent`] from the main model, which should be computed.
-    pub(crate) fn add_component(
+    pub fn add_component(
         &mut self,
         component: &'a ModelComponent<T>,
         inputs: Vec<ComponentId>,
@@ -130,8 +130,8 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'_, T> 
             before.elapsed()
         );
 
-        ScalarField::with_data(bounds.min, cell_size, n, data)
-            .expect("Generated field should have the correct data size")
+        ScalarField::from_data(bounds.min, cell_size, n, data)
+            .expect("Generated field should have the correct data size.")
     }
 }
 

@@ -9,14 +9,14 @@
 //!
 //! ### Key Features
 //!
-//! - **Compositional Modeling**: Create complex functions by combining primitives (e.g., spheres, toruses) and operations (e.g., intersections, unions).
-//! - **Versatile Geometric Types**: Work with [planes](crate::types::geometry::Plane), [lines](crate::types::geometry::Line), [triangle meshes](crate::types::geometry::Mesh), and more.
+//! - **Functional Modeling**: Create geometris using complex functions by combining distance functions (e.g., spheres, toruses) and operations (e.g., intersections, unions).
+//! - **Geometric Types**: The engine includes the core geometric types, like [Vec3](crate::types::geometry::Vec3), [Plane](crate::types::geometry::Plane), [Mesh](crate::types::geometry::Mesh), and more.
 //! - **Custom Distance Functions**: Define distance functions mathematically or derive them from external triangle meshes.
 //! - **Model Serialization**: Save and load models using the `.json` format for easy sharing and reuse.
-//! - **Mesh Export/Import**: Export results to `.obj` files or import external `.obj` files for custom modeling.
-//! - **Marching Cubes Algorithm**: Efficient iso-surface extraction for polygonization.
-//! - **CLI Interface**: Run models and manage `.obj` files directly from the command line.
-//! - **Built-in Viewer** *(optional)*: Visualize results quickly using the `viewer` feature built on top of `wgpu`.
+//! - **Mesh Export/Import**: Export results to `.obj` files or import external `.obj` files to create custom distance functions.
+//! - **Marching Cubes Algorithm**: Iso-surface extraction for polygonizing scalar fields.
+//! - **CLI Interface**: Run saved models and show `.obj` files directly from the command line.
+//! - **Built-in Viewer** *(optional)*: Visualize mesh outputs quickly using the `viewer` feature built on top of `wgpu`.
 //!
 //! The main modules of the crate are [`types::geometry`] and [`types::computation`], which together form the foundation for creating and manipulating implicit models. At the heart of `Imlet` is the [`ImplicitModel`](types::computation::model::ImplicitModel) struct, which represents the computation graph used for modeling.
 //!
@@ -68,19 +68,7 @@
 //! write_obj_file(&mesh, "output.obj").unwrap();
 //! ```
 //!
-//! ## Modules
-//!
-//! - [`types`]: Defines geometric types and computation structures for building implicit models.
-//! - [`algorithms`]: Includes iso-surface extraction algorithms such as marching cubes.
-//! - [`utils`]: Provides utilities for I/O, logging, and math operations.
-//! - [`viewer`] *(optional)*: Enables visualization of generated geometries (requires the `viewer` feature).
-//!
-//! ## Additional Features
-//!
-//! - **Viewer Integration** *(optional)*: Enable the `viewer` feature to visualize models using a simple graphical interface powered by `wgpu`.
-//!
 //! For detailed usage and API references, explore the module documentation.
-//!
 
 /// The current version of the `Imlet` library.
 pub const IMLET_VERSION: &str = env!("CARGO_PKG_VERSION");

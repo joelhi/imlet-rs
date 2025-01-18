@@ -6,18 +6,23 @@
 
  # Imlet
 
- `Imlet` is a lightweight toolkit for implicit modeling and geometry generation, written in Rust. It provides modular tools for creating 3D geometries using an implicit.
+ `Imlet` (Implicit Modeling Lightweight Exploration Toolkit) is a lightweight and flexible engine for creating 3D geometries through implicit modeling, written in Rust. 
+ It enables the construction of compound spatial functions that can be evaluated and polygonized to generate complex geometries.
 
  ## Overview
 
- **Features in short:**
- * Implicit functions, such as various primitives and periodic surfaces; and operations, such as boolean methods.
- * Interface to build complex implicit models combining various functions with custom processing.
- * Set of tools to create and process geometric objects such as `Points`, `Lines` and `Meshes`.
- * Algorithms to evaluate and extract iso surfaces (as triangle meshes) from implicit models at arbitrary resolutions.
- * Import OBJ files and compute signed distance fields from arbitrary meshes.
- * Export OBJ of generated iso surfaces.
- * Viewer to show generated geometries with some basic post processing tools (WIP)
+ `Imlet` provides tools for defining and combining distance functions, transforming these into geometric representations, and exporting the results. At its core, it offers a high-level interface for implicit modeling, including:
+
+ ### Key Features
+
+ - **Compositional Modeling**: Create complex functions by combining primitives (e.g., spheres, toruses) and operations (e.g., intersections, unions).
+ - **Versatile Geometric Types**: Work with [planes](crate::types::geometry::Plane), [lines](crate::types::geometry::Line), [triangle meshes](crate::types::geometry::Mesh), and more.
+ - **Custom Distance Functions**: Define distance functions mathematically or derive them from external triangle meshes.
+ - **Model Serialization**: Save and load models using the `.json` format for easy sharing and reuse.
+ - **Mesh Export/Import**: Export results to `.obj` files or import external `.obj` files for custom modeling.
+ - **Marching Cubes Algorithm**: Efficient iso-surface extraction for polygonization.
+ - **CLI Interface**: Run models and manage `.obj` files directly from the command line.
+ - **Built-in Viewer** *(optional)*: Visualize results quickly using the `viewer` feature built on top of `wgpu`.
 
  ## Examples
  

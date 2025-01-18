@@ -285,7 +285,7 @@ mod tests {
 
     #[test]
     fn test_generate_iso_surface_2x2x2() {
-        let field = ScalarField::with_data(
+        let field = ScalarField::from_data(
             Vec3::origin(),
             1.0,
             (2, 2, 2).into(),
@@ -305,7 +305,7 @@ mod tests {
 
     #[test]
     fn test_generate_iso_surface_3x2x2() {
-        let field = ScalarField::with_data(
+        let field = ScalarField::from_data(
             Vec3::origin(),
             1.0,
             (3, 2, 2).into(),
