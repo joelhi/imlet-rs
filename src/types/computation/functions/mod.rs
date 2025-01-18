@@ -1,7 +1,7 @@
 //! # Distance Functions
 //!
-//! This module provide some general functions utils such as coordinates and Triply-Periodic-Surface (TPS) definitions. 
-//! 
+//! This module provide some general functions utils such as coordinates and Triply-Periodic-Surface (TPS) definitions.
+//!
 //! The [`MeshFile`](functions::MeshFile) can be used to load an external [.obj] inside an [`ImplicitModel`](crate::types::computation::model::ImplicitModel).
 //!
 //! ## Simple

@@ -19,20 +19,20 @@ const MAX_LEAF_TRIANGLE_COUNT: usize = 12;
 const MAX_TREE_DEPTH: u32 = 10;
 
 /// Distance function from a mesh loaded from a file.
-/// 
+///
 /// # Example
-/// 
+///
 /// ```rust
 /// use imlet::types::computation::{
 ///     functions::MeshFile,
 ///     model::{ImplicitModel, ModelConfig},
 ///     operations::shape::{BooleanIntersection, Thickness},
 /// };
-/// 
+///
 /// // Create mesh file
 /// let mesh_file = MeshFile::<f64>::from_path("assets/geometry/bunny.obj").unwrap();
 /// let bounds = mesh_file.bounds().unwrap();
-/// 
+///
 /// // Build model
 /// let mut model = ImplicitModel::with_bounds(bounds);
 /// let mesh_tag = model.add_function("Mesh", mesh_file).unwrap();

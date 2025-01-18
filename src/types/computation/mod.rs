@@ -11,7 +11,7 @@
 //! - **Triply-Periodic Surfaces (TPS)**: Predefined implicit functions for advanced modeling.
 //! - **Custom Components**: Easily extend functionality by implementing new functions or operations.
 //! - **Extensibility**: Seamlessly integrate geometric primitives and user-defined components within the computation graph.
-//! 
+//!
 //! ## Components of an Implicit Model
 //!
 //! The computation graph in an `ImplicitModel` consists of connected [`ModelComponent`](crate::types::computation::model::ModelComponent).
@@ -29,11 +29,11 @@
 //! ### 2. **[`Operations`](crate::types::computation::model::ModelComponent::Operation)**
 //!
 //! Operations process the outputs of other components to create new behaviors or combine scalar fields. These components allow for:
-//! 
+//!
 //! - **Boolean Operations**: Combine geometries using union, intersection, and subtraction.
 //! - **Arithmetic Operations**: Apply transformations like multiplication or addition to scalar values.
 //! - **Implementation**: A `Operation` component cam contain any struct that implement the [`ImplicitOperation`](crate::types::computation::traits::ImplicitOperation) trait.
-//! 
+//!
 //! The available operations are listed in the [`OperationComponent`](crate::types::computation::operations::OperationComponent) enum.
 //!
 //! ### 3. **[`Constants`](crate::types::computation::model::ModelComponent::Constant)**
@@ -45,10 +45,10 @@
 //! To define new behavior, implement the following traits:
 //! - [`ImplicitFunction`](crate::types::computation::traits::ImplicitFunction) for custom spatial functions.
 //! - [`ImplicitOperation`](crate::types::computation::traits::ImplicitOperation) for custom data transformations.
-//! 
+//!
 //! > ⚠️ **Disclaimer**:
 //! >
-//! > Due to rusts lack of runtime reflection it's currently not possible to deserialize custom [`ImplicitFunction`](crate::types::computation::traits::ImplicitFunction) and [`ImplicitFunction`](crate::types::computation::traits::ImplicitOperation) structs at this point in time. 
+//! > Due to rusts lack of runtime reflection it's currently not possible to deserialize custom [`ImplicitFunction`](crate::types::computation::traits::ImplicitFunction) and [`ImplicitFunction`](crate::types::computation::traits::ImplicitOperation) structs at this point in time.
 
 /// Error types related to model computation.
 mod model_error;

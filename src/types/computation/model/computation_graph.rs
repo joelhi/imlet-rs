@@ -40,11 +40,7 @@ impl<'a, T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'a,
     }
 
     /// Add the reference to a [`ModelComponent`] from the main model, which should be computed.
-    pub fn add_component(
-        &mut self,
-        component: &'a ModelComponent<T>,
-        inputs: Vec<ComponentId>,
-    ) {
+    pub fn add_component(&mut self, component: &'a ModelComponent<T>, inputs: Vec<ComponentId>) {
         self.components.push(component);
         self.inputs.push(inputs);
     }
