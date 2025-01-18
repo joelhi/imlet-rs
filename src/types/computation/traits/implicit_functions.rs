@@ -83,7 +83,7 @@ pub trait ImplicitComponent<T>: Sync + Send + erased_serde::Serialize {
     /// If there are no parameters exposed, this shoudn't do anything.
     fn set_parameter(&mut self, _parameter_name: &str, _data: Data<T>) {}
 
-    /// Get the value of a parameter.
+    /// Read the value of a parameter.
     fn read_parameter(&self, _parameter_name: &str) -> Option<Data<T>> {
         None
     }
