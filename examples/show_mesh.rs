@@ -1,10 +1,17 @@
+use imlet::viewer::DisplaySettings;
+
 pub fn main() {
     env_logger::init();
     #[cfg(feature = "viewer")]
     {
         let mesh: imlet::types::geometry::Mesh<f32> =
             imlet::utils::io::parse_obj_file("assets/geometry/bunny.obj", false, false).unwrap();
-        imlet::viewer::show_mesh(&mesh, Some(mesh.bounds()));
+        let settings = DisplaySettings {
+            show_bounds: true,
+            show_mesh_edges: true,
+            mesh_material: imlet::viewer::Material::Normal,
+        };
+        imlet::viewer::show_mesh_with_settings(&mesh, Some(mesh.bounds()), &settings);
     }
     #[cfg(not(feature = "viewer"))]
     {
