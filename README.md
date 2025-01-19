@@ -43,7 +43,7 @@ where `$example` is any of the examples in the example dir, like `gyroid`, `inte
 To run a serialized model and show an output you can run the binary, for example
 
 ```cmd
-cargo run --release --features viewer -- run-model assets/model/gyroid_model.json Output 0.5 --show
+cargo run --release --features viewer -- run-model assets/models/gyroid_model.json Output 0.5 --show
 ```
 
 to run the `Output` node of the serialized model `gyroid_model.json` with a cell size of 0.5.
