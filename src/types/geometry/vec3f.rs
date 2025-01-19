@@ -252,31 +252,29 @@ impl<T: Float> Vec3<T> {
         ))
     }
 
+    /// Apply a transformation to the Vec.
     pub fn transform(&self, transform: Transform<T>) -> Vec3<T> {
         let rotated = self.rotate(transform.rotation);
         rotated + transform.translation
     }
 
-    pub fn rotate(&self, rotation: Vec3<T>) -> Vec3<T> {
+    pub(crate) fn rotate(&self, rotation: Vec3<T>) -> Vec3<T> {
         let (sin_x, cos_x) = (rotation.x.sin(), rotation.x.cos());
         let (sin_y, cos_y) = (rotation.y.sin(), rotation.y.cos());
         let (sin_z, cos_z) = (rotation.z.sin(), rotation.z.cos());
 
-        // Rotate around the x-axis
         let rotated_x = Vec3 {
             x: self.x,
             y: self.y * cos_x - self.z * sin_x,
             z: self.y * sin_x + self.z * cos_x,
         };
 
-        // Rotate around the y-axis
         let rotated_y = Vec3 {
             x: rotated_x.x * cos_y + rotated_x.z * sin_y,
             y: rotated_x.y,
             z: -rotated_x.x * sin_y + rotated_x.z * cos_y,
         };
 
-        // Rotate around the z-axis
         Vec3::new(
             rotated_y.x * cos_z - rotated_y.y * sin_z,
             rotated_y.x * sin_z + rotated_y.y * cos_z,

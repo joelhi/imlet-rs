@@ -2,15 +2,7 @@
 //!
 //! The `computation` module provides the core tools and abstractions for building, manipulating, and evaluating implicit models. These models represent continuous scalar fields in 3D space and can be used to define and polygonize complex geometries.
 //!
-//! ## Overview
-//!
 //! At the heart of this module is the [`ImplicitModel`](crate::types::computation::model::ImplicitModel), a computation graph composed of reusable components. This graph defines distance functions, and operations representing the scalar fields.
-//!
-//! ### Features
-//!
-//! - **Triply-Periodic Surfaces (TPS)**: Predefined implicit functions for advanced modeling.
-//! - **Custom Components**: Easily extend functionality by implementing new functions or operations.
-//! - **Extensibility**: Seamlessly integrate geometric primitives and user-defined components within the computation graph.
 //!
 //! ## Components of an Implicit Model
 //!

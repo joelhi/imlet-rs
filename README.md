@@ -44,7 +44,7 @@ To run a serialized model and show an output you can run the binary, for example
 cargo run --release --features viewer -- run-model assets/model/gyroid_model.json Output 0.5 --show
 ```
 
-to run the output node of the serialized model `gyroid_model.json` with a cell size of 0.5mm.
+to run the output node of the serialized model `gyroid_model.json` with a cell size of 0.5.
 
 ### Build a model
 

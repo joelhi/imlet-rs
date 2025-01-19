@@ -8,9 +8,19 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/joelhi/imlet-rs"
 documentation = "https://docs.rs/imlet"
 readme = "README.md"
-keywords = ["implicit geometry", "mesh generation", "3d geometry", "marching cubes"]
-categories = ["3d-geometry","3d-modeling"]
-exclude = ["assets/geometry/*","assets/models/*","media",".github/*"]
+keywords = [
+    "implicit geometry",
+    "mesh generation",
+    "3d geometry",
+    "marching cubes",
+    "isosurface extraction",
+]
+
+categories = [
+    "3d-geometry",
+    "3d-modeling",
+]
+exclude = ["assets/models/*","media",".github/*"]
 
 [dependencies]
 env_logger = "0.11.3"

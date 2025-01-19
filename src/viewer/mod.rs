@@ -1,5 +1,5 @@
 mod display_settings;
-pub mod material;
+mod material;
 mod show_mesh;
 mod state;
 
@@ -9,4 +9,5 @@ mod util;
 mod vertex;
 
 pub use display_settings::*;
+pub use material::*;
 pub use show_mesh::*;

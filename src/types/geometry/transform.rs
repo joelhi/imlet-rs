@@ -5,7 +5,7 @@ use super::Vec3;
 
 /// A Transform operation.
 ///
-/// The operation is defined as a translation and rotation component. Can be applied to object implementing the [`Transformable`](super::traits::Transformable) trait.
+/// The operation is defined as a translation and rotation component.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Transform<T> {
     pub translation: Vec3<T>,
@@ -21,10 +21,12 @@ impl<T: Float> Transform<T> {
         }
     }
 
+    /// Create a new transform from a translation.
     pub fn translation(translation: Vec3<T>) -> Self {
         Transform::new(translation, Vec3::origin())
     }
 
+    /// Create a new transform from a rotation.
     pub fn rotation(rotation: Vec3<T>) -> Self {
         Transform::new(Vec3::origin(), rotation)
     }
