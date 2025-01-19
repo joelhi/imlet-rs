@@ -68,6 +68,7 @@ use super::math_helper::Pi;
 ///
 /// * `file_path` - Relative path to the file.
 /// * `flip_yz` - Option to flip the y and z directions. Imlet uses z as up-direction so if the mesh has y, you may want to flip it.
+/// * `read_normals` - Option to read the normals from the `.obj`. If not smooth vertex normals will be calculated automatically. Using `false` is advised if the mesh is to be used as a distance field.
 pub fn parse_obj_file<T: Float + Send + Sync>(
     file_path: &str,
     flip_yz: bool,

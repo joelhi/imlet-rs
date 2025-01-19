@@ -356,6 +356,7 @@ impl<T: Float + Send + Sync> Mesh<T> {
             .collect()
     }
 
+    /// Apply a transformation to the mesh. This modifies the current mesh in-place.
     pub fn transform_self_par(&mut self, transform: Transform<T>) {
         self.vertices.par_iter_mut().for_each(|pt| {
             *pt = pt.transform(transform);

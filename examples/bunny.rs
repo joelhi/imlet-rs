@@ -20,11 +20,11 @@ pub fn main() {
     let mesh_tag = model.add_function("Mesh", mesh_file).unwrap();
 
     let gyroid_tag = model
-        .add_function("Gyroid", Gyroid::with_equal_spacing(5., false))
+        .add_function("Gyroid", Gyroid::with_equal_spacing(7.5, false))
         .unwrap();
 
     let offset_gyroid = model
-        .add_operation_with_inputs("OffsetGyroid", Thickness::new(2.), &[&gyroid_tag])
+        .add_operation_with_inputs("OffsetGyroid", Thickness::new(3.5), &[&gyroid_tag])
         .unwrap();
 
     let output = model
@@ -43,7 +43,6 @@ pub fn main() {
 
     #[cfg(feature = "viewer")]
     {
-        mesh.compute_vertex_normals_par();
         imlet::viewer::show_mesh_with_settings(
             &mesh,
             model.config().map(|c| c.bounds),

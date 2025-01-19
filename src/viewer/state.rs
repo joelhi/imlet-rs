@@ -101,7 +101,7 @@ impl<'a> State<'a> {
         };
         surface.configure(&device, &config);
         let default_position: Point3<f32> =
-            (centroid.x, centroid.z, centroid.y - 2.5 * dim.1).into();
+            (centroid.x, centroid.z, centroid.y - 5. * dim.1).into();
         let default_target: Point3<f32> = (centroid.x, centroid.z, centroid.y).into();
         let camera = OrbitCamera {
             eye: default_position,
