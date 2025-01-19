@@ -69,8 +69,8 @@
 //! ```
 //!
 //! For detailed usage and API references, explore the module documentation.
-//! 
-//! 
+//!
+//!
 
 /// The current version of the `Imlet` library.
 pub const IMLET_VERSION: &str = env!("CARGO_PKG_VERSION");
