@@ -9,11 +9,11 @@ repository = "https://github.com/joelhi/imlet-rs"
 documentation = "https://docs.rs/imlet"
 readme = "README.md"
 keywords = [
-    "implicit geometry",
-    "mesh generation",
-    "3d geometry",
-    "marching cubes",
-    "isosurface extraction",
+    "implicit-geometry",
+    "mesh-generation",
+    "3d-geometry",
+    "marching-cubes",
+    "isosurface-extraction",
 ]
 
 categories = [
