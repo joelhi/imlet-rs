@@ -16,9 +16,9 @@
  ### Key Features
 
  - **Functional Modeling**: Create geometries by combining distance functions (e.g., spheres, toruses) and operations (e.g., intersections, unions).
- - **Geometric Types**: The engine includes the core geometric types, like [Vec3](crate::types::geometry::Vec3), [Plane](crate::types::geometry::Plane), [Mesh](crate::types::geometry::Mesh), and more.
+ - **Geometric Types**: Provides core geometric types, like [Vec3](crate::types::geometry::Vec3), [Plane](crate::types::geometry::Plane), [Mesh](crate::types::geometry::Mesh), and more.
  - **Custom Distance Functions**: Define distance functions mathematically or derive them from external triangle meshes.
- - **Model Serialization**: Save and load models using the `.json` format for easy sharing and reuse.
+ - **Model Serialization**: Save and load models using the `.json` format for sharing and reuse.
  - **Mesh Export/Import**: Export results to `.obj` files or import external `.obj` files to create custom distance functions.
  - **Iso-surfacing**: Efficient iso-surface extraction from discretized scalar fields.
  - **CLI Interface**: Run saved models and show `.obj` files directly from the command line.
