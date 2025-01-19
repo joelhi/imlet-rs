@@ -1,4 +1,4 @@
-# Implicit Modeling Lightweight Exploration Toolkit (Imlet)
+# Imlet
 
  `Imlet` (Implicit Modeling Lightweight Exploration Toolkit) is a lightweight and flexible engine for creating 3D geometries through implicit modeling, written in Rust.
  It enables the construction of compound spatial functions that can be evaluated and polygonized to generate geometries.

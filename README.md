@@ -4,8 +4,6 @@
 [![crates.io](https://img.shields.io/crates/v/imlet.svg)](https://crates.io/crates/imlet)
 [![docs.rs](https://img.shields.io/docsrs/imlet)](https://docs.rs/imlet)
 
-
-
 ![Periodic Surface Example](media/examples.png)
 
  # Imlet
