@@ -1,5 +1,3 @@
-### Implicit Modeling Lightweight Exploration Toolkit (Imlet)
-
 ![Build & Test](https://github.com/joelhi/implicit-rs/actions/workflows/rust.yml/badge.svg)
 [![crates.io](https://img.shields.io/crates/v/imlet.svg)](https://crates.io/crates/imlet)
 [![docs.rs](https://img.shields.io/docsrs/imlet)](https://docs.rs/imlet)
