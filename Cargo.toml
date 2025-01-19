@@ -13,7 +13,7 @@ keywords = [
     "mesh-generation",
     "3d-geometry",
     "marching-cubes",
-    "isosurface-extraction",
+    "isosurface",
 ]
 
 categories = [
