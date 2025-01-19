@@ -13,8 +13,7 @@ keywords = [
     "geometry",
     "mesh-generation",
     "3d",
-    "marching-cubes",
-    "isosurface",
+    "marching-cubes"
 ]
 
 exclude = ["assets/models/*","media",".github/*"]
