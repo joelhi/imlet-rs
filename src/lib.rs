@@ -101,5 +101,5 @@ pub mod utils {
 }
 
 /// Optional viewer for visualizing generated geometries.
-#[cfg(any(feature = "viewer"))]
+#[cfg(feature = "viewer")]
 pub mod viewer;
