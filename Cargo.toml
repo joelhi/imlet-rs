@@ -41,6 +41,5 @@ cgmath = { version = "0.18.0", optional = true }
 pollster = { version = "0.3", optional = true }
 bytemuck = { version = "1.12", features = ["derive"], optional = true }
 
-
 [features]
 viewer = ["winit", "wgpu", "cgmath", "pollster", "bytemuck"]

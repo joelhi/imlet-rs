@@ -5,7 +5,7 @@
 //!
 //! ## Overview
 //!
-//! `Imlet` provides tools for defining and combining distance functions, transforming these into geometric representations, and exporting the results. At its core, it offers a high-level interface for implicit modeling, including:
+//! `Imlet` provides tools for defining and combining distance functions, extracting isosurfaces, and exporting the results. At its core, it offers a high-level interface for implicit modeling, including:
 //!
 //! ### Key Features
 //!
@@ -101,5 +101,5 @@ pub mod utils {
 }
 
 /// Optional viewer for visualizing generated geometries.
-#[cfg(feature = "viewer")]
+#[cfg(any(feature = "viewer"))]
 pub mod viewer;
