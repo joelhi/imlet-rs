@@ -7,13 +7,13 @@ description = "A lightweight engine for implicit modeling."
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/joelhi/imlet-rs"
 documentation = "https://docs.rs/imlet"
-readme = "README.md"
+readme = "README.crates.md"
 keywords = [
-    "implicit-geometry",
+    "implicit",
+    "geometry",
     "mesh-generation",
     "3d",
-    "marching-cubes",
-    "isosurface",
+    "marching-cubes"
 ]
 
 exclude = ["assets/models/*","media",".github/*"]

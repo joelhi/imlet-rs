@@ -1,10 +1,4 @@
- # Imlet
-
-![Build & Test](https://github.com/joelhi/implicit-rs/actions/workflows/rust.yml/badge.svg)
-[![crates.io](https://img.shields.io/crates/v/imlet.svg)](https://crates.io/crates/imlet)
-[![docs.rs](https://img.shields.io/docsrs/imlet)](https://docs.rs/imlet)
-
-![Periodic Surface Example](media/examples.png)
+# Imlet
 
  `Imlet` (Implicit Modeling Lightweight Exploration Toolkit) is a lightweight and flexible engine for creating 3D geometries through implicit modeling, written in Rust.
  It enables the construction of compound spatial functions that can be evaluated and polygonized to generate geometries.
@@ -28,33 +22,7 @@
 
 ## How to use
 
-### Examples
-
-To run a basic example via the terminal and show the result, run the following.
-
-```cmd
-cargo run --release --features viewer --example $example
-```
-
-where `$example` is any of the examples in the example dir, like `gyroid`, `interpolation` or `bunny`.
-
-### CLI
-
-To run a serialized model and show an output you can run the binary, for example
-
-```cmd
-cargo run --release --features viewer -- run-model assets/models/gyroid_model.json Output 0.5 --show
-```
-
-to run the `Output` node of the serialized model `gyroid_model.json` with a cell size of 0.5.
-
 ### Build a model
-
-Add via cargo.
-
-```
-cargo add imlet
-```
  
 Below is an example of how to use Imlet to create a 3D model by combining a sphere and a gyroid using an intersection operation.
 
@@ -103,14 +71,6 @@ The model is then evaluated over a 3D space and saved as a mesh in an OBJ file.
  let mesh = model.generate_iso_surface(&intersection, cell_size).unwrap();
  write_obj_file(&mesh, "output.obj").unwrap();
  ```
-
-## Roadmap
-
-### Future Enhancements (2025)
-- [ ] Make model serialization compatible with external impls.
-- [ ] Python binding or other scripting interface to build and compute models. (For example using [PyO3](https://github.com/PyO3/pyo3))
-- [ ] GPU computation of models for faster processing. (For example using [CubeCL](https://github.com/tracel-ai/cubecl))
-- [ ] Develop a node editor for visual programming. (For example using [snarl](https://github.com/zakarumych/egui-snarl))
 
 ## License
 
