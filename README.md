@@ -6,21 +6,23 @@
 
  # Imlet
 
- `Imlet` (Implicit Modeling Lightweight Exploration Toolkit) is a lightweight and flexible engine for creating 3D geometries through implicit modeling, written in Rust. 
- It enables the construction of compound spatial functions that can be evaluated and polygonized to generate geometric objects.
+ `Imlet` (Implicit Modeling Lightweight Exploration Toolkit) is a lightweight and flexible engine for creating 3D geometries through implicit modeling, written in Rust.
+ It enables the construction of compound spatial functions that can be evaluated and polygonized to generate geometries.
 
  ## Overview
 
- `Imlet` provides tools for defining and combining distance functions, extracting iso-surfaces, and exporting or vieweing the results. At its core, it offers a high-level interface for implicit modeling, including:
+ `Imlet` provides tools for defining and combining distance functions, extracting isosurfaces, and exporting the results. At its core, it offers a high-level interface for implicit modeling, including:
 
- - **Functional Modeling**: Create complex functions by combining primitives (e.g., spheres, toruses) and operations (e.g., intersections, unions).
- - **Geometric Types**: Work with [planes](crate::types::geometry::Plane), [lines](crate::types::geometry::Line), [triangle meshes](crate::types::geometry::Mesh), and more.
+ ### Key Features
+
+ - **Functional Modeling**: Create geometries by combining distance functions (e.g., spheres, toruses) and operations (e.g., intersections, unions).
+ - **Geometric Types**: The engine includes the core geometric types, like [Vec3](crate::types::geometry::Vec3), [Plane](crate::types::geometry::Plane), [Mesh](crate::types::geometry::Mesh), and more.
  - **Custom Distance Functions**: Define distance functions mathematically or derive them from external triangle meshes.
  - **Model Serialization**: Save and load models using the `.json` format for easy sharing and reuse.
- - **Mesh Export/Import**: Export results to `.obj` files or import external `.obj` files for custom distance functions.
- - **Iso-surface extraction**: Efficient iso-surface extraction from discretized scalar fields.
- - **CLI Interface**: Run models and manage `.obj` files directly from the command line.
- - **Built-in Viewer** *(optional)*: Visualize results quickly using the `viewer` feature built on top of `wgpu`.
+ - **Mesh Export/Import**: Export results to `.obj` files or import external `.obj` files to create custom distance functions.
+ - **Iso-surfacing**: Efficient iso-surface extraction from discretized scalar fields.
+ - **CLI Interface**: Run saved models and show `.obj` files directly from the command line.
+ - **Built-in Viewer** *(optional)*: Visualize mesh outputs quickly using the `viewer` feature built on top of `wgpu`.
 
  For a more in-depth explanation, see the [docs]()
 
@@ -31,10 +33,10 @@
 To run a basic example via the terminal and show the result, run the following.
 
 ```cmd
-cargo run --release --example $example --features viewer
+cargo run --release --features viewer --example $example
 ```
 
-where `$example` is any of the examples in the example dir, like `gyroid` or `bunny`.
+where `$example` is any of the examples in the example dir, like `gyroid`, `interpolation` or `bunny`.
 
 ### CLI
 
@@ -44,7 +46,7 @@ To run a serialized model and show an output you can run the binary, for example
 cargo run --release --features viewer -- run-model assets/model/gyroid_model.json Output 0.5 --show
 ```
 
-to run the output node of the serialized model `gyroid_model.json` with a cell size of 0.5.
+to run the `Output` node of the serialized model `gyroid_model.json` with a cell size of 0.5.
 
 ### Build a model
 
@@ -103,13 +105,6 @@ The model is then evaluated over a 3D space and saved as a mesh in an OBJ file.
  ```
 
 ## Roadmap
-
-### Base Features
-- [x] Handle normals in obj import/export.
-- [x] Improve normal interpolation to reduce leaking.
-- [x] Simple mesh viewer with wgpu.
-- [x] Some cli tools to run and show models.
-- [ ] Finish docs.
 
 ### Future Enhancements (2025)
 - [ ] Make model serialization compatible with external impls.
