@@ -11,15 +11,11 @@ readme = "README.md"
 keywords = [
     "implicit-geometry",
     "mesh-generation",
-    "3d-geometry",
+    "3d",
     "marching-cubes",
     "isosurface",
 ]
 
-categories = [
-    "3d-geometry",
-    "3d-modeling",
-]
 exclude = ["assets/models/*","media",".github/*"]
 
 [dependencies]
