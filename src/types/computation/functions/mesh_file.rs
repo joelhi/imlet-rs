@@ -114,7 +114,7 @@ impl<T: Float + Send + Sync> MeshFile<T> {
 
     /// Return the bounds of the mesh in the file.
     pub fn bounds(&self) -> Option<BoundingBox<T>> {
-        self.geometry_data.as_ref().map(|tree| tree.bounds())
+        self.geometry_data.as_ref().and_then(|tree| tree.bounds())
     }
 }
 
