@@ -26,7 +26,6 @@ impl<Q, T: Float> Octree<Q, T> {
     /// Create a new empty octree. To build the octree, add some objects and call [`Octree::build`].
     /// # Arguments
     ///
-    /// * `objects` - The objects contained in the tree.
     /// * `max_depth` - Maximum allowed recursive depth when constructing the tree.
     /// * `max_objects` - Maximum number of objects per leaf node.
     pub fn new(max_depth: u32, max_objects: usize) -> Self {
@@ -47,7 +46,7 @@ impl<Q, T: Float> Octree<Q, T> {
         self.root.as_ref().map(|r| r.all_bounds())
     }
 
-    /// Returns the full bounds of the octree
+    /// Returns the full bounds of the octree if built.
     pub fn bounds(&self) -> Option<BoundingBox<T>> {
         self.root.as_ref().map(|r| r.bounds)
     }
@@ -64,6 +63,8 @@ impl<Q: SpatialQuery<T>, T: Float> Octree<Q, T> {
     }
 
     /// Build the octree from the objects.
+    /// 
+    /// The method returns itself.
     pub fn build(mut self) -> Self {
         let mut node = OctreeNode::new(
             BoundingBox::from_objects(&self.objects).offset(T::from(0.1).unwrap()),
@@ -94,6 +95,7 @@ impl<Q: SpatialQuery<T>, T: Float> Octree<Q, T> {
     /// # Arguments
     ///
     /// * `query_point` - The point from which the search is carried out.
+    /// * `search_distance` - The limit distance for object retrieval.
     ///
     /// # Returns
     ///
