@@ -259,8 +259,9 @@ impl<T: Float> Mesh<T> {
     /// * `max_triangles` - Maximum number of triangles per leaf node.
     pub fn compute_octree(&self, max_depth: u32, max_triangles: usize) -> Octree<Triangle<T>, T> {
         let before = Instant::now();
-        let mut tree = Octree::new(&self.as_triangles(), max_depth, max_triangles);
-        tree.build();
+        let tree = Octree::new(max_depth, max_triangles)
+            .add_objects(&self.as_triangles())
+            .build();
 
         log::info!(
             "Octree computed for mesh with {} triangles in {:.2?}",

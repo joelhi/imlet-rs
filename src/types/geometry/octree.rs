@@ -22,15 +22,16 @@ pub struct Octree<Q, T> {
     max_objects: usize,
 }
 
-impl<Q: Clone, T: Float> Octree<Q, T> {
-    /// Create a new empty octree.
+impl<Q, T: Float> Octree<Q, T> {
+    /// Create a new empty octree. To build the octree, add some objects and call [`Octree::build`].
     /// # Arguments
     ///
+    /// * `objects` - The objects contained in the tree.
     /// * `max_depth` - Maximum allowed recursive depth when constructing the tree.
     /// * `max_objects` - Maximum number of objects per leaf node.
-    pub fn new(objects: &[Q], max_depth: u32, max_objects: usize) -> Self {
+    pub fn new(max_depth: u32, max_objects: usize) -> Self {
         Self {
-            objects: objects.to_vec(),
+            objects: Vec::new(),
             root: None,
             max_depth,
             max_objects,
@@ -53,8 +54,17 @@ impl<Q: Clone, T: Float> Octree<Q, T> {
 }
 
 impl<Q: SpatialQuery<T>, T: Float> Octree<Q, T> {
+    /// Add objects to the octree. This method takes ownership of and returns self, and can be used in a builder-like pattern.
+    ///
+    /// * `objects` - The objects to add to the octree.
+    pub fn add_objects(mut self, objects: &[Q]) -> Self {
+        self.objects.extend_from_slice(objects);
+
+        self
+    }
+
     /// Build the octree from the objects.
-    pub fn build(&mut self) {
+    pub fn build(mut self) -> Self {
         let mut node = OctreeNode::new(
             BoundingBox::from_objects(&self.objects).offset(T::from(0.1).unwrap()),
             (0..self.objects.len()).collect(),
@@ -62,6 +72,8 @@ impl<Q: SpatialQuery<T>, T: Float> Octree<Q, T> {
         node.build(self.max_depth, self.max_objects, &self.objects);
 
         self.root = Some(node);
+
+        self
     }
 
     /// Compute the closest point in the octree to a query point.
