@@ -64,7 +64,7 @@ impl<Q: SpatialQuery<T>, T: Float> Octree<Q, T> {
 
     /// Build the octree from the objects.
     /// 
-    /// The method returns itself.
+    /// The method returns will return the built octree.
     pub fn build(mut self) -> Self {
         let mut node = OctreeNode::new(
             BoundingBox::from_objects(&self.objects).offset(T::from(0.1).unwrap()),
