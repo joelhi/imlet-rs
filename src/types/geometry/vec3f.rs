@@ -39,6 +39,7 @@ impl<T: Float> Vec3<T> {
     }
 
     /// Create a unit X-axis.
+    
     pub fn x_axis() -> Vec3<T> {
         Self {
             x: T::one(),
@@ -81,6 +82,7 @@ impl<T: Float> Vec3<T> {
     ///
     /// # Arguments
     /// * `pt` - Other point to compare coordinates to.
+    #[inline(always)]
     pub fn max(&self, other: &Vec3<T>) -> Vec3<T> {
         Vec3::new(
             self.x.max(other.x),
@@ -182,7 +184,7 @@ impl<T: Float> Vec3<T> {
         }
     }
 
-    /// Computes the cangle between two Vec3 values.
+    /// Computes the angle between two Vec3 values.
     /// # Arguments
     ///
     /// * `rhs` - Vec to compute angle with.
