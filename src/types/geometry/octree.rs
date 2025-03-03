@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 use log::debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
@@ -227,6 +225,7 @@ impl<T: Float> OctreeNode<T> {
         self.object_indices.clear();
     }
 
+    #[inline(always)]
     fn bounding_box_closer_than(&self, point: &Vec3<T>, dist_sq: T) -> bool {
         if self.bounds.contains(point) {
             return true;
@@ -252,37 +251,28 @@ impl<T: Float> OctreeNode<T> {
                 *best_dist_sq = dist_sq;
                 *best_point = closest_point;
                 *best_object = all_objects[index];
+  
+                if *best_dist_sq == T::zero() {
+                    return;
+                }
             }
         }
-
+    
         if let Some(ref children) = self.children {
-            let mut child_nodes: Vec<&OctreeNode<T>> =
-                children.iter().filter_map(|c| c.as_ref()).collect();
+            let mut child_nodes: Vec<_> = children.iter().filter_map(|c| {
+                c.as_ref().map(|child| {
+                    let closest_dist_sq = child.bounds.closest_point(point).distance_to_vec3_squared(point);
+                    (child, closest_dist_sq)
+                })
+            }).filter(|(_, d)| *d <= *best_dist_sq).collect();
+    
+            child_nodes.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
-            child_nodes.sort_by(|a, b| {
-                let a_dist = &a
-                    .bounds
-                    .closest_point(point)
-                    .distance_to_vec3_squared(point);
-                let b_dist = &b
-                    .bounds
-                    .closest_point(point)
-                    .distance_to_vec3_squared(point);
-                a_dist
-                    .partial_cmp(b_dist)
-                    .unwrap_or(std::cmp::Ordering::Equal)
-            });
-
-            for child in child_nodes {
-                if child.bounding_box_closer_than(point, *best_dist_sq) {
-                    child.closest_point_recursive(
-                        point,
-                        best_dist_sq,
-                        best_point,
-                        best_object,
-                        all_objects,
-                    );
+            for (child, closest_dist_sq) in child_nodes {
+                if closest_dist_sq >= *best_dist_sq {
+                    break;
                 }
+                child.closest_point_recursive(point, best_dist_sq, best_point, best_object, all_objects);
             }
         }
     }
