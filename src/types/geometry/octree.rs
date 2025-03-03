@@ -225,17 +225,6 @@ impl<T: Float> OctreeNode<T> {
         self.object_indices.clear();
     }
 
-    #[inline(always)]
-    fn bounding_box_closer_than(&self, point: &Vec3<T>, dist_sq: T) -> bool {
-        if self.bounds.contains(point) {
-            return true;
-        }
-
-        let closest = self.bounds.closest_point(point);
-        let closest_dist_sq = point.distance_to_vec3_squared(&closest);
-        closest_dist_sq < dist_sq
-    }
-
     fn closest_point_recursive<Q: SpatialQuery<T>>(
         &self,
         point: &Vec3<T>,
