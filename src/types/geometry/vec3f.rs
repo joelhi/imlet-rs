@@ -93,6 +93,7 @@ impl<T: Float> Vec3<T> {
     ///
     /// # Arguments
     /// * `pt` - Other point to compute distance to.
+    #[inline(always)]
     pub fn distance_to_vec3(&self, pt: &Vec3<T>) -> T {
         self.distance_to_vec3_squared(pt).sqrt()
     }
@@ -103,6 +104,7 @@ impl<T: Float> Vec3<T> {
     /// * `x` - X coordinate.
     /// * `y` - Y coordinate.
     /// * `z` - Z coordinate.
+    #[inline(always)]
     pub fn distance_to_coord(&self, x: T, y: T, z: T) -> T {
         self.distance_to_coord_squared(x, y, z).sqrt()
     }
@@ -111,6 +113,7 @@ impl<T: Float> Vec3<T> {
     ///
     /// # Arguments
     /// * `pt` - Other point to compute distance to.
+    #[inline(always)]
     pub fn distance_to_vec3_squared(&self, pt: &Vec3<T>) -> T {
         self.distance_to_coord_squared(pt.x, pt.y, pt.z)
     }
@@ -121,6 +124,7 @@ impl<T: Float> Vec3<T> {
     /// * `x` - X coordinate.
     /// * `y` - Y coordinate.
     /// * `z` - Z coordinate.
+    #[inline(always)]
     pub fn distance_to_coord_squared(&self, x: T, y: T, z: T) -> T {
         (self.x - x).powi(2) + (self.y - y).powi(2) + (self.z - z).powi(2)
     }
@@ -131,6 +135,7 @@ impl<T: Float> Vec3<T> {
     /// * `start` - Vec to interpolate from.
     /// * `end` - Vec to interpolate to.
     /// * `t` - Parameter value, clamped between [0, 1].
+    #[inline(always)]
     pub fn interpolate(start: &Vec3<T>, end: &Vec3<T>, t: T) -> Vec3<T> {
         let clamped = t.clamp(T::zero(), T::one());
         Self {
@@ -146,6 +151,7 @@ impl<T: Float> Vec3<T> {
     ///
     /// # Arguments
     /// * `rhs` - Vec to compute dot product with.
+    #[inline(always)]
     pub fn dot(&self, rhs: &Vec3<T>) -> T {
         (self.x * rhs.x) + (self.y * rhs.y) + (self.z * rhs.z)
     }
@@ -158,6 +164,7 @@ impl<T: Float> Vec3<T> {
     /// * `x` - X coordinate.
     /// * `y` - Y coordinate.
     /// * `z` - Z coordinate.
+    #[inline(always)]
     pub fn dot_coord(&self, x: T, y: T, z: T) -> T {
         (self.x * x) + (self.y * y) + (self.z * z)
     }
@@ -166,6 +173,7 @@ impl<T: Float> Vec3<T> {
     /// # Arguments
     ///
     /// * `rhs` - Vec to compute cross product with.
+    #[inline(always)]
     pub fn cross(&self, rhs: &Vec3<T>) -> Vec3<T> {
         Self {
             x: self.y * rhs.z - self.z * rhs.y,
@@ -191,6 +199,7 @@ impl<T: Float> Vec3<T> {
     }
 
     /// Compute the total length of a vector (distance to origin).
+    #[inline(always)]
     pub fn magnitude(&self) -> T {
         self.distance_to_coord(T::zero(), T::zero(), T::zero())
     }
@@ -199,6 +208,7 @@ impl<T: Float> Vec3<T> {
     /// # Arguments
     ///
     /// * `scalar` - Scale factor.
+    #[inline(always)]
     pub fn scale(self, scalar: T) -> Vec3<T> {
         Vec3 {
             x: self.x * scalar,
@@ -208,6 +218,7 @@ impl<T: Float> Vec3<T> {
     }
 
     /// Normalize the vector, giving it a unit length.
+    #[inline(always)]
     pub fn normalize(&self) -> Vec3<T> {
         *self * (T::one() / self.magnitude())
     }
