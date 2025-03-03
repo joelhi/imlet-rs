@@ -1,5 +1,8 @@
 # imlet - Changelog
 
+## Latest
+- Octree performance improvements. [#27](https://github.com/joelhi/imlet-rs/pull/27)
+
 ## v0.1.1 (2025-02-5)
 - Add badges to readme ([#25](https://github.com/joelhi/imlet-rs/pull/25))
 - Update octree to use indexed list, to use less memory and reduce the serialized file size ([#26](https://github.com/joelhi/imlet-rs/pull/26))
