@@ -39,7 +39,6 @@ impl<T: Float> Vec3<T> {
     }
 
     /// Create a unit X-axis.
-    
     pub fn x_axis() -> Vec3<T> {
         Self {
             x: T::one(),

@@ -240,28 +240,41 @@ impl<T: Float> OctreeNode<T> {
                 *best_dist_sq = dist_sq;
                 *best_point = closest_point;
                 *best_object = all_objects[index];
-  
+
                 if *best_dist_sq == T::zero() {
                     return;
                 }
             }
         }
-    
+
         if let Some(ref children) = self.children {
-            let mut child_nodes: Vec<_> = children.iter().filter_map(|c| {
-                c.as_ref().map(|child| {
-                    let closest_dist_sq = child.bounds.closest_point(point).distance_to_vec3_squared(point);
-                    (child, closest_dist_sq)
+            let mut child_nodes: Vec<_> = children
+                .iter()
+                .filter_map(|c| {
+                    c.as_ref().map(|child| {
+                        let closest_dist_sq = child
+                            .bounds
+                            .closest_point(point)
+                            .distance_to_vec3_squared(point);
+                        (child, closest_dist_sq)
+                    })
                 })
-            }).filter(|(_, d)| *d <= *best_dist_sq).collect();
-    
+                .filter(|(_, d)| *d <= *best_dist_sq)
+                .collect();
+
             child_nodes.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
             for (child, closest_dist_sq) in child_nodes {
                 if closest_dist_sq >= *best_dist_sq {
                     break;
                 }
-                child.closest_point_recursive(point, best_dist_sq, best_point, best_object, all_objects);
+                child.closest_point_recursive(
+                    point,
+                    best_dist_sq,
+                    best_point,
+                    best_object,
+                    all_objects,
+                );
             }
         }
     }

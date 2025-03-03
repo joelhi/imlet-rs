@@ -61,6 +61,7 @@ impl<T: Float + Send + Sync + Serialize + Pi> ModelComponent<T> {
         }
     }
 
+    /// Read the parameters and data from the component.
     pub fn read_parameters(&self) -> Vec<(Parameter, Data<T>)> {
         match self {
             ModelComponent::Constant(value) => vec![(

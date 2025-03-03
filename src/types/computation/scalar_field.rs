@@ -16,7 +16,9 @@ use crate::utils::math_helper::index3d_from_index1d;
 
 use super::ModelError;
 
-/// 3-dimensional field for scalar values.
+/// 3-dimensional dense field for scalar values.
+///
+/// The geometry of the fields is defined by an origin point, a cell size and a point count in x,y and z directions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScalarField<T> {
     origin: Vec3<T>,
@@ -93,14 +95,17 @@ impl<T> ScalarField<T> {
         ]
     }
 
+    #[inline(always)]
     pub(crate) fn point_index1d(&self, i: usize, j: usize, k: usize) -> usize {
         index1d_from_index3d(i, j, k, self.n.i, self.n.j, self.n.k)
     }
 
+    #[inline(always)]
     pub(crate) fn point_index3d(&self, index: usize) -> (usize, usize, usize) {
         index3d_from_index1d(index, self.n.i, self.n.j, self.n.k)
     }
 
+    #[inline(always)]
     pub(crate) fn cell_index3d(&self, index: usize) -> (usize, usize, usize) {
         index3d_from_index1d(index, self.n.i - 1, self.n.j - 1, self.n.k - 1)
     }
