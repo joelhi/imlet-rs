@@ -405,7 +405,7 @@ impl<T: Float> OctreeNode<T> {
 
         direction.magnitude()
     }
-}       
+}
 
 impl<Q: SignedQuery<T> + Send + Sync, T: Float + Send + Sync> SignedDistance<T> for Octree<Q, T> {
     fn signed_distance(&self, x: T, y: T, z: T) -> T {
