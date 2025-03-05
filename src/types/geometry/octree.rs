@@ -58,13 +58,13 @@ impl<Q: SpatialQuery<T>, T: Float> Octree<Q, T> {
     }
 
     /// Set the max depth of the tree.
-    pub fn with_max_depth(mut self, max_depth: usize) -> Self{
+    pub fn with_max_depth(mut self, max_depth: usize) -> Self {
         self.max_depth = max_depth;
 
         self
     }
 
-    pub fn with_max_leaf_size(mut self, max_leaf_size: usize) -> Self{
+    pub fn with_max_leaf_size(mut self, max_leaf_size: usize) -> Self {
         self.max_leaf_size = max_leaf_size;
 
         self
@@ -134,6 +134,12 @@ impl<Q: SignedQuery<T>, T: Float> Octree<Q, T> {
         } else {
             self.root.signed_distance(query_point, &self.objects)
         }
+    }
+}
+
+impl<Q, T: Float> Default for Octree<Q, T> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
