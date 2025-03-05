@@ -18,12 +18,12 @@ impl Pi for f64 {
     }
 }
 
-#[inline]
+#[inline(always)]
 pub(crate) fn normalize<T: Float>(value: T, min: T, max: T) -> T {
     (value - min) / (max - min)
 }
 
-#[inline]
+#[inline(always)]
 pub(crate) fn index1d_from_index3d(
     i: usize,
     j: usize,
@@ -39,7 +39,7 @@ pub(crate) fn index1d_from_index3d(
     (k * num_x * num_y) + (j * num_x) + i
 }
 
-#[inline]
+#[inline(always)]
 pub(crate) fn index3d_from_index1d(
     index: usize,
     num_x: usize,
@@ -55,7 +55,7 @@ pub(crate) fn index3d_from_index1d(
     (i, j, k)
 }
 
-#[inline]
+#[inline(always)]
 pub(crate) fn format_integer(n: usize) -> String {
     let mut s = n.to_string();
     let len = s.len();

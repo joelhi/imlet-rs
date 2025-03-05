@@ -15,8 +15,8 @@ use crate::{
     utils::io::parse_obj_file,
 };
 
-const MAX_LEAF_TRIANGLE_COUNT: usize = 12;
-const MAX_TREE_DEPTH: u32 = 10;
+const MAX_LEAF_TRIANGLE_COUNT: usize = 24;
+const MAX_TREE_DEPTH: u32 = 12;
 
 /// Distance function from a mesh loaded from a file.
 ///

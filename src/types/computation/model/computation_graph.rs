@@ -88,7 +88,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'_, T> 
     }
 
     /// Retrieve the values for the inputs of a component.
-    #[inline]
+    #[inline(always)]
     pub fn inputs(
         &self,
         component_id: usize,
