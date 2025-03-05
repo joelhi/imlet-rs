@@ -1,4 +1,3 @@
-use log::debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
@@ -7,17 +6,15 @@ use super::{
     BoundingBox, Vec3,
 };
 
-type OctreeChildren<T> = Box<[Option<OctreeNode<T>>; 8]>;
-
 /// Octree used for storing object and accelerating closest point and distance queries.
 ///
 /// The octree can be built for any geometric object which implements the relevant traits.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Octree<Q, T> {
     objects: Vec<Q>,
-    root: Option<OctreeNode<T>>,
-    max_depth: u32,
-    max_objects: usize,
+    root: OctreeNode<T>,
+    max_depth: usize,
+    max_leaf_size: usize,
 }
 
 impl<Q, T: Float> Octree<Q, T> {
@@ -26,12 +23,12 @@ impl<Q, T: Float> Octree<Q, T> {
     ///
     /// * `max_depth` - Maximum allowed recursive depth when constructing the tree.
     /// * `max_objects` - Maximum number of objects per leaf node.
-    pub fn new(max_depth: u32, max_objects: usize) -> Self {
+    pub fn new() -> Self {
         Self {
             objects: Vec::new(),
-            root: None,
-            max_depth,
-            max_objects,
+            root: OctreeNode::Empty,
+            max_depth: 10,
+            max_leaf_size: 24,
         }
     }
 
@@ -40,13 +37,13 @@ impl<Q, T: Float> Octree<Q, T> {
     /// # Returns
     ///
     /// * A list of all the bounding boxes.
-    pub fn all_bounds(&self) -> Option<Vec<BoundingBox<T>>> {
-        self.root.as_ref().map(|r| r.all_bounds())
+    pub fn all_bounds(&self) -> Vec<BoundingBox<T>> {
+        self.root.all_bounds()
     }
 
     /// Returns the full bounds of the octree if built.
     pub fn bounds(&self) -> Option<BoundingBox<T>> {
-        self.root.as_ref().map(|r| r.bounds)
+        self.root.bounds()
     }
 }
 
@@ -54,8 +51,21 @@ impl<Q: SpatialQuery<T>, T: Float> Octree<Q, T> {
     /// Add objects to the octree. This method takes ownership of and returns self, and can be used in a builder-like pattern.
     ///
     /// * `objects` - The objects to add to the octree.
-    pub fn add_objects(mut self, objects: &[Q]) -> Self {
+    pub fn with_objects(mut self, objects: &[Q]) -> Self {
         self.objects.extend_from_slice(objects);
+
+        self
+    }
+
+    /// Set the max depth of the tree.
+    pub fn with_max_depth(mut self, max_depth: usize) -> Self{
+        self.max_depth = max_depth;
+
+        self
+    }
+
+    pub fn with_max_leaf_size(mut self, max_leaf_size: usize) -> Self{
+        self.max_leaf_size = max_leaf_size;
 
         self
     }
@@ -64,13 +74,13 @@ impl<Q: SpatialQuery<T>, T: Float> Octree<Q, T> {
     ///
     /// The method returns the built octree.
     pub fn build(mut self) -> Self {
-        let mut node = OctreeNode::new(
+        self.root = OctreeNode::build(
             BoundingBox::from_objects(&self.objects).offset(T::from(0.1).unwrap()),
             (0..self.objects.len()).collect(),
+            self.max_depth,
+            self.max_leaf_size,
+            &self.objects,
         );
-        node.build(self.max_depth, self.max_objects, &self.objects);
-
-        self.root = Some(node);
 
         self
     }
@@ -84,9 +94,11 @@ impl<Q: SpatialQuery<T>, T: Float> Octree<Q, T> {
     ///
     /// * A tuple with the closest point and the object on which it was found.
     pub fn closest_point(&self, query_point: &Vec3<T>) -> Option<(Vec3<T>, Q)> {
-        self.root
-            .as_ref()
-            .map(|r| r.closest_point(query_point, &self.objects))
+        if matches!(self.root, OctreeNode::Empty) {
+            None
+        } else {
+            Some(self.root.closest_point(query_point, &self.objects))
+        }
     }
 
     /// Collect all the objects in the tree withing a certain distance from a point.
@@ -102,15 +114,13 @@ impl<Q: SpatialQuery<T>, T: Float> Octree<Q, T> {
         let mut objects = Vec::new();
         let mut num_objects = 0;
 
-        if let Some(root) = &self.root {
-            root.collect_nearby_objects(
-                query_point,
-                search_distance,
-                &mut objects,
-                &mut num_objects,
-                &self.objects,
-            );
-        }
+        self.root.collect_nearby_objects(
+            query_point,
+            search_distance,
+            &mut objects,
+            &mut num_objects,
+            &self.objects,
+        );
 
         objects
     }
@@ -118,28 +128,37 @@ impl<Q: SpatialQuery<T>, T: Float> Octree<Q, T> {
 
 impl<Q: SignedQuery<T>, T: Float> Octree<Q, T> {
     pub fn signed_distance(&self, query_point: &Vec3<T>) -> T {
-        if let Some(root) = &self.root {
-            root.signed_distance(query_point, &self.objects)
-        } else {
+        if matches!(self.root, OctreeNode::Empty) {
             log::warn!("Octree not built yet.");
             T::nan()
+        } else {
+            self.root.signed_distance(query_point, &self.objects)
         }
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub(crate) struct OctreeNode<T> {
-    pub bounds: BoundingBox<T>,
-    pub object_indices: Vec<usize>,
-    pub children: Option<OctreeChildren<T>>,
+pub(crate) enum OctreeNode<T> {
+    /// Empty node.
+    Empty,
+    /// Internal node with children.
+    Internal {
+        bounds: BoundingBox<T>,
+        children: Box<[OctreeNode<T>; 8]>,
+    },
+    /// Leaf node with objects
+    Leaf {
+        bounds: BoundingBox<T>,
+        object_indices: Vec<usize>,
+    },
 }
 
 impl<T: Float> OctreeNode<T> {
-    pub fn new(bounds: BoundingBox<T>, object_indices: Vec<usize>) -> Self {
-        Self {
-            bounds,
-            object_indices,
-            children: None,
+    pub fn bounds(&self) -> Option<BoundingBox<T>> {
+        match self {
+            OctreeNode::Empty => None,
+            OctreeNode::Internal { bounds, .. } => Some(*bounds),
+            OctreeNode::Leaf { bounds, .. } => Some(*bounds),
         }
     }
 
@@ -149,12 +168,20 @@ impl<T: Float> OctreeNode<T> {
         bounds
     }
 
-    fn collect_bounds(&self, bounds: &mut Vec<BoundingBox<T>>) {
-        bounds.push(self.bounds);
-
-        if let Some(ref children) = self.children {
-            for child in children.iter().flatten() {
-                child.collect_bounds(bounds);
+    fn collect_bounds(&self, all_bounds: &mut Vec<BoundingBox<T>>) {
+        match self {
+            OctreeNode::Empty => {}
+            OctreeNode::Internal {
+                bounds: _,
+                children,
+            } => {
+                children.iter().for_each(|c| c.collect_bounds(all_bounds));
+            }
+            OctreeNode::Leaf {
+                bounds,
+                object_indices: _,
+            } => {
+                all_bounds.push(*bounds);
             }
         }
     }
@@ -162,67 +189,77 @@ impl<T: Float> OctreeNode<T> {
 
 impl<T: Float> OctreeNode<T> {
     pub fn build<Q: SpatialQuery<T>>(
-        &mut self,
-        max_depth: u32,
+        bounds: BoundingBox<T>,
+        object_indices: Vec<usize>,
+        max_depth: usize,
         max_triangles: usize,
         all_objects: &[Q],
-    ) {
-        if self.object_indices.len() <= max_triangles || max_depth == 0 {
-            if max_depth == 0 && self.object_indices.len() > max_triangles {
-                debug!(
-                    "Reached max depth of octree with {} triangles. Please increase allowed depth.",
-                    self.object_indices.len()
-                );
-            }
-            debug!(
-                "Built octree node with {} triangles and depth {}",
-                self.object_indices.len(),
-                max_depth
-            );
-            return;
+    ) -> OctreeNode<T> {
+        if object_indices.is_empty() {
+            // No objects
+            return OctreeNode::Empty;
+        } else if object_indices.len() <= max_triangles || max_depth == 0 {
+            // Reached a leaf.
+            return OctreeNode::Leaf {
+                bounds,
+                object_indices,
+            };
         }
 
-        let center = self.bounds.min + (self.bounds.max - self.bounds.min) * T::from(0.5).unwrap();
-        let mut children: OctreeChildren<T> = Default::default();
+        let center = bounds.min + (bounds.max - bounds.min) * T::from(0.5).unwrap();
+        let mut children = [
+            OctreeNode::Empty,
+            OctreeNode::Empty,
+            OctreeNode::Empty,
+            OctreeNode::Empty,
+            OctreeNode::Empty,
+            OctreeNode::Empty,
+            OctreeNode::Empty,
+            OctreeNode::Empty,
+        ];
 
-        for i in 0..8 {
+        for (i, child) in children.iter_mut().enumerate() {
             let offset = Vec3::<T>::new(
                 if i & 1 == 0 {
                     T::zero()
                 } else {
-                    center.x - self.bounds.min.x
+                    center.x - bounds.min.x
                 },
                 if i & 2 == 0 {
                     T::zero()
                 } else {
-                    center.y - self.bounds.min.y
+                    center.y - bounds.min.y
                 },
                 if i & 4 == 0 {
                     T::zero()
                 } else {
-                    center.z - self.bounds.min.z
+                    center.z - bounds.min.z
                 },
             );
 
-            let child_min = self.bounds.min + offset;
+            let child_min = bounds.min + offset;
             let child_max = center + offset;
             let child_bounds = BoundingBox::new(child_min, child_max);
 
-            let mut child_indices = Vec::new();
-            for &index in self.object_indices.iter() {
-                if all_objects[index].bounds().intersects(&child_bounds) {
-                    child_indices.push(index);
-                }
-            }
+            let child_indices = object_indices
+                .iter()
+                .filter(|&&index| all_objects[index].bounds().intersects(&child_bounds))
+                .copied()
+                .collect();
 
-            if !child_indices.is_empty() {
-                let mut child_node = OctreeNode::new(child_bounds, child_indices);
-                child_node.build(max_depth - 1, max_triangles, all_objects);
-                children[i] = Some(child_node);
-            }
+            *child = OctreeNode::build(
+                child_bounds,
+                child_indices,
+                max_depth - 1,
+                max_triangles,
+                all_objects,
+            );
         }
-        self.children = Some(children);
-        self.object_indices.clear();
+
+        OctreeNode::Internal {
+            bounds,
+            children: Box::new(children),
+        }
     }
 
     fn closest_point_recursive<Q: SpatialQuery<T>>(
@@ -233,48 +270,57 @@ impl<T: Float> OctreeNode<T> {
         best_object: &mut Q,
         all_objects: &[Q],
     ) {
-        for &index in &self.object_indices {
-            let closest_point = all_objects[index].closest_point(point);
-            let dist_sq = point.distance_to_vec3_squared(&closest_point);
-            if dist_sq < *best_dist_sq {
-                *best_dist_sq = dist_sq;
-                *best_point = closest_point;
-                *best_object = all_objects[index];
+        match self {
+            OctreeNode::Empty => todo!(),
+            OctreeNode::Internal {
+                bounds: _,
+                children,
+            } => {
+                let mut child_nodes = children
+                    .iter()
+                    .filter_map(|c| {
+                        c.bounds().map(|b| {
+                            let closest_dist =
+                                b.closest_point(point).distance_to_vec3_squared(point);
+                            (c, closest_dist)
+                        })
+                    })
+                    .filter(|(_, dist_sq)| *dist_sq < *best_dist_sq)
+                    .collect::<Vec<_>>();
 
-                if *best_dist_sq == T::zero() {
-                    return;
+                child_nodes
+                    .sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+
+                for (child, closest_dist_sq) in child_nodes {
+                    if closest_dist_sq >= *best_dist_sq {
+                        break;
+                    }
+                    child.closest_point_recursive(
+                        point,
+                        best_dist_sq,
+                        best_point,
+                        best_object,
+                        all_objects,
+                    );
                 }
             }
-        }
+            OctreeNode::Leaf {
+                bounds: _,
+                object_indices,
+            } => {
+                for &index in object_indices {
+                    let closest_point = all_objects[index].closest_point(point);
+                    let dist_sq = point.distance_to_vec3_squared(&closest_point);
+                    if dist_sq < *best_dist_sq {
+                        *best_dist_sq = dist_sq;
+                        *best_point = closest_point;
+                        *best_object = all_objects[index];
 
-        if let Some(ref children) = self.children {
-            let mut child_nodes: Vec<_> = children
-                .iter()
-                .filter_map(|c| {
-                    c.as_ref().map(|child| {
-                        let closest_dist_sq = child
-                            .bounds
-                            .closest_point(point)
-                            .distance_to_vec3_squared(point);
-                        (child, closest_dist_sq)
-                    })
-                })
-                .filter(|(_, d)| *d <= *best_dist_sq)
-                .collect();
-
-            child_nodes.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
-
-            for (child, closest_dist_sq) in child_nodes {
-                if closest_dist_sq >= *best_dist_sq {
-                    break;
+                        if *best_dist_sq == T::zero() {
+                            return;
+                        }
+                    }
                 }
-                child.closest_point_recursive(
-                    point,
-                    best_dist_sq,
-                    best_point,
-                    best_object,
-                    all_objects,
-                );
             }
         }
     }
@@ -305,27 +351,36 @@ impl<T: Float> OctreeNode<T> {
         num_objects: &mut usize,
         all_objects: &[Q],
     ) {
-        if self.bounds.contains(point) {
-            for &index in &self.object_indices {
-                if all_objects[index]
-                    .closest_point(point)
-                    .distance_to_vec3(point)
-                    < search_distance
-                {
-                    objects.push(all_objects[index]);
-                    *num_objects += 1;
+        match self {
+            OctreeNode::Empty => {}
+            OctreeNode::Internal { bounds, children } => {
+                if bounds.closest_point(point).distance_to_vec3(point) < search_distance {
+                    for child in children.iter() {
+                        child.collect_nearby_objects(
+                            point,
+                            search_distance,
+                            objects,
+                            num_objects,
+                            all_objects,
+                        );
+                    }
                 }
             }
-
-            if let Some(ref children) = self.children {
-                for child in children.iter().filter_map(|c| c.as_ref()) {
-                    child.collect_nearby_objects(
-                        point,
-                        search_distance,
-                        objects,
-                        num_objects,
-                        all_objects,
-                    );
+            OctreeNode::Leaf {
+                bounds,
+                object_indices,
+            } => {
+                if bounds.closest_point(point).distance_to_vec3(point) < search_distance {
+                    for &index in object_indices {
+                        if all_objects[index]
+                            .closest_point(point)
+                            .distance_to_vec3(point)
+                            < search_distance
+                        {
+                            objects.push(all_objects[index]);
+                            *num_objects += 1;
+                        }
+                    }
                 }
             }
         }
@@ -367,13 +422,13 @@ mod tests {
 
         let m: Mesh<f64> = parse_obj_file("assets/geometry/sphere.obj", false, false).unwrap();
         let octree = m.compute_octree(10, 12);
-        let bounds = octree.all_bounds().unwrap();
+        let bounds = octree.all_bounds();
 
         assert!(
-            bounds.len() == 183,
+            bounds.len() == 158,
             "Incorrect number of bounds. Was {} but expected {}",
             bounds.len(),
-            183
+            158
         );
     }
 
