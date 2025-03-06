@@ -16,7 +16,7 @@ use crate::{
 };
 
 const MAX_LEAF_TRIANGLE_COUNT: usize = 24;
-const MAX_TREE_DEPTH: u32 = 12;
+const MAX_TREE_DEPTH: usize = 12;
 
 /// Distance function from a mesh loaded from a file.
 ///
