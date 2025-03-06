@@ -106,6 +106,8 @@ The model is then evaluated over a 3D space and saved as a mesh in an OBJ file.
 
 ## Roadmap
 
+The project is still in the early phase of development, so expect breaking changes. Below is a non-exhaustive list of improvements that are on my radar for the next steps.
+
 ### Future Enhancements (2025)
 - [ ] Make model serialization compatible with external impls.
 - [ ] Python binding or other scripting interface to build and compute models. (For example using [PyO3](https://github.com/PyO3/pyo3))
