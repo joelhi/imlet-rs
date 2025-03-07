@@ -16,7 +16,7 @@
  ### Key Features
 
  - **Functional Modeling**: Create geometries by combining distance functions (e.g., spheres, toruses) and operations (e.g., intersections, unions).
- - **Geometric Types**: Provides core geometric types, like [Vec3](crate::types::geometry::Vec3), [Plane](crate::types::geometry::Plane), [Mesh](crate::types::geometry::Mesh), and more.
+ - **Geometric Types**: Provides core geometric types, like `Vec3`, `Plane`, `Mesh`, and more.
  - **Custom Distance Functions**: Define distance functions mathematically or derive them from external triangle meshes.
  - **Model Serialization**: Save and load implicit models using the `.json` format for sharing and reuse.
  - **Mesh Export/Import**: Export results to `.obj` files or import external `.obj` files to create custom distance functions.
@@ -105,6 +105,9 @@ The model is then evaluated over a 3D space and saved as a mesh in an OBJ file.
  ```
 
 ## Roadmap
+
+The project is still in the early phase of development, so expect breaking API changes as the library keeps developing. 
+Below is a non-exhaustive list of improvements that are on my radar for the next steps.
 
 ### Future Enhancements (2025)
 - [ ] Make model serialization compatible with external impls.
