@@ -3,6 +3,8 @@
  `Imlet` (Implicit Modeling Lightweight Exploration Toolkit) is a lightweight and flexible engine for creating 3D geometries through implicit modeling, written in Rust.
  It enables the construction of compound spatial functions that can be evaluated and polygonized to generate geometries.
 
+ The project is still in the early phase of development, so expect breaking API changes as the library keeps developing.
+
  ## Overview
 
  `Imlet` provides tools for defining and combining distance functions, extracting isosurfaces, and exporting the results. At its core, it offers a high-level interface for implicit modeling, including:
@@ -10,7 +12,7 @@
  ### Key Features
 
  - **Functional Modeling**: Create geometries by combining distance functions (e.g., spheres, toruses) and operations (e.g., intersections, unions).
- - **Geometric Types**: Provides core geometric types, like [Vec3](crate::types::geometry::Vec3), [Plane](crate::types::geometry::Plane), [Mesh](crate::types::geometry::Mesh), and more.
+ - **Geometric Types**: Provides core geometric types, like `Vec3`, `Plane`, `Mesh`, and more.
  - **Custom Distance Functions**: Define distance functions mathematically or derive them from external triangle meshes.
  - **Model Serialization**: Save and load implicit models using the `.json` format for sharing and reuse.
  - **Mesh Export/Import**: Export results to `.obj` files or import external `.obj` files to create custom distance functions.
