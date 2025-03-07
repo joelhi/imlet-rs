@@ -1,6 +1,6 @@
 # imlet - Changelog
 
-## v0.1.2 (2025-03-06)
+## v0.1.2 (2025-03-07)
 - Update Octree to use enum internally. [#28](https://github.com/joelhi/imlet-rs/pull/28)
 - Octree performance improvements. [#27](https://github.com/joelhi/imlet-rs/pull/27)
 
