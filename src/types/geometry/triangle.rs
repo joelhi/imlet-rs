@@ -175,6 +175,10 @@ impl<T: Float> Triangle<T> {
 
         let d21 = v2.dot(&v1);
         let denom = d00 * d11 - d01 * d01;
+        if denom.abs() < T::epsilon() {
+            return Vec3::new(T::zero(), T::zero(), T::zero());
+        }
+
         let v = (d11 * d20 - d01 * d21) / denom;
         let w = (d00 * d21 - d01 * d20) / denom;
         let u = T::one() - v - w;
