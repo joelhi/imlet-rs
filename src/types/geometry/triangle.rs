@@ -167,7 +167,7 @@ impl<T: Float> Triangle<T> {
         let v0 = self.p2() - self.p1();
         let v1 = self.p3() - self.p1();
         let v2 = *query_point - self.p1();
-        
+
         let d00 = v0.dot(&v0);
         let d01 = v0.dot(&v1);
         let d11 = v1.dot(&v1);
@@ -178,7 +178,7 @@ impl<T: Float> Triangle<T> {
         let v = (d11 * d20 - d01 * d21) / denom;
         let w = (d00 * d21 - d01 * d20) / denom;
         let u = T::one() - v - w;
-        
+
         Vec3::new(u, v, w)
     }
 
