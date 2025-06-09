@@ -164,16 +164,26 @@ impl<T: Float> Triangle<T> {
     ///
     /// * `query_point` - Point to compute the barycentric coordinate for.
     pub fn barycentric_coord(&self, query_point: &Vec3<T>) -> Vec3<T> {
-        let v1 = self.p1() - self.p3();
-        let v2 = self.p2() - self.p3();
-        let cross = v1.cross(&v2);
-        let det = cross.magnitude();
+        let v0 = self.p2() - self.p1();
+        let v1 = self.p3() - self.p1();
+        let v2 = *query_point - self.p1();
 
-        let v = *query_point - self.p3();
+        let d00 = v0.dot(&v0);
+        let d01 = v0.dot(&v1);
+        let d11 = v1.dot(&v1);
+        let d20 = v2.dot(&v0);
 
-        let a = v2.cross(&v).magnitude() / det;
-        let b = v.cross(&v1).magnitude() / det;
-        Vec3::new(a, b, T::one() - a - b)
+        let d21 = v2.dot(&v1);
+        let denom = d00 * d11 - d01 * d01;
+        if denom.abs() < T::epsilon() {
+            return Vec3::new(T::zero(), T::zero(), T::zero());
+        }
+
+        let v = (d11 * d20 - d01 * d21) / denom;
+        let w = (d00 * d21 - d01 * d20) / denom;
+        let u = T::one() - v - w;
+
+        Vec3::new(u, v, w)
     }
 
     /// Spherical interpolation of the vertex normal and a barycentrict coordinate.
