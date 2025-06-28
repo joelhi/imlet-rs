@@ -56,7 +56,6 @@ impl<T: Float + Default + Copy + Send + Sync + Serialize + 'static + Pi> SparseF
         graph: &ComputationGraph<T>,
         min_val: T,
         max_val: T,
-        sampling_mode: SamplingMode,
     ) -> Result<(), ModelError> {
         let before = Instant::now();
         if self.root.table.is_empty() {
@@ -70,7 +69,7 @@ impl<T: Float + Default + Copy + Send + Sync + Serialize + 'static + Pi> SparseF
                     min_val,
                     max_val,
                     self.config.leaf_size,
-                    sampling_mode,
+                    self.config.sampling_mode,
                 );
             }
         }

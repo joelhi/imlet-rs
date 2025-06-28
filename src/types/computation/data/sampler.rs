@@ -155,7 +155,6 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi + Serialize + Default>
             &comp_graph,
             self.min_val,
             self.max_val,
-            self.sparse_config.sampling_mode,
         )?;
         self.field = Some(sparse_field);
         Ok(self.field.as_ref().unwrap())
