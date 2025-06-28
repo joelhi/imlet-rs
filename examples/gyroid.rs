@@ -17,7 +17,7 @@ pub fn main() {
     let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
     // Build model
-    let mut model = ImplicitModel::with_bounds(model_space);
+    let mut model = ImplicitModel::new();
 
     let sphere_tag = model
         .add_function(

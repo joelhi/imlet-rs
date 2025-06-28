@@ -5,7 +5,7 @@ use imlet::{
                 BlockSize, SamplingMode, SparseFieldConfig,
             },
             functions::{Gyroid, MeshFile},
-            model::{ImplicitModel, ModelConfig},
+            model::{ImplicitModel},
             operations::shape::{BooleanIntersection, Thickness},
         },
     utils::{
@@ -20,9 +20,9 @@ pub fn main() {
     let cell_size = 0.5;
     let mesh_file = MeshFile::from_path("assets/geometry/bunny.obj").unwrap();
     let bounds = mesh_file.bounds().unwrap().offset(cell_size);
+    
     // Build model
     let mut model = ImplicitModel::new();
-    model.set_config(ModelConfig::with_smoothing(bounds, 2, 0.75));
 
     let mesh_tag = model.add_function("Mesh", mesh_file).unwrap();
 

@@ -2,7 +2,7 @@ use imlet::{
     types::computation::{
         data::sampler::{DenseSampler, Sampler},
         functions::{Gyroid, MeshFile},
-        model::{ImplicitModel, ModelConfig},
+        model::{ImplicitModel},
         operations::shape::{BooleanIntersection, Thickness},
     },
     utils::{self, io::write_obj_file},
@@ -16,7 +16,6 @@ pub fn main() {
     let bounds = mesh_file.bounds().unwrap().offset(cell_size);
     // Build model
     let mut model = ImplicitModel::new();
-    model.set_config(ModelConfig::with_smoothing(bounds, 2, 0.75));
 
     let mesh_tag = model.add_function("Mesh", mesh_file).unwrap();
 

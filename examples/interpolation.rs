@@ -21,7 +21,7 @@ pub fn main() {
     let bounds = mesh_file.bounds().unwrap().offset(cell_size);
 
     // Build model
-    let mut model = ImplicitModel::with_bounds(bounds);
+    let mut model = ImplicitModel::new();
 
     let sphere_tag = model
         .add_function(

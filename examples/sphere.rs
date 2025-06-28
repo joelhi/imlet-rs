@@ -1,7 +1,7 @@
 use imlet::{
     types::{
         computation::{
-            data::sampler::{self, DenseSampler, Sampler},
+            data::sampler::{DenseSampler, Sampler},
             model::ImplicitModel,
         },
         geometry::{BoundingBox, Sphere, Vec3},
@@ -22,7 +22,7 @@ pub fn main() {
     );
 
     // Function
-    let mut model = ImplicitModel::with_bounds(model_space);
+    let mut model = ImplicitModel::new();
 
     let sphere_node = model
         .add_function(
