@@ -45,8 +45,7 @@
 /// Error types related to model computation.
 mod model_error;
 
-/// Utilities for scalar field manipulation and evaluation.
-mod scalar_field;
+pub mod data;
 
 /// Predefined functions, including triply-periodic surfaces (TPS).
 pub mod functions;
@@ -61,4 +60,3 @@ pub mod operations;
 pub mod traits;
 
 pub use model_error::*;
-pub use scalar_field::*;
