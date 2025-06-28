@@ -1,7 +1,6 @@
-use crate::algorithms::marching_cubes::generate_iso_surface;
 use crate::types::computation::traits::{ImplicitFunction, ImplicitOperation};
-use crate::types::computation::{ModelError, ScalarField};
-use crate::types::geometry::{BoundingBox, Mesh};
+use crate::types::computation::ModelError;
+use crate::types::geometry::BoundingBox;
 use crate::utils::math_helper::Pi;
 use crate::IMLET_VERSION;
 use log::{debug, info};
@@ -620,7 +619,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         Ok(graph)
     }
 
-    fn compile(&self, target: &str) -> Result<ComputationGraph<T>, ModelError> {
+    pub(crate) fn compile(&self, target: &str) -> Result<ComputationGraph<T>, ModelError> {
         let before = Instant::now();
         let target_output = target.to_string();
 
@@ -700,72 +699,6 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     pub fn evaluate_at(&self, output: &str, x: T, y: T, z: T) -> Result<T, ModelError> {
         let computation_graph = self.compile(output)?;
         Ok(computation_graph.evaluate_at_coord(x, y, z))
-    }
-
-    /// Compute a discrete scalar field from the model.
-    /// # Arguments
-    ///
-    /// * `output` - The tag of the component for which the output should be stored in the field.
-    /// * `bounds` - The domain to compute.
-    /// * `cell_size` - The resolution at which the domain is computed.
-    ///
-    /// # Returns
-    ///      
-    /// * `Result<ScalarField<T>, ModelError> ` - The scalar field holding the computed data, or an error if not successful.
-    pub fn generate_field(
-        &self,
-        output: &str,
-        bounds: &BoundingBox<T>,
-        cell_size: T,
-    ) -> Result<ScalarField<T>, ModelError> {
-        let computation_graph = self.compile(output)?;
-        Ok(computation_graph.evaluate(bounds, cell_size))
-    }
-
-    /// Extract the iso surface at the zero-level.
-    /// # Arguments
-    ///
-    /// * `output` - The tag of the component which output should be used for the iso surface extraction.
-    /// * `bounds` - The domain to compute.
-    /// * `cell_size` - The resolution at which the domain is computed.
-    ///
-    /// # Returns
-    ///      
-    /// * `Result<Mesh<T>, ModelError>` - The iso surface represented as an indexed triangle mesh, or an error if not successful.
-    pub fn generate_iso_surface(&self, output: &str, cell_size: T) -> Result<Mesh<T>, ModelError> {
-        self.generate_iso_surface_at(output, cell_size, T::zero())
-    }
-
-    /// Extract the iso surface at a specified level.
-    /// # Arguments
-    ///
-    /// * `output` - The tag of the component which output should be used for the iso surface extraction.
-    /// * `bounds` - The domain to compute.
-    /// * `cell_size` - The resolution at which the domain is computed.
-    /// * `iso_value` - Specific value at which the iso surface should be extracted.
-    ///
-    /// # Returns
-    ///      
-    /// * `Result<Mesh<T>, ModelError>` - The iso surface represented as an indexed triangle mesh, or an error if not successful.    
-    pub fn generate_iso_surface_at(
-        &self,
-        output: &str,
-        cell_size: T,
-        iso_value: T,
-    ) -> Result<Mesh<T>, ModelError> {
-        if let Some(config) = &self.config {
-            let mut field = self.generate_field(output, &config.bounds, cell_size)?;
-            field.smooth(config.smoothing_factor, config.smoothing_iter);
-
-            if config.cap {
-                field.padding(T::one());
-            }
-
-            let triangles = generate_iso_surface(&field, iso_value);
-            return Ok(Mesh::from_triangles(&triangles, false));
-        }
-
-        Err(ModelError::MissingConfig())
     }
 }
 
