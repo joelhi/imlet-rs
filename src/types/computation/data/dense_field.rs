@@ -8,60 +8,36 @@ use rayon::iter::ParallelIterator;
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::types::computation::data::field_iterator::CellIterator;
+use crate::types::computation::data::field_iterator::DenseCellValueIterator;
+use crate::types::computation::data::field_iterator::GridIterator;
+use crate::types::computation::model::ComputationGraph;
+use crate::types::computation::ModelError;
+use crate::types::geometry::BoundingBox;
 use crate::types::geometry::Vec3;
 use crate::types::geometry::Vec3i;
 use crate::utils;
 use crate::utils::math_helper::index1d_from_index3d;
 use crate::utils::math_helper::index3d_from_index1d;
+use crate::utils::math_helper::Pi;
 
-use super::ModelError;
+use super::field_iterator::{
+    CellGridIter, CellGridIterator, CellValueIterator, PointGridIter, PointIterator, ValueIterator,
+};
 
 /// 3-dimensional dense field for scalar values.
 ///
 /// The geometry of the fields is defined by an origin point, a cell size and a point count in x,y and z directions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ScalarField<T> {
+pub struct DenseField<T> {
     origin: Vec3<T>,
     cell_size: T,
     n: Vec3i,
     data: Vec<T>,
+    bounds: BoundingBox<T>,
 }
 
-impl<T> ScalarField<T> {
-    /// Create a new field from a data buffer.
-    ///
-    /// The size of the data buffer must match the specified point count.
-    ///
-    /// # Arguments
-    ///
-    /// * `origin` - The base of the field, and the first value location in space.
-    /// * `cell_size` - The size of each cell in the field.
-    /// * `num_pts` - Number of points in each direction.
-    /// * `data` - The data buffer.
-    ///
-    /// # Returns
-    ///
-    /// [`Ok`] with the generated [`ScalarField`] if the data matches the point count, or [`Err`] if the data doesn't match.
-    pub fn from_data(
-        origin: Vec3<T>,
-        cell_size: T,
-        num_pts: Vec3i,
-        data: Vec<T>,
-    ) -> Result<Self, ModelError> {
-        if num_pts.product() != data.len() {
-            return Err(ModelError::Custom(
-                "Failed to generate field from data. Point count and data length must match"
-                    .to_owned(),
-            ));
-        }
-        Ok(Self {
-            origin,
-            cell_size,
-            n: num_pts,
-            data,
-        })
-    }
-
+impl<T> DenseField<T> {
     /// Returns the origin of the field.
     pub fn origin(&self) -> &Vec3<T> {
         &self.origin
@@ -106,12 +82,19 @@ impl<T> ScalarField<T> {
     }
 
     #[inline(always)]
+    #[allow(dead_code)]
+    pub(crate) fn cell_index1d(&self, i: usize, j: usize, k: usize) -> usize {
+        index1d_from_index3d(i, j, k, self.n.i - 1, self.n.j - 1, self.n.k - 1)
+    }
+
+    #[inline(always)]
+    #[allow(dead_code)]
     pub(crate) fn cell_index3d(&self, index: usize) -> (usize, usize, usize) {
         index3d_from_index1d(index, self.n.i - 1, self.n.j - 1, self.n.k - 1)
     }
 }
 
-impl<T: Float> ScalarField<T> {
+impl<T: Float> DenseField<T> {
     /// Create a new empty field.
     /// # Arguments
     ///
@@ -119,17 +102,84 @@ impl<T: Float> ScalarField<T> {
     /// * `cell_size` - The size of each cell in the field.
     /// * `num_pts` - Number of points in each direction.
     pub fn new(origin: Vec3<T>, cell_size: T, num_pts: Vec3i) -> Self {
+        let size = Vec3::new(
+            cell_size * T::from(num_pts.i - 1).unwrap(),
+            cell_size * T::from(num_pts.j - 1).unwrap(),
+            cell_size * T::from(num_pts.k - 1).unwrap(),
+        );
+        let bounds = BoundingBox::new(origin, origin + size);
         Self {
             origin,
             cell_size,
             n: num_pts,
             data: vec![T::zero(); num_pts.product()],
+            bounds,
         }
+    }
+
+    /// Create a new empty field from bounds and a cell size
+    /// # Arguments
+    ///
+    /// * `bounds` - The extents of the field.
+    /// * `cell_size` - The size of each cell in the field.
+    pub fn from_bounds(bounds: &BoundingBox<T>, cell_size: T) -> Self {
+        DenseField::new(
+            bounds.min,
+            cell_size,
+            DenseField::point_count(bounds, cell_size),
+        )
+    }
+
+    /// Create a new field from a data buffer.
+    ///
+    /// The size of the data buffer must match the specified point count.
+    ///
+    /// # Arguments
+    ///
+    /// * `origin` - The base of the field, and the first value location in space.
+    /// * `cell_size` - The size of each cell in the field.
+    /// * `num_pts` - Number of points in each direction.
+    /// * `data` - The data buffer.
+    ///
+    /// # Returns
+    ///
+    /// [`Ok`] with the generated [`ScalarField`] if the data matches the point count, or [`Err`] if the data doesn't match.
+    pub fn from_data(
+        origin: Vec3<T>,
+        cell_size: T,
+        num_pts: Vec3i,
+        data: Vec<T>,
+    ) -> Result<Self, ModelError> {
+        if num_pts.product() != data.len() {
+            return Err(ModelError::Custom(
+                "Failed to generate field from data. Point count and data length must match"
+                    .to_owned(),
+            ));
+        }
+        Ok(Self {
+            origin,
+            cell_size,
+            n: num_pts,
+            data,
+            bounds: BoundingBox::new(
+                origin,
+                origin
+                    + Vec3::new(
+                        cell_size * T::from(num_pts.i - 1).unwrap(),
+                        cell_size * T::from(num_pts.j - 1).unwrap(),
+                        cell_size * T::from(num_pts.k - 1).unwrap(),
+                    ),
+            ),
+        })
     }
 
     /// Returns the cell size of the field.
     pub fn cell_size(&self) -> T {
         self.cell_size
+    }
+
+    pub fn set_value(&mut self, index: usize, value: T) {
+        self.data[index] = value;
     }
 
     /// Returns a copy of the data buffer in the field.
@@ -320,9 +370,64 @@ impl<T: Float> ScalarField<T> {
             before.elapsed()
         );
     }
+
+    pub(crate) fn point_count(bounds: &BoundingBox<T>, cell_size: T) -> Vec3i {
+        let (x_dim, y_dim, z_dim) = bounds.dimensions();
+        Vec3i::new(
+            (x_dim / cell_size)
+                .floor()
+                .to_usize()
+                .expect("Failed to get point count from bounds. Make sure the bounds have a positive size in all directions.")
+                + 1,
+            (y_dim / cell_size)
+                .floor()
+                .to_usize()
+                .expect("Failed to get point count from bounds. Make sure the bounds have a positive size in all directions.")
+                + 1,
+            (z_dim / cell_size)
+                .floor()
+                .to_usize()
+                .expect("Failed to get point count from bounds. Make sure the bounds have a positive size in all directions.")
+                + 1,
+        )
+    }
 }
 
-impl<T: Float + Send + Sync> ScalarField<T> {
+impl<T: Float + Send + Sync + Serialize + 'static + Pi> DenseField<T> {
+    /// Evaluate the computation graph over a discretized domain.
+    pub(crate) fn sample_from_graph(&mut self, graph: &ComputationGraph<T>) {
+        let before = Instant::now();
+
+        log::info!(
+            "Evaluating model with {}x{}x{} points",
+            self.n.i,
+            self.n.j,
+            self.n.k
+        );
+
+        let n = self.n;
+        self.data
+            .par_iter_mut()
+            .enumerate()
+            .for_each(|(index, value)| {
+                let (i, j, k) = index3d_from_index1d(index, n.i, n.j, n.k);
+                *value = graph.evaluate_at_coord(
+                    self.origin.x
+                        + self.cell_size * T::from(i).expect("Failed to convert number to T"),
+                    self.origin.y
+                        + self.cell_size * T::from(j).expect("Failed to convert number to T"),
+                    self.origin.z
+                        + self.cell_size * T::from(k).expect("Failed to convert number to T"),
+                );
+            });
+
+        log::info!(
+            "Dense value buffer for {} points generated in {:.2?}",
+            utils::math_helper::format_integer(n.product()),
+            before.elapsed()
+        );
+    }
+
     /// Performs a laplacian smoothing operation on the field data using parallel iteration.
     ///
     /// The value of each point will be updated based on the average of the adjacent points.
@@ -357,6 +462,75 @@ impl<T: Float + Send + Sync> ScalarField<T> {
     }
 }
 
+impl<T: Float> PointIterator<T> for DenseField<T> {
+    fn iter_points(&self) -> PointGridIter<T> {
+        PointGridIter::new(self.bounds.clone(), self.n.into())
+    }
+
+    type Iter<'a>
+        = PointGridIter<T>
+    where
+        T: 'a;
+}
+
+impl<T: Float> GridIterator<T> for DenseField<T> {
+    type GridIter<'a>
+        = PointGridIter<T>
+    where
+        Self: 'a;
+
+    fn iter_grid<'a>(&'a self) -> Self::GridIter<'a> {
+        PointGridIter::new(self.bounds, self.n.into())
+    }
+}
+impl<T: Float> CellIterator<T> for DenseField<T> {
+    type Iter<'a>
+        = CellGridIter<T>
+    where
+        T: 'a;
+
+    fn iter_cells(&self) -> CellGridIter<T> {
+        self.iter_cell_grid()
+    }
+}
+
+impl<T: Float> CellGridIterator<T> for DenseField<T> {
+    fn iter_cell_grid(&self) -> CellGridIter<T> {
+        CellGridIter::new(
+            self.bounds.clone(),
+            (self.n.i - 1, self.n.j - 1, self.n.k - 1),
+        )
+    }
+
+    type GridIter<'a>
+        = CellGridIter<T>
+    where
+        Self: 'a;
+}
+
+impl<T: Float + 'static> ValueIterator<T> for DenseField<T> {
+    type Iter<'a> = std::iter::Copied<std::slice::Iter<'a, T>>;
+
+    fn iter_values<'a>(&'a self) -> Self::Iter<'a> {
+        self.data.iter().copied()
+    }
+}
+
+impl<T: Float> CellValueIterator<T> for DenseField<T> {
+    type Iter<'a>
+        = DenseCellValueIterator<'a, T>
+    where
+        Self: 'a;
+
+    fn iter_cell_values<'a>(&'a self) -> Self::Iter<'a> {
+        DenseCellValueIterator {
+            data: &self.data,
+            current: (0, 0, 0),
+            point_count: self.n.into(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -365,8 +539,7 @@ mod tests {
     fn test_smooth_field_half() {
         let mut data = vec![1.0; 27];
         data[13] = 2.0;
-        let mut field =
-            ScalarField::from_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
+        let mut field = DenseField::from_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
         field.smooth(0.5, 1);
 
         let field_data = field.copy_data();
@@ -384,8 +557,7 @@ mod tests {
     fn test_smooth_field_full() {
         let mut data = vec![1.0; 27];
         data[13] = 2.0;
-        let mut field =
-            ScalarField::from_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
+        let mut field = DenseField::from_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
         field.smooth(1.0, 1);
 
         let field_data = field.copy_data();
@@ -404,8 +576,7 @@ mod tests {
         data[14] = 20.0;
         data[16] = 15.0;
         data[22] = 20.0;
-        let mut field =
-            ScalarField::from_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
+        let mut field = DenseField::from_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
         field.smooth(1.0, 1);
 
         let field_data = field.copy_data();
@@ -421,8 +592,7 @@ mod tests {
         data[14] = 20.0;
         data[16] = 15.0;
         data[22] = 20.0;
-        let mut field =
-            ScalarField::from_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
+        let mut field = DenseField::from_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
         field.smooth(0.5, 1);
 
         let field_data = field.copy_data();
@@ -436,8 +606,7 @@ mod tests {
         data[20] = 1.0;
         data[21] = 1.5;
 
-        let mut field =
-            ScalarField::from_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
+        let mut field = DenseField::from_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
         field.threshold(0.1);
 
         let field_data = field.copy_data();
@@ -450,7 +619,7 @@ mod tests {
 
     #[test]
     fn test_map_point_index() {
-        let field = ScalarField::new(Vec3::origin(), 1.0, (10, 10, 10).into());
+        let field = DenseField::new(Vec3::origin(), 1.0, (10, 10, 10).into());
 
         assert_eq!(1, field.point_index1d(1, 0, 0));
         assert_eq!(10, field.point_index1d(0, 1, 0));
@@ -458,5 +627,32 @@ mod tests {
         assert_eq!(100, field.point_index1d(0, 0, 1));
         assert_eq!(110, field.point_index1d(0, 1, 1));
         assert_eq!(111, field.point_index1d(1, 1, 1));
+    }
+
+    #[test]
+    fn test_value_iterator() {
+        let data = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
+        let field = DenseField::from_data(Vec3::origin(), 1.0, (2, 2, 2).into(), data).unwrap();
+
+        let values: Vec<f64> = field.iter_values().collect();
+        assert_eq!(values, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+    }
+
+    #[test]
+    fn test_cell_value_iterator() {
+        let data = vec![
+            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0,
+            17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0,
+        ];
+        let field = DenseField::from_data(Vec3::origin(), 1.0, (3, 3, 3).into(), data).unwrap();
+
+        let cell_values: Vec<[f64; 8]> = field.iter_cell_values().collect();
+        assert_eq!(cell_values.len(), 8); // 2x2x2 cells in a 3x3x3 grid
+
+        // Test first cell (0,0,0)
+        assert_eq!(cell_values[0], field.cell_values(0, 0, 0));
+
+        // Test last cell (1,1,1)
+        assert_eq!(cell_values[7], field.cell_values(1, 1, 1));
     }
 }
