@@ -1,6 +1,6 @@
 [package]
 name = "imlet"
-version = "0.1.2"
+version = "0.2.0"
 edition = "2021"
 authors = ["Joel Hilmersson <d.j.hilmersson@gmail.com>"]
 description = "A lightweight engine for implicit modeling."
@@ -21,14 +21,13 @@ exclude = ["assets/models/*","media",".github/*"]
 [dependencies]
 env_logger = "0.11.3"
 erased-serde = "0.4.5"
-hashbrown = "0.15.2"
+hashbrown = {version="0.15.2", features = ["serde"]}
 log = "0.4.21"
 num-traits = "0.2.19"
 rayon = "1.10.0"
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.120"
 smallvec = "1.13.2"
-clap = "4.5.26"
 
 # Viewer dependencies
 wgpu = { version = "22.0", optional = true }
