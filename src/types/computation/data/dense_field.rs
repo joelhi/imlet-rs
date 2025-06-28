@@ -464,7 +464,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> DenseField<T> {
 
 impl<T: Float> PointIterator<T> for DenseField<T> {
     fn iter_points(&self) -> PointGridIter<T> {
-        PointGridIter::new(self.bounds.clone(), self.n.into())
+        PointGridIter::new(self.bounds, self.n.into())
     }
 
     type Iter<'a>
@@ -496,10 +496,7 @@ impl<T: Float> CellIterator<T> for DenseField<T> {
 
 impl<T: Float> CellGridIterator<T> for DenseField<T> {
     fn iter_cell_grid(&self) -> CellGridIter<T> {
-        CellGridIter::new(
-            self.bounds.clone(),
-            (self.n.i - 1, self.n.j - 1, self.n.k - 1),
-        )
+        CellGridIter::new(self.bounds, (self.n.i - 1, self.n.j - 1, self.n.k - 1))
     }
 
     type GridIter<'a>

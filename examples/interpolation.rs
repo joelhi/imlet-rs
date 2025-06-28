@@ -52,7 +52,7 @@ pub fn main() {
         .build()
         .unwrap();
 
-        sampler
+    sampler
         .sample_field(cell_size, &shape_interpolation)
         .expect("Sampling should work.");
 

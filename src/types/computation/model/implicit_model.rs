@@ -9,8 +9,8 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::{self, Debug, Display};
 use std::time::Instant;
 
+use super::ComputationGraph;
 use super::{ComponentId, ModelComponent};
-use super::{ComputationGraph};
 
 /// An implicit model composed of distance functions and operations.
 ///

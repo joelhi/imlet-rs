@@ -48,7 +48,7 @@ pub fn main() {
         .build()
         .unwrap();
 
-        sampler
+    sampler
         .sample_field(cell_size, &output)
         .expect("Sampling should work.");
 

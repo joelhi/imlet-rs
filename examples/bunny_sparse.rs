@@ -1,17 +1,14 @@
 use imlet::{
     types::computation::{
-            data::{
-                sampler::{Sampler, SparseSampler},
-                BlockSize, SamplingMode, SparseFieldConfig,
-            },
-            functions::{Gyroid, MeshFile},
-            model::{ImplicitModel},
-            operations::shape::{BooleanIntersection, Thickness},
+        data::{
+            sampler::{Sampler, SparseSampler},
+            BlockSize, SamplingMode, SparseFieldConfig,
         },
-    utils::{
-        self,
-        io::write_obj_file,
+        functions::{Gyroid, MeshFile},
+        model::ImplicitModel,
+        operations::shape::{BooleanIntersection, Thickness},
     },
+    utils::{self, io::write_obj_file},
 };
 
 pub fn main() {
@@ -20,7 +17,7 @@ pub fn main() {
     let cell_size = 0.5;
     let mesh_file = MeshFile::from_path("assets/geometry/bunny.obj").unwrap();
     let bounds = mesh_file.bounds().unwrap().offset(cell_size);
-    
+
     // Build model
     let mut model = ImplicitModel::new();
 

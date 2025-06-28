@@ -2,7 +2,7 @@ use imlet::{
     types::computation::{
         data::sampler::{DenseSampler, Sampler},
         functions::{Gyroid, MeshFile},
-        model::{ImplicitModel},
+        model::ImplicitModel,
         operations::shape::{BooleanIntersection, Thickness},
     },
     utils::{self, io::write_obj_file},

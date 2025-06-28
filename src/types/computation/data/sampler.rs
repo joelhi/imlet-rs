@@ -80,6 +80,15 @@ where
     sparse_config: Option<SparseFieldConfig>,
 }
 
+impl<T> Default for SparseSamplerBuilder<T>
+where
+    T: Float + Send + Sync + Serialize + 'static + Pi,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T> SparseSamplerBuilder<T>
 where
     T: Float + Send + Sync + Serialize + 'static + Pi,
@@ -151,11 +160,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi + Serialize + Default>
         let mut sparse_field = SparseField::new(self.sparse_config);
         sparse_field.init_bounds(&self.bounds, cell_size);
         let comp_graph = self.model.compile(component_tag)?;
-        sparse_field.sample_from_graph(
-            &comp_graph,
-            self.min_val,
-            self.max_val,
-        )?;
+        sparse_field.sample_from_graph(&comp_graph, self.min_val, self.max_val)?;
         self.field = Some(sparse_field);
         Ok(self.field.as_ref().unwrap())
     }
@@ -207,6 +212,15 @@ where
     smoothing_iter: usize,
     smoothing_factor: T,
     padding: bool,
+}
+
+impl<T> Default for DenseSamplerBuilder<T>
+where
+    T: Float + Send + Sync + Serialize + 'static + Pi,
+{
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<T> DenseSamplerBuilder<T>
@@ -282,7 +296,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> Sampler<T, DenseField<T>
     ) -> Result<&DenseField<T>, ModelError> {
         let mut field = DenseField::from_bounds(&self.bounds, cell_size);
 
-        let graph = self.model.compile(&component_tag)?;
+        let graph = self.model.compile(component_tag)?;
         field.sample_from_graph(&graph);
         self.dense_field = Some(field);
         Ok(self.dense_field.as_ref().unwrap())

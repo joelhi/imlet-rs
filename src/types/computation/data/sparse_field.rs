@@ -359,7 +359,7 @@ impl<T: Float + Default + Send + Sync + Serialize + Pi> LeafNode<T> {
     }
 }
 
-/// Iterators
+// Iterators
 
 impl<T: Float + 'static> ValueIterator<T> for LeafNode<T> {
     type Iter<'a> = std::iter::Copied<std::slice::Iter<'a, T>>;
@@ -399,10 +399,7 @@ impl<T: Float + 'static> CellGridIterator<T> for LeafNode<T> {
 
     fn iter_cell_grid(&self) -> CellGridIter<T> {
         let cells_per_dim = (self.values.len() as f64).cbrt() as usize - 1;
-        CellGridIter::new(
-            self.bounds.clone(),
-            (cells_per_dim, cells_per_dim, cells_per_dim),
-        )
+        CellGridIter::new(self.bounds, (cells_per_dim, cells_per_dim, cells_per_dim))
     }
 }
 
@@ -415,7 +412,7 @@ impl<T: Float + 'static> GridIterator<T> for LeafNode<T> {
     fn iter_grid<'a>(&'a self) -> Self::GridIter<'a> {
         let points_per_dim = (self.values.len() as f64).cbrt() as usize;
         PointGridIter::new(
-            self.bounds.clone(),
+            self.bounds,
             (points_per_dim, points_per_dim, points_per_dim),
         )
     }
@@ -456,10 +453,7 @@ impl<T: Float + Copy> CellGridIterator<T> for InternalNode<T> {
 
     fn iter_cell_grid<'a>(&'a self) -> Self::GridIter<'a> {
         let cells_per_dim = (self.children.len() as f64).cbrt() as usize;
-        CellGridIter::new(
-            self.bounds.clone(),
-            (cells_per_dim, cells_per_dim, cells_per_dim),
-        )
+        CellGridIter::new(self.bounds, (cells_per_dim, cells_per_dim, cells_per_dim))
     }
 }
 
