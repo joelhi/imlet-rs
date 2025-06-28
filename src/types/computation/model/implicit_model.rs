@@ -1,6 +1,5 @@
 use crate::types::computation::traits::{ImplicitFunction, ImplicitOperation};
 use crate::types::computation::ModelError;
-use crate::types::geometry::BoundingBox;
 use crate::utils::math_helper::Pi;
 use crate::IMLET_VERSION;
 use log::{debug, info};
@@ -11,7 +10,7 @@ use std::fmt::{self, Debug, Display};
 use std::time::Instant;
 
 use super::{ComponentId, ModelComponent};
-use super::{ComputationGraph, ModelConfig};
+use super::{ComputationGraph};
 
 /// An implicit model composed of distance functions and operations.
 ///
@@ -68,7 +67,6 @@ pub struct ImplicitModel<T: Float + Send + Sync + Serialize + 'static + Pi> {
     version: String,
     components: HashMap<String, ModelComponent<T>>,
     inputs: HashMap<String, Vec<Option<String>>>,
-    config: Option<ModelConfig<T>>,
 }
 
 impl<T: Float + Send + Sync + Serialize + 'static + Pi> Default for ImplicitModel<T> {
@@ -84,30 +82,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
             version: IMLET_VERSION.to_string(),
             components: HashMap::new(),
             inputs: HashMap::new(),
-            config: None,
         }
-    }
-
-    /// Create a new empty model with a predefined model domain.
-    pub fn with_bounds(bounds: BoundingBox<T>) -> Self {
-        let mut model = ImplicitModel::new();
-        model.set_config(ModelConfig::new(bounds));
-        model
-    }
-
-    /// Set the model config, which determines model parameters such as bounds and smoothing.
-    pub fn set_config(&mut self, config: ModelConfig<T>) {
-        self.config = Some(config);
-    }
-
-    /// Set the model config, which determines model parameters such as bounds and smoothing.
-    pub fn config(&self) -> Option<&ModelConfig<T>> {
-        self.config.as_ref()
-    }
-
-    /// Set the model config, which determines model parameters such as bounds and smoothing.
-    pub fn config_mut(&mut self) -> Option<&mut ModelConfig<T>> {
-        self.config.as_mut()
     }
 
     /// Get references to all the components in the model and their tags.
@@ -126,7 +101,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     ///
     /// Useful when you want to update the value of a [`Parameter`](super::Parameter) of a component.
     ///
-    /// Returns a [`&mut`] to the component if present, othwerwise [`None`]
+    /// Returns a [`&mut`] to the component if present, otherwise [`None`].
     pub fn get_component_mut(&mut self, tag: &str) -> Option<&mut ModelComponent<T>> {
         self.components.get_mut(tag)
     }
