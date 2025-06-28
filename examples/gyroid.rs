@@ -1,5 +1,6 @@
 use imlet::types::{
     computation::{
+        data::sampler::{DenseSampler, Sampler},
         functions::Gyroid,
         model::ImplicitModel,
         operations::shape::{BooleanIntersection, Thickness},
@@ -12,6 +13,7 @@ pub fn main() {
     utils::logging::init_info();
 
     let size: f32 = 100.0;
+    let cell_size = 0.5;
     let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
     // Build model
@@ -40,8 +42,19 @@ pub fn main() {
         )
         .unwrap();
 
-    let mut mesh = model.generate_iso_surface(&output, 0.5).unwrap();
-    mesh.compute_vertex_normals_par();
+    let mut sampler = DenseSampler::builder()
+        .with_bounds(model_space)
+        .with_model(model)
+        .build()
+        .unwrap();
+
+        sampler
+        .sample_field(cell_size, &output)
+        .expect("Sampling should work.");
+
+    let mesh = sampler
+        .iso_surface(0.0)
+        .expect("Extracting iso-surface should work.");
     utils::io::write_obj_file(&mesh, "gyroid_example").unwrap();
 
     #[cfg(feature = "viewer")]

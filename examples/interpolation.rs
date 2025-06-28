@@ -1,6 +1,7 @@
 use imlet::{
     types::{
         computation::{
+            data::sampler::{DenseSampler, Sampler},
             functions::MeshFile,
             model::{Data, ImplicitModel},
             operations::math::LinearInterpolation,
@@ -45,11 +46,19 @@ pub fn main() {
         .expect("Component should be present")
         .set_parameter("Factor", Data::Value(factor));
 
-    let mut mesh = model
-        .generate_iso_surface(&shape_interpolation, cell_size)
+    let mut sampler = DenseSampler::builder()
+        .with_bounds(bounds)
+        .with_model(model)
+        .build()
         .unwrap();
 
-    mesh.compute_vertex_normals_par();
+        sampler
+        .sample_field(cell_size, &shape_interpolation)
+        .expect("Sampling should work.");
+
+    let mesh = sampler
+        .iso_surface(0.0)
+        .expect("Extracting iso-surface should work.");
 
     utils::io::write_obj_file(&mesh, "interpolation_example").unwrap();
     #[cfg(feature = "viewer")]

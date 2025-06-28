@@ -1,6 +1,9 @@
 use imlet::{
     types::{
-        computation::model::ImplicitModel,
+        computation::{
+            data::sampler::{self, DenseSampler, Sampler},
+            model::ImplicitModel,
+        },
         geometry::{BoundingBox, Sphere, Vec3},
     },
     utils,
@@ -10,6 +13,7 @@ pub fn main() {
     utils::logging::init_info();
 
     // Inputs
+    let cell_size = 0.5;
     let size = 100.0;
     let offset = 5.0;
     let model_space = BoundingBox::new(
@@ -34,8 +38,19 @@ pub fn main() {
         )
         .unwrap();
 
-    let mut mesh = model.generate_iso_surface(&sphere_node, 0.5).unwrap();
-    mesh.compute_vertex_normals_par();
+    let mut sampler = DenseSampler::builder()
+        .with_bounds(model_space)
+        .with_model(model)
+        .build()
+        .unwrap();
+
+    sampler
+        .sample_field(cell_size, &sphere_node)
+        .expect("Sampling should work.");
+
+    let mesh = sampler
+        .iso_surface(0.0)
+        .expect("Extracting iso-surface should work.");
 
     utils::io::write_obj_file(&mesh, "sphere_example").unwrap();
 
