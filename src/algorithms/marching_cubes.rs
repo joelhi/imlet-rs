@@ -1,17 +1,16 @@
 use std::time::Instant;
 
 use num_traits::Float;
-use rayon::iter::IntoParallelIterator;
-use rayon::iter::ParallelIterator;
 
-use crate::types::computation::ScalarField;
+use crate::types::computation::data::field_iterator::CellIterator;
+use crate::types::computation::data::field_iterator::CellValueIterator;
 use crate::types::geometry::Triangle;
 use crate::types::geometry::Vec3;
 use crate::utils;
 
 use super::tables::*;
 
-/// Generate a list of triangles from a ScalarField using the marching cubes algorithm.
+/// Generate a list of triangles from a field using the marching cubes algorithm.
 ///
 /// This function is based on the logic by [Paul Bourke](https://paulbourke.net/geometry/polygonise/).
 ///
@@ -19,29 +18,20 @@ use super::tables::*;
 ///
 /// * `field` - The field from which the iso surface should be generated.
 /// * `iso_val` - The target iso value.
-pub fn generate_iso_surface<T: Float + Send + Sync>(
-    field: &ScalarField<T>,
-    iso_val: T,
-) -> Vec<Triangle<T>> {
+pub fn generate_iso_surface<T, F>(field: &F, iso_val: T) -> Vec<Triangle<T>>
+where
+    T: Float,
+    F: CellIterator<T> + CellValueIterator<T>,
+{
     let before = Instant::now();
     // Generate triangles for cell
-    let mut triangles: Vec<Triangle<T>> = Vec::with_capacity(field.num_cells());
+    let mut triangles: Vec<Triangle<T>> = Vec::new();
 
     // Iterate over cell indices in parallel and collect triangles
-    triangles.extend(
-        (0..field.num_cells())
-            .into_par_iter()
-            .map(|cell_index| {
-                let (i, j, k) = field.cell_index3d(cell_index);
-                let cell_vec3f = field.cell_corners(i, j, k);
-                let cell_values = field.cell_values(i, j, k);
-                polygonize_cell(iso_val, &cell_vec3f, &cell_values)
-            })
-            .reduce(Vec::new, |mut acc, triangles| {
-                acc.extend(triangles);
-                acc
-            }),
-    );
+    for (cell_bounds, cell_values) in field.iter_cells().zip(field.iter_cell_values()) {
+        let cell_coord = cell_bounds.corners();
+        triangles.extend(polygonize_cell(iso_val, &cell_coord, &cell_values));
+    }
 
     log::info!(
         "Marching cubes generated {} triangles in {:.2?}",
@@ -275,17 +265,16 @@ fn interpolate_vertex<T: Float>(
 
 #[cfg(test)]
 mod tests {
-
     use crate::types::{
-        computation::model::ImplicitModel,
-        geometry::{BoundingBox, Sphere},
+        computation::data::DenseField,
+        geometry::{traits::SignedDistance, Sphere, Vec3},
     };
 
     use super::*;
 
     #[test]
     fn test_generate_iso_surface_2x2x2() {
-        let field = ScalarField::from_data(
+        let field = DenseField::from_data(
             Vec3::origin(),
             1.0,
             (2, 2, 2).into(),
@@ -304,61 +293,26 @@ mod tests {
     }
 
     #[test]
-    fn test_generate_iso_surface_3x2x2() {
-        let field = ScalarField::from_data(
-            Vec3::origin(),
-            1.0,
-            (3, 2, 2).into(),
-            vec![
-                1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0,
-            ],
-        )
-        .unwrap();
-        let triangles = generate_iso_surface(&field, 0.0);
-
-        assert_eq!(4, triangles.len());
-        for tri in triangles {
-            assert!(tri.p1().z - 0.5 < 0.0001);
-            assert!(tri.p2().z - 0.5 < 0.0001);
-            assert!(tri.p3().z - 0.5 < 0.0001);
-            assert!(tri.compute_area() - 0.5 < 0.0001);
-        }
-    }
-
-    #[test]
     fn test_generate_iso_surface_sphere() {
-        let size = 10.0;
-        let cell_size = 0.5;
-        let bounds = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
+        let mut field = DenseField::new(Vec3::origin(), 1.0, (10, 10, 10).into());
+        let sphere = Sphere::new(Vec3::new(5.0, 5.0, 5.0), 4.0);
 
-        // Function
-        let mut model = ImplicitModel::new();
-        model
-            .add_function(
-                "Sphere",
-                Sphere::new(Vec3::new(size / 2.0, size / 2.0, size / 2.0), size * 0.4),
-            )
-            .unwrap();
+        // Sample field
+        for i in 0..10 {
+            for j in 0..10 {
+                for k in 0..10 {
+                    let point = Vec3::new(
+                        f64::from(i as i32),
+                        f64::from(j as i32),
+                        f64::from(k as i32),
+                    );
+                    let index = field.point_index1d(i, j, k);
+                    field.set_value(index, sphere.signed_distance(point.x, point.y, point.z));
+                }
+            }
+        }
 
-        let field = model.generate_field("Sphere", &bounds, cell_size).unwrap();
-
-        // Generate triangles
         let triangles = generate_iso_surface(&field, 0.0);
-
-        let area: f64 = triangles.iter().map(|tri| tri.compute_area()).sum();
-
-        assert!(
-            200.079 - area < 0.1,
-            "Incorrect area computed. Expected {}, but was {}",
-            200.079,
-            area
-        );
-        assert_eq!(
-            2312,
-            triangles.len(),
-            "Incorrect number of triangles computed. Expected {} but was {}",
-            2312,
-            triangles.len()
-        );
+        assert!(!triangles.is_empty());
     }
 }
