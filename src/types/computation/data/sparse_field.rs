@@ -36,7 +36,11 @@ pub struct SparseField<T: Float> {
 }
 
 impl<T: Float> SparseField<T> {
-    /// Create a new empty sparse field
+    /// Creates a new empty sparse field with the given configuration.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - The configuration specifying block sizes and sampling mode.
     pub fn new(config: SparseFieldConfig) -> Self {
         Self {
             config,
@@ -44,13 +48,29 @@ impl<T: Float> SparseField<T> {
         }
     }
 
+    /// Initializes the field's bounds and creates the necessary internal nodes.
+    ///
+    /// # Arguments
+    ///
+    /// * `bounds` - The bounding box defining the field's extents.
+    /// * `cell_size` - The size of each cell in the field.
     pub fn init_bounds(&mut self, bounds: &BoundingBox<T>, cell_size: T) {
         self.root.init_bounds(bounds, cell_size, &self.config);
     }
 }
 
 impl<T: Float + Default + Copy + Send + Sync + Serialize + 'static + Pi> SparseField<T> {
-    /// Sample the field using a computation graph
+    /// Samples the field using a computation graph.
+    ///
+    /// # Arguments
+    ///
+    /// * `graph` - The computation graph to evaluate.
+    /// * `min_val` - The minimum value threshold.
+    /// * `max_val` - The maximum value threshold.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(())` if sampling was successful, or an error if the space was not initialized.
     pub(crate) fn sample_from_graph(
         &mut self,
         graph: &ComputationGraph<T>,
@@ -97,7 +117,12 @@ pub enum BlockSize {
 }
 
 impl BlockSize {
-    /// Get the size value
+    /// Returns the size value of the block.
+    /// 
+    /// For example:
+    /// - Size2 returns 2
+    /// - Size4 returns 4
+    /// - etc.
     #[inline(always)]
     fn value(&self) -> usize {
         match self {
@@ -110,7 +135,12 @@ impl BlockSize {
         }
     }
 
-    /// Get the total number of elements in a block (size^3)
+    /// Returns the total number of elements in a block (size^3).
+    /// 
+    /// For example:
+    /// - Size2 returns 8 (2^3)
+    /// - Size4 returns 64 (4^3)
+    /// - etc.
     #[inline(always)]
     fn total_size(&self) -> usize {
         match self {
@@ -143,6 +173,7 @@ struct RootNode<T: Float> {
 }
 
 impl<T: Float> RootNode<T> {
+    /// Creates a new empty root node.
     fn new() -> Self {
         Self {
             table: HashMap::new(),
@@ -151,6 +182,13 @@ impl<T: Float> RootNode<T> {
 }
 
 impl<T: Float> RootNode<T> {
+    /// Initializes the root node's bounds and creates the necessary internal nodes.
+    ///
+    /// # Arguments
+    ///
+    /// * `bounds` - The bounding box defining the field's extents.
+    /// * `cell_size` - The size of each cell in the field.
+    /// * `config` - The configuration specifying block sizes and sampling mode.
     fn init_bounds(&mut self, bounds: &BoundingBox<T>, cell_size: T, config: &SparseFieldConfig) {
         let steps = config.internal_size.value() * (config.leaf_size.value() - 1);
         let node_size = cell_size * T::from(steps).unwrap();
@@ -209,6 +247,12 @@ struct InternalNode<T> {
 }
 
 impl<T: Float> InternalNode<T> {
+    /// Creates a new internal node with the given bounds and size.
+    ///
+    /// # Arguments
+    ///
+    /// * `bounds` - The bounding box defining the node's extents.
+    /// * `size` - The block size configuration for this node.
     fn new(bounds: BoundingBox<T>, size: BlockSize) -> Self {
         Self {
             bounds,
@@ -216,6 +260,11 @@ impl<T: Float> InternalNode<T> {
         }
     }
 
+    /// Initializes the cells within this node that intersect with the given bounds.
+    ///
+    /// # Arguments
+    ///
+    /// * `bounds` - The bounding box to check for intersection.
     fn init_cells(&mut self, bounds: &BoundingBox<T>) {
         let mut num_active = 0;
         for i in 0..self.children.len() {
@@ -233,6 +282,14 @@ impl<T: Float> InternalNode<T> {
     }
 
     /// Returns the bounds of the cell at the given index.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The linear index of the cell.
+    ///
+    /// # Returns
+    ///
+    /// The bounding box of the specified cell.
     pub fn cell_bounds(&self, index: usize) -> BoundingBox<T> {
         let cells_per_dim = (self.children.len() as f64).cbrt() as usize;
         let size = self.bounds.dimensions();
@@ -264,6 +321,19 @@ pub enum SamplingMode {
 }
 
 impl<T: Float + Send + Sync + Serialize + Default + 'static + Pi> InternalNode<T> {
+    /// Checks if a cell overlaps with the computation graph's non-zero region.
+    ///
+    /// # Arguments
+    ///
+    /// * `graph` - The computation graph to evaluate.
+    /// * `min_val` - The minimum value threshold.
+    /// * `max_val` - The maximum value threshold.
+    /// * `cell_bounds` - The bounds of the cell to check.
+    /// * `sampling_mode` - The mode to use for sampling points.
+    ///
+    /// # Returns
+    ///
+    /// `true` if the cell overlaps with the non-zero region, `false` otherwise.
     fn is_overlapping(
         graph: &ComputationGraph<T>,
         min_val: T,
@@ -295,7 +365,15 @@ impl<T: Float + Send + Sync + Serialize + Default + 'static + Pi> InternalNode<T
         }
     }
 
-    /// Sample cells and create leaf nodes where needed
+    /// Samples the cells in this node using the computation graph.
+    ///
+    /// # Arguments
+    ///
+    /// * `graph` - The computation graph to evaluate.
+    /// * `min_val` - The minimum value threshold.
+    /// * `max_val` - The maximum value threshold.
+    /// * `leaf_size` - The size configuration for leaf nodes.
+    /// * `sampling_mode` - The mode to use for sampling points.
     pub(crate) fn sample_cells(
         &mut self,
         graph: &ComputationGraph<T>,
@@ -340,6 +418,12 @@ struct LeafNode<T> {
 }
 
 impl<T: Float + Default> LeafNode<T> {
+    /// Creates a new leaf node with the given bounds and size.
+    ///
+    /// # Arguments
+    ///
+    /// * `bounds` - The bounding box defining the node's extents.
+    /// * `size` - The block size configuration for this node.
     fn new(bounds: BoundingBox<T>, size: BlockSize) -> Self {
         Self {
             bounds,
@@ -349,7 +433,11 @@ impl<T: Float + Default> LeafNode<T> {
 }
 
 impl<T: Float + Default + Send + Sync + Serialize + Pi> LeafNode<T> {
-    /// Sample all points in the leaf node
+    /// Samples points in this leaf node using the computation graph.
+    ///
+    /// # Arguments
+    ///
+    /// * `graph` - The computation graph to evaluate.
     fn sample_points(&mut self, graph: &ComputationGraph<T>) {
         // Now we can iterate over the collected points and modify self
         for (index, point) in self.iter_points().enumerate() {
@@ -364,6 +452,7 @@ impl<T: Float + Default + Send + Sync + Serialize + Pi> LeafNode<T> {
 impl<T: Float + 'static> ValueIterator<T> for LeafNode<T> {
     type Iter<'a> = std::iter::Copied<std::slice::Iter<'a, T>>;
 
+    /// Returns an iterator that yields each value in this leaf node.
     fn iter_values<'a>(&'a self) -> Self::Iter<'a> {
         self.values.iter().copied()
     }
@@ -375,6 +464,7 @@ impl<T: Float + 'static> PointIterator<T> for LeafNode<T> {
     where
         T: 'a;
 
+    /// Returns an iterator that yields all point coordinates in this leaf node.
     fn iter_points(&self) -> PointGridIter<T> {
         self.iter_grid()
     }
@@ -386,6 +476,7 @@ impl<T: Float + 'static> CellIterator<T> for LeafNode<T> {
     where
         T: 'a;
 
+    /// Returns an iterator that yields all cell coordinates in this leaf node.
     fn iter_cells(&self) -> CellGridIter<T> {
         self.iter_cell_grid()
     }
@@ -397,6 +488,7 @@ impl<T: Float + 'static> CellGridIterator<T> for LeafNode<T> {
     where
         Self: 'a;
 
+    /// Returns an iterator that yields all cell coordinates in this leaf node's grid.
     fn iter_cell_grid(&self) -> CellGridIter<T> {
         let cells_per_dim = (self.values.len() as f64).cbrt() as usize - 1;
         CellGridIter::new(self.bounds, (cells_per_dim, cells_per_dim, cells_per_dim))
@@ -409,6 +501,7 @@ impl<T: Float + 'static> GridIterator<T> for LeafNode<T> {
     where
         Self: 'a;
 
+    /// Returns an iterator that yields all grid point coordinates in this leaf node.
     fn iter_grid<'a>(&'a self) -> Self::GridIter<'a> {
         let points_per_dim = (self.values.len() as f64).cbrt() as usize;
         PointGridIter::new(
@@ -424,6 +517,7 @@ impl<T: Float> CellValueIterator<T> for LeafNode<T> {
     where
         Self: 'a;
 
+    /// Returns an iterator that yields the values at each cell's corners in this leaf node.
     fn iter_cell_values<'a>(&'a self) -> Self::Iter<'a> {
         let pts_per_dim = (self.values.len() as f64).cbrt() as usize;
         DenseCellValueIterator {
@@ -440,6 +534,7 @@ impl<T: Float + Copy> CellIterator<T> for InternalNode<T> {
     where
         Self: 'a;
 
+    /// Returns an iterator that yields all cell coordinates in this internal node.
     fn iter_cells<'a>(&'a self) -> Self::Iter<'a> {
         self.iter_cell_grid()
     }
@@ -451,6 +546,7 @@ impl<T: Float + Copy> CellGridIterator<T> for InternalNode<T> {
     where
         Self: 'a;
 
+    /// Returns an iterator that yields all cell coordinates in this internal node's grid.
     fn iter_cell_grid<'a>(&'a self) -> Self::GridIter<'a> {
         let cells_per_dim = (self.children.len() as f64).cbrt() as usize;
         CellGridIter::new(self.bounds, (cells_per_dim, cells_per_dim, cells_per_dim))
@@ -463,6 +559,7 @@ impl<T: Float + 'static> PointIterator<T> for SparseField<T> {
     where
         Self: 'a;
 
+    /// Returns an iterator that yields all point coordinates in each leaf node in the sparse field.
     fn iter_points<'a>(&'a self) -> Self::Iter<'a> {
         let iter = self
             .root
@@ -499,6 +596,7 @@ impl<T: Float + 'static> ValueIterator<T> for SparseField<T> {
     where
         Self: 'a;
 
+    /// Returns an iterator that yields each value in the leaf nodes in the sparse field.
     fn iter_values<'a>(&'a self) -> Self::Iter<'a> {
         let iter = self
             .root
@@ -535,6 +633,7 @@ impl<T: Float + 'static> CellIterator<T> for SparseField<T> {
     where
         Self: 'a;
 
+    /// Returns an iterator that yields all cell coordinates in the leaf nodes in the sparse field.
     fn iter_cells<'a>(&'a self) -> Self::Iter<'a> {
         let iter = self
             .root
@@ -571,6 +670,7 @@ impl<T: Float + 'static> CellValueIterator<T> for SparseField<T> {
     where
         Self: 'a;
 
+    /// Returns an iterator that yields the values at each cell's corners in the leaf nodes in the sparse field.
     fn iter_cell_values<'a>(&'a self) -> Self::Iter<'a> {
         let iter = self
             .root
