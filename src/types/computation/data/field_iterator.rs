@@ -4,67 +4,94 @@ use crate::{
 };
 use num_traits::Float;
 
-/// Iterate raw scalar values.
+/// Trait for iterating over raw scalar values in a field.
+///
+/// This trait provides functionality to iterate over the individual values stored in a field,
+/// regardless of their spatial arrangement.
 pub trait ValueIterator<T> {
     /// A different `Iterator<Item=T>` for each borrow‐lifetime `'a`.
     type Iter<'a>: Iterator<Item = T>
     where
         Self: 'a;
 
+    /// Returns an iterator that yields each value in the field.
     fn iter_values<'a>(&'a self) -> Self::Iter<'a>;
 }
 
-/// Iterate 3D points.
+/// Trait for iterating over 3D points in a field.
+///
+/// This trait provides functionality to iterate over the spatial locations of points in a field,
+/// returning their 3D coordinates.
 pub trait PointIterator<T> {
     /// A different `Iterator<Item=Vec3<T>>` for each borrow‐lifetime `'a`.
     type Iter<'a>: Iterator<Item = Vec3<T>>
     where
         Self: 'a;
 
+    /// Returns an iterator that yields the 3D coordinates of each point in the field.
     fn iter_points<'a>(&'a self) -> Self::Iter<'a>;
 }
 
-/// Iterate points in a regular 3D grid.
+/// Trait for iterating over points in a regular 3D grid.
+///
+/// This trait extends [`PointIterator`] to provide specialized iteration over points
+/// arranged in a regular grid pattern.
 pub trait GridIterator<T>: PointIterator<T> {
     /// A different grid‐iterator for each borrow‐lifetime `'a`.
     type GridIter<'a>: Iterator<Item = Vec3<T>>
     where
         Self: 'a;
 
+    /// Returns an iterator that yields the 3D coordinates of each point in the grid.
     fn iter_grid<'a>(&'a self) -> Self::GridIter<'a>;
 }
 
-/// Iterate the eight corner‐values of each cell.
+/// Trait for iterating over the values at cell corners.
+///
+/// This trait provides functionality to iterate over cells in a field, returning
+/// the values at the eight corners of each cell.
 pub trait CellValueIterator<T> {
     /// A different `Iterator<Item=[T;8]>` for each borrow‐lifetime `'a`.
     type Iter<'a>: Iterator<Item = [T; 8]>
     where
         Self: 'a;
 
+    /// Returns an iterator that yields an array of the eight corner values for each cell.
     fn iter_cell_values<'a>(&'a self) -> Self::Iter<'a>;
 }
 
-/// Iterate the bounding‐boxes of individual cells.
+/// Trait for iterating over cell bounding boxes.
+///
+/// This trait provides functionality to iterate over cells in a field, returning
+/// the bounding box of each cell.
 pub trait CellIterator<T> {
     /// A different `Iterator<Item=BoundingBox<T>>` for each borrow‐lifetime `'a`.
     type Iter<'a>: Iterator<Item = BoundingBox<T>>
     where
         Self: 'a;
 
+    /// Returns an iterator that yields the bounding box of each cell.
     fn iter_cells<'a>(&'a self) -> Self::Iter<'a>;
 }
 
-/// Iterate cell‐grid bounding‐boxes in a regular 3D grid.
+/// Trait for iterating over cells in a regular 3D grid.
+///
+/// This trait extends [`CellIterator`] to provide specialized iteration over cells
+/// arranged in a regular grid pattern.
 pub trait CellGridIterator<T>: CellIterator<T> {
     /// A different grid‐cell iterator for each borrow‐lifetime `'a`.
     type GridIter<'a>: Iterator<Item = BoundingBox<T>>
     where
         Self: 'a;
 
+    /// Returns an iterator that yields the bounding box of each cell in the grid.
     fn iter_cell_grid<'a>(&'a self) -> Self::GridIter<'a>;
 }
 
-/// Helper struct for grid‐based point iteration.
+/// Iterator for traversing points in a regular 3D grid.
+///
+/// This struct provides efficient iteration over points arranged in a regular grid pattern,
+/// computing their 3D coordinates based on the grid's bounds and point counts.
 pub struct PointGridIter<T> {
     bounds: BoundingBox<T>,
     current: (usize, usize, usize),
@@ -72,6 +99,12 @@ pub struct PointGridIter<T> {
 }
 
 impl<T> PointGridIter<T> {
+    /// Creates a new point grid iterator.
+    ///
+    /// # Arguments
+    ///
+    /// * `bounds` - The bounding box containing all points.
+    /// * `point_count` - The number of points in each dimension (x, y, z).
     pub fn new(bounds: BoundingBox<T>, point_count: (usize, usize, usize)) -> Self {
         Self {
             bounds,
@@ -117,7 +150,10 @@ impl<T: Float> Iterator for PointGridIter<T> {
     }
 }
 
-/// Helper struct for cell‐grid iteration.
+/// Iterator for traversing cells in a regular 3D grid.
+///
+/// This struct provides efficient iteration over cells arranged in a regular grid pattern,
+/// computing their bounding boxes based on the grid's bounds and cell counts.
 pub struct CellGridIter<T> {
     bounds: BoundingBox<T>,
     current: (usize, usize, usize),
@@ -125,6 +161,12 @@ pub struct CellGridIter<T> {
 }
 
 impl<T> CellGridIter<T> {
+    /// Creates a new cell grid iterator.
+    ///
+    /// # Arguments
+    ///
+    /// * `bounds` - The bounding box containing all cells.
+    /// * `cell_count` - The number of cells in each dimension (x, y, z).
     pub fn new(bounds: BoundingBox<T>, cell_count: (usize, usize, usize)) -> Self {
         Self {
             bounds,
@@ -174,7 +216,10 @@ impl<T: Float> Iterator for CellGridIter<T> {
     }
 }
 
-/// Iterator over cell values in a dense field
+/// Iterator for traversing cell values in a dense field.
+///
+/// This struct provides efficient iteration over cell values in a dense field,
+/// returning the eight corner values for each cell.
 pub struct DenseCellValueIterator<'a, T: Float> {
     pub(crate) data: &'a [T],
     pub(crate) current: (usize, usize, usize),
@@ -182,6 +227,13 @@ pub struct DenseCellValueIterator<'a, T: Float> {
 }
 
 impl<T: Float> DenseCellValueIterator<'_, T> {
+    /// Returns the values at the eight corners of a cell.
+    ///
+    /// # Arguments
+    ///
+    /// * `i` - Index in first dimension.
+    /// * `j` - Index in second dimension.
+    /// * `k` - Index in third dimension.
     fn cell_values(&self, i: usize, j: usize, k: usize) -> [T; 8] {
         let cell_ids = self.cell_ids(i, j, k);
         [
@@ -196,6 +248,13 @@ impl<T: Float> DenseCellValueIterator<'_, T> {
         ]
     }
 
+    /// Returns the indices of the eight corners of a cell.
+    ///
+    /// # Arguments
+    ///
+    /// * `i` - Index in first dimension.
+    /// * `j` - Index in second dimension.
+    /// * `k` - Index in third dimension.
     fn cell_ids(&self, i: usize, j: usize, k: usize) -> [usize; 8] {
         let (n_i, n_j, n_k) = self.point_count;
         [
