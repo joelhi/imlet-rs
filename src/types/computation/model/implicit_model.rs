@@ -58,8 +58,6 @@ use super::{ComponentId, ModelComponent};
 ///     )
 ///     .unwrap();
 ///
-/// // Evaluate the model and generate a scalar field
-/// let mesh = model.generate_iso_surface(&union, cell_size).unwrap();
 /// ```
 ///
 #[derive(Serialize, Deserialize)]

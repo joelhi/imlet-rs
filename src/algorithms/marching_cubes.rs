@@ -24,10 +24,10 @@ where
     F: CellIterator<T> + CellValueIterator<T>,
 {
     let before = Instant::now();
+    
     // Generate triangles for cell
     let mut triangles: Vec<Triangle<T>> = Vec::new();
-
-    // Iterate over cell indices in parallel and collect triangles
+    // Iterate over cells and corner values and collect triangles
     for (cell_bounds, cell_values) in field.iter_cells().zip(field.iter_cell_values()) {
         let cell_coord = cell_bounds.corners();
         triangles.extend(polygonize_cell(iso_val, &cell_coord, &cell_values));
