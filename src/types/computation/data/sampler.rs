@@ -437,7 +437,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> Sampler<T, DenseField<T>
         }
 
         // Apply smoothing if specified.
-        if self.smoothing_iter > 0{
+        if self.smoothing_iter > 0 {
             field.smooth_par(self.smoothing_factor, self.smoothing_iter);
         }
 
