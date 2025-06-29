@@ -1,14 +1,11 @@
 use imlet::types::{
     computation::{
         data::sampler::{DenseSampler, Sampler},
-        functions::{CoordinateValue, Gyroid, XYZValue},
+        functions::{CoordinateValue, XYZValue},
         model::ImplicitModel,
-        operations::{
-            math::{Divide, Multiply, Subtract},
-            shape::{BooleanIntersection, Thickness},
-        },
+        operations::math::{Divide, Multiply, Subtract},
     },
-    geometry::{BoundingBox, Sphere, Vec3},
+    geometry::{BoundingBox, Vec3},
 };
 use imlet::utils;
 
@@ -41,16 +38,27 @@ pub fn main() {
     let b_sqrt = model.add_constant("b", b.powi(2)).unwrap();
 
     // X and Y terms
-    let x_sqrt = model.add_operation_with_inputs("x_sqrt", Multiply::new(), &[&x_coord, &x_coord]).unwrap();
-    let y_sqrt = model.add_operation_with_inputs("y_sqrt", Multiply::new(), &[&y_coord, &y_coord]).unwrap();
+    let x_sqrt = model
+        .add_operation_with_inputs("x_sqrt", Multiply::new(), &[&x_coord, &x_coord])
+        .unwrap();
+    let y_sqrt = model
+        .add_operation_with_inputs("y_sqrt", Multiply::new(), &[&y_coord, &y_coord])
+        .unwrap();
 
-    let x_term = model.add_operation_with_inputs("x_term", Divide::new(), &[&x_sqrt, &a_sqrt]).unwrap();
-    let y_term = model.add_operation_with_inputs("y_term", Divide::new(), &[&y_sqrt, &b_sqrt]).unwrap();
-
+    let x_term = model
+        .add_operation_with_inputs("x_term", Divide::new(), &[&x_sqrt, &a_sqrt])
+        .unwrap();
+    let y_term = model
+        .add_operation_with_inputs("y_term", Divide::new(), &[&y_sqrt, &b_sqrt])
+        .unwrap();
 
     // Final iso value
-    let sub_1 = model.add_operation_with_inputs("sub_1", Subtract::new(), &[&y_term, &x_term]).unwrap();
-    let output = model.add_operation_with_inputs("sub_2", Subtract::new(), &[&z_coord, &sub_1]).unwrap();
+    let sub_1 = model
+        .add_operation_with_inputs("sub_1", Subtract::new(), &[&y_term, &x_term])
+        .unwrap();
+    let output = model
+        .add_operation_with_inputs("sub_2", Subtract::new(), &[&z_coord, &sub_1])
+        .unwrap();
 
     let mut sampler = DenseSampler::builder()
         .with_bounds(bounds)
