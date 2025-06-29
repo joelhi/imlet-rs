@@ -388,15 +388,11 @@ mod tests {
         let second_angle = interpolated.angle(&v2).unwrap();
         assert!(
             (expected_angle - first_angle).abs() < 0.001,
-            "Incorrect angle, expected {} but was {}",
-            expected_angle,
-            first_angle
+            "Incorrect angle, expected {expected_angle} but was {first_angle}"
         );
         assert!(
             (expected_angle - second_angle).abs() < 0.001,
-            "Incorrect angle, expected {} but was {}",
-            expected_angle,
-            second_angle
+            "Incorrect angle, expected {expected_angle} but was {second_angle}"
         );
     }
 }

@@ -634,4 +634,189 @@ mod tests {
         assert!(sampler.iso_surface(1.0).is_err());
         assert!(sampler.iso_surface(-1.0).is_err());
     }
+
+    #[test]
+    fn test_dense_sampler_with_smoothing() {
+        let model = create_test_model();
+        let bounds = create_test_bounds();
+        
+        let mut sampler = DenseSampler::builder()
+            .with_model(model)
+            .with_bounds(bounds)
+            .with_smoothing_iter(3)
+            .with_smoothing_factor(0.1)
+            .build()
+            .expect("Failed to build sampler");
+
+        sampler.sample_field(1.0, "test")
+            .expect("Failed to sample field");
+
+        let field = sampler.field().unwrap();
+        assert!(!field.data().is_empty());
+    }
+
+    #[test]
+    fn test_dense_sampler_with_padding() {
+        let model = create_test_model();
+        let bounds = create_test_bounds();
+        
+        let mut sampler = DenseSampler::builder()
+            .with_model(model)
+            .with_bounds(bounds)
+            .with_padding(true)
+            .build()
+            .expect("Failed to build sampler");
+
+        sampler.sample_field(1.0, "test")
+            .expect("Failed to sample field");
+
+        let field = sampler.field().unwrap();
+        assert!(!field.data().is_empty());
+    }
+
+    #[test]
+    fn test_sparse_sampler_different_block_sizes() {
+        let bounds = create_test_bounds();
+        
+        // Test with small blocks
+        let config_small = SparseFieldConfig {
+            internal_size: BlockSize::Size8,
+            leaf_size: BlockSize::Size2,
+            sampling_mode: SamplingMode::CENTRE,
+        };
+
+        let mut sampler_small = SparseSampler::builder()
+            .with_model(create_test_model())
+            .with_bounds(bounds)
+            .with_sparse_config(config_small)
+            .build()
+            .expect("Failed to build sampler");
+
+        sampler_small.sample_field(1.0, "test")
+            .expect("Failed to sample field with small blocks");
+
+        // Test with large blocks
+        let config_large = SparseFieldConfig {
+            internal_size: BlockSize::Size32,
+            leaf_size: BlockSize::Size8,
+            sampling_mode: SamplingMode::CENTRE,
+        };
+
+        let mut sampler_large = SparseSampler::builder()
+            .with_model(create_test_model())
+            .with_bounds(bounds)
+            .with_sparse_config(config_large)
+            .build()
+            .expect("Failed to build sampler");
+
+        sampler_large.sample_field(1.0, "test")
+            .expect("Failed to sample field with large blocks");
+
+        // Both samplers should produce valid fields
+        assert!(sampler_small.field().is_some());
+        assert!(sampler_large.field().is_some());
+    }
+
+    #[test]
+    fn test_sparse_sampler_sampling_modes() {
+        let bounds = create_test_bounds();
+        
+        // Test CENTRE mode
+        let config_centre = SparseFieldConfig {
+            internal_size: BlockSize::Size8,
+            leaf_size: BlockSize::Size4,
+            sampling_mode: SamplingMode::CENTRE,
+        };
+
+        let mut sampler_centre = SparseSampler::builder()
+            .with_model(create_test_model())
+            .with_bounds(bounds)
+            .with_sparse_config(config_centre)
+            .build()
+            .expect("Failed to build sampler");
+
+        sampler_centre.sample_field(1.0, "test")
+            .expect("Failed to sample field with CENTRE mode");
+
+        // Test CORNERS mode
+        let config_corners = SparseFieldConfig {
+            internal_size: BlockSize::Size8,
+            leaf_size: BlockSize::Size4,
+            sampling_mode: SamplingMode::CORNERS,
+        };
+
+        let mut sampler_corners = SparseSampler::builder()
+            .with_model(create_test_model())
+            .with_bounds(bounds)
+            .with_sparse_config(config_corners)
+            .build()
+            .expect("Failed to build sampler");
+
+        sampler_corners.sample_field(1.0, "test")
+            .expect("Failed to sample field with CORNERS mode");
+
+        // Both samplers should produce valid fields
+        assert!(sampler_centre.field().is_some());
+        assert!(sampler_corners.field().is_some());
+    }
+
+    #[test]
+    fn test_sampler_invalid_component() {
+        let bounds = create_test_bounds();
+        
+        let mut dense_sampler = DenseSampler::builder()
+            .with_model(create_test_model())
+            .with_bounds(bounds)
+            .build()
+            .expect("Failed to build dense sampler");
+
+        let dense_result = dense_sampler.sample_field(1.0, "nonexistent_component");
+        assert!(dense_result.is_err());
+
+        let config = SparseFieldConfig {
+            internal_size: BlockSize::Size8,
+            leaf_size: BlockSize::Size4,
+            sampling_mode: SamplingMode::CENTRE,
+        };
+
+        let mut sparse_sampler = SparseSampler::builder()
+            .with_model(create_test_model())
+            .with_bounds(bounds)
+            .with_sparse_config(config)
+            .build()
+            .expect("Failed to build sparse sampler");
+
+        let sparse_result = sparse_sampler.sample_field(1.0, "nonexistent_component");
+        assert!(sparse_result.is_err());
+    }
+
+    #[test]
+    fn test_sampler_iso_surface_without_field() {
+        let bounds = create_test_bounds();
+        
+        let dense_sampler = DenseSampler::builder()
+            .with_model(create_test_model())
+            .with_bounds(bounds)
+            .build()
+            .expect("Failed to build dense sampler");
+
+        let dense_result = dense_sampler.iso_surface(0.0);
+        assert!(dense_result.is_err());
+
+        let config = SparseFieldConfig {
+            internal_size: BlockSize::Size8,
+            leaf_size: BlockSize::Size4,
+            sampling_mode: SamplingMode::CENTRE,
+        };
+
+        let sparse_sampler = SparseSampler::builder()
+            .with_model(create_test_model())
+            .with_bounds(bounds)
+            .with_sparse_config(config)
+            .build()
+            .expect("Failed to build sparse sampler");
+
+        let sparse_result = sparse_sampler.iso_surface(0.0);
+        assert!(sparse_result.is_err());
+    }
 }

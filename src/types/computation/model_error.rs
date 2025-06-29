@@ -39,39 +39,37 @@ impl std::fmt::Display for ModelError {
             ModelError::CyclicDependency(component) => {
                 write!(
                     f,
-                    "Cyclic dependency detected for {}. The component is depending on itself.",
-                    component
+                    "Cyclic dependency detected for {component}. The component is depending on itself."
                 )
             }
             ModelError::MissingTag(tag) => {
-                write!(f, "Could not find component with tag {} in model.", tag)
+                write!(f, "Could not find component with tag {tag} in model.")
             }
             ModelError::DuplicateTag(tag) => {
-                write!(f, "Component with tag {} already present in model.", tag)
+                write!(f, "Component with tag {tag} already present in model.")
             }
             ModelError::InputIndexOutOfRange {
                 component,
                 num_inputs,
                 index,
             } => {
-                write!(f, "Input index out of bounds for component {}. The recieved index ({}) is larget than the input count for the component ({})", component, index, num_inputs)
+                write!(f, "Input index out of bounds for component {component}. The recieved index ({index}) is larger than the input count for the component ({num_inputs})")
             }
             ModelError::IncorrectInputCount {
                 component,
                 num_inputs,
                 count,
             } => {
-                write!(f, "Incorrect inputs for component {}. The recieved number ({}) is larget than the input count for the component ({})", component, count, num_inputs)
+                write!(f, "Incorrect inputs for component {component}. The recieved number ({count}) is larger than the input count for the component ({num_inputs})")
             }
             ModelError::MissingInput { component, index } => {
                 write!(
                     f,
-                    "Component {} is missing an input at index {}. The model cannot be computed.",
-                    component, index
+                    "Component {component} is missing an input at index {index}. The model cannot be computed."
                 )
             }
             ModelError::TagGenerationFailed(tag) => {
-                write!(f, "Failed to generate increment for tag {}.", tag)
+                write!(f, "Failed to generate increment for tag {tag}.")
             }
             ModelError::MissingOutput() => {
                 write!(f, "Failed to generate output as no output node specified.")
@@ -80,7 +78,7 @@ impl std::fmt::Display for ModelError {
                 f,
                 "Failed to generate output as no config is specified for the model."
             ),
-            ModelError::Custom(message) => write!(f, "{}", message),
+            ModelError::Custom(message) => write!(f, "{message}"),
         }
     }
 }

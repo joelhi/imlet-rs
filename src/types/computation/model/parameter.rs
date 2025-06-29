@@ -1,5 +1,3 @@
-use std::fmt::{self, Display};
-
 use crate::types::geometry::Vec3;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
@@ -240,14 +238,14 @@ impl<T> Data<T> {
 }
 
 // Implement the Display trait for Data<T>
-impl<T: Display> Display for Data<T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl<T: std::fmt::Display> std::fmt::Display for Data<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Data::Value(value) => write!(f, "{}", value),
-            Data::Vec3(vec3) => write!(f, "({}, {}, {})", vec3.x, vec3.y, vec3.z),
-            Data::Boolean(b) => write!(f, "{}", b),
-            Data::File(path) => write!(f, "File: {}", path),
-            Data::EnumValue(text) => write!(f, "Selection: {}", text),
+            Data::Value(value) => write!(f, "{value}"),
+            Data::Vec3(vec) => write!(f, "Vector: ({}, {}, {})", vec.x, vec.y, vec.z),
+            Data::Boolean(b) => write!(f, "{b}"),
+            Data::File(path) => write!(f, "File: {path}"),
+            Data::EnumValue(text) => write!(f, "Selection: {text}"),
         }
     }
 }

@@ -362,8 +362,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
 
         let component = self.components.remove(current_tag).unwrap_or_else(|| {
             panic!(
-                "Should be a valid entry as tag {} is verified.",
-                current_tag
+                "Should be a valid entry as tag {current_tag} is verified.",
             )
         });
         self.components.insert(new_tag_string.clone(), component);
@@ -394,11 +393,11 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     fn find_free_tag(&mut self, base_tag: &str) -> Result<String, ModelError> {
         if self.components.contains_key(base_tag) {
             let mut increment = 1;
-            let mut temp_tag = format!("{}_{}", base_tag, increment);
+            let mut temp_tag = format!("{base_tag}_{increment}");
             while self.components.contains_key(&temp_tag) {
                 info!("Increment");
                 increment += 1;
-                temp_tag = format!("{}_{}", base_tag, increment);
+                temp_tag = format!("{base_tag}_{increment}");
 
                 if increment > 1000 {
                     return Err(ModelError::TagGenerationFailed(base_tag.to_owned()));
@@ -630,8 +629,8 @@ impl<T: Float + Send + Sync + Display + Debug + Serialize + 'static + Pi> Displa
     for ImplicitModel<T>
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for (name, component) in &self.components {
-            writeln!(f, "Component: {}", name)?;
+        for (name, component) in self.components.iter() {
+            writeln!(f, "Component: {name}")?;
             writeln!(f, "Type: {}", component.type_name())?;
             let parameters = component.read_parameters();
             if !parameters.is_empty() {
@@ -644,8 +643,8 @@ impl<T: Float + Send + Sync + Display + Debug + Serialize + 'static + Pi> Displa
                 writeln!(f, "Inputs: ")?;
                 for input in inputs {
                     match input {
-                        Some(name) => writeln!(f, "- {}", name)?,
-                        None => writeln!(f, "- Empty")?,
+                        Some(name) => writeln!(f, "- {name}")?,
+                        None => writeln!(f, "- None")?,
                     }
                 }
             }
@@ -694,8 +693,7 @@ mod tests {
 
         assert!(
             (val - 2.0).abs() < f64::epsilon(),
-            "Incorrect value. Expected 2.0 but was {}",
-            val
+            "Incorrect value. Expected 2.0 but was {val}"
         );
     }
 
@@ -718,8 +716,7 @@ mod tests {
 
         assert!(
             (val - 3.0).abs() < f64::epsilon(),
-            "Incorrect value. Expected 3.0 but was {}",
-            val
+            "Incorrect value. Expected 3.0 but was {val}"
         );
 
         model.remove_input("Add", 0).unwrap();

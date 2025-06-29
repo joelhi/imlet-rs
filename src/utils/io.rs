@@ -80,15 +80,13 @@ pub fn parse_obj_file<T: Float + Send + Sync>(
 
     let extension = path.extension().ok_or_else(|| {
         format!(
-            "Cannot read file {}. Only .obj files are supported.",
-            file_path
+            "Cannot read file {file_path}. Only .obj files are supported."   
         )
     })?;
 
     if !extension.eq_ignore_ascii_case("obj") {
         return Err(format!(
-            "Cannot read file {}. Only .obj files are supported.",
-            file_path
+            "Cannot read file {file_path}. Only .obj files are supported."
         )
         .into());
     }
@@ -255,15 +253,13 @@ pub fn read_model_from_file<
 
     let extension = path.extension().ok_or_else(|| {
         format!(
-            "Cannot read file {}. No valid extension provided. Should be .json.",
-            file_path
+            "Cannot read file {file_path}. No valid extension provided. Should be .json."
         )
     })?;
 
     if !extension.eq_ignore_ascii_case("json") {
         return Err(format!(
-            "Cannot read file {}. Only .json files are supported.",
-            file_path
+            "Cannot read file {file_path}. Only .json files are supported."
         )
         .into());
     }
@@ -292,9 +288,7 @@ mod tests {
         let expected_val = 41.60254;
         assert!(
             (val - expected_val).abs() < f32::epsilon(),
-            "Wrong value returned from model. Was {}, but should have been {}",
-            val,
-            expected_val
+            "Wrong value returned from model. Was {val}, but should have been {expected_val}"
         );
     }
 
@@ -308,9 +302,7 @@ mod tests {
         let expected_val = 13.442741;
         assert!(
             (val - expected_val).abs() < f32::epsilon(),
-            "Wrong value returned from model. Was {}, but should have been {}",
-            val,
-            expected_val
+            "Wrong value returned from model. Was {val}, but should have been {expected_val}"
         );
     }
 }

@@ -423,8 +423,7 @@ mod tests {
         for tag in &tags {
             assert!(
                 deserialized_model.get_component(tag).is_some(),
-                "Component with tag '{}' is missing in the deserialized model",
-                tag
+                "Component with tag '{tag}' is missing in the deserialized model"
             );
         }
     }
@@ -448,8 +447,7 @@ mod tests {
         for tag in &tags {
             assert!(
                 deserialized_model.get_component(tag).is_some(),
-                "Component with tag '{}' is missing in the deserialized model",
-                tag
+                "Component with tag '{tag}' is missing in the deserialized model"
             );
         }
     }
