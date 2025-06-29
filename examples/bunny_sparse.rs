@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use imlet::{
     types::computation::{
         data::{
@@ -45,9 +47,10 @@ pub fn main() {
         sampling_mode: SamplingMode::CENTRE,
     };
 
+    let model_ptr = Rc::new(model);
     let mut sampler = SparseSampler::builder()
         .with_bounds(bounds.offset(5.0))
-        .with_model(model)
+        .with_model(model_ptr)
         .with_sparse_config(config)
         .build()
         .expect("Should be able to build the sampler.");

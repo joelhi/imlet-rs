@@ -7,6 +7,7 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::{self, Debug, Display};
+use std::rc::Rc;
 use std::time::Instant;
 
 use super::ComputationGraph;
@@ -79,6 +80,12 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
             components: HashMap::new(),
             inputs: HashMap::new(),
         }
+    }
+
+    /// Create a new empty model wrapped in a reference counted pointer [Rc].
+    /// The [Rc] is used to pass the model to external structs like samplers.
+    pub fn new_shared() -> Rc<Self> {
+        Rc::new(Self::new())
     }
 
     /// Get references to all the components in the model and their tags.

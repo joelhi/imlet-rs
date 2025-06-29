@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use imlet::types::{
     computation::{
         data::sampler::{DenseSampler, Sampler},
@@ -60,9 +62,10 @@ pub fn main() {
         .add_operation_with_inputs("sub_2", Subtract::new(), &[&z_coord, &sub_1])
         .unwrap();
 
+    let model_ptr = Rc::new(model);
     let mut sampler = DenseSampler::builder()
         .with_bounds(bounds)
-        .with_model(model)
+        .with_model(model_ptr.clone())
         .build()
         .unwrap();
 

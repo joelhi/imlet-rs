@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
@@ -86,14 +88,14 @@ pub trait Sampler<T, F> {
 /// let mesh = sampler.iso_surface(0.0)
 ///     .expect("Failed to extract surface");
 /// ```
-#[derive(Serialize, Deserialize)]
+
 pub struct SparseSampler<T>
 where
     T: Float + Send + Sync + Serialize + 'static + Pi,
 {
     min_val: T,
     max_val: T,
-    model: ImplicitModel<T>,
+    model: Rc<ImplicitModel<T>>,
     bounds: BoundingBox<T>,
     sparse_config: SparseFieldConfig,
     field: Option<SparseField<T>>,
@@ -106,7 +108,7 @@ where
     fn new(
         min_val: T,
         max_val: T,
-        model: ImplicitModel<T>,
+        model: Rc<ImplicitModel<T>>,
         bounds: BoundingBox<T>,
         sparse_config: SparseFieldConfig,
     ) -> Self {
@@ -139,7 +141,7 @@ where
 {
     max_val: Option<T>,
     min_val: Option<T>,
-    model: Option<ImplicitModel<T>>,
+    model: Option<Rc<ImplicitModel<T>>>,
     bounds: Option<BoundingBox<T>>,
     sparse_config: Option<SparseFieldConfig>,
 }
@@ -181,7 +183,7 @@ where
     }
 
     /// Sets the implicit model to sample.
-    pub fn with_model(mut self, model: ImplicitModel<T>) -> Self {
+    pub fn with_model(mut self, model: Rc<ImplicitModel<T>>) -> Self {
         self.model = Some(model);
         self
     }
@@ -308,12 +310,11 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi + Serialize + Default>
 /// let mesh = sampler.iso_surface(0.0)
 ///     .expect("Failed to extract surface");
 /// ```
-#[derive(Serialize, Deserialize)]
 pub struct DenseSampler<T>
 where
     T: Float + Send + Sync + Serialize + 'static + Pi,
 {
-    model: ImplicitModel<T>,
+    model: Rc<ImplicitModel<T>>,
     bounds: BoundingBox<T>,
     smoothing_iter: u32,
     smoothing_factor: T,
@@ -329,7 +330,7 @@ pub struct DenseSamplerBuilder<T>
 where
     T: Float + Send + Sync + Serialize + 'static + Pi,
 {
-    model: Option<ImplicitModel<T>>,
+    model: Option<Rc<ImplicitModel<T>>>,
     bounds: Option<BoundingBox<T>>,
     smoothing_iter: u32,
     smoothing_factor: T,
@@ -361,7 +362,7 @@ where
     }
 
     /// Sets the implicit model to sample.
-    pub fn with_model(mut self, model: ImplicitModel<T>) -> Self {
+    pub fn with_model(mut self, model: Rc<ImplicitModel<T>>) -> Self {
         self.model = Some(model);
         self
     }
@@ -478,17 +479,17 @@ mod tests {
     #[test]
     fn test_dense_sampler_builder() {
         let bounds = create_test_bounds();
-
+        let model_ptr = Rc::new(create_test_model());
         // Test basic builder
         let sampler = DenseSampler::builder()
-            .with_model(create_test_model())
+            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .build();
         assert!(sampler.is_ok());
 
         // Test builder with all options
         let sampler = DenseSampler::builder()
-            .with_model(create_test_model())
+            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_smoothing_iter(2)
             .with_smoothing_factor(0.5)
@@ -502,7 +503,7 @@ mod tests {
 
         // Test builder fails without bounds
         let sampler = DenseSampler::builder()
-            .with_model(create_test_model())
+            .with_model(model_ptr.clone())
             .build();
         assert!(sampler.is_err());
     }
@@ -510,8 +511,9 @@ mod tests {
     #[test]
     fn test_dense_sampler_field_operations() {
         let bounds = create_test_bounds();
+        let model_ptr = Rc::new(create_test_model());
         let mut sampler = DenseSampler::builder()
-            .with_model(create_test_model())
+            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .build()
             .unwrap();
@@ -532,15 +534,17 @@ mod tests {
     #[test]
     fn test_sparse_sampler_builder() {
         let bounds = create_test_bounds();
+        let model = create_test_model();
         let config = SparseFieldConfig {
             internal_size: BlockSize::Size64,
             leaf_size: BlockSize::Size4,
             sampling_mode: SamplingMode::CENTRE,
         };
 
+        let model_ptr = Rc::new(model);
         // Test basic builder
         let sampler = SparseSampler::builder()
-            .with_model(create_test_model())
+            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config)
             .build();
@@ -548,7 +552,7 @@ mod tests {
 
         // Test builder with custom thresholds
         let sampler = SparseSampler::builder()
-            .with_model(create_test_model())
+            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config)
             .with_max_val(0.5)
@@ -565,14 +569,14 @@ mod tests {
 
         // Test builder fails without bounds
         let sampler = SparseSampler::builder()
-            .with_model(create_test_model())
+            .with_model(model_ptr.clone())
             .with_sparse_config(config)
             .build();
         assert!(sampler.is_err());
 
         // Test builder fails without config
         let sampler = SparseSampler::builder()
-            .with_model(create_test_model())
+            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .build();
         assert!(sampler.is_err());
@@ -581,14 +585,16 @@ mod tests {
     #[test]
     fn test_sparse_sampler_field_operations() {
         let bounds = create_test_bounds();
+        let model = create_test_model();
         let config = SparseFieldConfig {
             internal_size: BlockSize::Size64,
             leaf_size: BlockSize::Size4,
             sampling_mode: SamplingMode::CENTRE,
         };
 
+        let model_ptr = Rc::new(model);
         let mut sampler = SparseSampler::builder()
-            .with_model(create_test_model())
+            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config)
             .build()
@@ -610,14 +616,16 @@ mod tests {
     #[test]
     fn test_sparse_sampler_iso_value_bounds() {
         let bounds = create_test_bounds();
+        let model = create_test_model();
         let config = SparseFieldConfig {
             internal_size: BlockSize::Size64,
             leaf_size: BlockSize::Size4,
             sampling_mode: SamplingMode::CENTRE,
         };
 
+        let model_ptr = Rc::new(model);
         let mut sampler = SparseSampler::builder()
-            .with_model(create_test_model())
+            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config)
             .with_max_val(0.5)
@@ -637,11 +645,11 @@ mod tests {
 
     #[test]
     fn test_dense_sampler_with_smoothing() {
-        let model = create_test_model();
+        let model_ptr = Rc::new(create_test_model());
         let bounds = create_test_bounds();
 
         let mut sampler = DenseSampler::builder()
-            .with_model(model)
+            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_smoothing_iter(3)
             .with_smoothing_factor(0.1)
@@ -649,7 +657,7 @@ mod tests {
             .expect("Failed to build sampler");
 
         sampler
-            .sample_field(1.0, "test")
+            .sample_field(1.0, "constant")
             .expect("Failed to sample field");
 
         let field = sampler.field().unwrap();
@@ -658,18 +666,18 @@ mod tests {
 
     #[test]
     fn test_dense_sampler_with_padding() {
-        let model = create_test_model();
+        let model_ptr = Rc::new(create_test_model());
         let bounds = create_test_bounds();
 
         let mut sampler = DenseSampler::builder()
-            .with_model(model)
+            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_padding(true)
             .build()
             .expect("Failed to build sampler");
 
         sampler
-            .sample_field(1.0, "test")
+            .sample_field(1.0, "constant")
             .expect("Failed to sample field");
 
         let field = sampler.field().unwrap();
@@ -679,6 +687,7 @@ mod tests {
     #[test]
     fn test_sparse_sampler_different_block_sizes() {
         let bounds = create_test_bounds();
+        let model_ptr = Rc::new(create_test_model());
 
         // Test with small blocks
         let config_small = SparseFieldConfig {
@@ -688,17 +697,16 @@ mod tests {
         };
 
         let mut sampler_small = SparseSampler::builder()
-            .with_model(create_test_model())
+            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config_small)
             .build()
             .expect("Failed to build sampler");
 
         sampler_small
-            .sample_field(1.0, "test")
+            .sample_field(1.0, "constant")
             .expect("Failed to sample field with small blocks");
 
-        // Test with large blocks
         let config_large = SparseFieldConfig {
             internal_size: BlockSize::Size32,
             leaf_size: BlockSize::Size8,
@@ -706,17 +714,16 @@ mod tests {
         };
 
         let mut sampler_large = SparseSampler::builder()
-            .with_model(create_test_model())
+            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config_large)
             .build()
             .expect("Failed to build sampler");
 
         sampler_large
-            .sample_field(1.0, "test")
+            .sample_field(1.0, "constant")
             .expect("Failed to sample field with large blocks");
 
-        // Both samplers should produce valid fields
         assert!(sampler_small.field().is_some());
         assert!(sampler_large.field().is_some());
     }
@@ -724,6 +731,7 @@ mod tests {
     #[test]
     fn test_sparse_sampler_sampling_modes() {
         let bounds = create_test_bounds();
+        let model_ptr = Rc::new(create_test_model());
 
         // Test CENTRE mode
         let config_centre = SparseFieldConfig {
@@ -733,14 +741,14 @@ mod tests {
         };
 
         let mut sampler_centre = SparseSampler::builder()
-            .with_model(create_test_model())
+            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config_centre)
             .build()
             .expect("Failed to build sampler");
 
         sampler_centre
-            .sample_field(1.0, "test")
+            .sample_field(1.0, "constant")
             .expect("Failed to sample field with CENTRE mode");
 
         // Test CORNERS mode
@@ -751,14 +759,14 @@ mod tests {
         };
 
         let mut sampler_corners = SparseSampler::builder()
-            .with_model(create_test_model())
+            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config_corners)
             .build()
             .expect("Failed to build sampler");
 
         sampler_corners
-            .sample_field(1.0, "test")
+            .sample_field(1.0, "constant")
             .expect("Failed to sample field with CORNERS mode");
 
         // Both samplers should produce valid fields
@@ -769,9 +777,10 @@ mod tests {
     #[test]
     fn test_sampler_invalid_component() {
         let bounds = create_test_bounds();
+        let model_ptr = Rc::new(create_test_model());
 
         let mut dense_sampler = DenseSampler::builder()
-            .with_model(create_test_model())
+            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .build()
             .expect("Failed to build dense sampler");
@@ -786,7 +795,7 @@ mod tests {
         };
 
         let mut sparse_sampler = SparseSampler::builder()
-            .with_model(create_test_model())
+            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config)
             .build()
@@ -799,9 +808,10 @@ mod tests {
     #[test]
     fn test_sampler_iso_surface_without_field() {
         let bounds = create_test_bounds();
+        let model_ptr = Rc::new(create_test_model());
 
         let dense_sampler = DenseSampler::builder()
-            .with_model(create_test_model())
+            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .build()
             .expect("Failed to build dense sampler");
@@ -816,7 +826,7 @@ mod tests {
         };
 
         let sparse_sampler = SparseSampler::builder()
-            .with_model(create_test_model())
+            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config)
             .build()

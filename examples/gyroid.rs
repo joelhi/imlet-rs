@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use imlet::types::{
     computation::{
         data::sampler::{DenseSampler, Sampler},
@@ -14,7 +16,7 @@ pub fn main() {
 
     let size: f32 = 100.0;
     let cell_size = 0.5;
-    let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
+    let bounds = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
     // Build model
     let mut model = ImplicitModel::new();
@@ -42,9 +44,10 @@ pub fn main() {
         )
         .unwrap();
 
+    let model_ptr = Rc::new(model);
     let mut sampler = DenseSampler::builder()
-        .with_bounds(model_space)
-        .with_model(model)
+        .with_bounds(bounds)
+        .with_model(model_ptr.clone())
         .build()
         .unwrap();
 

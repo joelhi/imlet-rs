@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use imlet::{
     types::{
         computation::{
@@ -16,7 +18,7 @@ pub fn main() {
     let cell_size = 0.5;
     let size = 100.0;
     let offset = 5.0;
-    let model_space = BoundingBox::new(
+    let bounds = BoundingBox::new(
         Vec3::new(offset, offset, offset),
         Vec3::new(offset + size, offset + size, offset + size),
     );
@@ -38,9 +40,10 @@ pub fn main() {
         )
         .unwrap();
 
+    let model_ptr = Rc::new(model);
     let mut sampler = DenseSampler::builder()
-        .with_bounds(model_space)
-        .with_model(model)
+        .with_bounds(bounds)
+        .with_model(model_ptr.clone())
         .build()
         .unwrap();
 
