@@ -31,7 +31,7 @@ use super::{ComponentId, ModelComponent};
 /// let cell_size = 0.1;
 ///
 /// // Create an empty implicit model
-/// let mut model = ImplicitModel::with_bounds(model_space);
+/// let mut model = ImplicitModel::new();
 ///
 /// // Add a sphere function
 /// let sphere = model

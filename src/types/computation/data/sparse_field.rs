@@ -118,7 +118,7 @@ pub enum BlockSize {
 
 impl BlockSize {
     /// Returns the size value of the block.
-    /// 
+    ///
     /// For example:
     /// - Size2 returns 2
     /// - Size4 returns 4
@@ -136,7 +136,7 @@ impl BlockSize {
     }
 
     /// Returns the total number of elements in a block (size^3).
-    /// 
+    ///
     /// For example:
     /// - Size2 returns 8 (2^3)
     /// - Size4 returns 64 (4^3)
@@ -161,7 +161,7 @@ pub struct SparseFieldConfig {
     pub internal_size: BlockSize,
     /// The size of leaf nodes.
     pub leaf_size: BlockSize,
-    /// Sampling mode
+    /// Sampling mode.
     pub sampling_mode: SamplingMode,
 }
 
@@ -314,9 +314,17 @@ impl<T: Float> InternalNode<T> {
     }
 }
 
+/// Controls how internal nodes in the sparse field are evaluated to determine if they should be filled.
+///
+/// - [`CENTRE`]: Evaluates only the center point and estimates coverage based on the size.
+///   Faster but only accurate for linear distance fields. (For example may not be valid for TPS such as gyroids.)
+/// - [`CORNERS`]: Evaluates all corners to determine if node intersects the iso-surface.
+///   More robust but computationally expensive.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum SamplingMode {
+    /// Sample only the center point. Fast but requires linear distance fields.
     CENTRE,
+    /// Sample all corners. More robust but slower.
     CORNERS,
 }
 

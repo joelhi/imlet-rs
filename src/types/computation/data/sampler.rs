@@ -52,11 +52,16 @@ pub trait Sampler<T, F> {
 /// # Example
 ///
 /// ```rust
-/// use imlet::types::computation::data::{
-///     sampler::{Sampler, SparseSampler},
-///     BlockSize, SamplingMode, SparseFieldConfig,
-/// };
-/// use imlet::types::geometry::BoundingBox;
+/// # use imlet::types::computation::{
+/// #    data::{sampler::{Sampler, SparseSampler}, BlockSize, SamplingMode, SparseFieldConfig},
+/// #    model::ImplicitModel,
+/// # };
+/// # use imlet::types::geometry::BoundingBox;
+/// #
+/// # let mut model = ImplicitModel::new();
+/// # let model_tag = model.add_constant("tag", 1.0).unwrap();
+/// # let bounds = BoundingBox::zero();
+/// # let cell_size = 1.0;
 ///
 /// // Configure the sparse field parameters
 /// let config = SparseFieldConfig {
@@ -199,9 +204,15 @@ where
     ///
     /// A [`Result`] containing the configured sampler or an error message if required parameters are missing.
     pub fn build(self) -> Result<SparseSampler<T>, ModelError> {
-        let model = self.model.ok_or(ModelError::Custom("model is required".to_owned()))?;
-        let bounds = self.bounds.ok_or(ModelError::Custom("bounds is required".to_owned()))?;
-        let sparse_config = self.sparse_config.ok_or(ModelError::Custom("config is required".to_owned()))?;
+        let model = self
+            .model
+            .ok_or(ModelError::Custom("model is required".to_owned()))?;
+        let bounds = self
+            .bounds
+            .ok_or(ModelError::Custom("bounds is required".to_owned()))?;
+        let sparse_config = self
+            .sparse_config
+            .ok_or(ModelError::Custom("config is required".to_owned()))?;
 
         let min_val = self.min_val.unwrap_or(SparseSampler::default_min());
         let max_val = self.max_val.unwrap_or(SparseSampler::default_max());
@@ -268,8 +279,16 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi + Serialize + Default>
 /// # Example
 ///
 /// ```rust
-/// use imlet::types::computation::data::sampler::{DenseSampler, Sampler};
-/// use imlet::types::geometry::BoundingBox;
+/// # use imlet::types::computation::{
+/// #    data::sampler::{DenseSampler, Sampler},
+/// #    model::ImplicitModel,
+/// # };
+/// # use imlet::types::geometry::BoundingBox;
+/// #
+/// # let mut model = ImplicitModel::new();
+/// # let model_tag = model.add_constant("tag", 1.0).unwrap();
+/// # let bounds = BoundingBox::zero();
+/// # let cell_size = 1.0;
 ///
 /// // Create and configure the sampler
 /// let mut sampler = DenseSampler::builder()
@@ -296,7 +315,7 @@ where
 {
     model: ImplicitModel<T>,
     bounds: BoundingBox<T>,
-    smoothing_iter: usize,
+    smoothing_iter: u32,
     smoothing_factor: T,
     padding: bool,
     dense_field: Option<DenseField<T>>,
@@ -312,7 +331,7 @@ where
 {
     model: Option<ImplicitModel<T>>,
     bounds: Option<BoundingBox<T>>,
-    smoothing_iter: usize,
+    smoothing_iter: u32,
     smoothing_factor: T,
     padding: bool,
 }
@@ -354,7 +373,7 @@ where
     }
 
     /// Sets the number of smoothing iterations to apply to the field.
-    pub fn with_smoothing_iter(mut self, smoothing_iter: usize) -> Self {
+    pub fn with_smoothing_iter(mut self, smoothing_iter: u32) -> Self {
         self.smoothing_iter = smoothing_iter;
         self
     }
@@ -409,9 +428,19 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> Sampler<T, DenseField<T>
         component_tag: &str,
     ) -> Result<&DenseField<T>, ModelError> {
         let mut field = DenseField::from_bounds(&self.bounds, cell_size);
-
         let graph = self.model.compile(component_tag)?;
         field.sample_from_graph(&graph);
+
+        // Apply padding if specified.
+        if self.padding {
+            field.padding(T::zero());
+        }
+
+        // Apply smoothing if specified.
+        if self.smoothing_iter > 0{
+            field.smooth_par(self.smoothing_factor, self.smoothing_iter);
+        }
+
         self.dense_field = Some(field);
         Ok(self.dense_field.as_ref().unwrap())
     }

@@ -24,7 +24,7 @@ where
     F: CellIterator<T> + CellValueIterator<T>,
 {
     let before = Instant::now();
-    
+
     // Generate triangles for cell
     let mut triangles: Vec<Triangle<T>> = Vec::new();
     // Iterate over cells and corner values and collect triangles
