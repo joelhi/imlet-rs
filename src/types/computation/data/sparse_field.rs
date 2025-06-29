@@ -203,7 +203,12 @@ impl<T: Float> RootNode<T> {
 
         self.table.clear();
 
-        log::info!("Initialized ({},{},{}) internal nodes.", nodes_x, nodes_y, nodes_z);
+        log::info!(
+            "Initialized ({},{},{}) internal nodes.",
+            nodes_x,
+            nodes_y,
+            nodes_z
+        );
         for k in 0..nodes_z {
             for j in 0..nodes_y {
                 for i in 0..nodes_x {
@@ -796,8 +801,15 @@ mod tests {
 
         // Test cell value iterator
         let cell_values: Vec<_> = field.iter_cell_values().collect();
-        assert!(!cell_values.is_empty(), "Cell value iterator should yield values");
-        assert_eq!(cell_values[0].len(), 8, "Each cell should have 8 corner values");
+        assert!(
+            !cell_values.is_empty(),
+            "Cell value iterator should yield values"
+        );
+        assert_eq!(
+            cell_values[0].len(),
+            8,
+            "Each cell should have 8 corner values"
+        );
 
         // Test cell iterator
         let cells: Vec<_> = field.iter_cells().collect();
@@ -850,8 +862,7 @@ mod tests {
             let expected = size.value().pow(3);
             let actual = size.total_size();
             assert_eq!(
-                actual,
-                expected,
+                actual, expected,
                 "Block total size should be cube of value: expected {expected}, got {actual}"
             );
         }
@@ -873,7 +884,10 @@ mod tests {
         // Test sampling without initialization
         let graph = model.compile("constant").unwrap();
         let result = field.sample_from_graph(&graph, -0.1, 0.1);
-        assert!(result.is_err(), "Sampling without initialization should fail");
+        assert!(
+            result.is_err(),
+            "Sampling without initialization should fail"
+        );
 
         // Initialize and test with invalid component
         field.init_bounds(&bounds, cell_size);

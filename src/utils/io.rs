@@ -78,17 +78,12 @@ pub fn parse_obj_file<T: Float + Send + Sync>(
 ) -> Result<Mesh<T>, Box<dyn std::error::Error>> {
     let path = Path::new(file_path);
 
-    let extension = path.extension().ok_or_else(|| {
-        format!(
-            "Cannot read file {file_path}. Only .obj files are supported."   
-        )
-    })?;
+    let extension = path
+        .extension()
+        .ok_or_else(|| format!("Cannot read file {file_path}. Only .obj files are supported."))?;
 
     if !extension.eq_ignore_ascii_case("obj") {
-        return Err(format!(
-            "Cannot read file {file_path}. Only .obj files are supported."
-        )
-        .into());
+        return Err(format!("Cannot read file {file_path}. Only .obj files are supported.").into());
     }
 
     let file = File::open(path)?;
@@ -252,16 +247,13 @@ pub fn read_model_from_file<
     let path = Path::new(file_path);
 
     let extension = path.extension().ok_or_else(|| {
-        format!(
-            "Cannot read file {file_path}. No valid extension provided. Should be .json."
-        )
+        format!("Cannot read file {file_path}. No valid extension provided. Should be .json.")
     })?;
 
     if !extension.eq_ignore_ascii_case("json") {
-        return Err(format!(
-            "Cannot read file {file_path}. Only .json files are supported."
-        )
-        .into());
+        return Err(
+            format!("Cannot read file {file_path}. Only .json files are supported.").into(),
+        );
     }
 
     let mut file = File::open(path)?;

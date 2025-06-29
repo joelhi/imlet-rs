@@ -639,7 +639,7 @@ mod tests {
     fn test_dense_sampler_with_smoothing() {
         let model = create_test_model();
         let bounds = create_test_bounds();
-        
+
         let mut sampler = DenseSampler::builder()
             .with_model(model)
             .with_bounds(bounds)
@@ -648,7 +648,8 @@ mod tests {
             .build()
             .expect("Failed to build sampler");
 
-        sampler.sample_field(1.0, "test")
+        sampler
+            .sample_field(1.0, "test")
             .expect("Failed to sample field");
 
         let field = sampler.field().unwrap();
@@ -659,7 +660,7 @@ mod tests {
     fn test_dense_sampler_with_padding() {
         let model = create_test_model();
         let bounds = create_test_bounds();
-        
+
         let mut sampler = DenseSampler::builder()
             .with_model(model)
             .with_bounds(bounds)
@@ -667,7 +668,8 @@ mod tests {
             .build()
             .expect("Failed to build sampler");
 
-        sampler.sample_field(1.0, "test")
+        sampler
+            .sample_field(1.0, "test")
             .expect("Failed to sample field");
 
         let field = sampler.field().unwrap();
@@ -677,7 +679,7 @@ mod tests {
     #[test]
     fn test_sparse_sampler_different_block_sizes() {
         let bounds = create_test_bounds();
-        
+
         // Test with small blocks
         let config_small = SparseFieldConfig {
             internal_size: BlockSize::Size8,
@@ -692,7 +694,8 @@ mod tests {
             .build()
             .expect("Failed to build sampler");
 
-        sampler_small.sample_field(1.0, "test")
+        sampler_small
+            .sample_field(1.0, "test")
             .expect("Failed to sample field with small blocks");
 
         // Test with large blocks
@@ -709,7 +712,8 @@ mod tests {
             .build()
             .expect("Failed to build sampler");
 
-        sampler_large.sample_field(1.0, "test")
+        sampler_large
+            .sample_field(1.0, "test")
             .expect("Failed to sample field with large blocks");
 
         // Both samplers should produce valid fields
@@ -720,7 +724,7 @@ mod tests {
     #[test]
     fn test_sparse_sampler_sampling_modes() {
         let bounds = create_test_bounds();
-        
+
         // Test CENTRE mode
         let config_centre = SparseFieldConfig {
             internal_size: BlockSize::Size8,
@@ -735,7 +739,8 @@ mod tests {
             .build()
             .expect("Failed to build sampler");
 
-        sampler_centre.sample_field(1.0, "test")
+        sampler_centre
+            .sample_field(1.0, "test")
             .expect("Failed to sample field with CENTRE mode");
 
         // Test CORNERS mode
@@ -752,7 +757,8 @@ mod tests {
             .build()
             .expect("Failed to build sampler");
 
-        sampler_corners.sample_field(1.0, "test")
+        sampler_corners
+            .sample_field(1.0, "test")
             .expect("Failed to sample field with CORNERS mode");
 
         // Both samplers should produce valid fields
@@ -763,7 +769,7 @@ mod tests {
     #[test]
     fn test_sampler_invalid_component() {
         let bounds = create_test_bounds();
-        
+
         let mut dense_sampler = DenseSampler::builder()
             .with_model(create_test_model())
             .with_bounds(bounds)
@@ -793,7 +799,7 @@ mod tests {
     #[test]
     fn test_sampler_iso_surface_without_field() {
         let bounds = create_test_bounds();
-        
+
         let dense_sampler = DenseSampler::builder()
             .with_model(create_test_model())
             .with_bounds(bounds)

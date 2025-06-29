@@ -361,9 +361,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         self.verify_tag_is_present(current_tag)?;
 
         let component = self.components.remove(current_tag).unwrap_or_else(|| {
-            panic!(
-                "Should be a valid entry as tag {current_tag} is verified.",
-            )
+            panic!("Should be a valid entry as tag {current_tag} is verified.",)
         });
         self.components.insert(new_tag_string.clone(), component);
 
