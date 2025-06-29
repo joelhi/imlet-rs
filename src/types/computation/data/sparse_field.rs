@@ -19,14 +19,17 @@ use crate::utils::math_helper::Pi;
 
 /// 3-dimensional sparse field for scalar values.
 ///
-/// The field uses a hierarchical tree structure where each node can be:
-/// - A leaf node containing actual values
-/// - An internal node with child nodes
-/// - A constant value for uniform regions
-/// - Empty space
+/// The field uses a three-level hierarchical structure:
+/// - A dynamic root node that can be subdivided arbitrarily (e.g., 1x1x2, 2x2x2, etc.)
+/// - Internal nodes with a fixed subdivision pattern defined by [`BlockSize`]
+/// - Dense leaf nodes containing the actual field data
 ///
-/// This allows for arbitrary nesting depth and efficient representation of
-/// both sparse and dense regions of the field.
+/// This structure provides a balance between memory efficiency and computational
+/// performance, allowing dense sampling only in regions where the field is active.
+/// Empty or uniform regions can be efficiently represented at the internal node level.
+///
+/// Note: This type should not be constructed directly. Instead, use [`SparseSampler`]
+/// to sample and extract a sparse field from an implicit model.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SparseField<T: Float> {
     /// The configuration for block sizes

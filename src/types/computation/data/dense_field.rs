@@ -27,7 +27,18 @@ use super::field_iterator::{
 
 /// 3-dimensional dense field for scalar values.
 ///
-/// The geometry of the fields is defined by an origin point, a cell size and a point count in x,y and z directions.
+/// A uniform grid representation that stores field values at every point in the sampling domain.
+/// The field geometry is defined by:
+/// - An origin point defining the minimum corner of the field
+/// - A uniform cell size for all dimensions
+/// - The number of points in x, y, and z directions
+///
+/// The field stores values in a contiguous array, providing efficient access and parallel
+/// processing capabilities. This representation is memory-intensive but offers fast
+/// random access and is well-suited for operations like smoothing and iso-surface extraction.
+///
+/// Note: This type should not be constructed directly. Instead, use [`DenseSampler`]
+/// to sample and extract a dense field from an implicit model.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DenseField<T> {
     origin: Vec3<T>,
