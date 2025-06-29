@@ -711,3 +711,181 @@ impl<T: Float + 'static> CellValueIterator<T> for SparseField<T> {
         Box::new(iter)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{computation::model::ImplicitModel, geometry::Vec3};
+
+    fn create_test_bounds() -> BoundingBox<f32> {
+        BoundingBox::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(10.0, 10.0, 10.0))
+    }
+
+    fn create_test_model() -> ImplicitModel<f32> {
+        let mut model = ImplicitModel::new();
+        model.add_constant("constant", 1.0).unwrap();
+        model
+    }
+
+    fn create_test_config() -> SparseFieldConfig {
+        SparseFieldConfig {
+            internal_size: BlockSize::Size8,
+            leaf_size: BlockSize::Size4,
+            sampling_mode: SamplingMode::CENTRE,
+        }
+    }
+
+    #[test]
+    fn test_sparse_field_initialization() {
+        let mut field = SparseField::new(create_test_config());
+        let bounds = create_test_bounds();
+        let cell_size = 1.0;
+
+        // Test initialization
+        field.init_bounds(&bounds, cell_size);
+
+        // Verify root node exists
+        assert!(!field.root.table.is_empty());
+    }
+
+    #[test]
+    fn test_sparse_field_sampling() {
+        let mut field = SparseField::new(create_test_config());
+        let bounds = create_test_bounds();
+        let cell_size = 1.0;
+        let model = create_test_model();
+
+        // Initialize and sample
+        field.init_bounds(&bounds, cell_size);
+        let graph = model.compile("constant").unwrap();
+        field.sample_from_graph(&graph, -0.1, 0.1).unwrap();
+
+        // Verify field contains data
+        assert!(!field.root.table.is_empty());
+
+        // Test some points are within expected range
+        let mut found_active = false;
+        for node in field.root.table.values() {
+            if let NodeHandle::Internal(internal) = node {
+                for child in internal.children.iter() {
+                    if let NodeHandle::Leaf(_) = child {
+                        found_active = true;
+                        break;
+                    }
+                }
+            }
+        }
+        assert!(found_active, "No active leaf nodes found");
+    }
+
+    #[test]
+    fn test_sparse_field_iterators() {
+        let mut field = SparseField::new(create_test_config());
+        let bounds = create_test_bounds();
+        let cell_size = 1.0;
+        let model = create_test_model();
+
+        // Initialize and sample
+        field.init_bounds(&bounds, cell_size);
+        let graph = model.compile("constant").unwrap();
+        field.sample_from_graph(&graph, -0.1, 0.1).unwrap();
+
+        // Test value iterator
+        let values: Vec<_> = field.iter_values().collect();
+        assert!(!values.is_empty(), "Value iterator should yield values");
+
+        // Test cell value iterator
+        let cell_values: Vec<_> = field.iter_cell_values().collect();
+        assert!(
+            !cell_values.is_empty(),
+            "Cell value iterator should yield values"
+        );
+        assert_eq!(
+            cell_values[0].len(),
+            8,
+            "Each cell should have 8 corner values"
+        );
+
+        // Test cell iterator
+        let cells: Vec<_> = field.iter_cells().collect();
+        assert!(!cells.is_empty(), "Cell iterator should yield cells");
+    }
+
+    #[test]
+    fn test_sampling_modes() {
+        // Test CENTRE mode
+        let mut field_centre = SparseField::new(SparseFieldConfig {
+            internal_size: BlockSize::Size8,
+            leaf_size: BlockSize::Size4,
+            sampling_mode: SamplingMode::CENTRE,
+        });
+        let bounds = create_test_bounds();
+        let cell_size = 1.0;
+        let model = create_test_model();
+
+        field_centre.init_bounds(&bounds, cell_size);
+        let graph = model.compile("constant").unwrap();
+        field_centre.sample_from_graph(&graph, -0.1, 0.1).unwrap();
+
+        // Test CORNERS mode
+        let mut field_corners = SparseField::new(SparseFieldConfig {
+            internal_size: BlockSize::Size8,
+            leaf_size: BlockSize::Size4,
+            sampling_mode: SamplingMode::CORNERS,
+        });
+
+        field_corners.init_bounds(&bounds, cell_size);
+        field_corners.sample_from_graph(&graph, -0.1, 0.1).unwrap();
+
+        // Both modes should produce valid fields
+        assert!(!field_centre.root.table.is_empty());
+        assert!(!field_corners.root.table.is_empty());
+    }
+
+    #[test]
+    fn test_block_sizes() {
+        let sizes = [
+            BlockSize::Size2,
+            BlockSize::Size4,
+            BlockSize::Size8,
+            BlockSize::Size16,
+            BlockSize::Size32,
+            BlockSize::Size64,
+        ];
+
+        for &size in sizes.iter() {
+            assert_eq!(
+                size.total_size(),
+                size.value().pow(3),
+                "Block total size should be cube of value"
+            );
+        }
+
+        // Test specific values
+        assert_eq!(BlockSize::Size2.value(), 2);
+        assert_eq!(BlockSize::Size2.total_size(), 8);
+        assert_eq!(BlockSize::Size64.value(), 64);
+        assert_eq!(BlockSize::Size64.total_size(), 262144);
+    }
+
+    #[test]
+    fn test_error_handling() {
+        let mut field = SparseField::new(create_test_config());
+        let bounds = create_test_bounds();
+        let cell_size = 1.0;
+        let model = create_test_model();
+
+        // Test sampling without initialization
+        let graph = model.compile("constant").unwrap();
+        let result = field.sample_from_graph(&graph, -0.1, 0.1);
+        assert!(
+            result.is_err(),
+            "Sampling without initialization should fail"
+        );
+
+        // Initialize and test with invalid component
+        field.init_bounds(&bounds, cell_size);
+        let result = model.compile("nonexistent");
+        assert!(result.is_err(), "Compiling invalid component should fail");
+    }
+}

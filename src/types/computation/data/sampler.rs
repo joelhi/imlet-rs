@@ -223,7 +223,7 @@ where
 
 impl<T> SparseSampler<T>
 where
-    T: Float + Send + Sync + Serialize + 'static + Pi,
+    T: Float + Send + Sync + Serialize + Pi,
 {
     pub fn builder() -> SparseSamplerBuilder<T> {
         SparseSamplerBuilder::new()
@@ -347,7 +347,7 @@ where
 
 impl<T> DenseSamplerBuilder<T>
 where
-    T: Float + Send + Sync + Serialize + 'static + Pi,
+    T: Float + Send + Sync + Serialize + Pi,
 {
     /// Creates a new builder with default values.
     pub fn new() -> Self {
@@ -419,9 +419,7 @@ where
     }
 }
 
-impl<T: Float + Send + Sync + Serialize + 'static + Pi> Sampler<T, DenseField<T>>
-    for DenseSampler<T>
-{
+impl<T: Float + Send + Sync + Serialize + Pi> Sampler<T, DenseField<T>> for DenseSampler<T> {
     fn sample_field(
         &mut self,
         cell_size: T,
@@ -456,5 +454,184 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> Sampler<T, DenseField<T>
 
     fn field(&self) -> Option<&DenseField<T>> {
         self.dense_field.as_ref()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{
+        computation::data::{BlockSize, SamplingMode},
+        geometry::Vec3,
+    };
+
+    fn create_test_model() -> ImplicitModel<f32> {
+        let mut model = ImplicitModel::new();
+        model.add_constant("constant", 1.0).unwrap();
+        model
+    }
+
+    fn create_test_bounds() -> BoundingBox<f32> {
+        BoundingBox::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(10.0, 10.0, 10.0))
+    }
+
+    #[test]
+    fn test_dense_sampler_builder() {
+        let bounds = create_test_bounds();
+
+        // Test basic builder
+        let sampler = DenseSampler::builder()
+            .with_model(create_test_model())
+            .with_bounds(bounds.clone())
+            .build();
+        assert!(sampler.is_ok());
+
+        // Test builder with all options
+        let sampler = DenseSampler::builder()
+            .with_model(create_test_model())
+            .with_bounds(bounds.clone())
+            .with_smoothing_iter(2)
+            .with_smoothing_factor(0.5)
+            .with_padding(true)
+            .build();
+        assert!(sampler.is_ok());
+
+        // Test builder fails without model
+        let sampler = DenseSampler::builder().with_bounds(bounds.clone()).build();
+        assert!(sampler.is_err());
+
+        // Test builder fails without bounds
+        let sampler = DenseSampler::builder()
+            .with_model(create_test_model())
+            .build();
+        assert!(sampler.is_err());
+    }
+
+    #[test]
+    fn test_dense_sampler_field_operations() {
+        let bounds = create_test_bounds();
+        let mut sampler = DenseSampler::builder()
+            .with_model(create_test_model())
+            .with_bounds(bounds)
+            .build()
+            .unwrap();
+
+        // Test field is initially None
+        assert!(sampler.field().is_none());
+
+        // Test sampling
+        let field = sampler.sample_field(1.0, "constant");
+        assert!(field.is_ok());
+        assert!(sampler.field().is_some());
+
+        // Test iso-surface extraction
+        let mesh = sampler.iso_surface(0.0);
+        assert!(mesh.is_ok());
+    }
+
+    #[test]
+    fn test_sparse_sampler_builder() {
+        let bounds = create_test_bounds();
+        let config = SparseFieldConfig {
+            internal_size: BlockSize::Size64,
+            leaf_size: BlockSize::Size4,
+            sampling_mode: SamplingMode::CENTRE,
+        };
+
+        // Test basic builder
+        let sampler = SparseSampler::builder()
+            .with_model(create_test_model())
+            .with_bounds(bounds.clone())
+            .with_sparse_config(config)
+            .build();
+        assert!(sampler.is_ok());
+
+        // Test builder with custom thresholds
+        let sampler = SparseSampler::builder()
+            .with_model(create_test_model())
+            .with_bounds(bounds.clone())
+            .with_sparse_config(config)
+            .with_max_val(0.5)
+            .with_delta_neg(-0.5)
+            .build();
+        assert!(sampler.is_ok());
+
+        // Test builder fails without model
+        let sampler = SparseSampler::builder()
+            .with_bounds(bounds.clone())
+            .with_sparse_config(config)
+            .build();
+        assert!(sampler.is_err());
+
+        // Test builder fails without bounds
+        let sampler = SparseSampler::builder()
+            .with_model(create_test_model())
+            .with_sparse_config(config)
+            .build();
+        assert!(sampler.is_err());
+
+        // Test builder fails without config
+        let sampler = SparseSampler::builder()
+            .with_model(create_test_model())
+            .with_bounds(bounds)
+            .build();
+        assert!(sampler.is_err());
+    }
+
+    #[test]
+    fn test_sparse_sampler_field_operations() {
+        let bounds = create_test_bounds();
+        let config = SparseFieldConfig {
+            internal_size: BlockSize::Size64,
+            leaf_size: BlockSize::Size4,
+            sampling_mode: SamplingMode::CENTRE,
+        };
+
+        let mut sampler = SparseSampler::builder()
+            .with_model(create_test_model())
+            .with_bounds(bounds)
+            .with_sparse_config(config)
+            .build()
+            .unwrap();
+
+        // Test field is initially None
+        assert!(sampler.field().is_none());
+
+        // Test sampling
+        let field = sampler.sample_field(1.0, "constant");
+        assert!(field.is_ok());
+        assert!(sampler.field().is_some());
+
+        // Test iso-surface extraction
+        let mesh = sampler.iso_surface(0.0);
+        assert!(mesh.is_ok());
+    }
+
+    #[test]
+    fn test_sparse_sampler_iso_value_bounds() {
+        let bounds = create_test_bounds();
+        let config = SparseFieldConfig {
+            internal_size: BlockSize::Size64,
+            leaf_size: BlockSize::Size4,
+            sampling_mode: SamplingMode::CENTRE,
+        };
+
+        let mut sampler = SparseSampler::builder()
+            .with_model(create_test_model())
+            .with_bounds(bounds)
+            .with_sparse_config(config)
+            .with_max_val(0.5)
+            .with_delta_neg(-0.5)
+            .build()
+            .unwrap();
+
+        sampler.sample_field(1.0, "constant").unwrap();
+
+        // Test iso-surface extraction within bounds succeeds
+        assert!(sampler.iso_surface(0.0).is_ok());
+
+        // Test iso-surface extraction outside bounds fails
+        assert!(sampler.iso_surface(1.0).is_err());
+        assert!(sampler.iso_surface(-1.0).is_err());
     }
 }
