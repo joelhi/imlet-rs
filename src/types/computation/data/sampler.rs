@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use num_traits::Float;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use crate::{
     algorithms::{self, marching_cubes},
@@ -75,7 +75,7 @@ pub trait Sampler<T, F> {
 /// // Create and configure the sampler
 /// let mut sampler = SparseSampler::builder()
 ///     .with_bounds(bounds)
-///     .with_model(model)
+///     .with_model(model.into())
 ///     .with_sparse_config(config)
 ///     .build()
 ///     .expect("Failed to build sampler");
@@ -87,8 +87,8 @@ pub trait Sampler<T, F> {
 /// // Extract the iso-surface
 /// let mesh = sampler.iso_surface(0.0)
 ///     .expect("Failed to extract surface");
+///
 /// ```
-
 pub struct SparseSampler<T>
 where
     T: Float + Send + Sync + Serialize + 'static + Pi,
@@ -295,7 +295,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi + Serialize + Default>
 /// // Create and configure the sampler
 /// let mut sampler = DenseSampler::builder()
 ///     .with_bounds(bounds)
-///     .with_model(model)
+///     .with_model(model.into())
 ///     .with_smoothing_iter(2)       // Optional: Apply smoothing
 ///     .with_smoothing_factor(0.5)   // Optional: Set smoothing strength
 ///     .with_padding(true)           // Optional: Add padding

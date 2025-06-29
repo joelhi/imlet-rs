@@ -71,9 +71,9 @@
 //! };
 //!
 //! let mut sampler = SparseSampler::builder()
-//!     .with_bounds(bounds)            // Set the bounds for the sampling.
-//!     .with_model(model)              // Set the model to sample.
-//!     .with_sparse_config(config)     // Set the sparse field parameters.
+//!     .with_bounds(bounds)                    // Set the bounds for the sampling.
+//!     .with_model(model.into())              // Set the model to sample.
+//!     .with_sparse_config(config)             // Set the sparse field parameters.
 //!     .build()
 //!     .expect("Should be able to build the sampler.");
 //!

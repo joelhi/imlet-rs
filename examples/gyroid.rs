@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use imlet::types::{
     computation::{
         data::sampler::{DenseSampler, Sampler},
@@ -44,10 +42,9 @@ pub fn main() {
         )
         .unwrap();
 
-    let model_ptr = Rc::new(model);
     let mut sampler = DenseSampler::builder()
         .with_bounds(bounds)
-        .with_model(model_ptr.clone())
+        .with_model(model.into())
         .build()
         .unwrap();
 
