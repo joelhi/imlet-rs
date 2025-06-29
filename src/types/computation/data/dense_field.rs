@@ -38,26 +38,38 @@ pub struct DenseField<T> {
 }
 
 impl<T> DenseField<T> {
-    /// Returns the origin of the field.
+    /// Returns a reference to the origin point of the field as a [`Vec3<T>`].
     pub fn origin(&self) -> &Vec3<T> {
         &self.origin
     }
 
-    /// Returns the totla number of points in the field.
+    /// Returns the total number of points in the field as the product of points in each direction.
     pub fn num_points(&self) -> usize {
         self.n.product()
     }
 
-    /// Returns the total number of cells in the field.
+    /// Returns the total number of cells in the field as the product of cells in each direction.
+    /// Note that the number of cells is one less than the number of points in each direction.
     pub fn num_cells(&self) -> usize {
         (self.n.i - 1) * (self.n.j - 1) * (self.n.k - 1)
     }
 
-    /// Returns a slice of the data buffer in the field.
+    /// Returns a reference to the underlying data buffer as a slice.
     pub fn data(&self) -> &[T] {
         &self.data
     }
 
+    /// Returns the indices of the eight corners of a cell at the specified coordinates.
+    ///
+    /// # Arguments
+    ///
+    /// * `i` - Index in first direction.
+    /// * `j` - Index in second direction.
+    /// * `k` - Index in third direction.
+    ///
+    /// # Returns
+    ///
+    /// An array of 8 indices corresponding to the corners of the cell in the data buffer.
     fn cell_ids(&self, i: usize, j: usize, k: usize) -> [usize; 8] {
         [
             self.point_index1d(i, j, k),
@@ -71,22 +83,62 @@ impl<T> DenseField<T> {
         ]
     }
 
+    /// Converts 3D point coordinates to a 1D index in the data buffer.
+    ///
+    /// # Arguments
+    ///
+    /// * `i` - Index in first direction.
+    /// * `j` - Index in second direction.
+    /// * `k` - Index in third direction.
+    ///
+    /// # Returns
+    ///
+    /// The 1D index corresponding to the given 3D coordinates.
     #[inline(always)]
     pub(crate) fn point_index1d(&self, i: usize, j: usize, k: usize) -> usize {
         index1d_from_index3d(i, j, k, self.n.i, self.n.j, self.n.k)
     }
 
+    /// Converts a 1D index to 3D point coordinates.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The 1D index in the data buffer.
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing the (i, j, k) coordinates corresponding to the 1D index.
     #[inline(always)]
     pub(crate) fn point_index3d(&self, index: usize) -> (usize, usize, usize) {
         index3d_from_index1d(index, self.n.i, self.n.j, self.n.k)
     }
 
+    /// Converts 3D cell coordinates to a 1D index in the cell space.
+    ///
+    /// # Arguments
+    ///
+    /// * `i` - Index in first direction.
+    /// * `j` - Index in second direction.
+    /// * `k` - Index in third direction.
+    ///
+    /// # Returns
+    ///
+    /// The 1D index corresponding to the given 3D cell coordinates.
     #[inline(always)]
     #[allow(dead_code)]
     pub(crate) fn cell_index1d(&self, i: usize, j: usize, k: usize) -> usize {
         index1d_from_index3d(i, j, k, self.n.i - 1, self.n.j - 1, self.n.k - 1)
     }
 
+    /// Converts a 1D index to 3D cell coordinates.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The 1D index in the cell space.
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing the (i, j, k) coordinates corresponding to the 1D cell index.
     #[inline(always)]
     #[allow(dead_code)]
     pub(crate) fn cell_index3d(&self, index: usize) -> (usize, usize, usize) {
@@ -96,11 +148,16 @@ impl<T> DenseField<T> {
 
 impl<T: Float> DenseField<T> {
     /// Create a new empty field.
+    ///
     /// # Arguments
     ///
     /// * `origin` - The base of the field, and the first data location.
     /// * `cell_size` - The size of each cell in the field.
     /// * `num_pts` - Number of points in each direction.
+    ///
+    /// # Returns
+    ///
+    /// A new [`DenseField`] initialized with zeros and the specified parameters.
     pub fn new(origin: Vec3<T>, cell_size: T, num_pts: Vec3i) -> Self {
         let size = Vec3::new(
             cell_size * T::from(num_pts.i - 1).unwrap(),
@@ -117,11 +174,16 @@ impl<T: Float> DenseField<T> {
         }
     }
 
-    /// Create a new empty field from bounds and a cell size
+    /// Create a new empty field from bounds and a cell size.
+    ///
     /// # Arguments
     ///
     /// * `bounds` - The extents of the field.
     /// * `cell_size` - The size of each cell in the field.
+    ///
+    /// # Returns
+    ///
+    /// A new [`DenseField`] initialized with zeros and dimensions derived from the bounds and cell size.
     pub fn from_bounds(bounds: &BoundingBox<T>, cell_size: T) -> Self {
         DenseField::new(
             bounds.min,
@@ -173,13 +235,19 @@ impl<T: Float> DenseField<T> {
         })
     }
 
+    /// Sets the value at a specific index in the data buffer.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The 1D index in the data buffer.
+    /// * `value` - The new value to set.
+    pub fn set_value(&mut self, index: usize, value: T) {
+        self.data[index] = value;
+    }
+
     /// Returns the cell size of the field.
     pub fn cell_size(&self) -> T {
         self.cell_size
-    }
-
-    pub fn set_value(&mut self, index: usize, value: T) {
-        self.data[index] = value;
     }
 
     /// Returns a copy of the data buffer in the field.
@@ -188,11 +256,16 @@ impl<T: Float> DenseField<T> {
     }
 
     /// Returns the vertex locations at the corners of the specified cell.
+    ///
     /// # Arguments
     ///
     /// * `i` - Index in first direction.
     /// * `j` - Index in second direction.
     /// * `k` - Index in third direction.
+    ///
+    /// # Returns
+    ///
+    /// An array of 8 [`Vec3<T>`] coordinates corresponding to the corners of the cell.
     pub fn cell_corners(&self, i: usize, j: usize, k: usize) -> [Vec3<T>; 8] {
         let size = self.cell_size;
         let i_val = T::from(i).expect("Failed to convert number to T");
@@ -252,11 +325,16 @@ impl<T: Float> DenseField<T> {
     }
 
     /// Returns the values at the corners of the specified cell.
+    ///
     /// # Arguments
     ///
     /// * `i` - Index in first direction.
     /// * `j` - Index in second direction.
     /// * `k` - Index in third direction.
+    ///
+    /// # Returns
+    ///
+    /// An array of 8 values corresponding to the corners of the cell.
     pub fn cell_values(&self, i: usize, j: usize, k: usize) -> [T; 8] {
         let cell_ids = self.cell_ids(i, j, k);
         [
@@ -272,6 +350,7 @@ impl<T: Float> DenseField<T> {
     }
 
     /// Assigns 0 to any point with an absolute value below the limit.
+    ///
     /// # Arguments
     ///
     /// * `limit` - The limit threshold for non-zero values.
@@ -283,6 +362,16 @@ impl<T: Float> DenseField<T> {
         });
     }
 
+    /// Calculates the sum of values at the six adjacent points for a given index.
+    ///
+    /// # Arguments
+    ///
+    /// * `index` - The 1D index of the point in the data buffer.
+    ///
+    /// # Returns
+    ///
+    /// [`Some`] containing the sum of adjacent values if the point is not on the boundary,
+    /// or [`None`] if the point is on the boundary.
     fn neighbours_sum(&self, index: usize) -> Option<T> {
         let (i, j, k) = self.point_index3d(index);
 
@@ -302,6 +391,7 @@ impl<T: Float> DenseField<T> {
     /// Performs a laplacian smoothing operation on the field data.
     ///
     /// The value of each point will be updated based on the average of the adjacent points.
+    ///
     /// # Arguments
     ///
     /// * `factor` - Interpolation value between the average of the adjacent points and the current value.
@@ -335,7 +425,7 @@ impl<T: Float> DenseField<T> {
     ///
     /// # Arguments
     ///
-    /// * `value` - The value to assign to all boundary points.
+    /// * `padding_value` - The value to assign to all boundary points.
     pub fn padding(&mut self, padding_value: T) {
         let before = Instant::now();
         let (num_x, num_y, num_z) = self.n.into();
@@ -371,6 +461,20 @@ impl<T: Float> DenseField<T> {
         );
     }
 
+    /// Calculates the number of points needed in each direction based on bounds and cell size.
+    ///
+    /// # Arguments
+    ///
+    /// * `bounds` - The extents of the field.
+    /// * `cell_size` - The size of each cell in the field.
+    ///
+    /// # Returns
+    ///
+    /// A [`Vec3i`] containing the number of points needed in each direction.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the bounds have a non-positive size in any direction.
     pub(crate) fn point_count(bounds: &BoundingBox<T>, cell_size: T) -> Vec3i {
         let (x_dim, y_dim, z_dim) = bounds.dimensions();
         Vec3i::new(
@@ -395,6 +499,13 @@ impl<T: Float> DenseField<T> {
 
 impl<T: Float + Send + Sync + Serialize + 'static + Pi> DenseField<T> {
     /// Evaluate the computation graph over a discretized domain.
+    ///
+    /// # Arguments
+    ///
+    /// * `graph` - The computation graph to evaluate.
+    ///
+    /// This method evaluates the computation graph at each point in the field in parallel.
+    /// The results are stored in the field's data buffer.
     pub(crate) fn sample_from_graph(&mut self, graph: &ComputationGraph<T>) {
         let before = Instant::now();
 
@@ -431,6 +542,8 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> DenseField<T> {
     /// Performs a laplacian smoothing operation on the field data using parallel iteration.
     ///
     /// The value of each point will be updated based on the average of the adjacent points.
+    /// This is a parallel version of the `smooth` method.
+    ///
     /// # Arguments
     ///
     /// * `factor` - Interpolation value between the average of the adjacent points and the current value.
@@ -463,6 +576,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> DenseField<T> {
 }
 
 impl<T: Float> PointIterator<T> for DenseField<T> {
+    /// Returns an iterator that yields all point coordinates in the field.
     fn iter_points(&self) -> PointGridIter<T> {
         PointGridIter::new(self.bounds, self.n.into())
     }
@@ -479,22 +593,26 @@ impl<T: Float> GridIterator<T> for DenseField<T> {
     where
         Self: 'a;
 
+    /// Returns an iterator that yields all grid point coordinates in the field.
     fn iter_grid<'a>(&'a self) -> Self::GridIter<'a> {
         PointGridIter::new(self.bounds, self.n.into())
     }
 }
+
 impl<T: Float> CellIterator<T> for DenseField<T> {
     type Iter<'a>
         = CellGridIter<T>
     where
         T: 'a;
 
+    /// Returns an iterator that yields all cell coordinates in the field.
     fn iter_cells(&self) -> CellGridIter<T> {
         self.iter_cell_grid()
     }
 }
 
 impl<T: Float> CellGridIterator<T> for DenseField<T> {
+    /// Returns an iterator that yields all cell coordinates in the field grid.
     fn iter_cell_grid(&self) -> CellGridIter<T> {
         CellGridIter::new(self.bounds, (self.n.i - 1, self.n.j - 1, self.n.k - 1))
     }
@@ -508,6 +626,7 @@ impl<T: Float> CellGridIterator<T> for DenseField<T> {
 impl<T: Float + 'static> ValueIterator<T> for DenseField<T> {
     type Iter<'a> = std::iter::Copied<std::slice::Iter<'a, T>>;
 
+    /// Returns an iterator that yields each value in the field's data buffer.
     fn iter_values<'a>(&'a self) -> Self::Iter<'a> {
         self.data.iter().copied()
     }
@@ -519,6 +638,7 @@ impl<T: Float> CellValueIterator<T> for DenseField<T> {
     where
         Self: 'a;
 
+    /// Returns an iterator that yields the values at each cell's corners.
     fn iter_cell_values<'a>(&'a self) -> Self::Iter<'a> {
         DenseCellValueIterator {
             data: &self.data,
