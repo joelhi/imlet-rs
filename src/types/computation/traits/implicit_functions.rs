@@ -21,8 +21,10 @@ use std::any::type_name;
 /// # use num_traits::Float;
 /// # use serde::{Deserialize, Serialize};
 /// # use std::marker::{Send, Sync};
+/// #
 /// # #[derive(Debug, Clone, Copy, Serialize)]
 /// # pub struct Sphere<T: Serialize>{ centre: Vec3<T>, radius: T};
+/// 
 /// // Default implementation of base trait.
 /// impl<T: Send + Sync + Serialize> ImplicitComponent<T> for Sphere<T>{};
 ///
@@ -54,11 +56,13 @@ pub trait ImplicitFunction<T>: ImplicitComponent<T> {
 /// Examples can be found in the [`computation::operations`](crate::types::computation::operations) module, for example a simple addition would look like this:
 ///
 /// ```rust
+///
 /// # use imlet::types::computation::traits::{ImplicitOperation, ImplicitComponent};
 /// # use num_traits::Float;
 /// # use serde::{Deserialize, Serialize};
 /// # #[derive(Debug, Clone, Copy, Serialize)]
 /// # pub struct Add;
+/// 
 /// static INPUT_NAMES: [&str; 2] = ["First Number", "Second Number"];
 /// // Default implementation of base trait.
 /// impl<T> ImplicitComponent<T> for Add{};
@@ -72,6 +76,7 @@ pub trait ImplicitFunction<T>: ImplicitComponent<T> {
 ///         &INPUT_NAMES
 ///     }
 /// }
+/// 
 /// ```
 pub trait ImplicitOperation<T>: ImplicitComponent<T> {
     /// Perform the operation based on the input values.

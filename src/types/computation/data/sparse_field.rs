@@ -28,7 +28,7 @@ use crate::utils::math_helper::Pi;
 /// performance, allowing dense sampling only in regions where the field is active.
 /// Empty or uniform regions can be efficiently represented at the internal node level.
 ///
-/// Note: This type should not be constructed directly. Instead, use [`SparseSampler`]
+/// Note: This type should not be constructed directly. Instead, use [`~SparseSampler`][crate::types::computation::data::sampler::SparseSampler]
 /// to sample and extract a sparse field from an implicit model.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SparseField<T: Float> {
@@ -319,9 +319,9 @@ impl<T: Float> InternalNode<T> {
 
 /// Controls how internal nodes in the sparse field are evaluated to determine if they should be filled.
 ///
-/// - [`CENTRE`]: Evaluates only the center point and estimates coverage based on the size.
+/// - [`SamplingMode::CENTRE`]: Evaluates only the center point and estimates coverage based on the size.
 ///   Faster but only accurate for linear distance fields. (For example may not be valid for TPS such as gyroids.)
-/// - [`CORNERS`]: Evaluates all corners to determine if node intersects the iso-surface.
+/// - [`SamplingMode::CORNERS`]: Evaluates all corners to determine if node intersects the iso-surface.
 ///   More robust but computationally expensive.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum SamplingMode {

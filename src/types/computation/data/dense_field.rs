@@ -37,7 +37,7 @@ use super::field_iterator::{
 /// processing capabilities. This representation is memory-intensive but offers fast
 /// random access and is well-suited for operations like smoothing and iso-surface extraction.
 ///
-/// Note: This type should not be constructed directly. Instead, use [`DenseSampler`]
+/// Note: This type should not be constructed directly. Instead, use [`~DenseSampler`][crate::types::computation::data::sampler::DenseSampler]
 /// to sample and extract a dense field from an implicit model.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DenseField<T> {
@@ -216,7 +216,7 @@ impl<T: Float> DenseField<T> {
     ///
     /// # Returns
     ///
-    /// [`Ok`] with the generated [`ScalarField`] if the data matches the point count, or [`Err`] if the data doesn't match.
+    /// [`Ok`] with the generated [`DenseField`] if the data matches the point count, or [`Err`] if the data doesn't match.
     pub fn from_data(
         origin: Vec3<T>,
         cell_size: T,

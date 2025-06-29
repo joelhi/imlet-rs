@@ -14,16 +14,17 @@ use super::{ComponentId, ModelComponent};
 
 /// An implicit model composed of distance functions and operations.
 ///
-/// This acts as the main interface used to build and compute implicit models.
+/// This acts as the main interface used to build and compute implicit models. 
+/// To sample and extract discrete scalar fields or iso-surfaces look inside the [~sampler][crate::types::computation::data::sampler] module.
 ///
 /// # Example use
 ///
 ///```rust
-/// use imlet::types::geometry::{Vec3, BoundingBox, Sphere, Torus};
-/// use imlet::types::computation::{
-///     operations::shape::BooleanUnion,
-///     model::ImplicitModel,
-/// };
+/// # use imlet::types::geometry::{Vec3, BoundingBox, Sphere, Torus};
+/// # use imlet::types::computation::{
+/// #    operations::shape::BooleanUnion,
+/// #    model::ImplicitModel,
+/// # };
 ///
 /// // Define the model space and parameters
 /// let size = 10.0;
@@ -37,16 +38,14 @@ use super::{ComponentId, ModelComponent};
 /// let sphere = model
 ///     .add_function(
 ///         "Sphere",
-///         Sphere::new(Vec3::new(size / 2.0, size / 2.0, size / 2.0), size / 3.0),
-///     )
+///         Sphere::new(Vec3::new(size / 2.0, size / 2.0, size / 2.0), size / 3.0))
 ///     .unwrap();
 ///
 /// // Add a torus function
 /// let torus = model
 ///     .add_function(
 ///         "Torus",
-///         Torus::new(Vec3::new(size / 2.0, size / 2.0, size / 2.0), size / 5.0, size / 10.0),
-///     )
+///         Torus::new(Vec3::new(size / 2.0, size / 2.0, size / 2.0), size / 5.0, size / 10.0))
 ///     .unwrap();
 ///
 /// // Combine the sphere and torus using a union operation
@@ -54,8 +53,7 @@ use super::{ComponentId, ModelComponent};
 ///     .add_operation_with_inputs(
 ///         "Union",
 ///         BooleanUnion::new(),
-///         &[&sphere, &torus],
-///     )
+///         &[&sphere, &torus])
 ///     .unwrap();
 ///
 /// ```

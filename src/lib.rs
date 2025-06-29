@@ -25,15 +25,15 @@
 //! Here's a basic example demonstrating how to use `Imlet` to combine a sphere and a gyroid using an intersection operation. The result is polygonized and saved as an `.obj` file:
 //!
 //! ```rust
-//! use imlet::utils::io::write_obj_file;
-//! use imlet::types::geometry::{Vec3, BoundingBox, Sphere};
-//! use imlet::types::computation::{
-//!     functions::Gyroid,
-//!     operations::shape::BooleanIntersection,
-//! };
-//! use imlet::types::computation::model::ImplicitModel;
-//! use imlet::types::computation::data::{SparseField, SparseFieldConfig, SamplingMode, BlockSize};
-//! use imlet::types::computation::data::sampler::{SparseSampler, Sampler};
+//! # use imlet::utils::io::write_obj_file;
+//! # use imlet::types::geometry::{Vec3, BoundingBox, Sphere};
+//! # use imlet::types::computation::{
+//! #    functions::Gyroid,
+//! #    operations::shape::BooleanIntersection,
+//! # };
+//! # use imlet::types::computation::model::ImplicitModel;
+//! # use imlet::types::computation::data::{SparseField, SparseFieldConfig, SamplingMode, BlockSize};
+//! # use imlet::types::computation::data::sampler::{SparseSampler, Sampler};
 //!
 //! // Define the model parameters
 //! let size = 10.0;
@@ -47,8 +47,7 @@
 //! let sphere = model
 //!     .add_function(
 //!         "Sphere",
-//!         Sphere::new(Vec3::new(0.5 * size, 0.5 * size, 0.5 * size), 0.45 * size),
-//!     )
+//!         Sphere::new(Vec3::new(0.5 * size, 0.5 * size, 0.5 * size), 0.45 * size))
 //!     .unwrap();
 //!
 //! // Add a gyroid function to the model
