@@ -203,7 +203,7 @@ impl<T: Float> RootNode<T> {
 
         self.table.clear();
 
-        log::info!("Initalized ({},{},{})", nodes_x, nodes_y, nodes_z);
+        log::info!("Initialized ({},{},{}) internal nodes.", nodes_x, nodes_y, nodes_z);
         for k in 0..nodes_z {
             for j in 0..nodes_y {
                 for i in 0..nodes_x {
