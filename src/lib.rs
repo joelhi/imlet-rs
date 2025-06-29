@@ -60,8 +60,7 @@
 //!     .add_operation_with_inputs(
 //!         "Intersection",
 //!         BooleanIntersection::new(),
-//!         &[&sphere, &gyroid],
-//!     )
+//!         &[&sphere, &gyroid])
 //!     .unwrap();
 //!
 //! // Sample a sparse field and generate an iso-surface.

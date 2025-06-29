@@ -21,7 +21,6 @@
  - **Model Serialization**: Save and load implicit models using the `.json` format for sharing and reuse.
  - **Mesh Export/Import**: Export results to `.obj` files or import external `.obj` files to create custom distance functions.
  - **Iso-surfacing**: Efficient iso-surface extraction from discretized scalar fields.
- - **CLI Interface**: Run saved models and show `.obj` files directly from the command line.
  - **Built-in Viewer** *(optional)*: Visualize mesh outputs quickly using the `viewer` feature built on top of `wgpu`.
 
  For a more in-depth explanation of the library, see the [docs](https://docs.rs/imlet)
@@ -38,16 +37,6 @@ cargo run --release --features viewer --example $example
 
 where `$example` is any of the examples in the example dir, like `gyroid`, `interpolation` or `bunny`.
 
-### CLI
-
-To run a serialized model and show an output you can run the binary, for example
-
-```cmd
-cargo run --release --features viewer -- run-model assets/models/gyroid_model.json Output 0.5 --show
-```
-
-to run the `Output` node of the serialized model `gyroid_model.json` with a cell size of 0.5.
-
 ### Build a model
 
 Add via cargo.
@@ -61,28 +50,19 @@ Below is an example of how to use Imlet to create a 3D model by combining a sphe
 The model is then evaluated over a 3D space and saved as a mesh in an OBJ file.
 
  ```rust
- use imlet::utils::io::write_obj_file;
- use imlet::types::geometry::{Vec3, BoundingBox, Sphere};
- use imlet::types::computation::{
-     functions::Gyroid,
-     operations::shape::BooleanIntersection,
- };
- use imlet::types::computation::model::ImplicitModel;
-
  // Define the model parameters
  let size = 10.0;
  let cell_size = 0.1;
- let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
+ let bounds = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 
  // Create an implicit model
- let mut model = ImplicitModel::with_bounds(model_space);
+ let mut model = ImplicitModel::new();
 
  // Add a sphere to the model
  let sphere = model
      .add_function(
          "Sphere",
-         Sphere::new(Vec3::new(0.5 * size, 0.5 * size, 0.5 * size), 0.45 * size),
-     )
+         Sphere::new(Vec3::new(0.5 * size, 0.5 * size, 0.5 * size), 0.45 * size))
      .unwrap();
 
  // Add a gyroid function to the model
@@ -95,13 +75,31 @@ The model is then evaluated over a 3D space and saved as a mesh in an OBJ file.
      .add_operation_with_inputs(
          "Intersection",
          BooleanIntersection::new(),
-         &[&sphere, &gyroid],
-     )
+         &[&sphere, &gyroid])
      .unwrap();
 
- // Generate the iso-surface and save it to an OBJ file
- let mesh = model.generate_iso_surface(&intersection, cell_size).unwrap();
- write_obj_file(&mesh, "output.obj").unwrap();
+ // Sample a sparse field and generate an iso-surface.
+ let config = SparseFieldConfig {
+     internal_size: BlockSize::Size64,       // Internal node subdivision.
+     leaf_size: BlockSize::Size4,            // Leaf node subdivision.
+     sampling_mode: SamplingMode::CENTRE,    // Sampling logic for Leaf node exclusion.
+ };
+
+ let mut sampler = SparseSampler::builder()
+     .with_bounds(bounds)            // Set the bounds for the sampling.
+     .with_model(model)              // Set the model to sample.
+     .with_sparse_config(config)     // Set the sparse field parameters.
+     .build()
+     .expect("Should be able to build the sampler.");
+
+ sampler
+     .sample_field(cell_size, &intersection)
+     .expect("Sampling should work.");
+
+ let mesh = sampler
+     .iso_surface(0.0)
+     .expect("Extracting iso-surface should work.");
+
  ```
 
 ## Roadmap
