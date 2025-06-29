@@ -1,8 +1,8 @@
 # imlet - Changelog
 
 ## Latest
-- Minor fix to barycentric coord. ([#30](https://github.com/joelhi/imlet-rs/pull/30))
 - Implement sparse field and decouple sampling from model definition. ([#31](https://github.com/joelhi/imlet-rs/pull/31))
+- Minor fix to barycentric coord. ([#30](https://github.com/joelhi/imlet-rs/pull/30))
 
 ## v0.1.2 (2025-03-07)
 - Update Readme. ([#29](https://github.com/joelhi/imlet-rs/pull/29))
