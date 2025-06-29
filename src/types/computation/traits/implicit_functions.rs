@@ -24,7 +24,7 @@ use std::any::type_name;
 /// #
 /// # #[derive(Debug, Clone, Copy, Serialize)]
 /// # pub struct Sphere<T: Serialize>{ centre: Vec3<T>, radius: T};
-/// 
+///
 /// // Default implementation of base trait.
 /// impl<T: Send + Sync + Serialize> ImplicitComponent<T> for Sphere<T>{};
 ///
@@ -62,7 +62,7 @@ pub trait ImplicitFunction<T>: ImplicitComponent<T> {
 /// # use serde::{Deserialize, Serialize};
 /// # #[derive(Debug, Clone, Copy, Serialize)]
 /// # pub struct Add;
-/// 
+///
 /// static INPUT_NAMES: [&str; 2] = ["First Number", "Second Number"];
 /// // Default implementation of base trait.
 /// impl<T> ImplicitComponent<T> for Add{};
@@ -76,7 +76,7 @@ pub trait ImplicitFunction<T>: ImplicitComponent<T> {
 ///         &INPUT_NAMES
 ///     }
 /// }
-/// 
+///
 /// ```
 pub trait ImplicitOperation<T>: ImplicitComponent<T> {
     /// Perform the operation based on the input values.

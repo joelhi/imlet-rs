@@ -14,7 +14,7 @@ use super::{ComponentId, ModelComponent};
 
 /// An implicit model composed of distance functions and operations.
 ///
-/// This acts as the main interface used to build and compute implicit models. 
+/// This acts as the main interface used to build and compute implicit models.
 /// To sample and extract discrete scalar fields or iso-surfaces look inside the [~sampler][crate::types::computation::data::sampler] module.
 ///
 /// # Example use
