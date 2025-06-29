@@ -36,7 +36,7 @@ pub fn main() {
         .unwrap();
 
     let mut sampler = DenseSampler::builder()
-        .with_bounds(bounds.clone())
+        .with_bounds(bounds)
         .with_model(model)
         .build()
         .unwrap();

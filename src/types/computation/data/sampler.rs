@@ -482,14 +482,14 @@ mod tests {
         // Test basic builder
         let sampler = DenseSampler::builder()
             .with_model(create_test_model())
-            .with_bounds(bounds.clone())
+            .with_bounds(bounds)
             .build();
         assert!(sampler.is_ok());
 
         // Test builder with all options
         let sampler = DenseSampler::builder()
             .with_model(create_test_model())
-            .with_bounds(bounds.clone())
+            .with_bounds(bounds)
             .with_smoothing_iter(2)
             .with_smoothing_factor(0.5)
             .with_padding(true)
@@ -497,7 +497,7 @@ mod tests {
         assert!(sampler.is_ok());
 
         // Test builder fails without model
-        let sampler = DenseSampler::builder().with_bounds(bounds.clone()).build();
+        let sampler = DenseSampler::builder().with_bounds(bounds).build();
         assert!(sampler.is_err());
 
         // Test builder fails without bounds
@@ -541,7 +541,7 @@ mod tests {
         // Test basic builder
         let sampler = SparseSampler::builder()
             .with_model(create_test_model())
-            .with_bounds(bounds.clone())
+            .with_bounds(bounds)
             .with_sparse_config(config)
             .build();
         assert!(sampler.is_ok());
@@ -549,7 +549,7 @@ mod tests {
         // Test builder with custom thresholds
         let sampler = SparseSampler::builder()
             .with_model(create_test_model())
-            .with_bounds(bounds.clone())
+            .with_bounds(bounds)
             .with_sparse_config(config)
             .with_max_val(0.5)
             .with_delta_neg(-0.5)
@@ -558,7 +558,7 @@ mod tests {
 
         // Test builder fails without model
         let sampler = SparseSampler::builder()
-            .with_bounds(bounds.clone())
+            .with_bounds(bounds)
             .with_sparse_config(config)
             .build();
         assert!(sampler.is_err());
