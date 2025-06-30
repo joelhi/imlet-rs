@@ -40,13 +40,13 @@
 //!
 //! > ⚠️ **Disclaimer**:
 //! >
-//! > Due to rusts lack of runtime reflection it's currently not possible to deserialize custom [`ImplicitFunction`](crate::types::computation::traits::ImplicitFunction) and [`ImplicitFunction`](crate::types::computation::traits::ImplicitOperation) structs at this point in time.
+//! > Due to rusts lack of runtime reflection it's currently not possible to deserialize custom [`ImplicitFunction`](crate::types::computation::traits::ImplicitFunction) and [`ImplicitOperation`](crate::types::computation::traits::ImplicitOperation) structs at this point in time.
 
 /// Error types related to model computation.
 mod model_error;
 
-/// Utilities for scalar field manipulation and evaluation.
-mod scalar_field;
+/// Types related to discrete scalar fields and sampling models.
+pub mod data;
 
 /// Predefined functions, including triply-periodic surfaces (TPS).
 pub mod functions;
@@ -61,4 +61,3 @@ pub mod operations;
 pub mod traits;
 
 pub use model_error::*;
-pub use scalar_field::*;

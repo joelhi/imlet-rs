@@ -259,6 +259,18 @@ impl XYZValue {
     pub fn new(coordinate_value: CoordinateValue) -> Self {
         Self { coordinate_value }
     }
+
+    pub fn x() -> Self {
+        Self::new(CoordinateValue::X)
+    }
+
+    pub fn y() -> Self {
+        Self::new(CoordinateValue::Y)
+    }
+
+    pub fn z() -> Self {
+        Self::new(CoordinateValue::Z)
+    }
 }
 
 impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XYZValue {

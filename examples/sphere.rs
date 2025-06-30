@@ -1,6 +1,9 @@
 use imlet::{
     types::{
-        computation::model::ImplicitModel,
+        computation::{
+            data::sampler::{DenseSampler, Sampler},
+            model::ImplicitModel,
+        },
         geometry::{BoundingBox, Sphere, Vec3},
     },
     utils,
@@ -10,17 +13,18 @@ pub fn main() {
     utils::logging::init_info();
 
     // Inputs
+    let cell_size = 5.0;
     let size = 100.0;
     let offset = 5.0;
-    let model_space = BoundingBox::new(
+    let bounds = BoundingBox::new(
         Vec3::new(offset, offset, offset),
         Vec3::new(offset + size, offset + size, offset + size),
     );
 
     // Function
-    let mut model = ImplicitModel::with_bounds(model_space);
+    let mut model = ImplicitModel::new();
 
-    let sphere_node = model
+    let _ = model
         .add_function(
             "Sphere",
             Sphere::new(
@@ -34,13 +38,32 @@ pub fn main() {
         )
         .unwrap();
 
-    let mut mesh = model.generate_iso_surface(&sphere_node, 0.5).unwrap();
-    mesh.compute_vertex_normals_par();
+    let mut sampler = DenseSampler::builder()
+        .with_bounds(bounds)
+        .with_cell_size(cell_size)
+        .build()
+        .unwrap();
+
+    sampler.sample_field(&model).expect("Sampling should work.");
+
+    let mesh = sampler
+        .iso_surface(0.0)
+        .expect("Extracting iso-surface should work.");
 
     utils::io::write_obj_file(&mesh, "sphere_example").unwrap();
 
     #[cfg(feature = "viewer")]
     {
-        imlet::viewer::show_mesh(&mesh, Some(mesh.bounds()));
+        use imlet::viewer::{DisplaySettings, Material};
+
+        imlet::viewer::show_mesh_with_settings(
+            &mesh,
+            Some(bounds),
+            &DisplaySettings {
+                show_bounds: true,
+                show_mesh_edges: true,
+                mesh_material: Material::Normal,
+            },
+        );
     }
 }

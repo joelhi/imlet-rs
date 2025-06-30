@@ -25,28 +25,30 @@
 //! Here's a basic example demonstrating how to use `Imlet` to combine a sphere and a gyroid using an intersection operation. The result is polygonized and saved as an `.obj` file:
 //!
 //! ```rust
-//! use imlet::utils::io::write_obj_file;
-//! use imlet::types::geometry::{Vec3, BoundingBox, Sphere};
-//! use imlet::types::computation::{
-//!     functions::Gyroid,
-//!     operations::shape::BooleanIntersection,
-//! };
-//! use imlet::types::computation::model::ImplicitModel;
+//! # use imlet::utils::io::write_obj_file;
+//! # use imlet::types::geometry::{Vec3, BoundingBox, Sphere};
+//! # use imlet::types::computation::{
+//! #    functions::Gyroid,
+//! #    operations::shape::BooleanIntersection,
+//! # };
+//! # use imlet::types::computation::model::ImplicitModel;
+//! # use imlet::types::computation::data::{SparseField, SparseFieldConfig, SamplingMode, BlockSize};
+//! # use imlet::types::computation::data::sampler::{SparseSampler, Sampler};
+//! # use imlet::utils::io;
 //!
 //! // Define the model parameters
 //! let size = 10.0;
 //! let cell_size = 0.1;
-//! let model_space = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
+//! let bounds = BoundingBox::new(Vec3::origin(), Vec3::new(size, size, size));
 //!
 //! // Create an implicit model
-//! let mut model = ImplicitModel::with_bounds(model_space);
+//! let mut model = ImplicitModel::new();
 //!
 //! // Add a sphere to the model
 //! let sphere = model
 //!     .add_function(
 //!         "Sphere",
-//!         Sphere::new(Vec3::new(0.5 * size, 0.5 * size, 0.5 * size), 0.45 * size),
-//!     )
+//!         Sphere::new(Vec3::new(0.5 * size, 0.5 * size, 0.5 * size), 0.45 * size))
 //!     .unwrap();
 //!
 //! // Add a gyroid function to the model
@@ -59,13 +61,33 @@
 //!     .add_operation_with_inputs(
 //!         "Intersection",
 //!         BooleanIntersection::new(),
-//!         &[&sphere, &gyroid],
-//!     )
+//!         &[&sphere, &gyroid])
 //!     .unwrap();
 //!
-//! // Generate the iso-surface and save it to an OBJ file
-//! let mesh = model.generate_iso_surface(&intersection, cell_size).unwrap();
-//! write_obj_file(&mesh, "output.obj").unwrap();
+//! // Sample a sparse field and generate an iso-surface.
+//! let config = SparseFieldConfig {
+//!     internal_size: BlockSize::Size64,       // Internal node subdivision.
+//!     leaf_size: BlockSize::Size4,            // Leaf node subdivision.
+//!     sampling_mode: SamplingMode::CORNERS,    // Sampling logic for Leaf node exclusion.
+//!     cell_size,                              // Sampling resolution.
+//! };
+//!
+//! let mut sampler = SparseSampler::builder()
+//!     .with_bounds(bounds)                    // Set the bounds for the sampling.
+//!     .with_sparse_config(config)             // Set the sparse field parameters.
+//!     .build()
+//!     .expect("Should be able to build the sampler.");
+//!
+//! sampler
+//!     .sample_field(&model)
+//!     .expect("Sampling should work.");
+//!
+//! let mesh = sampler
+//!     .iso_surface(0.0)
+//!     .expect("Extracting iso-surface should work.");
+//!
+//! write_obj_file(&mesh, "interpolation_example").unwrap();
+//!
 //! ```
 //!
 //! For detailed usage and API references, explore the module documentation.

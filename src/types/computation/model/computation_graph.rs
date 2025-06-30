@@ -1,20 +1,10 @@
-use std::{cell::RefCell, time::Instant};
+use std::cell::RefCell;
 
 use num_traits::Float;
-use rayon::iter::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
 use serde::Serialize;
 use smallvec::SmallVec;
 
-use crate::{
-    types::{
-        computation::ScalarField,
-        geometry::{BoundingBox, Vec3i},
-    },
-    utils::{
-        self,
-        math_helper::{index3d_from_index1d, Pi},
-    },
-};
+use crate::utils::math_helper::Pi;
 
 use super::{ComponentId, ComponentValues, ModelComponent};
 
@@ -25,7 +15,7 @@ const INPUT_STACK_BUFFER_SIZE: usize = 8;
 /// Defines a set of components which should be computed to generate an output.
 ///
 /// The components are extracted from the model based on the target output.
-pub struct ComputationGraph<'a, T: Float + Send + Sync + Serialize + 'static + Pi> {
+pub(crate) struct ComputationGraph<'a, T: Float + Send + Sync + Serialize + 'static + Pi> {
     components: Vec<&'a ModelComponent<T>>,
     inputs: Vec<Vec<ComponentId>>,
 }
@@ -66,30 +56,9 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'_, T> 
         })
     }
 
-    fn point_count(bounds: &BoundingBox<T>, cell_size: T) -> Vec3i {
-        let (x_dim, y_dim, z_dim) = bounds.dimensions();
-        Vec3i::new(
-            (x_dim / cell_size)
-                .floor()
-                .to_usize()
-                .expect("Failed to get point count from bounds. Make sure the bounds have a positive size in all directions.")
-                + 1,
-            (y_dim / cell_size)
-                .floor()
-                .to_usize()
-                .expect("Failed to get point count from bounds. Make sure the bounds have a positive size in all directions.")
-                + 1,
-            (z_dim / cell_size)
-                .floor()
-                .to_usize()
-                .expect("Failed to get point count from bounds. Make sure the bounds have a positive size in all directions.")
-                + 1,
-        )
-    }
-
     /// Retrieve the values for the inputs of a component.
     #[inline(always)]
-    pub fn inputs(
+    fn inputs(
         &self,
         component_id: usize,
         values: &ComponentValues,
@@ -102,40 +71,14 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'_, T> 
     }
 }
 
-impl<T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'_, T> {
-    /// Evaluate the computation graph over a discretized domain.
-    pub fn evaluate(&self, bounds: &BoundingBox<T>, cell_size: T) -> ScalarField<T> {
-        let before = Instant::now();
-        let n = Self::point_count(bounds, cell_size);
-
-        log::info!("Evaluating model with {}x{}x{} points", n.i, n.j, n.k);
-
-        let mut data: Vec<T> = vec![T::zero(); n.product()];
-        data.par_iter_mut().enumerate().for_each(|(index, value)| {
-            let (i, j, k) = index3d_from_index1d(index, n.i, n.j, n.k);
-            *value = self.evaluate_at_coord(
-                bounds.min.x + cell_size * T::from(i).expect("Failed to convert number to T"),
-                bounds.min.y + cell_size * T::from(j).expect("Failed to convert number to T"),
-                bounds.min.z + cell_size * T::from(k).expect("Failed to convert number to T"),
-            );
-        });
-
-        log::info!(
-            "Dense value buffer for {} points generated in {:.2?}",
-            utils::math_helper::format_integer(n.i * n.j * n.k,),
-            before.elapsed()
-        );
-
-        ScalarField::from_data(bounds.min, cell_size, n, data)
-            .expect("Generated field should have the correct data size.")
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use crate::types::{
-        computation::operations::{math::Add, shape::BooleanDifference},
-        geometry::{Sphere, Vec3},
+        computation::{
+            data::DenseField,
+            operations::{math::Add, shape::BooleanDifference},
+        },
+        geometry::{BoundingBox, Sphere, Vec3},
     };
 
     use super::*;
@@ -156,7 +99,13 @@ mod tests {
         graph.add_component(&binding, vec![]);
 
         // Discretize
-        let field = graph.evaluate(&bounds, cell_size);
+        let mut field = DenseField::new(
+            Vec3::origin(),
+            cell_size,
+            DenseField::point_count(&bounds, cell_size),
+        );
+
+        field.sample_from_graph(&graph);
 
         assert_eq!(64, field.num_cells());
         assert_eq!(125, field.num_points());
@@ -183,8 +132,12 @@ mod tests {
         model.add_component(&sphere, vec![]);
 
         // Discretize
-        let field = model.evaluate(&bounds, cell_size);
-
+        let mut field = DenseField::new(
+            Vec3::origin(),
+            cell_size,
+            DenseField::point_count(&bounds, cell_size),
+        );
+        field.sample_from_graph(&model);
         assert_eq!(8 * 6 * 4, field.num_cells());
         assert_eq!(9 * 7 * 5, field.num_points());
 

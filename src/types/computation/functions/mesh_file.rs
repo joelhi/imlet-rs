@@ -25,7 +25,7 @@ const MAX_TREE_DEPTH: usize = 12;
 /// ```rust
 /// use imlet::types::computation::{
 ///     functions::MeshFile,
-///     model::{ImplicitModel, ModelConfig},
+///     model::ImplicitModel,
 ///     operations::shape::{BooleanIntersection, Thickness},
 /// };
 ///
@@ -34,8 +34,9 @@ const MAX_TREE_DEPTH: usize = 12;
 /// let bounds = mesh_file.bounds().unwrap();
 ///
 /// // Build model
-/// let mut model = ImplicitModel::with_bounds(bounds);
+/// let mut model = ImplicitModel::new();
 /// let mesh_tag = model.add_function("Mesh", mesh_file).unwrap();
+///
 /// ```
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MeshFile<T> {

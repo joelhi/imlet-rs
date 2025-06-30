@@ -1,6 +1,7 @@
 use imlet::{
     types::{
         computation::{
+            data::sampler::{DenseSampler, Sampler},
             functions::MeshFile,
             model::{Data, ImplicitModel},
             operations::math::LinearInterpolation,
@@ -20,7 +21,7 @@ pub fn main() {
     let bounds = mesh_file.bounds().unwrap().offset(cell_size);
 
     // Build model
-    let mut model = ImplicitModel::with_bounds(bounds);
+    let mut model = ImplicitModel::new();
 
     let sphere_tag = model
         .add_function(
@@ -45,15 +46,21 @@ pub fn main() {
         .expect("Component should be present")
         .set_parameter("Factor", Data::Value(factor));
 
-    let mut mesh = model
-        .generate_iso_surface(&shape_interpolation, cell_size)
+    let mut sampler = DenseSampler::builder()
+        .with_bounds(bounds)
+        .with_cell_size(cell_size)
+        .build()
         .unwrap();
 
-    mesh.compute_vertex_normals_par();
+    sampler.sample_field(&model).expect("Sampling should work.");
+
+    let mesh = sampler
+        .iso_surface(0.0)
+        .expect("Extracting iso-surface should work.");
 
     utils::io::write_obj_file(&mesh, "interpolation_example").unwrap();
     #[cfg(feature = "viewer")]
     {
-        imlet::viewer::show_mesh(&mesh, Some(mesh.bounds()));
+        imlet::viewer::show_mesh(&mesh, Some(bounds));
     }
 }

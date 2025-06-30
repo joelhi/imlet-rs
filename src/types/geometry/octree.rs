@@ -508,15 +508,11 @@ mod tests {
 
         assert!(
             (signed_distance - expected_signed_distance).abs() < 0.001,
-            "Incorrect signed distance. Was {} but expected {}",
-            signed_distance,
-            expected_signed_distance
+            "Incorrect signed distance. Was {signed_distance} but expected {expected_signed_distance}"
         );
         assert!(
             closest_pt.distance_to_vec3(&expected_closest_point).abs() < 0.001,
-            "Incorrect closest point. Was {} but expected {}",
-            closest_pt,
-            expected_closest_point
+            "Incorrect closest point. Was {closest_pt} but expected {expected_closest_point}"
         );
     }
 
@@ -536,15 +532,11 @@ mod tests {
 
         assert!(
             (signed_distance - expected_signed_distance).abs() < 0.001,
-            "Incorrect signed distance. Was {} but expected {}",
-            signed_distance,
-            expected_signed_distance
+            "Incorrect signed distance. Was {signed_distance} but expected {expected_signed_distance}"
         );
         assert!(
             closest_pt.distance_to_vec3(&expected_closest_point).abs() < 0.001,
-            "Incorrect closest point. Was {} but expected {}",
-            closest_pt,
-            expected_closest_point
+            "Incorrect closest point. Was {closest_pt} but expected {expected_closest_point}"
         );
     }
 
@@ -564,15 +556,11 @@ mod tests {
 
         assert!(
             (signed_distance - expected_signed_distance).abs() < 0.001,
-            "Incorrect signed distance. Was {} but expected {}",
-            signed_distance,
-            expected_signed_distance
+            "Incorrect signed distance. Was {signed_distance} but expected {expected_signed_distance}"
         );
         assert!(
             closest_pt.distance_to_vec3(&expected_closest_point).abs() < 0.001,
-            "Incorrect closest point. Was {} but expected {}",
-            closest_pt,
-            expected_closest_point
+            "Incorrect closest point. Was {closest_pt} but expected {expected_closest_point}"
         );
     }
 
@@ -592,15 +580,11 @@ mod tests {
 
         assert!(
             closest_pt.distance_to_vec3(&expected_closest_point).abs() < 0.001,
-            "Incorrect closest point. Was {} but expected {}",
-            closest_pt,
-            expected_closest_point
+            "Incorrect closest point. Was {closest_pt} but expected {expected_closest_point}"
         );
         assert!(
             (signed_distance - expected_signed_distance).abs() < 0.001,
-            "Incorrect signed distance. Was {} but expected {}",
-            signed_distance,
-            expected_signed_distance
+            "Incorrect signed distance. Was {signed_distance} but expected {expected_signed_distance}"
         );
     }
 
@@ -620,15 +604,11 @@ mod tests {
 
         assert!(
             closest_pt.distance_to_vec3(&expected_closest_point).abs() < 0.001,
-            "Incorrect closest point. Was {} but expected {}",
-            closest_pt,
-            expected_closest_point
+            "Incorrect closest point. Was {closest_pt} but expected {expected_closest_point}"
         );
         assert!(
             (signed_distance - expected_signed_distance).abs() < 0.001,
-            "Incorrect signed distance. Was {} but expected {}",
-            signed_distance,
-            expected_signed_distance
+            "Incorrect signed distance. Was {signed_distance} but expected {expected_signed_distance}"
         );
     }
 
@@ -642,9 +622,8 @@ mod tests {
         let signed_distance = octree.signed_distance(&Vec3::new(103.180, 167.482, 119.522));
         assert!(
             (signed_distance - 2.391).abs() < 0.001,
-            "Incorrect signed distance, expected {}, but was {}",
-            2.391,
-            signed_distance
+            "Incorrect signed distance, expected {}, but was {signed_distance}",
+            2.391
         );
     }
 }

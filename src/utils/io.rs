@@ -10,9 +10,11 @@ use num_traits::Float;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::types::{
-    computation::{model::ImplicitModel, ScalarField},
+    computation::{data::field_iterator::ValueIterator, model::ImplicitModel},
     geometry::{Mesh, Vec3},
 };
+
+use crate::types::computation::data::field_iterator::PointIterator;
 
 pub(crate) fn mesh_to_obj<T: Display>(mesh: &Mesh<T>) -> String {
     let mut data = String::new();
@@ -76,19 +78,12 @@ pub fn parse_obj_file<T: Float + Send + Sync>(
 ) -> Result<Mesh<T>, Box<dyn std::error::Error>> {
     let path = Path::new(file_path);
 
-    let extension = path.extension().ok_or_else(|| {
-        format!(
-            "Cannot read file {}. Only .obj files are supported.",
-            file_path
-        )
-    })?;
+    let extension = path
+        .extension()
+        .ok_or_else(|| format!("Cannot read file {file_path}. Only .obj files are supported."))?;
 
     if !extension.eq_ignore_ascii_case("obj") {
-        return Err(format!(
-            "Cannot read file {}. Only .obj files are supported.",
-            file_path
-        )
-        .into());
+        return Err(format!("Cannot read file {file_path}. Only .obj files are supported.").into());
     }
 
     let file = File::open(path)?;
@@ -181,47 +176,37 @@ pub fn parse_obj_file<T: Float + Send + Sync>(
     Ok(mesh)
 }
 
-/// Write a ScalarField to a .csv file.
+/// Write a field to a .csv file.
 ///
 /// This will create a csv with the columns *{x, y, z, v}* where
-/// - `x` is the x cooridinate of the data point
-/// - `y` is the y cooridinate of the data point
-/// - `z` is the z cooridinate of the data point
-/// - `v` is value of the data point
+/// - `x` is the x coordinate of the data point
+/// - `y` is the y coordinate of the data point
+/// - `z` is the z coordinate of the data point
+/// - `v` is value of the field at the data point
 ///
 /// # Arguments
 ///
 /// * `field` - Field to export.
 /// * `file_name` - Name of the target file to be created, without .csv extension.
-pub fn write_field_csv<T: Float + Display>(
-    field: &ScalarField<T>,
-    file_name: &str,
-) -> io::Result<()> {
+pub fn write_field_csv<T, F>(field: &F, file_name: &str) -> io::Result<()>
+where
+    T: Float + Display,
+    F: PointIterator<T> + ValueIterator<T>,
+{
     let file_path = Path::new(file_name).with_extension("csv");
     let mut file = fs::File::create(file_path)?;
-    file.write_all(field_as_data(field).as_bytes())?;
-    Ok(())
-}
 
-fn field_as_data<T: Float + Display>(field: &ScalarField<T>) -> String {
-    let mut data = String::new();
-    data.push_str("x, y, z, v\n");
-    for (idx, v) in field.data().iter().enumerate() {
-        let (i, j, k) = field.point_index3d(idx);
-        let v_string = format!(
-            "{},{},{},{}\n",
-            field.origin().x
-                + field.cell_size() * T::from(i).expect("Failed to convert number to T"),
-            field.origin().y
-                + field.cell_size() * T::from(j).expect("Failed to convert number to T"),
-            field.origin().z
-                + field.cell_size() * T::from(k).expect("Failed to convert number to T"),
-            v
-        );
-        data.push_str(&v_string);
+    // Write header
+    file.write_all(b"x, y, z, v\n")?;
+
+    // Write all points using the iterator
+    for (point, value) in field.iter_points().zip(field.iter_values()) {
+        writeln!(file, "{}, {}, {}, {}", point.x, point.y, point.z, value)?;
     }
 
-    data
+    log::info!("Field data written to {}", file_name.to_owned() + ".csv");
+
+    Ok(())
 }
 
 /// Write an imlet model to a text file as json.
@@ -262,18 +247,13 @@ pub fn read_model_from_file<
     let path = Path::new(file_path);
 
     let extension = path.extension().ok_or_else(|| {
-        format!(
-            "Cannot read file {}. No valid extension provided. Should be .json.",
-            file_path
-        )
+        format!("Cannot read file {file_path}. No valid extension provided. Should be .json.")
     })?;
 
     if !extension.eq_ignore_ascii_case("json") {
-        return Err(format!(
-            "Cannot read file {}. Only .json files are supported.",
-            file_path
-        )
-        .into());
+        return Err(
+            format!("Cannot read file {file_path}. Only .json files are supported.").into(),
+        );
     }
 
     let mut file = File::open(path)?;
@@ -300,9 +280,7 @@ mod tests {
         let expected_val = 41.60254;
         assert!(
             (val - expected_val).abs() < f32::epsilon(),
-            "Wrong value returned from model. Was {}, but should have been {}",
-            val,
-            expected_val
+            "Wrong value returned from model. Was {val}, but should have been {expected_val}"
         );
     }
 
@@ -316,9 +294,7 @@ mod tests {
         let expected_val = 13.442741;
         assert!(
             (val - expected_val).abs() < f32::epsilon(),
-            "Wrong value returned from model. Was {}, but should have been {}",
-            val,
-            expected_val
+            "Wrong value returned from model. Was {val}, but should have been {expected_val}"
         );
     }
 }

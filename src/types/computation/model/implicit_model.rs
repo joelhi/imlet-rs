@@ -1,7 +1,5 @@
-use crate::algorithms::marching_cubes::generate_iso_surface;
 use crate::types::computation::traits::{ImplicitFunction, ImplicitOperation};
-use crate::types::computation::{ModelError, ScalarField};
-use crate::types::geometry::{BoundingBox, Mesh};
+use crate::types::computation::ModelError;
 use crate::utils::math_helper::Pi;
 use crate::IMLET_VERSION;
 use log::{debug, info};
@@ -11,21 +9,22 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::{self, Debug, Display};
 use std::time::Instant;
 
+use super::ComputationGraph;
 use super::{ComponentId, ModelComponent};
-use super::{ComputationGraph, ModelConfig};
 
 /// An implicit model composed of distance functions and operations.
 ///
 /// This acts as the main interface used to build and compute implicit models.
+/// To sample and extract discrete scalar fields or iso-surfaces look inside the [~sampler][crate::types::computation::data::sampler] module.
 ///
 /// # Example use
 ///
 ///```rust
-/// use imlet::types::geometry::{Vec3, BoundingBox, Sphere, Torus};
-/// use imlet::types::computation::{
-///     operations::shape::BooleanUnion,
-///     model::ImplicitModel,
-/// };
+/// # use imlet::types::geometry::{Vec3, BoundingBox, Sphere, Torus};
+/// # use imlet::types::computation::{
+/// #    operations::shape::BooleanUnion,
+/// #    model::ImplicitModel,
+/// # };
 ///
 /// // Define the model space and parameters
 /// let size = 10.0;
@@ -33,22 +32,20 @@ use super::{ComputationGraph, ModelConfig};
 /// let cell_size = 0.1;
 ///
 /// // Create an empty implicit model
-/// let mut model = ImplicitModel::with_bounds(model_space);
+/// let mut model = ImplicitModel::new();
 ///
 /// // Add a sphere function
 /// let sphere = model
 ///     .add_function(
 ///         "Sphere",
-///         Sphere::new(Vec3::new(size / 2.0, size / 2.0, size / 2.0), size / 3.0),
-///     )
+///         Sphere::new(Vec3::new(size / 2.0, size / 2.0, size / 2.0), size / 3.0))
 ///     .unwrap();
 ///
 /// // Add a torus function
 /// let torus = model
 ///     .add_function(
 ///         "Torus",
-///         Torus::new(Vec3::new(size / 2.0, size / 2.0, size / 2.0), size / 5.0, size / 10.0),
-///     )
+///         Torus::new(Vec3::new(size / 2.0, size / 2.0, size / 2.0), size / 5.0, size / 10.0))
 ///     .unwrap();
 ///
 /// // Combine the sphere and torus using a union operation
@@ -56,12 +53,9 @@ use super::{ComputationGraph, ModelConfig};
 ///     .add_operation_with_inputs(
 ///         "Union",
 ///         BooleanUnion::new(),
-///         &[&sphere, &torus],
-///     )
+///         &[&sphere, &torus])
 ///     .unwrap();
 ///
-/// // Evaluate the model and generate a scalar field
-/// let mesh = model.generate_iso_surface(&union, cell_size).unwrap();
 /// ```
 ///
 #[derive(Serialize, Deserialize)]
@@ -69,7 +63,7 @@ pub struct ImplicitModel<T: Float + Send + Sync + Serialize + 'static + Pi> {
     version: String,
     components: HashMap<String, ModelComponent<T>>,
     inputs: HashMap<String, Vec<Option<String>>>,
-    config: Option<ModelConfig<T>>,
+    default_output: Option<String>,
 }
 
 impl<T: Float + Send + Sync + Serialize + 'static + Pi> Default for ImplicitModel<T> {
@@ -85,30 +79,8 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
             version: IMLET_VERSION.to_string(),
             components: HashMap::new(),
             inputs: HashMap::new(),
-            config: None,
+            default_output: None,
         }
-    }
-
-    /// Create a new empty model with a predefined model domain.
-    pub fn with_bounds(bounds: BoundingBox<T>) -> Self {
-        let mut model = ImplicitModel::new();
-        model.set_config(ModelConfig::new(bounds));
-        model
-    }
-
-    /// Set the model config, which determines model parameters such as bounds and smoothing.
-    pub fn set_config(&mut self, config: ModelConfig<T>) {
-        self.config = Some(config);
-    }
-
-    /// Set the model config, which determines model parameters such as bounds and smoothing.
-    pub fn config(&self) -> Option<&ModelConfig<T>> {
-        self.config.as_ref()
-    }
-
-    /// Set the model config, which determines model parameters such as bounds and smoothing.
-    pub fn config_mut(&mut self) -> Option<&mut ModelConfig<T>> {
-        self.config.as_mut()
     }
 
     /// Get references to all the components in the model and their tags.
@@ -123,11 +95,23 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         self.components.get(tag)
     }
 
+    /// Get the default model output node.
+    ///
+    /// This will be the last added component to the model.
+    pub fn get_default_output(&self) -> Option<&str> {
+        self.default_output.as_deref()
+    }
+
+    /// Set the default model output node.
+    pub fn set_default_output(&mut self, tag: &str) {
+        self.default_output = Some(tag.to_owned());
+    }
+
     /// Get a mutable reference to a component from the model by tag.
     ///
     /// Useful when you want to update the value of a [`Parameter`](super::Parameter) of a component.
     ///
-    /// Returns a [`&mut`] to the component if present, othwerwise [`None`]
+    /// Returns a [`&mut`] to the component if present, otherwise [`None`].
     pub fn get_component_mut(&mut self, tag: &str) -> Option<&mut ModelComponent<T>> {
         self.components.get_mut(tag)
     }
@@ -158,6 +142,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
             ModelComponent::Function(Box::new(function)),
         );
 
+        self.default_output = Some(tag_string.clone());
         Ok(tag_string)
     }
 
@@ -184,6 +169,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
             ModelComponent::Operation(Box::new(operation)),
         );
 
+        self.default_output = Some(tag_string.clone());
         Ok(tag_string)
     }
 
@@ -223,6 +209,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
             ModelComponent::Operation(Box::new(operation)),
         );
 
+        self.default_output = Some(tag_string.clone());
         Ok(tag_string)
     }
 
@@ -241,6 +228,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         self.components
             .insert(tag_string.clone(), ModelComponent::Constant(value));
 
+        self.default_output = Some(tag_string.clone());
         Ok(tag_string)
     }
 
@@ -353,6 +341,12 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
             self.remove_input(component, *index)?;
         }
 
+        if let Some(default_tag) = &self.default_output {
+            if default_tag == tag {
+                self.default_output = None;
+            }
+        }
+
         Ok(())
     }
 
@@ -376,6 +370,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
 
         self.components.insert(valid_tag.clone(), component);
 
+        self.default_output = Some(tag.to_owned());
         Ok(valid_tag)
     }
 
@@ -391,10 +386,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         self.verify_tag_is_present(current_tag)?;
 
         let component = self.components.remove(current_tag).unwrap_or_else(|| {
-            panic!(
-                "Should be a valid entry as tag {} is verified.",
-                current_tag
-            )
+            panic!("Should be a valid entry as tag {current_tag} is verified.",)
         });
         self.components.insert(new_tag_string.clone(), component);
 
@@ -416,19 +408,24 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
             }
         }
 
-        debug!("Component {}, was renamed to {}", current_tag, new_tag);
+        if let Some(default_tag) = &self.default_output {
+            if default_tag == current_tag {
+                self.default_output = Some(new_tag_string.clone());
+            }
+        }
 
+        debug!("Component {}, was renamed to {}", current_tag, new_tag);
         Ok(new_tag_string)
     }
 
     fn find_free_tag(&mut self, base_tag: &str) -> Result<String, ModelError> {
         if self.components.contains_key(base_tag) {
             let mut increment = 1;
-            let mut temp_tag = format!("{}_{}", base_tag, increment);
+            let mut temp_tag = format!("{base_tag}_{increment}");
             while self.components.contains_key(&temp_tag) {
                 info!("Increment");
                 increment += 1;
-                temp_tag = format!("{}_{}", base_tag, increment);
+                temp_tag = format!("{base_tag}_{increment}");
 
                 if increment > 1000 {
                     return Err(ModelError::TagGenerationFailed(base_tag.to_owned()));
@@ -620,7 +617,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         Ok(graph)
     }
 
-    fn compile(&self, target: &str) -> Result<ComputationGraph<T>, ModelError> {
+    pub(crate) fn compile(&self, target: &str) -> Result<ComputationGraph<T>, ModelError> {
         let before = Instant::now();
         let target_output = target.to_string();
 
@@ -660,8 +657,8 @@ impl<T: Float + Send + Sync + Display + Debug + Serialize + 'static + Pi> Displa
     for ImplicitModel<T>
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for (name, component) in &self.components {
-            writeln!(f, "Component: {}", name)?;
+        for (name, component) in self.components.iter() {
+            writeln!(f, "Component: {name}")?;
             writeln!(f, "Type: {}", component.type_name())?;
             let parameters = component.read_parameters();
             if !parameters.is_empty() {
@@ -674,8 +671,8 @@ impl<T: Float + Send + Sync + Display + Debug + Serialize + 'static + Pi> Displa
                 writeln!(f, "Inputs: ")?;
                 for input in inputs {
                     match input {
-                        Some(name) => writeln!(f, "- {}", name)?,
-                        None => writeln!(f, "- Empty")?,
+                        Some(name) => writeln!(f, "- {name}")?,
+                        None => writeln!(f, "- None")?,
                     }
                 }
             }
@@ -701,72 +698,6 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         let computation_graph = self.compile(output)?;
         Ok(computation_graph.evaluate_at_coord(x, y, z))
     }
-
-    /// Compute a discrete scalar field from the model.
-    /// # Arguments
-    ///
-    /// * `output` - The tag of the component for which the output should be stored in the field.
-    /// * `bounds` - The domain to compute.
-    /// * `cell_size` - The resolution at which the domain is computed.
-    ///
-    /// # Returns
-    ///      
-    /// * `Result<ScalarField<T>, ModelError> ` - The scalar field holding the computed data, or an error if not successful.
-    pub fn generate_field(
-        &self,
-        output: &str,
-        bounds: &BoundingBox<T>,
-        cell_size: T,
-    ) -> Result<ScalarField<T>, ModelError> {
-        let computation_graph = self.compile(output)?;
-        Ok(computation_graph.evaluate(bounds, cell_size))
-    }
-
-    /// Extract the iso surface at the zero-level.
-    /// # Arguments
-    ///
-    /// * `output` - The tag of the component which output should be used for the iso surface extraction.
-    /// * `bounds` - The domain to compute.
-    /// * `cell_size` - The resolution at which the domain is computed.
-    ///
-    /// # Returns
-    ///      
-    /// * `Result<Mesh<T>, ModelError>` - The iso surface represented as an indexed triangle mesh, or an error if not successful.
-    pub fn generate_iso_surface(&self, output: &str, cell_size: T) -> Result<Mesh<T>, ModelError> {
-        self.generate_iso_surface_at(output, cell_size, T::zero())
-    }
-
-    /// Extract the iso surface at a specified level.
-    /// # Arguments
-    ///
-    /// * `output` - The tag of the component which output should be used for the iso surface extraction.
-    /// * `bounds` - The domain to compute.
-    /// * `cell_size` - The resolution at which the domain is computed.
-    /// * `iso_value` - Specific value at which the iso surface should be extracted.
-    ///
-    /// # Returns
-    ///      
-    /// * `Result<Mesh<T>, ModelError>` - The iso surface represented as an indexed triangle mesh, or an error if not successful.    
-    pub fn generate_iso_surface_at(
-        &self,
-        output: &str,
-        cell_size: T,
-        iso_value: T,
-    ) -> Result<Mesh<T>, ModelError> {
-        if let Some(config) = &self.config {
-            let mut field = self.generate_field(output, &config.bounds, cell_size)?;
-            field.smooth(config.smoothing_factor, config.smoothing_iter);
-
-            if config.cap {
-                field.padding(T::one());
-            }
-
-            let triangles = generate_iso_surface(&field, iso_value);
-            return Ok(Mesh::from_triangles(&triangles, false));
-        }
-
-        Err(ModelError::MissingConfig())
-    }
 }
 
 #[cfg(test)]
@@ -790,8 +721,7 @@ mod tests {
 
         assert!(
             (val - 2.0).abs() < f64::epsilon(),
-            "Incorrect value. Expected 2.0 but was {}",
-            val
+            "Incorrect value. Expected 2.0 but was {val}"
         );
     }
 
@@ -814,8 +744,7 @@ mod tests {
 
         assert!(
             (val - 3.0).abs() < f64::epsilon(),
-            "Incorrect value. Expected 3.0 but was {}",
-            val
+            "Incorrect value. Expected 3.0 but was {val}"
         );
 
         model.remove_input("Add", 0).unwrap();
