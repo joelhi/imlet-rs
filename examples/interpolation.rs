@@ -46,7 +46,11 @@ pub fn main() {
         .expect("Component should be present")
         .set_parameter("Factor", Data::Value(factor));
 
-    let mut sampler = DenseSampler::builder().with_bounds(bounds).build().unwrap();
+    let mut sampler = DenseSampler::builder()
+        .with_bounds(bounds)
+        .with_cell_size(cell_size)
+        .build()
+        .unwrap();
 
     sampler.sample_field(&model).expect("Sampling should work.");
 
@@ -57,6 +61,6 @@ pub fn main() {
     utils::io::write_obj_file(&mesh, "interpolation_example").unwrap();
     #[cfg(feature = "viewer")]
     {
-        imlet::viewer::show_mesh(&mesh, Some(mesh.bounds()));
+        imlet::viewer::show_mesh(&mesh, Some(bounds));
     }
 }

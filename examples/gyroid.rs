@@ -59,6 +59,6 @@ pub fn main() {
 
     #[cfg(feature = "viewer")]
     {
-        imlet::viewer::show_mesh(&mesh, Some(mesh.bounds()));
+        imlet::viewer::show_mesh(&mesh, Some(bounds));
     }
 }

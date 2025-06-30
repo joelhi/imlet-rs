@@ -42,7 +42,7 @@ pub fn main() {
     let config = SparseFieldConfig {
         internal_size: BlockSize::Size32,
         leaf_size: BlockSize::Size8,
-        sampling_mode: SamplingMode::CENTRE,
+        sampling_mode: SamplingMode::CORNERS,
         cell_size: cell_size,
     };
 

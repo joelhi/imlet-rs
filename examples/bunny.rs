@@ -38,6 +38,8 @@ pub fn main() {
     let mut sampler = DenseSampler::builder()
         .with_bounds(bounds)
         .with_cell_size(cell_size)
+        .with_smoothing_iter(5)
+        .with_smoothing_factor(0.75)
         .build()
         .unwrap();
 

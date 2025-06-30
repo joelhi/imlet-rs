@@ -13,7 +13,7 @@ pub fn main() {
     utils::logging::init_info();
 
     // Inputs
-    let cell_size = 0.5;
+    let cell_size = 5.0;
     let size = 100.0;
     let offset = 5.0;
     let bounds = BoundingBox::new(
@@ -54,6 +54,16 @@ pub fn main() {
 
     #[cfg(feature = "viewer")]
     {
-        imlet::viewer::show_mesh(&mesh, Some(mesh.bounds()));
+        use imlet::viewer::{DisplaySettings, Material};
+
+        imlet::viewer::show_mesh_with_settings(
+            &mesh,
+            Some(bounds),
+            &DisplaySettings {
+                show_bounds: true,
+                show_mesh_edges: true,
+                mesh_material: Material::Normal,
+            },
+        );
     }
 }
