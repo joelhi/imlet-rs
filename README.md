@@ -100,6 +100,8 @@ The model is then evaluated over a 3D space and saved as a mesh in an OBJ file.
      .iso_surface(0.0)
      .expect("Extracting iso-surface should work.");
 
+ utils::io::write_obj_file(&mesh, "interpolation_example").unwrap();
+
  ```
 
 ## Roadmap
