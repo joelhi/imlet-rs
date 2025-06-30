@@ -85,7 +85,7 @@
 //! let mesh = sampler
 //!     .iso_surface(0.0)
 //!     .expect("Extracting iso-surface should work.");
-//! 
+//!
 //! write_obj_file(&mesh, "interpolation_example").unwrap();
 //!
 //! ```
