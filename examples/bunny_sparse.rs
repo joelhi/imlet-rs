@@ -24,14 +24,14 @@ pub fn main() {
     let mesh_tag = model.add_function("Mesh", mesh_file).unwrap();
 
     let gyroid_tag = model
-        .add_function("Gyroid", Gyroid::with_equal_spacing(7.5, true))
+        .add_function("Gyroid", Gyroid::with_equal_spacing(15.0, true))
         .unwrap();
 
     let offset_gyroid = model
-        .add_operation_with_inputs("OffsetGyroid", Thickness::new(3.5), &[&gyroid_tag])
+        .add_operation_with_inputs("OffsetGyroid", Thickness::new(7.5), &[&gyroid_tag])
         .unwrap();
 
-    let output = model
+    let _ = model
         .add_operation_with_inputs(
             "Output",
             BooleanIntersection::new(),
@@ -40,21 +40,19 @@ pub fn main() {
         .unwrap();
 
     let config = SparseFieldConfig {
-        internal_size: BlockSize::Size64,
-        leaf_size: BlockSize::Size4,
+        internal_size: BlockSize::Size32,
+        leaf_size: BlockSize::Size8,
         sampling_mode: SamplingMode::CENTRE,
+        cell_size: cell_size,
     };
 
     let mut sampler = SparseSampler::builder()
-        .with_bounds(bounds.offset(5.0))
-        .with_model(model.into())
+        .with_bounds(bounds)
         .with_sparse_config(config)
         .build()
         .expect("Should be able to build the sampler.");
 
-    sampler
-        .sample_field(cell_size, &output)
-        .expect("Sampling should work.");
+    sampler.sample_field(&model).expect("Sampling should work.");
 
     let mesh = sampler
         .iso_surface(0.0)
@@ -62,4 +60,13 @@ pub fn main() {
 
     //write_field_csv(&field, "bunny_sparse").unwrap();
     write_obj_file(&mesh, "sparse_bunny").unwrap();
+
+    #[cfg(feature = "viewer")]
+    {
+        imlet::viewer::show_mesh_with_settings(
+            &mesh,
+            Some(bounds),
+            &imlet::viewer::DisplaySettings::new(),
+        );
+    }
 }

@@ -24,7 +24,7 @@ pub fn main() {
     // Function
     let mut model = ImplicitModel::new();
 
-    let sphere_node = model
+    let _ = model
         .add_function(
             "Sphere",
             Sphere::new(
@@ -40,13 +40,11 @@ pub fn main() {
 
     let mut sampler = DenseSampler::builder()
         .with_bounds(bounds)
-        .with_model(model.into())
+        .with_cell_size(cell_size)
         .build()
         .unwrap();
 
-    sampler
-        .sample_field(cell_size, &sphere_node)
-        .expect("Sampling should work.");
+    sampler.sample_field(&model).expect("Sampling should work.");
 
     let mesh = sampler
         .iso_surface(0.0)

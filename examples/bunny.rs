@@ -27,7 +27,7 @@ pub fn main() {
         .add_operation_with_inputs("OffsetGyroid", Thickness::new(3.5), &[&gyroid_tag])
         .unwrap();
 
-    let output = model
+    let _ = model
         .add_operation_with_inputs(
             "Output",
             BooleanIntersection::new(),
@@ -37,13 +37,11 @@ pub fn main() {
 
     let mut sampler = DenseSampler::builder()
         .with_bounds(bounds)
-        .with_model(model.into())
+        .with_cell_size(cell_size)
         .build()
         .unwrap();
 
-    sampler
-        .sample_field(cell_size, &output)
-        .expect("Sampling should work.");
+    sampler.sample_field(&model).expect("Sampling should work.");
 
     let mesh = sampler
         .iso_surface(0.0)

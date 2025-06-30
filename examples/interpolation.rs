@@ -46,15 +46,9 @@ pub fn main() {
         .expect("Component should be present")
         .set_parameter("Factor", Data::Value(factor));
 
-    let mut sampler = DenseSampler::builder()
-        .with_bounds(bounds)
-        .with_model(model.into())
-        .build()
-        .unwrap();
+    let mut sampler = DenseSampler::builder().with_bounds(bounds).build().unwrap();
 
-    sampler
-        .sample_field(cell_size, &shape_interpolation)
-        .expect("Sampling should work.");
+    sampler.sample_field(&model).expect("Sampling should work.");
 
     let mesh = sampler
         .iso_surface(0.0)
