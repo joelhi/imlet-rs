@@ -43,7 +43,7 @@ pub fn main() {
         internal_size: BlockSize::Size32,
         leaf_size: BlockSize::Size8,
         sampling_mode: SamplingMode::CORNERS,
-        cell_size: cell_size,
+        cell_size,
     };
 
     let mut sampler = SparseSampler::builder()

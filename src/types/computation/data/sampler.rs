@@ -536,7 +536,7 @@ mod tests {
         // Test basic builder
         let sampler = SparseSampler::builder()
             .with_bounds(bounds)
-            .with_sparse_config(config.clone())
+            .with_sparse_config(config)
             .build();
         assert!(sampler.is_ok());
 
@@ -551,7 +551,7 @@ mod tests {
 
         // Test builder fails without bounds
         let sampler = SparseSampler::<f32>::builder()
-            .with_sparse_config(config.clone())
+            .with_sparse_config(config)
             .build();
         assert!(sampler.is_err());
 
