@@ -33,7 +33,7 @@ use crate::utils::math_helper::Pi;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SparseField<T: Float> {
     /// The configuration for block sizes
-    config: SparseFieldConfig,
+    config: SparseFieldConfig<T>,
     /// The root node of the tree structure
     root: RootNode<T>,
 }
@@ -44,7 +44,7 @@ impl<T: Float> SparseField<T> {
     /// # Arguments
     ///
     /// * `config` - The configuration specifying block sizes and sampling mode.
-    pub fn new(config: SparseFieldConfig) -> Self {
+    pub fn new(config: SparseFieldConfig<T>) -> Self {
         Self {
             config,
             root: RootNode::new(),
@@ -57,8 +57,8 @@ impl<T: Float> SparseField<T> {
     ///
     /// * `bounds` - The bounding box defining the field's extents.
     /// * `cell_size` - The size of each cell in the field.
-    pub fn init_bounds(&mut self, bounds: &BoundingBox<T>, cell_size: T) {
-        self.root.init_bounds(bounds, cell_size, &self.config);
+    pub fn init_bounds(&mut self, bounds: &BoundingBox<T>) {
+        self.root.init_bounds(bounds, &self.config);
     }
 }
 
@@ -159,13 +159,15 @@ impl BlockSize {
 
 /// Configuration for the sparse field structure
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct SparseFieldConfig {
+pub struct SparseFieldConfig<T> {
     /// The size of internal nodes.
     pub internal_size: BlockSize,
     /// The size of leaf nodes.
     pub leaf_size: BlockSize,
     /// Sampling mode.
     pub sampling_mode: SamplingMode,
+    /// Cell size
+    pub cell_size: T,
 }
 
 /// Root node containing pointers to other nodes
@@ -192,9 +194,9 @@ impl<T: Float> RootNode<T> {
     /// * `bounds` - The bounding box defining the field's extents.
     /// * `cell_size` - The size of each cell in the field.
     /// * `config` - The configuration specifying block sizes and sampling mode.
-    fn init_bounds(&mut self, bounds: &BoundingBox<T>, cell_size: T, config: &SparseFieldConfig) {
+    fn init_bounds(&mut self, bounds: &BoundingBox<T>, config: &SparseFieldConfig<T>) {
         let steps = config.internal_size.value() * (config.leaf_size.value() - 1);
-        let node_size = cell_size * T::from(steps).unwrap();
+        let node_size = config.cell_size * T::from(steps).unwrap();
 
         let size = bounds.dimensions();
         let nodes_x = ((size.0 / node_size).ceil().to_usize().unwrap()).max(1);
@@ -732,11 +734,12 @@ mod tests {
         model
     }
 
-    fn create_test_config() -> SparseFieldConfig {
+    fn create_test_config() -> SparseFieldConfig<f32> {
         SparseFieldConfig {
             internal_size: BlockSize::Size8,
             leaf_size: BlockSize::Size4,
             sampling_mode: SamplingMode::CENTRE,
+            cell_size: 1.0,
         }
     }
 
@@ -744,10 +747,9 @@ mod tests {
     fn test_sparse_field_initialization() {
         let mut field = SparseField::new(create_test_config());
         let bounds = create_test_bounds();
-        let cell_size = 1.0;
 
         // Test initialization
-        field.init_bounds(&bounds, cell_size);
+        field.init_bounds(&bounds);
 
         // Verify root node exists
         assert!(!field.root.table.is_empty());
@@ -757,11 +759,10 @@ mod tests {
     fn test_sparse_field_sampling() {
         let mut field = SparseField::new(create_test_config());
         let bounds = create_test_bounds();
-        let cell_size = 1.0;
         let model = create_test_model();
 
         // Initialize and sample
-        field.init_bounds(&bounds, cell_size);
+        field.init_bounds(&bounds);
         let graph = model.compile("constant").unwrap();
         field.sample_from_graph(&graph, -0.1, 0.1).unwrap();
 
@@ -787,11 +788,10 @@ mod tests {
     fn test_sparse_field_iterators() {
         let mut field = SparseField::new(create_test_config());
         let bounds = create_test_bounds();
-        let cell_size = 1.0;
         let model = create_test_model();
 
         // Initialize and sample
-        field.init_bounds(&bounds, cell_size);
+        field.init_bounds(&bounds);
         let graph = model.compile("constant").unwrap();
         field.sample_from_graph(&graph, -0.1, 0.1).unwrap();
 
@@ -823,12 +823,12 @@ mod tests {
             internal_size: BlockSize::Size8,
             leaf_size: BlockSize::Size4,
             sampling_mode: SamplingMode::CENTRE,
+            cell_size: 1.0,
         });
         let bounds = create_test_bounds();
-        let cell_size = 1.0;
         let model = create_test_model();
 
-        field_centre.init_bounds(&bounds, cell_size);
+        field_centre.init_bounds(&bounds);
         let graph = model.compile("constant").unwrap();
         field_centre.sample_from_graph(&graph, -0.1, 0.1).unwrap();
 
@@ -837,9 +837,10 @@ mod tests {
             internal_size: BlockSize::Size8,
             leaf_size: BlockSize::Size4,
             sampling_mode: SamplingMode::CORNERS,
+            cell_size: 1.0,
         });
 
-        field_corners.init_bounds(&bounds, cell_size);
+        field_corners.init_bounds(&bounds);
         field_corners.sample_from_graph(&graph, -0.1, 0.1).unwrap();
 
         // Both modes should produce valid fields
@@ -878,7 +879,6 @@ mod tests {
     fn test_error_handling() {
         let mut field = SparseField::new(create_test_config());
         let bounds = create_test_bounds();
-        let cell_size = 1.0;
         let model = create_test_model();
 
         // Test sampling without initialization
@@ -890,7 +890,7 @@ mod tests {
         );
 
         // Initialize and test with invalid component
-        field.init_bounds(&bounds, cell_size);
+        field.init_bounds(&bounds);
         let result = model.compile("nonexistent");
         assert!(result.is_err(), "Compiling invalid component should fail");
     }
