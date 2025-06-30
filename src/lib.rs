@@ -34,6 +34,7 @@
 //! # use imlet::types::computation::model::ImplicitModel;
 //! # use imlet::types::computation::data::{SparseField, SparseFieldConfig, SamplingMode, BlockSize};
 //! # use imlet::types::computation::data::sampler::{SparseSampler, Sampler};
+//! # use imlet::utils::io;
 //!
 //! // Define the model parameters
 //! let size = 10.0;
@@ -84,6 +85,8 @@
 //! let mesh = sampler
 //!     .iso_surface(0.0)
 //!     .expect("Extracting iso-surface should work.");
+//! 
+//! write_obj_file(&mesh, "interpolation_example").unwrap();
 //!
 //! ```
 //!
