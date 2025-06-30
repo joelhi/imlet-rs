@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use num_traits::Float;
 use serde::Serialize;
 
@@ -20,19 +18,31 @@ use crate::{
 ///
 /// This trait defines the core functionality for converting implicit models into
 /// discretized fields and extracting meshes at specific iso-values.
-pub trait Sampler<T, F> {
+pub trait Sampler<T: Float + Send + Sync + Serialize + Pi, F> {
+    /// Sample a field with a certain resolution for the default component given by [`ImplicitModel::get_default_output`]
+    ///
+    /// # Arguments
+    ///
+    /// * `cell_size` - The size of each cell in the discretized field.
+    /// * `component_tag` - The tag of the model component to evaluate.
+    fn sample_field(&mut self, model: &ImplicitModel<T>) -> Result<&F, ModelError>;
+
     /// Sample a field with a certain resolution from one of the model components.
     ///
     /// # Arguments
     ///
     /// * `cell_size` - The size of each cell in the discretized field.
     /// * `component_tag` - The tag of the model component to evaluate.
-    fn sample_field(&mut self, cell_size: T, component_tag: &str) -> Result<&F, ModelError>;
+    fn sample_field_for_component(
+        &mut self,
+        model: &ImplicitModel<T>,
+        component_tag: &str,
+    ) -> Result<&F, ModelError>;
 
     /// Access the field data if present.
     ///
-    /// Returns [`None`] if no field has been sampled yet.
-    fn field(&self) -> Option<&F>;
+    /// Returns the current field.
+    fn field(&self) -> &F;
 
     /// Extract an iso-surface for a certain iso value.
     ///
@@ -63,25 +73,24 @@ pub trait Sampler<T, F> {
 /// # let mut model = ImplicitModel::new();
 /// # let model_tag = model.add_constant("tag", 1.0).unwrap();
 /// # let bounds = BoundingBox::zero();
-/// # let cell_size = 1.0;
 ///
 /// // Configure the sparse field parameters
 /// let config = SparseFieldConfig {
 ///     internal_size: BlockSize::Size64,
 ///     leaf_size: BlockSize::Size4,
 ///     sampling_mode: SamplingMode::CENTRE,
+///     cell_size: 1.0,
 /// };
 ///
 /// // Create and configure the sampler
 /// let mut sampler = SparseSampler::builder()
 ///     .with_bounds(bounds)
-///     .with_model(model.into())
 ///     .with_sparse_config(config)
 ///     .build()
 ///     .expect("Failed to build sampler");
 ///
 /// // Sample the field
-/// sampler.sample_field(cell_size, &model_tag)
+/// sampler.sample_field(&model)
 ///     .expect("Sampling failed");
 ///
 /// // Extract the iso-surface
@@ -95,10 +104,7 @@ where
 {
     min_val: T,
     max_val: T,
-    model: Rc<ImplicitModel<T>>,
-    bounds: BoundingBox<T>,
-    sparse_config: SparseFieldConfig,
-    field: Option<SparseField<T>>,
+    field: SparseField<T>,
 }
 
 impl<T> SparseSampler<T>
@@ -108,17 +114,15 @@ where
     fn new(
         min_val: T,
         max_val: T,
-        model: Rc<ImplicitModel<T>>,
         bounds: BoundingBox<T>,
-        sparse_config: SparseFieldConfig,
+        sparse_config: SparseFieldConfig<T>,
     ) -> Self {
+        let mut field = SparseField::new(sparse_config);
+        field.init_bounds(&bounds);
         Self {
             min_val,
             max_val,
-            model,
-            bounds,
-            sparse_config,
-            field: None,
+            field,
         }
     }
 
@@ -141,9 +145,8 @@ where
 {
     max_val: Option<T>,
     min_val: Option<T>,
-    model: Option<Rc<ImplicitModel<T>>>,
     bounds: Option<BoundingBox<T>>,
-    sparse_config: Option<SparseFieldConfig>,
+    sparse_config: Option<SparseFieldConfig<T>>,
 }
 
 impl<T> Default for SparseSamplerBuilder<T>
@@ -164,7 +167,6 @@ where
         Self {
             max_val: Some(SparseSampler::default_max()),
             min_val: Some(SparseSampler::default_min()),
-            model: None,
             bounds: None,
             sparse_config: None,
         }
@@ -182,12 +184,6 @@ where
         self
     }
 
-    /// Sets the implicit model to sample.
-    pub fn with_model(mut self, model: Rc<ImplicitModel<T>>) -> Self {
-        self.model = Some(model);
-        self
-    }
-
     /// Sets the bounding box defining the sampling region.
     pub fn with_bounds(mut self, bounds: BoundingBox<T>) -> Self {
         self.bounds = Some(bounds);
@@ -195,7 +191,7 @@ where
     }
 
     /// Sets the configuration for the sparse field structure.
-    pub fn with_sparse_config(mut self, config: SparseFieldConfig) -> Self {
+    pub fn with_sparse_config(mut self, config: SparseFieldConfig<T>) -> Self {
         self.sparse_config = Some(config);
         self
     }
@@ -206,9 +202,6 @@ where
     ///
     /// A [`Result`] containing the configured sampler or an error message if required parameters are missing.
     pub fn build(self) -> Result<SparseSampler<T>, ModelError> {
-        let model = self
-            .model
-            .ok_or(ModelError::Custom("model is required".to_owned()))?;
         let bounds = self
             .bounds
             .ok_or(ModelError::Custom("bounds is required".to_owned()))?;
@@ -218,7 +211,7 @@ where
 
         let min_val = self.min_val.unwrap_or(SparseSampler::default_min());
         let max_val = self.max_val.unwrap_or(SparseSampler::default_max());
-        let field = SparseSampler::new(min_val, max_val, model, bounds, sparse_config);
+        let field = SparseSampler::new(min_val, max_val, bounds, sparse_config);
         Ok(field)
     }
 }
@@ -235,17 +228,22 @@ where
 impl<T: Float + Send + Sync + Serialize + 'static + Pi + Serialize + Default>
     Sampler<T, SparseField<T>> for SparseSampler<T>
 {
-    fn sample_field(
+    fn sample_field(&mut self, model: &ImplicitModel<T>) -> Result<&SparseField<T>, ModelError> {
+        let component_tag = model
+            .get_default_output()
+            .ok_or(ModelError::Custom("No default output defined.".to_owned()))?;
+        self.sample_field_for_component(model, component_tag)
+    }
+
+    fn sample_field_for_component(
         &mut self,
-        cell_size: T,
+        model: &ImplicitModel<T>,
         component_tag: &str,
     ) -> Result<&SparseField<T>, ModelError> {
-        let mut sparse_field = SparseField::new(self.sparse_config);
-        sparse_field.init_bounds(&self.bounds, cell_size);
-        let comp_graph = self.model.compile(component_tag)?;
-        sparse_field.sample_from_graph(&comp_graph, self.min_val, self.max_val)?;
-        self.field = Some(sparse_field);
-        Ok(self.field.as_ref().unwrap())
+        let comp_graph = model.compile(component_tag)?;
+        self.field
+            .sample_from_graph(&comp_graph, self.min_val, self.max_val)?;
+        Ok(&self.field)
     }
 
     fn iso_surface(&self, iso_val: T) -> Result<Mesh<T>, ModelError> {
@@ -260,16 +258,12 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi + Serialize + Default>
                 .to_owned(),
             ));
         }
-        if let Some(field_ref) = &self.field {
-            let tris = marching_cubes::generate_iso_surface(field_ref, iso_val);
-            return Ok(Mesh::from_triangles(&tris, true));
-        }
-
-        Err(ModelError::Custom("Field not computed".to_owned()))
+        let tris = marching_cubes::generate_iso_surface(&self.field, iso_val);
+        Ok(Mesh::from_triangles(&tris, true))
     }
 
-    fn field(&self) -> Option<&SparseField<T>> {
-        self.field.as_ref()
+    fn field(&self) -> &SparseField<T> {
+        &self.field
     }
 }
 
@@ -295,7 +289,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi + Serialize + Default>
 /// // Create and configure the sampler
 /// let mut sampler = DenseSampler::builder()
 ///     .with_bounds(bounds)
-///     .with_model(model.into())
+///     .with_cell_size(cell_size)
 ///     .with_smoothing_iter(2)       // Optional: Apply smoothing
 ///     .with_smoothing_factor(0.5)   // Optional: Set smoothing strength
 ///     .with_padding(true)           // Optional: Add padding
@@ -303,7 +297,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi + Serialize + Default>
 ///     .expect("Failed to build sampler");
 ///
 /// // Sample the field
-/// sampler.sample_field(cell_size, &model_tag)
+/// sampler.sample_field(&model)
 ///     .expect("Sampling failed");
 ///
 /// // Extract the iso-surface
@@ -314,12 +308,10 @@ pub struct DenseSampler<T>
 where
     T: Float + Send + Sync + Serialize + 'static + Pi,
 {
-    model: Rc<ImplicitModel<T>>,
-    bounds: BoundingBox<T>,
     smoothing_iter: u32,
     smoothing_factor: T,
     padding: bool,
-    dense_field: Option<DenseField<T>>,
+    dense_field: DenseField<T>,
 }
 
 /// A builder for configuring and creating dense samplers.
@@ -330,7 +322,7 @@ pub struct DenseSamplerBuilder<T>
 where
     T: Float + Send + Sync + Serialize + 'static + Pi,
 {
-    model: Option<Rc<ImplicitModel<T>>>,
+    cell_size: Option<T>,
     bounds: Option<BoundingBox<T>>,
     smoothing_iter: u32,
     smoothing_factor: T,
@@ -353,7 +345,7 @@ where
     /// Creates a new builder with default values.
     pub fn new() -> Self {
         Self {
-            model: None,
+            cell_size: None,
             bounds: None,
             smoothing_iter: 0,
             smoothing_factor: T::from(0.5).unwrap(),
@@ -361,9 +353,9 @@ where
         }
     }
 
-    /// Sets the implicit model to sample.
-    pub fn with_model(mut self, model: Rc<ImplicitModel<T>>) -> Self {
-        self.model = Some(model);
+    /// Sets the resolution of the sampling.
+    pub fn with_cell_size(mut self, cell_size: T) -> Self {
+        self.cell_size = Some(cell_size);
         self
     }
 
@@ -397,16 +389,15 @@ where
     ///
     /// A [`Result`] containing the configured sampler or an error message if required parameters are missing.
     pub fn build(self) -> Result<DenseSampler<T>, &'static str> {
-        let model = self.model.ok_or("model is required")?;
         let bounds = self.bounds.ok_or("bounds is required")?;
+        let cell_size = self.cell_size.ok_or("cell size is required")?;
 
+        let dense_field = DenseField::from_bounds(&bounds, cell_size);
         Ok(DenseSampler {
-            model,
-            bounds,
             smoothing_iter: self.smoothing_iter,
             smoothing_factor: self.smoothing_factor,
             padding: self.padding,
-            dense_field: None,
+            dense_field,
         })
     }
 }
@@ -421,40 +412,42 @@ where
 }
 
 impl<T: Float + Send + Sync + Serialize + Pi> Sampler<T, DenseField<T>> for DenseSampler<T> {
-    fn sample_field(
+    fn sample_field(&mut self, model: &ImplicitModel<T>) -> Result<&DenseField<T>, ModelError> {
+        let component_tag = model
+            .get_default_output()
+            .ok_or(ModelError::Custom("No default output defined.".to_owned()))?;
+        self.sample_field_for_component(model, component_tag)
+    }
+
+    fn sample_field_for_component(
         &mut self,
-        cell_size: T,
+        model: &ImplicitModel<T>,
         component_tag: &str,
     ) -> Result<&DenseField<T>, ModelError> {
-        let mut field = DenseField::from_bounds(&self.bounds, cell_size);
-        let graph = self.model.compile(component_tag)?;
-        field.sample_from_graph(&graph);
+        let graph = model.compile(component_tag)?;
+        self.dense_field.sample_from_graph(&graph);
 
         // Apply padding if specified.
         if self.padding {
-            field.padding(T::zero());
+            self.dense_field.padding(T::zero());
         }
 
         // Apply smoothing if specified.
         if self.smoothing_iter > 0 {
-            field.smooth_par(self.smoothing_factor, self.smoothing_iter);
+            self.dense_field
+                .smooth_par(self.smoothing_factor, self.smoothing_iter);
         }
 
-        self.dense_field = Some(field);
-        Ok(self.dense_field.as_ref().unwrap())
+        Ok(&self.dense_field)
     }
 
     fn iso_surface(&self, iso_val: T) -> Result<Mesh<T>, ModelError> {
-        if let Some(field_ref) = &self.dense_field {
-            let tris = algorithms::marching_cubes::generate_iso_surface(field_ref, iso_val);
-            return Ok(Mesh::from_triangles(&tris, true));
-        }
-
-        Err(ModelError::Custom("Field not computed".to_owned()))
+        let tris = algorithms::marching_cubes::generate_iso_surface(&self.dense_field, iso_val);
+        Ok(Mesh::from_triangles(&tris, true))
     }
 
-    fn field(&self) -> Option<&DenseField<T>> {
-        self.dense_field.as_ref()
+    fn field(&self) -> &DenseField<T> {
+        &self.dense_field
     }
 }
 
@@ -462,13 +455,16 @@ impl<T: Float + Send + Sync + Serialize + Pi> Sampler<T, DenseField<T>> for Dens
 mod tests {
     use super::*;
     use crate::types::{
-        computation::data::{BlockSize, SamplingMode},
+        computation::{
+            data::{field_iterator::ValueIterator, BlockSize, SamplingMode},
+            functions::XYZValue,
+        },
         geometry::Vec3,
     };
 
     fn create_test_model() -> ImplicitModel<f32> {
         let mut model = ImplicitModel::new();
-        model.add_constant("constant", 1.0).unwrap();
+        model.add_function("z_coord", XYZValue::z()).unwrap();
         model
     }
 
@@ -479,52 +475,48 @@ mod tests {
     #[test]
     fn test_dense_sampler_builder() {
         let bounds = create_test_bounds();
-        let model_ptr = Rc::new(create_test_model());
+        let cell_size = 1.0;
+
         // Test basic builder
         let sampler = DenseSampler::builder()
-            .with_model(model_ptr.clone())
             .with_bounds(bounds)
+            .with_cell_size(cell_size)
             .build();
         assert!(sampler.is_ok());
 
         // Test builder with all options
         let sampler = DenseSampler::builder()
-            .with_model(model_ptr.clone())
             .with_bounds(bounds)
+            .with_cell_size(cell_size)
             .with_smoothing_iter(2)
             .with_smoothing_factor(0.5)
             .with_padding(true)
             .build();
         assert!(sampler.is_ok());
 
-        // Test builder fails without model
-        let sampler = DenseSampler::builder().with_bounds(bounds).build();
+        // Test builder fails without bounds
+        let sampler = DenseSampler::<f32>::builder().build();
         assert!(sampler.is_err());
 
-        // Test builder fails without bounds
-        let sampler = DenseSampler::builder()
-            .with_model(model_ptr.clone())
-            .build();
+        // Test builder fails without cell size
+        let sampler = DenseSampler::builder().with_bounds(bounds).build();
         assert!(sampler.is_err());
     }
 
     #[test]
     fn test_dense_sampler_field_operations() {
         let bounds = create_test_bounds();
-        let model_ptr = Rc::new(create_test_model());
+        let model = create_test_model();
+        let cell_size = 1.0;
         let mut sampler = DenseSampler::builder()
-            .with_model(model_ptr.clone())
             .with_bounds(bounds)
+            .with_cell_size(cell_size)
             .build()
             .unwrap();
 
-        // Test field is initially None
-        assert!(sampler.field().is_none());
-
         // Test sampling
-        let field = sampler.sample_field(1.0, "constant");
+        let field = sampler.sample_field(&model);
         assert!(field.is_ok());
-        assert!(sampler.field().is_some());
 
         // Test iso-surface extraction
         let mesh = sampler.iso_surface(0.0);
@@ -534,25 +526,22 @@ mod tests {
     #[test]
     fn test_sparse_sampler_builder() {
         let bounds = create_test_bounds();
-        let model = create_test_model();
         let config = SparseFieldConfig {
             internal_size: BlockSize::Size64,
             leaf_size: BlockSize::Size4,
             sampling_mode: SamplingMode::CENTRE,
+            cell_size: 1.0,
         };
 
-        let model_ptr = Rc::new(model);
         // Test basic builder
         let sampler = SparseSampler::builder()
-            .with_model(model_ptr.clone())
             .with_bounds(bounds)
-            .with_sparse_config(config)
+            .with_sparse_config(config.clone())
             .build();
         assert!(sampler.is_ok());
 
         // Test builder with custom thresholds
         let sampler = SparseSampler::builder()
-            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config)
             .with_max_val(0.5)
@@ -560,25 +549,14 @@ mod tests {
             .build();
         assert!(sampler.is_ok());
 
-        // Test builder fails without model
-        let sampler = SparseSampler::builder()
-            .with_bounds(bounds)
-            .with_sparse_config(config)
-            .build();
-        assert!(sampler.is_err());
-
         // Test builder fails without bounds
-        let sampler = SparseSampler::builder()
-            .with_model(model_ptr.clone())
-            .with_sparse_config(config)
+        let sampler = SparseSampler::<f32>::builder()
+            .with_sparse_config(config.clone())
             .build();
         assert!(sampler.is_err());
 
         // Test builder fails without config
-        let sampler = SparseSampler::builder()
-            .with_model(model_ptr.clone())
-            .with_bounds(bounds)
-            .build();
+        let sampler = SparseSampler::builder().with_bounds(bounds).build();
         assert!(sampler.is_err());
     }
 
@@ -590,23 +568,18 @@ mod tests {
             internal_size: BlockSize::Size64,
             leaf_size: BlockSize::Size4,
             sampling_mode: SamplingMode::CENTRE,
+            cell_size: 1.0,
         };
 
-        let model_ptr = Rc::new(model);
         let mut sampler = SparseSampler::builder()
-            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config)
             .build()
             .unwrap();
 
-        // Test field is initially None
-        assert!(sampler.field().is_none());
-
         // Test sampling
-        let field = sampler.sample_field(1.0, "constant");
+        let field = sampler.sample_field(&model);
         assert!(field.is_ok());
-        assert!(sampler.field().is_some());
 
         // Test iso-surface extraction
         let mesh = sampler.iso_surface(0.0);
@@ -621,11 +594,10 @@ mod tests {
             internal_size: BlockSize::Size64,
             leaf_size: BlockSize::Size4,
             sampling_mode: SamplingMode::CENTRE,
+            cell_size: 1.0,
         };
 
-        let model_ptr = Rc::new(model);
         let mut sampler = SparseSampler::builder()
-            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config)
             .with_max_val(0.5)
@@ -633,7 +605,7 @@ mod tests {
             .build()
             .unwrap();
 
-        sampler.sample_field(1.0, "constant").unwrap();
+        sampler.sample_field(&model).unwrap();
 
         // Test iso-surface extraction within bounds succeeds
         assert!(sampler.iso_surface(0.0).is_ok());
@@ -645,110 +617,113 @@ mod tests {
 
     #[test]
     fn test_dense_sampler_with_smoothing() {
-        let model_ptr = Rc::new(create_test_model());
+        let model = create_test_model();
         let bounds = create_test_bounds();
+        let cell_size = 1.0;
 
         let mut sampler = DenseSampler::builder()
-            .with_model(model_ptr.clone())
             .with_bounds(bounds)
+            .with_cell_size(cell_size)
             .with_smoothing_iter(3)
             .with_smoothing_factor(0.1)
             .build()
             .expect("Failed to build sampler");
 
         sampler
-            .sample_field(1.0, "constant")
+            .sample_field(&model)
             .expect("Failed to sample field");
 
-        let field = sampler.field().unwrap();
-        assert!(!field.data().is_empty());
+        let field = sampler.field();
+        assert!(field.iter_values().count() != 0);
     }
 
     #[test]
     fn test_dense_sampler_with_padding() {
-        let model_ptr = Rc::new(create_test_model());
+        let model = create_test_model();
         let bounds = create_test_bounds();
+        let cell_size = 1.0;
 
         let mut sampler = DenseSampler::builder()
-            .with_model(model_ptr.clone())
             .with_bounds(bounds)
+            .with_cell_size(cell_size)
             .with_padding(true)
             .build()
             .expect("Failed to build sampler");
 
         sampler
-            .sample_field(1.0, "constant")
+            .sample_field(&model)
             .expect("Failed to sample field");
 
-        let field = sampler.field().unwrap();
-        assert!(!field.data().is_empty());
+        let field = sampler.field();
+        assert!(field.iter_values().count() != 0);
     }
 
     #[test]
     fn test_sparse_sampler_different_block_sizes() {
         let bounds = create_test_bounds();
-        let model_ptr = Rc::new(create_test_model());
+        let model = create_test_model();
 
         // Test with small blocks
         let config_small = SparseFieldConfig {
             internal_size: BlockSize::Size8,
             leaf_size: BlockSize::Size2,
             sampling_mode: SamplingMode::CENTRE,
+            cell_size: 1.0,
         };
 
         let mut sampler_small = SparseSampler::builder()
-            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config_small)
             .build()
             .expect("Failed to build sampler");
 
         sampler_small
-            .sample_field(1.0, "constant")
+            .sample_field(&model)
             .expect("Failed to sample field with small blocks");
 
+        // Test with large blocks
         let config_large = SparseFieldConfig {
             internal_size: BlockSize::Size32,
             leaf_size: BlockSize::Size8,
             sampling_mode: SamplingMode::CENTRE,
+            cell_size: 1.0,
         };
 
         let mut sampler_large = SparseSampler::builder()
-            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config_large)
             .build()
             .expect("Failed to build sampler");
 
         sampler_large
-            .sample_field(1.0, "constant")
+            .sample_field(&model)
             .expect("Failed to sample field with large blocks");
 
-        assert!(sampler_small.field().is_some());
-        assert!(sampler_large.field().is_some());
+        assert!(sampler_small.field().iter_values().count() != 0);
+        assert!(sampler_large.field().iter_values().count() != 0);
     }
 
     #[test]
     fn test_sparse_sampler_sampling_modes() {
         let bounds = create_test_bounds();
-        let model_ptr = Rc::new(create_test_model());
+        let model = create_test_model();
 
         // Test CENTRE mode
         let config_centre = SparseFieldConfig {
             internal_size: BlockSize::Size8,
             leaf_size: BlockSize::Size4,
             sampling_mode: SamplingMode::CENTRE,
+            cell_size: 1.0,
         };
 
         let mut sampler_centre = SparseSampler::builder()
-            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config_centre)
             .build()
             .expect("Failed to build sampler");
 
         sampler_centre
-            .sample_field(1.0, "constant")
+            .sample_field(&model)
             .expect("Failed to sample field with CENTRE mode");
 
         // Test CORNERS mode
@@ -756,83 +731,86 @@ mod tests {
             internal_size: BlockSize::Size8,
             leaf_size: BlockSize::Size4,
             sampling_mode: SamplingMode::CORNERS,
+            cell_size: 1.0,
         };
 
         let mut sampler_corners = SparseSampler::builder()
-            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config_corners)
             .build()
             .expect("Failed to build sampler");
 
         sampler_corners
-            .sample_field(1.0, "constant")
+            .sample_field(&model)
             .expect("Failed to sample field with CORNERS mode");
 
         // Both samplers should produce valid fields
-        assert!(sampler_centre.field().is_some());
-        assert!(sampler_corners.field().is_some());
+        assert!(sampler_centre.field().iter_values().count() != 0);
+        assert!(sampler_corners.field().iter_values().count() != 0);
     }
 
     #[test]
     fn test_sampler_invalid_component() {
         let bounds = create_test_bounds();
-        let model_ptr = Rc::new(create_test_model());
+        let model = ImplicitModel::new();
 
         let mut dense_sampler = DenseSampler::builder()
-            .with_model(model_ptr.clone())
             .with_bounds(bounds)
+            .with_cell_size(1.0)
             .build()
             .expect("Failed to build dense sampler");
 
-        let dense_result = dense_sampler.sample_field(1.0, "nonexistent_component");
+        let dense_result = dense_sampler.sample_field(&model);
         assert!(dense_result.is_err());
 
         let config = SparseFieldConfig {
             internal_size: BlockSize::Size8,
             leaf_size: BlockSize::Size4,
             sampling_mode: SamplingMode::CENTRE,
+            cell_size: 1.0,
         };
 
         let mut sparse_sampler = SparseSampler::builder()
-            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config)
             .build()
             .expect("Failed to build sparse sampler");
 
-        let sparse_result = sparse_sampler.sample_field(1.0, "nonexistent_component");
+        let sparse_result = sparse_sampler.sample_field(&model);
         assert!(sparse_result.is_err());
     }
 
     #[test]
     fn test_sampler_iso_surface_without_field() {
         let bounds = create_test_bounds();
-        let model_ptr = Rc::new(create_test_model());
 
         let dense_sampler = DenseSampler::builder()
-            .with_model(model_ptr.clone())
             .with_bounds(bounds)
+            .with_cell_size(1.0)
             .build()
             .expect("Failed to build dense sampler");
 
         let dense_result = dense_sampler.iso_surface(0.0);
-        assert!(dense_result.is_err());
+        assert!(dense_result.is_ok());
 
         let config = SparseFieldConfig {
             internal_size: BlockSize::Size8,
             leaf_size: BlockSize::Size4,
             sampling_mode: SamplingMode::CENTRE,
+            cell_size: 1.0,
         };
 
         let sparse_sampler = SparseSampler::builder()
-            .with_model(model_ptr.clone())
             .with_bounds(bounds)
             .with_sparse_config(config)
             .build()
             .expect("Failed to build sparse sampler");
 
         let sparse_result = sparse_sampler.iso_surface(0.0);
-        assert!(sparse_result.is_err());
+        assert!(sparse_result.is_ok(), "Expected mesh to be ok");
+        assert!(
+            sparse_result.unwrap().vertices().is_empty(),
+            "Expected empty vertex list."
+        );
     }
 }
