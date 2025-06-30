@@ -7,7 +7,6 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::{self, Debug, Display};
-use std::rc::Rc;
 use std::time::Instant;
 
 use super::ComputationGraph;
@@ -64,6 +63,7 @@ pub struct ImplicitModel<T: Float + Send + Sync + Serialize + 'static + Pi> {
     version: String,
     components: HashMap<String, ModelComponent<T>>,
     inputs: HashMap<String, Vec<Option<String>>>,
+    default_output: Option<String>,
 }
 
 impl<T: Float + Send + Sync + Serialize + 'static + Pi> Default for ImplicitModel<T> {
@@ -79,13 +79,8 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
             version: IMLET_VERSION.to_string(),
             components: HashMap::new(),
             inputs: HashMap::new(),
+            default_output: None,
         }
-    }
-
-    /// Create a new empty model wrapped in a reference counted pointer [Rc].
-    /// The [Rc] is used to pass the model to external structs like samplers.
-    pub fn new_shared() -> Rc<Self> {
-        Rc::new(Self::new())
     }
 
     /// Get references to all the components in the model and their tags.
@@ -98,6 +93,18 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     /// Returns a reference to the component if present, othwerwise [`None`]
     pub fn get_component(&self, tag: &str) -> Option<&ModelComponent<T>> {
         self.components.get(tag)
+    }
+
+    /// Get the default model output node.
+    ///
+    /// This will be the last added component to the model.
+    pub fn get_default_output(&self) -> Option<&str> {
+        self.default_output.as_deref()
+    }
+
+    /// Set the default model output node.
+    pub fn set_default_output(&mut self, tag: &str) {
+        self.default_output = Some(tag.to_owned());
     }
 
     /// Get a mutable reference to a component from the model by tag.
@@ -135,6 +142,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
             ModelComponent::Function(Box::new(function)),
         );
 
+        self.default_output = Some(tag_string.clone());
         Ok(tag_string)
     }
 
@@ -161,6 +169,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
             ModelComponent::Operation(Box::new(operation)),
         );
 
+        self.default_output = Some(tag_string.clone());
         Ok(tag_string)
     }
 
@@ -200,6 +209,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
             ModelComponent::Operation(Box::new(operation)),
         );
 
+        self.default_output = Some(tag_string.clone());
         Ok(tag_string)
     }
 
@@ -218,6 +228,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         self.components
             .insert(tag_string.clone(), ModelComponent::Constant(value));
 
+        self.default_output = Some(tag_string.clone());
         Ok(tag_string)
     }
 
@@ -330,6 +341,12 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
             self.remove_input(component, *index)?;
         }
 
+        if let Some(default_tag) = &self.default_output {
+            if default_tag == tag {
+                self.default_output = None;
+            }
+        }
+
         Ok(())
     }
 
@@ -353,6 +370,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
 
         self.components.insert(valid_tag.clone(), component);
 
+        self.default_output = Some(tag.to_owned());
         Ok(valid_tag)
     }
 
@@ -390,8 +408,13 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
             }
         }
 
-        debug!("Component {}, was renamed to {}", current_tag, new_tag);
+        if let Some(default_tag) = &self.default_output {
+            if default_tag == current_tag {
+                self.default_output = Some(new_tag_string.clone());
+            }
+        }
 
+        debug!("Component {}, was renamed to {}", current_tag, new_tag);
         Ok(new_tag_string)
     }
 
