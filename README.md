@@ -82,18 +82,18 @@ The model is then evaluated over a 3D space and saved as a mesh in an OBJ file.
  let config = SparseFieldConfig {
      internal_size: BlockSize::Size64,       // Internal node subdivision.
      leaf_size: BlockSize::Size4,            // Leaf node subdivision.
-     sampling_mode: SamplingMode::CENTRE,    // Sampling logic for Leaf node exclusion.
+     sampling_mode: SamplingMode::CORNERS,   // Sampling logic for Leaf node exclusion.
+     cell_size,                              // Sampling resolution
  };
 
  let mut sampler = SparseSampler::builder()
      .with_bounds(bounds)            // Set the bounds for the sampling.
-     .with_model(model)              // Set the model to sample.
      .with_sparse_config(config)     // Set the sparse field parameters.
      .build()
      .expect("Should be able to build the sampler.");
 
  sampler
-     .sample_field(cell_size, &intersection)
+     .sample_field(model)
      .expect("Sampling should work.");
 
  let mesh = sampler

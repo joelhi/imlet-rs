@@ -67,7 +67,7 @@
 //! let config = SparseFieldConfig {
 //!     internal_size: BlockSize::Size64,       // Internal node subdivision.
 //!     leaf_size: BlockSize::Size4,            // Leaf node subdivision.
-//!     sampling_mode: SamplingMode::CENTRE,    // Sampling logic for Leaf node exclusion.
+//!     sampling_mode: SamplingMode::CORNERS,    // Sampling logic for Leaf node exclusion.
 //!     cell_size,                              // Sampling resolution.
 //! };
 //!
