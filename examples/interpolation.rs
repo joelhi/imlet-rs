@@ -1,6 +1,9 @@
 use imlet::{
     types::computation::{
-        data::sampler::{DenseSampler, Sampler},
+        data::{
+            sampler::{DenseSampler, Sampler, SparseSampler},
+            BlockSize, SamplingMode, SparseFieldConfig,
+        },
         functions::{Gyroid, MeshFile, XYZValue},
         model::ImplicitModel,
         operations::{
@@ -15,7 +18,7 @@ use imlet::{
 pub fn main() {
     utils::logging::init_info();
 
-    let cell_size = 0.5;
+    let cell_size = 0.25;
     let mesh_file = MeshFile::from_path("assets/geometry/bunny.obj").unwrap();
     let bounds = mesh_file.bounds().unwrap().offset(cell_size);
 
@@ -29,10 +32,7 @@ pub fn main() {
         .unwrap();
 
     let offset_gyroid = model
-        .add_operation(
-            "OffsetGyroid",
-            Thickness::new(1.5),
-            Some(&[&gyroid_tag]))
+        .add_operation("OffsetGyroid", Thickness::new(1.5), Some(&[&gyroid_tag]))
         .unwrap();
 
     let union_tag = model
@@ -61,11 +61,14 @@ pub fn main() {
         )
         .unwrap();
 
-    let mut sampler = DenseSampler::builder()
+    let mut sampler = SparseSampler::builder()
         .with_bounds(bounds)
-        .with_cell_size(cell_size)
-        .with_smoothing_factor(0.75)
-        .with_smoothing_iter(3)
+        .with_config(SparseFieldConfig {
+            internal_size: BlockSize::Size32,
+            leaf_size: BlockSize::Size8,
+            sampling_mode: SamplingMode::CORNERS,
+            cell_size,
+        })
         .build()
         .unwrap();
 

@@ -31,10 +31,7 @@ pub fn main() {
         .unwrap();
 
     let offset_gyroid = model
-        .add_operation(
-            "OffsetGyroid",
-            Thickness::new(10.),
-            Some(&[&gyroid_tag]))
+        .add_operation("OffsetGyroid", Thickness::new(10.), Some(&[&gyroid_tag]))
         .unwrap();
 
     let _ = model
