@@ -1,12 +1,12 @@
 use imlet::{
-    types::{
-        computation::{
-            data::sampler::{DenseSampler, Sampler},
-            functions::MeshFile,
-            model::{Data, ImplicitModel},
-            operations::math::LinearInterpolation,
+    types::computation::{
+        data::sampler::{DenseSampler, Sampler},
+        functions::{Gyroid, MeshFile, XYZValue},
+        model::ImplicitModel,
+        operations::{
+            math::{Remap, VariableLinearInterpolation},
+            shape::{BooleanIntersection, Thickness},
         },
-        geometry::Sphere,
     },
     utils,
 };
@@ -15,7 +15,6 @@ use imlet::{
 pub fn main() {
     utils::logging::init_info();
 
-    let factor: f32 = 0.35;
     let cell_size = 0.5;
     let mesh_file = MeshFile::from_path("assets/geometry/bunny.obj").unwrap();
     let bounds = mesh_file.bounds().unwrap().offset(cell_size);
@@ -23,32 +22,47 @@ pub fn main() {
     // Build model
     let mut model = ImplicitModel::new();
 
-    let sphere_tag = model
-        .add_function(
-            "Sphere",
-            Sphere::new(bounds.centroid(), bounds.dimensions().0 * 0.3),
+    let mesh_tag = model.add_function("Mesh", mesh_file).unwrap();
+
+    let gyroid_tag = model
+        .add_function("Gyroid", Gyroid::with_equal_spacing(3.0, true))
+        .unwrap();
+
+    let offset_gyroid = model
+        .add_operation_with_inputs("OffsetGyroid", Thickness::new(1.5), &[&gyroid_tag])
+        .unwrap();
+
+    let union_tag = model
+        .add_operation_with_inputs(
+            "Union",
+            BooleanIntersection::new(),
+            &[&mesh_tag, &offset_gyroid],
         )
         .unwrap();
 
-    let bunny_tag = model.add_function("Bunny", mesh_file).unwrap();
+    let z_coord_tag = model.add_function("z_coord", XYZValue::z()).unwrap();
 
-    let shape_interpolation = model
+    let interp_factor_tag = model
+        .add_operation_with_inputs(
+            "factor",
+            Remap::with_source_domain(bounds.min.z, bounds.max.z),
+            &[&z_coord_tag],
+        )
+        .unwrap();
+
+    let _ = model
         .add_operation_with_inputs(
             "ShapeInterpolation",
-            LinearInterpolation::new(),
-            &[&bunny_tag, &sphere_tag],
+            VariableLinearInterpolation::new(),
+            &[&mesh_tag, &union_tag, &interp_factor_tag],
         )
         .unwrap();
-
-    // Update the interpolation factor
-    model
-        .get_component_mut(&shape_interpolation)
-        .expect("Component should be present")
-        .set_parameter("Factor", Data::Value(factor));
 
     let mut sampler = DenseSampler::builder()
         .with_bounds(bounds)
         .with_cell_size(cell_size)
+        .with_smoothing_factor(0.75)
+        .with_smoothing_iter(3)
         .build()
         .unwrap();
 
