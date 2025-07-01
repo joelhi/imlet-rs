@@ -357,6 +357,20 @@ fn operation_runtime_reflection<
             Ok(boxed_trait_object)
         };
         Some(deserialize_fn)
+    } else if type_info == "VariableLinearInterpolation" {
+        let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
+            let s: VariableLinearInterpolation = erased_serde::deserialize(deserializer)?;
+            let boxed_trait_object: Box<dyn ImplicitOperation<T>> = Box::new(s);
+            Ok(boxed_trait_object)
+        };
+        Some(deserialize_fn)
+    } else if type_info == "Remap" {
+        let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
+            let s: Remap<T> = erased_serde::deserialize(deserializer)?;
+            let boxed_trait_object: Box<dyn ImplicitOperation<T>> = Box::new(s);
+            Ok(boxed_trait_object)
+        };
+        Some(deserialize_fn)
     } else if type_info == "BooleanUnion" {
         let deserialize_fn = |deserializer: &mut dyn erased_serde::Deserializer<'de>| {
             let s: BooleanUnion = erased_serde::deserialize(deserializer)?;

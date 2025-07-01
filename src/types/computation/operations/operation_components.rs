@@ -5,7 +5,10 @@ use crate::{
     types::computation::{
         model::ModelComponent,
         operations::{
-            math::{Add, Divide, LinearInterpolation, Multiply, Subtract},
+            math::{
+                Add, Divide, LinearInterpolation, Multiply, Remap, Subtract,
+                VariableLinearInterpolation,
+            },
             shape::{BooleanDifference, BooleanIntersection, BooleanUnion, Offset, Thickness},
         },
         traits::ImplicitOperation,
@@ -21,6 +24,8 @@ pub enum OperationComponent {
     Multiply,
     Divide,
     LinearInterpolation,
+    VariableLinearInterpolation,
+    Remap,
     BooleanUnion,
     BooleanDifference,
     BooleanIntersection,
@@ -42,6 +47,10 @@ impl OperationComponent {
             OperationComponent::Multiply => Box::new(Multiply::new()),
             OperationComponent::Divide => Box::new(Divide::new()),
             OperationComponent::LinearInterpolation => Box::new(LinearInterpolation::new()),
+            OperationComponent::VariableLinearInterpolation => {
+                Box::new(VariableLinearInterpolation::new())
+            }
+            OperationComponent::Remap => Box::new(Remap::new()),
             // Shape
             OperationComponent::BooleanUnion => Box::new(BooleanUnion::new()),
             OperationComponent::BooleanIntersection => Box::new(BooleanIntersection::new()),
@@ -62,6 +71,8 @@ pub const OPERATION_COMPONENTS: &[OperationComponent] = &[
     OperationComponent::Multiply,
     OperationComponent::Divide,
     OperationComponent::LinearInterpolation,
+    OperationComponent::VariableLinearInterpolation,
+    OperationComponent::Remap,
     // Shape
     OperationComponent::BooleanUnion,
     OperationComponent::BooleanIntersection,
