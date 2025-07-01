@@ -29,32 +29,35 @@ pub fn main() {
         .unwrap();
 
     let offset_gyroid = model
-        .add_operation_with_inputs("OffsetGyroid", Thickness::new(1.5), &[&gyroid_tag])
+        .add_operation(
+            "OffsetGyroid",
+            Thickness::new(1.5),
+            Some(&[&gyroid_tag]))
         .unwrap();
 
     let union_tag = model
-        .add_operation_with_inputs(
+        .add_operation(
             "Union",
             BooleanIntersection::new(),
-            &[&mesh_tag, &offset_gyroid],
+            Some(&[&mesh_tag, &offset_gyroid]),
         )
         .unwrap();
 
     let z_coord_tag = model.add_function("z_coord", XYZValue::z()).unwrap();
 
     let interp_factor_tag = model
-        .add_operation_with_inputs(
+        .add_operation(
             "factor",
             Remap::with_source_domain(bounds.min.z, bounds.max.z),
-            &[&z_coord_tag],
+            Some(&[&z_coord_tag]),
         )
         .unwrap();
 
     let _ = model
-        .add_operation_with_inputs(
+        .add_operation(
             "ShapeInterpolation",
             VariableLinearInterpolation::new(),
-            &[&mesh_tag, &union_tag, &interp_factor_tag],
+            Some(&[&mesh_tag, &union_tag, &interp_factor_tag]),
         )
         .unwrap();
 

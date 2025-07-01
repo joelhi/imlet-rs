@@ -27,18 +27,16 @@ fn create_hyperbolic_paraboliod(a: f32, b: f32) -> Result<ImplicitModel<f32>, Mo
     let b_sqrt = model.add_constant("b", b.powi(2)).unwrap();
 
     // X and Y terms
-    let x_sqrt =
-        model.add_operation_with_inputs("x_sqrt", Multiply::new(), &[&x_coord, &x_coord])?;
-    let y_sqrt =
-        model.add_operation_with_inputs("y_sqrt", Multiply::new(), &[&y_coord, &y_coord])?;
+    let x_sqrt = model.add_operation("x_sqrt", Multiply::new(), Some(&[&x_coord, &x_coord]))?;
+    let y_sqrt = model.add_operation("y_sqrt", Multiply::new(), Some(&[&y_coord, &y_coord]))?;
 
-    let x_term = model.add_operation_with_inputs("x_term", Divide::new(), &[&x_sqrt, &a_sqrt])?;
-    let y_term = model.add_operation_with_inputs("y_term", Divide::new(), &[&y_sqrt, &b_sqrt])?;
+    let x_term = model.add_operation("x_term", Divide::new(), Some(&[&x_sqrt, &a_sqrt]))?;
+    let y_term = model.add_operation("y_term", Divide::new(), Some(&[&y_sqrt, &b_sqrt]))?;
 
     // Final iso value
-    let sub_1 = model.add_operation_with_inputs("sub_1", Subtract::new(), &[&y_term, &x_term])?;
+    let sub_1 = model.add_operation("sub_1", Subtract::new(), Some(&[&y_term, &x_term]))?;
 
-    let _ = model.add_operation_with_inputs("sub_2", Subtract::new(), &[&z_coord, &sub_1])?;
+    let _ = model.add_operation("sub_2", Subtract::new(), Some(&[&z_coord, &sub_1]))?;
 
     Ok(model)
 }

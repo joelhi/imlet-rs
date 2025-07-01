@@ -72,10 +72,10 @@ The model is then evaluated over a 3D space and saved as a mesh in an OBJ file.
 
  // Combine the sphere and gyroid using a Boolean intersection
  let intersection = model
-     .add_operation_with_inputs(
+     .add_operation(
          "Intersection",
          BooleanIntersection::new(),
-         &[&sphere, &gyroid])
+         Some(&[&sphere, &gyroid]))
      .unwrap();
 
  // Sample a sparse field and generate an iso-surface.
