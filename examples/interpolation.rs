@@ -1,7 +1,8 @@
 use imlet::{
     types::computation::{
         data::{
-            sampler::{Sampler, SparseSampler}, SamplingMode, SparseFieldConfig,
+            sampler::{Sampler, SparseSampler},
+            SamplingMode, SparseFieldConfig,
         },
         functions::{Gyroid, MeshFile, XYZValue},
         model::ImplicitModel,
