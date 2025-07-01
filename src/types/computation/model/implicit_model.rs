@@ -50,10 +50,10 @@ use super::{ComponentId, ModelComponent};
 ///
 /// // Combine the sphere and torus using a union operation
 /// let union = model
-///     .add_operation_with_inputs(
+///     .add_operation(
 ///         "Union",
 ///         BooleanUnion::new(),
-///         &[&sphere, &torus])
+///         Some(&[&sphere, &torus]))
 ///     .unwrap();
 ///
 /// ```

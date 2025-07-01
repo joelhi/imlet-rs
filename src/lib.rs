@@ -58,10 +58,10 @@
 //!
 //! // Combine the sphere and gyroid using a Boolean intersection
 //! let intersection = model
-//!     .add_operation_with_inputs(
+//!     .add_operation(
 //!         "Intersection",
 //!         BooleanIntersection::new(),
-//!         &[&sphere, &gyroid])
+//!         Some(&[&sphere, &gyroid]))
 //!     .unwrap();
 //!
 //! // Sample a sparse field and generate an iso-surface.

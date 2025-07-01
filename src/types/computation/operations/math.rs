@@ -266,7 +266,11 @@ impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for VariableLinear
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for VariableLinearInterpolation {}
+impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for VariableLinearInterpolation {
+    fn name(&self) -> &'static str {
+        "VariableLinearInterpolation"
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Remap<T> {
