@@ -170,6 +170,43 @@ pub struct SparseFieldConfig<T> {
     pub cell_size: T,
 }
 
+impl<T: Float> Default for SparseFieldConfig<T> {
+    fn default() -> Self {
+        Self {
+            internal_size: BlockSize::Size32,
+            leaf_size: BlockSize::Size8,
+            sampling_mode: SamplingMode::CENTRE,
+            cell_size: T::one(),
+        }
+    }
+}
+
+impl<T: Float> SparseFieldConfig<T> {
+    /// Set the cell size of the config. Returns self for chaining.
+    pub fn set_cell_size(mut self, cell_size: T) -> Self {
+        self.cell_size = cell_size;
+        self
+    }
+
+    /// Set the internal node size of the config. Returns self for chaining.
+    pub fn set_internal_size(mut self, internal_size: BlockSize) -> Self {
+        self.internal_size = internal_size;
+        self
+    }
+
+    /// Set the leaf node size of the config. Returns self for chaining.
+    pub fn set_leaf_size(mut self, leaf_size: BlockSize) -> Self {
+        self.leaf_size = leaf_size;
+        self
+    }
+
+    /// Set the sampling mode of the config. Returns self for chaining.
+    pub fn set_sampling_mode(mut self, sampling_mode: SamplingMode) -> Self {
+        self.sampling_mode = sampling_mode;
+        self
+    }
+}
+
 /// Root node containing pointers to other nodes
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct RootNode<T: Float> {

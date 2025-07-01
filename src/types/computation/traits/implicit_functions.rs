@@ -49,7 +49,7 @@ pub trait ImplicitFunction<T>: ImplicitComponent<T> {
 /// Trait to define an operation to be performed as part of an implicit model computation.
 ///
 /// This is used to define custom operations on data in an implicit model, independent of global coordinates.
-/// A struct that implements this trait can be passed to the [`ImplicitModel`](crate::types::computation::model::ImplicitModel) via the [`add_operation`](crate::types::computation::model::ImplicitModel::add_operation) or [`add_operation_with_inputs`](crate::types::computation::model::ImplicitModel::add_operation_with_inputs) methods.
+/// A struct that implements this trait can be passed to the [`ImplicitModel`](crate::types::computation::model::ImplicitModel) via the [`add_operation`](crate::types::computation::model::ImplicitModel::add_operation) method.
 ///
 /// # Example
 ///

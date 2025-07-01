@@ -50,10 +50,10 @@ use super::{ComponentId, ModelComponent};
 ///
 /// // Combine the sphere and torus using a union operation
 /// let union = model
-///     .add_operation_with_inputs(
+///     .add_operation(
 ///         "Union",
 ///         BooleanUnion::new(),
-///         &[&sphere, &torus])
+///         Some(&[&sphere, &torus]))
 ///     .unwrap();
 ///
 /// ```
@@ -146,64 +146,38 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
         Ok(tag_string)
     }
 
-    /// Add a distance function component to the model.
+    /// Add a operation component to the model, optionally with inputs.
     /// # Arguments
     ///
     /// * `tag` - The tag of the operation component added. This is used to reference the component for input and output assignments.
     /// * `operation` - The operation to add.
+    /// * `inputs` - Optional slice of tags for the components which provide the inputs. If provided, the number of inputs must match the operation.
     /// # Returns
     ///      
-    /// * `Result<String, ModelError>` - Returns `Ok(String)` with the tag if the function is added successfully, or `Err(String)` if something goes wrong.
+    /// * `Result<String, ModelError>` - Returns `Ok(String)` with the tag if the operation is added successfully, or `Err(String)` if something goes wrong.
     pub fn add_operation<F: ImplicitOperation<T> + 'static>(
         &mut self,
         tag: &str,
         operation: F,
+        inputs: Option<&[&str]>,
     ) -> Result<String, ModelError> {
         let tag_string = tag.to_string();
         self.verify_tag_is_free(&tag_string)?;
 
-        self.inputs
-            .insert(tag_string.clone(), vec![None; operation.inputs().len()]);
-        self.components.insert(
-            tag_string.clone(),
-            ModelComponent::Operation(Box::new(operation)),
-        );
+        let input_vec = if let Some(input_tags) = inputs {
+            if operation.inputs().len() != input_tags.len() {
+                return Err(ModelError::IncorrectInputCount {
+                    component: tag_string,
+                    num_inputs: input_tags.len(),
+                    count: operation.inputs().len(),
+                });
+            }
+            input_tags.iter().map(|s| Some(s.to_string())).collect()
+        } else {
+            vec![None; operation.inputs().len()]
+        };
 
-        self.default_output = Some(tag_string.clone());
-        Ok(tag_string)
-    }
-
-    /// Add a operation component to the model, and populate it with inputs.
-    /// # Arguments
-    ///
-    /// * `tag` - The tag of the operation component added. This is used to reference the component for input and output assignments.
-    /// * `function` - The operation to add.
-    /// * `inputs` - The tags of the components which provide the inputs. The number of inputs must match the operation added.
-    /// # Returns
-    ///      
-    /// * `Result<String, ModelError>` - Returns `Ok(String)` with the tag of the component if the operation is added successfully, or `Err(String)` if something goes wrong.
-    pub fn add_operation_with_inputs<F: ImplicitOperation<T> + 'static>(
-        &mut self,
-        tag: &str,
-        operation: F,
-        inputs: &[&str],
-    ) -> Result<String, ModelError> {
-        let tag_string = tag.to_string();
-        self.verify_tag_is_free(&tag_string)?;
-
-        if operation.inputs().len() != inputs.len() {
-            return Err(ModelError::IncorrectInputCount {
-                component: tag_string,
-                num_inputs: inputs.len(),
-                count: operation.inputs().len(),
-            });
-        }
-
-        self.inputs.insert(
-            tag_string.clone(),
-            inputs.iter().map(|s| Some(s.to_string())).collect(),
-        );
-
+        self.inputs.insert(tag_string.clone(), input_vec);
         self.components.insert(
             tag_string.clone(),
             ModelComponent::Operation(Box::new(operation)),
@@ -712,7 +686,7 @@ mod tests {
         let mut model = ImplicitModel::new();
 
         model.add_constant("Value", 1.0).unwrap();
-        model.add_operation("Add", Add::new()).unwrap();
+        model.add_operation("Add", Add::new(), None).unwrap();
 
         model.add_input("Add", "Value", 0).unwrap();
         model.add_input("Add", "Value", 1).unwrap();
@@ -730,12 +704,12 @@ mod tests {
         let mut model = ImplicitModel::new();
 
         model.add_constant("Value", 1.0).unwrap();
-        model.add_operation("Add", Add::new()).unwrap();
+        model.add_operation("Add", Add::new(), None).unwrap();
 
         model.add_input("Add", "Value", 0).unwrap();
         model.add_input("Add", "Value", 1).unwrap();
 
-        model.add_operation("Add2", Add::new()).unwrap();
+        model.add_operation("Add2", Add::new(), None).unwrap();
 
         model.add_input("Add2", "Add", 0).unwrap();
         model.add_input("Add2", "Value", 1).unwrap();
@@ -759,7 +733,7 @@ mod tests {
         let mut model = ImplicitModel::new();
 
         model.add_constant("Value", 1.0).unwrap();
-        model.add_operation("Add", Add::new()).unwrap();
+        model.add_operation("Add", Add::new(), None).unwrap();
 
         model.add_input("Add", "Value", 0).unwrap();
         model.add_input("Add", "Value", 1).unwrap();
@@ -775,7 +749,7 @@ mod tests {
         let mut model = ImplicitModel::new();
 
         model.add_constant("Value", 1.0).unwrap();
-        model.add_operation("Add", Add::new()).unwrap();
+        model.add_operation("Add", Add::new(), None).unwrap();
 
         model.add_input("Add", "Value", 0).unwrap();
 
@@ -792,7 +766,7 @@ mod tests {
         model.add_constant("Value", 1.0).unwrap();
 
         // Value is already in model
-        let error = model.add_operation("Value", Add::new()).unwrap_err();
+        let error = model.add_operation("Value", Add::new(), None).unwrap_err();
 
         assert!(matches!(error, ModelError::DuplicateTag { .. }));
     }
@@ -802,7 +776,7 @@ mod tests {
         let mut model = ImplicitModel::new();
 
         model.add_constant("Value", 1.0).unwrap();
-        model.add_operation("Add", Add::new()).unwrap();
+        model.add_operation("Add", Add::new(), None).unwrap();
 
         model.add_input("Add", "Value", 0).unwrap();
 
@@ -819,12 +793,12 @@ mod tests {
 
         // Only add one when two needed.
         let error1 = model
-            .add_operation_with_inputs("Add", Add::new(), &["Value"])
+            .add_operation("Add", Add::new(), Some(&["Value"]))
             .unwrap_err();
 
         // Add three when two needed.
         let error2 = model
-            .add_operation_with_inputs("Add", Add::new(), &["Value"])
+            .add_operation("Add", Add::new(), Some(&["Value"]))
             .unwrap_err();
 
         assert!(matches!(error1, ModelError::IncorrectInputCount { .. }));

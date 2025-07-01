@@ -31,14 +31,14 @@ pub fn main() {
         .unwrap();
 
     let offset_gyroid = model
-        .add_operation_with_inputs("OffsetGyroid", Thickness::new(10.), &[&gyroid_tag])
+        .add_operation("OffsetGyroid", Thickness::new(10.), Some(&[&gyroid_tag]))
         .unwrap();
 
     let _ = model
-        .add_operation_with_inputs(
+        .add_operation(
             "Output",
             BooleanIntersection::new(),
-            &[&sphere_tag, &offset_gyroid],
+            Some(&[&sphere_tag, &offset_gyroid]),
         )
         .unwrap();
 

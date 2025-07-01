@@ -85,7 +85,7 @@ pub trait Sampler<T: Float + Send + Sync + Serialize + Pi, F> {
 /// // Create and configure the sampler
 /// let mut sampler = SparseSampler::builder()
 ///     .with_bounds(bounds)
-///     .with_sparse_config(config)
+///     .with_config(config)
 ///     .build()
 ///     .expect("Failed to build sampler");
 ///
@@ -179,7 +179,7 @@ where
     }
 
     /// Sets the minimum value threshold for the field.
-    pub fn with_delta_neg(mut self, min_val: T) -> Self {
+    pub fn with_min_val(mut self, min_val: T) -> Self {
         self.min_val = Some(min_val);
         self
     }
@@ -191,7 +191,7 @@ where
     }
 
     /// Sets the configuration for the sparse field structure.
-    pub fn with_sparse_config(mut self, config: SparseFieldConfig<T>) -> Self {
+    pub fn with_config(mut self, config: SparseFieldConfig<T>) -> Self {
         self.sparse_config = Some(config);
         self
     }
@@ -536,23 +536,21 @@ mod tests {
         // Test basic builder
         let sampler = SparseSampler::builder()
             .with_bounds(bounds)
-            .with_sparse_config(config)
+            .with_config(config)
             .build();
         assert!(sampler.is_ok());
 
         // Test builder with custom thresholds
         let sampler = SparseSampler::builder()
             .with_bounds(bounds)
-            .with_sparse_config(config)
+            .with_config(config)
             .with_max_val(0.5)
-            .with_delta_neg(-0.5)
+            .with_min_val(-0.5)
             .build();
         assert!(sampler.is_ok());
 
         // Test builder fails without bounds
-        let sampler = SparseSampler::<f32>::builder()
-            .with_sparse_config(config)
-            .build();
+        let sampler = SparseSampler::<f32>::builder().with_config(config).build();
         assert!(sampler.is_err());
 
         // Test builder fails without config
@@ -573,7 +571,7 @@ mod tests {
 
         let mut sampler = SparseSampler::builder()
             .with_bounds(bounds)
-            .with_sparse_config(config)
+            .with_config(config)
             .build()
             .unwrap();
 
@@ -599,9 +597,9 @@ mod tests {
 
         let mut sampler = SparseSampler::builder()
             .with_bounds(bounds)
-            .with_sparse_config(config)
+            .with_config(config)
             .with_max_val(0.5)
-            .with_delta_neg(-0.5)
+            .with_min_val(-0.5)
             .build()
             .unwrap();
 
@@ -673,7 +671,7 @@ mod tests {
 
         let mut sampler_small = SparseSampler::builder()
             .with_bounds(bounds)
-            .with_sparse_config(config_small)
+            .with_config(config_small)
             .build()
             .expect("Failed to build sampler");
 
@@ -691,7 +689,7 @@ mod tests {
 
         let mut sampler_large = SparseSampler::builder()
             .with_bounds(bounds)
-            .with_sparse_config(config_large)
+            .with_config(config_large)
             .build()
             .expect("Failed to build sampler");
 
@@ -718,7 +716,7 @@ mod tests {
 
         let mut sampler_centre = SparseSampler::builder()
             .with_bounds(bounds)
-            .with_sparse_config(config_centre)
+            .with_config(config_centre)
             .build()
             .expect("Failed to build sampler");
 
@@ -736,7 +734,7 @@ mod tests {
 
         let mut sampler_corners = SparseSampler::builder()
             .with_bounds(bounds)
-            .with_sparse_config(config_corners)
+            .with_config(config_corners)
             .build()
             .expect("Failed to build sampler");
 
@@ -772,7 +770,7 @@ mod tests {
 
         let mut sparse_sampler = SparseSampler::builder()
             .with_bounds(bounds)
-            .with_sparse_config(config)
+            .with_config(config)
             .build()
             .expect("Failed to build sparse sampler");
 
@@ -802,7 +800,7 @@ mod tests {
 
         let sparse_sampler = SparseSampler::builder()
             .with_bounds(bounds)
-            .with_sparse_config(config)
+            .with_config(config)
             .build()
             .expect("Failed to build sparse sampler");
 
