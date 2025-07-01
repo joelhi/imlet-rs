@@ -23,15 +23,14 @@ const MAX_TREE_DEPTH: usize = 12;
 /// # Example
 ///
 /// ```rust
-/// use imlet::types::computation::{
-///     functions::MeshFile,
-///     model::ImplicitModel,
-///     operations::shape::{BooleanIntersection, Thickness},
-/// };
+/// # use imlet::types::computation::{
+/// #     functions::MeshFile,
+/// #     model::ImplicitModel,
+/// #     operations::shape::{BooleanIntersection, Thickness},
+/// # };
 ///
 /// // Create mesh file
 /// let mesh_file = MeshFile::<f64>::from_path("assets/geometry/bunny.obj").unwrap();
-/// let bounds = mesh_file.bounds().unwrap();
 ///
 /// // Build model
 /// let mut model = ImplicitModel::new();
@@ -72,11 +71,7 @@ impl<T: Float + Send + Sync> MeshFile<T> {
         }
     }
 
-    /// Create a new custom sdf from a geometry that implements the SignedDistance trait.
-    ///
-    /// # Arguments
-    ///
-    /// * `geometry` - Geomtry to use as base for signed distance computation.
+    /// Create a new custom sdf from a mesh loaded from an obj file.
     pub fn from_path(file_path: &str) -> Result<Self, Box<dyn Error>> {
         let mesh = parse_obj_file(file_path, false, false)?;
         let octree = mesh.compute_octree(MAX_TREE_DEPTH, MAX_LEAF_TRIANGLE_COUNT);
