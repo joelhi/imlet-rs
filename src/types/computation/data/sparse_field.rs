@@ -13,6 +13,7 @@ use crate::types::computation::data::field_iterator::{
     CellIterator, CellValueIterator, DenseCellValueIterator, ValueIterator,
 };
 use crate::types::computation::model::ComputationGraph;
+use crate::types::computation::traits::ModelFloat;
 use crate::types::computation::ModelError;
 use crate::types::geometry::{BoundingBox, Vec3};
 use crate::utils::math_helper::Pi;
@@ -62,7 +63,7 @@ impl<T: Float> SparseField<T> {
     }
 }
 
-impl<T: Float + Default + Copy + Send + Sync + Serialize + 'static + Pi> SparseField<T> {
+impl<T: ModelFloat + 'static + Default> SparseField<T> {
     /// Samples the field using a computation graph.
     ///
     /// # Arguments
@@ -375,7 +376,7 @@ pub enum SamplingMode {
     CORNERS,
 }
 
-impl<T: Float + Send + Sync + Serialize + Default + 'static + Pi> InternalNode<T> {
+impl<T: ModelFloat + Default + 'static> InternalNode<T> {
     /// Checks if a cell overlaps with the computation graph's non-zero region.
     ///
     /// # Arguments
@@ -487,7 +488,7 @@ impl<T: Float + Default> LeafNode<T> {
     }
 }
 
-impl<T: Float + Default + Send + Sync + Serialize + Pi> LeafNode<T> {
+impl<T: ModelFloat + Default> LeafNode<T> {
     /// Samples points in this leaf node using the computation graph.
     ///
     /// # Arguments

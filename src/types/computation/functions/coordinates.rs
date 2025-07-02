@@ -5,7 +5,7 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::model::{Data, DataType, Parameter};
-use crate::types::computation::traits::{ImplicitComponent, ImplicitFunction};
+use crate::types::computation::traits::{ImplicitComponent, ImplicitFunction, ModelFloat};
 use crate::utils::math_helper::normalize;
 
 static COORD_PARAMETERS: [Parameter; 2] = [
@@ -48,13 +48,13 @@ impl<T: Float> ZDomain<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for ZDomain<T> {
+impl<T: ModelFloat> ImplicitFunction<T> for ZDomain<T> {
     fn eval(&self, _: T, _: T, z: T) -> T {
         normalize(z, self.min, self.max)
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for ZDomain<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for ZDomain<T> {
     fn parameters(&self) -> &[Parameter] {
         &COORD_PARAMETERS
     }
@@ -121,13 +121,13 @@ impl<T: Float> YDomain<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for YDomain<T> {
+impl<T: ModelFloat> ImplicitFunction<T> for YDomain<T> {
     fn eval(&self, _: T, y: T, _: T) -> T {
         normalize(y, self.min, self.max)
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for YDomain<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for YDomain<T> {
     fn parameters(&self) -> &[Parameter] {
         &COORD_PARAMETERS
     }
@@ -194,13 +194,13 @@ impl<T: Float> XDomain<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XDomain<T> {
+impl<T: ModelFloat> ImplicitFunction<T> for XDomain<T> {
     fn eval(&self, x: T, _: T, _: T) -> T {
         normalize(x, self.min, self.max)
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for XDomain<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for XDomain<T> {
     fn parameters(&self) -> &[Parameter] {
         &COORD_PARAMETERS
     }
@@ -273,7 +273,7 @@ impl XYZValue {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XYZValue {
+impl<T: ModelFloat> ImplicitFunction<T> for XYZValue {
     fn eval(&self, x: T, y: T, z: T) -> T {
         match self.coordinate_value {
             CoordinateValue::X => x,
@@ -283,7 +283,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for XYZValue {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for XYZValue {
+impl<T: ModelFloat> ImplicitComponent<T> for XYZValue {
     fn parameters(&self) -> &[Parameter] {
         &GLOBAL_COORD_PARAMETERS
     }

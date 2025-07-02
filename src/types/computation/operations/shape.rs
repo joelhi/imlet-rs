@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
     model::{Data, DataType, Parameter},
-    traits::{ImplicitComponent, ImplicitOperation},
+    traits::{ImplicitComponent, ImplicitOperation, ModelFloat},
 };
 
 /// Operation to perform a boolean union on two distance values -> min(a, b)
@@ -153,7 +153,7 @@ static OFFSET_PARAMETERS: &[Parameter] = &[Parameter {
     data_type: DataType::Value,
 }];
 
-impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Offset<T> {
+impl<T: ModelFloat> ImplicitOperation<T> for Offset<T> {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0] - self.distance
     }
@@ -163,7 +163,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Offset<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Offset<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for Offset<T> {
     fn parameters(&self) -> &[Parameter] {
         OFFSET_PARAMETERS
     }
@@ -214,7 +214,7 @@ impl<T> Thickness<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Thickness<T> {
+impl<T: ModelFloat> ImplicitOperation<T> for Thickness<T> {
     fn eval(&self, inputs: &[T]) -> T {
         let two = T::from(2.0).unwrap();
         (inputs[0] - self.t / two).max(-(inputs[0] + self.t / two))
@@ -225,7 +225,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Thickness<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Thickness<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for Thickness<T> {
     fn parameters(&self) -> &[Parameter] {
         THICKNESS_PARAMETERS
     }

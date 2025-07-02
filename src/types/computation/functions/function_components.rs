@@ -7,6 +7,7 @@ use serde::Serialize;
 use crate::types::computation::functions::*;
 use crate::types::computation::model::ModelComponent;
 use crate::types::computation::traits::ImplicitFunction;
+use crate::types::computation::traits::ModelFloat;
 use crate::types::geometry::*;
 use crate::utils::math_helper::Pi;
 
@@ -45,7 +46,7 @@ impl FunctionComponent {
     /// Create an instance of the component with default values.
     ///
     /// Used when creating components from a UI or other interface.
-    pub fn create_default<T: Float + Pi + Send + Sync + 'static + Serialize>(
+    pub fn create_default<T: ModelFloat + 'static>(
         &self,
     ) -> ModelComponent<T> {
         let default_value = T::from(45.).unwrap();

@@ -12,6 +12,7 @@ use crate::types::computation::data::field_iterator::CellIterator;
 use crate::types::computation::data::field_iterator::DenseCellValueIterator;
 use crate::types::computation::data::field_iterator::GridIterator;
 use crate::types::computation::model::ComputationGraph;
+use crate::types::computation::traits::ModelFloat;
 use crate::types::computation::ModelError;
 use crate::types::geometry::BoundingBox;
 use crate::types::geometry::Vec3;
@@ -508,7 +509,7 @@ impl<T: Float> DenseField<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize + 'static + Pi> DenseField<T> {
+impl<T: ModelFloat + 'static> DenseField<T> {
     /// Evaluate the computation graph over a discretized domain.
     ///
     /// # Arguments

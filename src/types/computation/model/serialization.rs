@@ -8,14 +8,14 @@ use crate::{
         computation::{
             functions::*,
             operations::{math::*, shape::*},
-            traits::{ImplicitFunction, ImplicitOperation},
+            traits::{ImplicitFunction, ImplicitOperation, ModelFloat},
         },
         geometry::*,
     },
     utils::math_helper::Pi,
 };
 
-impl<T: Float + Send + Sync> serde::Serialize for dyn ImplicitFunction<T> {
+impl<T: ModelFloat> serde::Serialize for dyn ImplicitFunction<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -28,7 +28,7 @@ impl<T: Float + Send + Sync> serde::Serialize for dyn ImplicitFunction<T> {
     }
 }
 
-impl<T: Float + Send + Sync> serde::Serialize for dyn ImplicitOperation<T> {
+impl<T: ModelFloat> serde::Serialize for dyn ImplicitOperation<T> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -55,7 +55,7 @@ where
     }
 }
 
-impl<'de, T: Float + Send + Sync + Serialize + Deserialize<'de> + 'static + Pi>
+impl<'de, T: ModelFloat + Deserialize<'de> + 'static>
     serde::Deserialize<'de> for Box<dyn ImplicitFunction<T>>
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -67,11 +67,11 @@ impl<'de, T: Float + Send + Sync + Serialize + Deserialize<'de> + 'static + Pi>
     }
 }
 
-struct FunctionVisitor<T: Float + Send + Sync> {
+struct FunctionVisitor<T: ModelFloat> {
     _phantom: PhantomData<T>,
 }
 
-impl<T: Float + Send + Sync> FunctionVisitor<T> {
+impl<T: ModelFloat> FunctionVisitor<T> {
     pub fn new() -> Self {
         Self {
             _phantom: PhantomData,
@@ -79,7 +79,7 @@ impl<T: Float + Send + Sync> FunctionVisitor<T> {
     }
 }
 
-impl<'de, T: Float + Send + Sync + Serialize + Deserialize<'de> + 'static + Pi>
+impl<'de, T: ModelFloat + Deserialize<'de> + 'static>
     serde::de::Visitor<'de> for FunctionVisitor<T>
 {
     type Value = Box<dyn ImplicitFunction<T>>;
@@ -127,7 +127,7 @@ type DeserializeFunctionFn<'de, T> = fn(
 ) -> erased_serde::Result<Box<dyn ImplicitFunction<T>>>;
 fn function_runtime_reflection<
     'de,
-    T: Float + Send + Sync + Serialize + Deserialize<'de> + 'static + Pi,
+    T: ModelFloat + Deserialize<'de> + 'static,
 >(
     type_info: &str,
 ) -> Option<DeserializeFunctionFn<'de, T>> {
@@ -245,7 +245,7 @@ fn function_runtime_reflection<
 
 // Deserialize operations
 
-impl<'de, T: Float + Send + Sync + Serialize + Deserialize<'de> + 'static> serde::Deserialize<'de>
+impl<'de, T: ModelFloat + Deserialize<'de> + 'static> serde::Deserialize<'de>
     for Box<dyn ImplicitOperation<T>>
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -257,11 +257,11 @@ impl<'de, T: Float + Send + Sync + Serialize + Deserialize<'de> + 'static> serde
     }
 }
 
-struct OperationVisitor<T: Float + Send + Sync> {
+struct OperationVisitor<T: ModelFloat> {
     _phantom: PhantomData<T>,
 }
 
-impl<T: Float + Send + Sync> OperationVisitor<T> {
+impl<T: ModelFloat> OperationVisitor<T> {
     pub fn new() -> Self {
         Self {
             _phantom: PhantomData,
@@ -269,7 +269,7 @@ impl<T: Float + Send + Sync> OperationVisitor<T> {
     }
 }
 
-impl<'de, T: Float + Send + Sync + Serialize + Deserialize<'de> + 'static> serde::de::Visitor<'de>
+impl<'de, T: ModelFloat + Deserialize<'de> + 'static> serde::de::Visitor<'de>
     for OperationVisitor<T>
 {
     type Value = Box<dyn ImplicitOperation<T>>;
@@ -318,7 +318,7 @@ type DeserializeOperationFn<'de, T> = fn(
 
 fn operation_runtime_reflection<
     'de,
-    T: Float + Send + Sync + Serialize + Deserialize<'de> + 'static,
+    T: ModelFloat + Deserialize<'de> + 'static,
 >(
     type_info: &str,
 ) -> Option<DeserializeOperationFn<'de, T>> {

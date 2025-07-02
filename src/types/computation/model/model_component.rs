@@ -4,7 +4,7 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    types::computation::traits::{ImplicitFunction, ImplicitOperation},
+    types::computation::traits::{ImplicitFunction, ImplicitOperation, ModelFloat},
     utils::math_helper::Pi,
 };
 
@@ -29,13 +29,13 @@ impl From<usize> for ComponentId {
 /// * `Function` - Represents a function in 3d space `f(x,y,z)`. This takes no inputs from other components, and is variable across the domain.
 /// * `Operation` - Represents an operation on some values in the model. The operation does not depend on the evaluation coordinate directly, but instead operates on the output of other components.
 #[derive(Serialize, Deserialize)]
-pub enum ModelComponent<T: Float + Send + Sync + Serialize + 'static + Pi> {
+pub enum ModelComponent<T: ModelFloat + 'static> {
     Constant(T),
     Function(Box<dyn ImplicitFunction<T>>),
     Operation(Box<dyn ImplicitOperation<T>>),
 }
 
-impl<T: Float + Send + Sync + Serialize + Pi> ModelComponent<T> {
+impl<T: ModelFloat> ModelComponent<T> {
     /// Evaluate the output of the comppnent
     ///
     /// # Arguments

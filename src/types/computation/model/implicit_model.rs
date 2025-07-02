@@ -1,9 +1,7 @@
-use crate::types::computation::traits::{ImplicitFunction, ImplicitOperation};
+use crate::types::computation::traits::{ImplicitFunction, ImplicitOperation, ModelFloat};
 use crate::types::computation::ModelError;
-use crate::utils::math_helper::Pi;
 use crate::IMLET_VERSION;
 use log::{debug, info};
-use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::{self, Debug, Display};
@@ -59,20 +57,20 @@ use super::{ComponentId, ModelComponent};
 /// ```
 ///
 #[derive(Serialize, Deserialize)]
-pub struct ImplicitModel<T: Float + Send + Sync + Serialize + 'static + Pi> {
+pub struct ImplicitModel<T: ModelFloat + 'static> {
     version: String,
     components: HashMap<String, ModelComponent<T>>,
     inputs: HashMap<String, Vec<Option<String>>>,
     default_output: Option<String>,
 }
 
-impl<T: Float + Send + Sync + Serialize + 'static + Pi> Default for ImplicitModel<T> {
+impl<T: ModelFloat> Default for ImplicitModel<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
+impl<T: ModelFloat> ImplicitModel<T> {
     /// Create a new empty model.
     pub fn new() -> Self {
         Self {
@@ -627,7 +625,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Display + Debug + Serialize + 'static + Pi> Display
+impl<T: ModelFloat + Display + Debug > Display
     for ImplicitModel<T>
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -656,7 +654,7 @@ impl<T: Float + Send + Sync + Display + Debug + Serialize + 'static + Pi> Displa
     }
 }
 
-impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
+impl<T: ModelFloat> ImplicitModel<T> {
     /// Evaluate the model at a coordinate *{x, y, z}*.
     /// # Arguments
     ///
@@ -678,6 +676,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi> ImplicitModel<T> {
 mod tests {
 
     use crate::types::computation::operations::math::Add;
+    use num_traits::Float;
 
     use super::*;
 

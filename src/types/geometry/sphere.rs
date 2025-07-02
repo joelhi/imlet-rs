@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::types::{
     computation::{
         model::{Data, DataType, Parameter},
-        traits::{ImplicitComponent, ImplicitFunction},
+        traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
     },
     geometry::Vec3,
 };
@@ -66,19 +66,19 @@ impl<T: Float> Sphere<T> {
     }
 }
 
-impl<T: Float + Send + Sync> SignedDistance<T> for Sphere<T> {
+impl<T: ModelFloat> SignedDistance<T> for Sphere<T> {
     fn signed_distance(&self, x: T, y: T, z: T) -> T {
         self.centre.distance_to_coord(x, y, z) - self.radius
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Sphere<T> {
+impl<T: ModelFloat> ImplicitFunction<T> for Sphere<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.centre.distance_to_coord(x, y, z) - self.radius
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Sphere<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for Sphere<T> {
     fn parameters(&self) -> &[Parameter] {
         SPHERE_PARAMS
     }

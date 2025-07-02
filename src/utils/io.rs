@@ -10,7 +10,7 @@ use num_traits::Float;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::types::{
-    computation::{data::field_iterator::ValueIterator, model::ImplicitModel},
+    computation::{data::field_iterator::ValueIterator, model::ImplicitModel, traits::ModelFloat},
     geometry::{Mesh, Vec3},
 };
 
@@ -71,7 +71,7 @@ use super::math_helper::Pi;
 /// * `file_path` - Relative path to the file.
 /// * `flip_yz` - Option to flip the y and z directions. Imlet uses z as up-direction so if the mesh has y, you may want to flip it.
 /// * `read_normals` - Option to read the normals from the `.obj`. If not smooth vertex normals will be calculated automatically. Using `false` is advised if the mesh is to be used as a distance field.
-pub fn parse_obj_file<T: Float + Send + Sync>(
+pub fn parse_obj_file<T: Float>(
     file_path: &str,
     flip_yz: bool,
     read_normals: bool,
@@ -210,7 +210,7 @@ where
 }
 
 /// Write an imlet model to a text file as json.
-pub fn write_model_to_file<T: Float + Send + Sync + Serialize + 'static + Pi>(
+pub fn write_model_to_file<T: ModelFloat>(
     model: &ImplicitModel<T>,
     file_name: &str,
 ) -> io::Result<()> {
@@ -240,7 +240,7 @@ pub fn write_model_to_file<T: Float + Send + Sync + Serialize + 'static + Pi>(
 ///
 /// Returns Ok() with the model if the read was successful.
 pub fn read_model_from_file<
-    T: Float + Send + Sync + Serialize + 'static + Pi + DeserializeOwned,
+    T: ModelFloat + 'static + DeserializeOwned,
 >(
     file_path: &str,
 ) -> Result<ImplicitModel<T>, Box<dyn std::error::Error>> {

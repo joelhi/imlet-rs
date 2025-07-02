@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
     model::{Data, DataType, Parameter},
-    traits::{ImplicitComponent, ImplicitOperation},
+    traits::{ImplicitComponent, ImplicitOperation, ModelFloat},
 };
 
 static INPUT_NAMES: [&str; 2] = ["First Number", "Second Number"];
@@ -192,7 +192,7 @@ impl<T: Float> LinearInterpolation<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for LinearInterpolation<T> {
+impl<T: ModelFloat> ImplicitOperation<T> for LinearInterpolation<T> {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0] + self.factor * (inputs[1] - inputs[0])
     }
@@ -202,7 +202,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for LinearInterpol
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for LinearInterpolation<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for LinearInterpolation<T> {
     fn parameters(&self) -> &[Parameter] {
         LINEAR_INTERPOLATION_PARAMETERS
     }
@@ -256,7 +256,7 @@ impl VariableLinearInterpolation {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for VariableLinearInterpolation {
+impl<T: ModelFloat> ImplicitOperation<T> for VariableLinearInterpolation {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0] + inputs[2] * (inputs[1] - inputs[0])
     }
@@ -266,7 +266,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for VariableLinear
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for VariableLinearInterpolation {
+impl<T: ModelFloat> ImplicitComponent<T> for VariableLinearInterpolation {
     fn name(&self) -> &'static str {
         "VariableLinearInterpolation"
     }
@@ -339,7 +339,7 @@ impl<T: Float> Remap<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Remap<T> {
+impl<T: ModelFloat> ImplicitOperation<T> for Remap<T> {
     fn eval(&self, inputs: &[T]) -> T {
         let value = inputs[0];
         // First normalize to [0,1]
@@ -353,7 +353,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Remap<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Remap<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for Remap<T> {
     fn parameters(&self) -> &[Parameter] {
         REMAP_PARAMETERS
     }

@@ -8,7 +8,7 @@ use crate::{
     types::{
         computation::{
             model::{Data, DataType, Parameter},
-            traits::{ImplicitComponent, ImplicitFunction},
+            traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
         },
         geometry::{BoundingBox, Octree, Transform, Triangle, Vec3},
     },
@@ -48,13 +48,13 @@ pub struct MeshFile<T> {
     pub geometry_data: Option<Octree<Triangle<T>, T>>,
 }
 
-impl<T: Float + Send + Sync> Default for MeshFile<T> {
+impl<T: ModelFloat> Default for MeshFile<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: Float + Send + Sync> MeshFile<T> {
+impl<T: ModelFloat> MeshFile<T> {
     /// Create a new unset reference to some mesh data in a file.
     pub fn new() -> Self {
         Self {
@@ -125,7 +125,7 @@ static MESH_FILE_PARAMETERS: &[Parameter] = &[
     },
 ];
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for MeshFile<T> {
+impl<T: ModelFloat> ImplicitFunction<T> for MeshFile<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         if let Some(geometry_data) = &self.geometry_data {
             geometry_data.signed_distance(&Vec3::new(x, y, z))
@@ -135,7 +135,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for MeshFile<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for MeshFile<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for MeshFile<T> {
     fn parameters(&self) -> &[Parameter] {
         MESH_FILE_PARAMETERS
     }

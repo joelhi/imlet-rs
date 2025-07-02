@@ -16,7 +16,7 @@ use std::any::type_name;
 /// use imlet::types::computation::traits::ImplicitFunction;
 ///
 /// ```rust
-/// # use imlet::types::computation::traits::{ImplicitFunction, ImplicitComponent};
+/// # use imlet::types::computation::traits::{ModelFloat, ImplicitFunction, ImplicitComponent};
 /// # use imlet::types::geometry::Vec3;
 /// # use num_traits::Float;
 /// # use serde::{Deserialize, Serialize};
@@ -26,9 +26,9 @@ use std::any::type_name;
 /// # pub struct Sphere<T: Serialize>{ centre: Vec3<T>, radius: T};
 ///
 /// // Default implementation of base trait.
-/// impl<T: Send + Sync + Serialize> ImplicitComponent<T> for Sphere<T>{};
+/// impl<T: ModelFloat> ImplicitComponent<T> for Sphere<T>{};
 ///
-/// impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Sphere<T> {
+/// impl<T: ModelFloat> ImplicitFunction<T> for Sphere<T> {
 ///     fn eval(&self, x: T, y: T, z: T) -> T {
 ///         self.centre.distance_to_coord(x, y, z) - self.radius
 ///     }

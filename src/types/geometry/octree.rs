@@ -1,6 +1,8 @@
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
+use crate::types::computation::traits::ModelFloat;
+
 use super::{
     traits::{SignedDistance, SignedQuery, SpatialQuery},
     BoundingBox, Vec3,
@@ -407,7 +409,7 @@ impl<T: Float> OctreeNode<T> {
     }
 }
 
-impl<Q: SignedQuery<T> + Send + Sync, T: Float + Send + Sync> SignedDistance<T> for Octree<Q, T> {
+impl<Q: SignedQuery<T> + Send + Sync, T: ModelFloat> SignedDistance<T> for Octree<Q, T> {
     fn signed_distance(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(&Vec3::new(x, y, z))
     }

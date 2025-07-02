@@ -4,7 +4,7 @@ use imlet::types::{
         functions::XYZValue,
         model::ImplicitModel,
         operations::math::{Divide, Multiply, Subtract},
-        traits::{ImplicitComponent, ImplicitFunction},
+        traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
         ModelError,
     },
     geometry::{BoundingBox, Vec3},
@@ -48,9 +48,9 @@ pub struct HyperbolicParaboloid<T: Serialize> {
 }
 
 // Default implementation of base trait.
-impl<T: Send + Sync + Serialize> ImplicitComponent<T> for HyperbolicParaboloid<T> {}
+impl<T: ModelFloat> ImplicitComponent<T> for HyperbolicParaboloid<T> {}
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for HyperbolicParaboloid<T> {
+impl<T: ModelFloat> ImplicitFunction<T> for HyperbolicParaboloid<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         (y.powi(2) / self.b.powi(2)) - (x.powi(2) / self.a.powi(2)) - z
     }

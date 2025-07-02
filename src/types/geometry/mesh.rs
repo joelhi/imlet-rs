@@ -7,6 +7,7 @@ use rayon::iter::ParallelIterator;
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::types::computation::traits::ModelFloat;
 use crate::utils;
 
 use super::BoundingBox;
@@ -275,7 +276,7 @@ impl<T: Float> Mesh<T> {
     }
 }
 
-impl<T: Float + Send + Sync> Mesh<T> {
+impl<T: ModelFloat> Mesh<T> {
     /// Create a indexed mesh from a list of triangle objects.
     ///
     /// # Arguments

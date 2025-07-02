@@ -4,7 +4,7 @@ use num_traits::Float;
 use serde::Serialize;
 use smallvec::SmallVec;
 
-use crate::utils::math_helper::Pi;
+use crate::{types::computation::traits::ModelFloat, utils::math_helper::Pi};
 
 use super::{ComponentId, ComponentValues, ModelComponent};
 
@@ -15,12 +15,12 @@ const INPUT_STACK_BUFFER_SIZE: usize = 8;
 /// Defines a set of components which should be computed to generate an output.
 ///
 /// The components are extracted from the model based on the target output.
-pub(crate) struct ComputationGraph<'a, T: Float + Send + Sync + Serialize + 'static + Pi> {
+pub(crate) struct ComputationGraph<'a, T: ModelFloat + 'static> {
     components: Vec<&'a ModelComponent<T>>,
     inputs: Vec<Vec<ComponentId>>,
 }
 
-impl<'a, T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'a, T> {
+impl<'a, T: ModelFloat + 'static > ComputationGraph<'a, T> {
     /// Create a new, empty, computation graph.
     pub fn new() -> Self {
         Self {

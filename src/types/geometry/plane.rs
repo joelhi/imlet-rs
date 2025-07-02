@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
     model::{Data, DataType, Parameter},
-    traits::{ImplicitComponent, ImplicitFunction},
+    traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
 };
 
 use super::{traits::SignedDistance, Vec3};
@@ -97,19 +97,19 @@ impl<T: Float> Plane<T> {
     }
 }
 
-impl<T: Float + Send + Sync> SignedDistance<T> for Plane<T> {
+impl<T: ModelFloat> SignedDistance<T> for Plane<T> {
     fn signed_distance(&self, x: T, y: T, z: T) -> T {
         self.signed_distance_coord(x, y, z)
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Plane<T> {
+impl<T: ModelFloat> ImplicitFunction<T> for Plane<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance_coord(x, y, z)
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Plane<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for Plane<T> {
     fn parameters(&self) -> &[Parameter] {
         PLANE_PARAMS
     }

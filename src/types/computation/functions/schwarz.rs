@@ -3,7 +3,7 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::model::{Data, DataType, Parameter};
-use crate::types::computation::traits::{ImplicitComponent, ImplicitFunction};
+use crate::types::computation::traits::{ImplicitComponent, ImplicitFunction, ModelFloat};
 use crate::utils::math_helper::Pi;
 use std::fmt::Debug;
 
@@ -69,7 +69,7 @@ impl<T: Float> SchwarzP<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Pi + Serialize> ImplicitFunction<T> for SchwarzP<T> {
+impl<T: ModelFloat> ImplicitFunction<T> for SchwarzP<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         let two = T::from(2.0).expect("Failed to convert number to T");
         let x = two * (T::pi() * x / self.length_x) as T;
@@ -89,7 +89,7 @@ impl<T: Float + Send + Sync + Pi + Serialize> ImplicitFunction<T> for SchwarzP<T
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for SchwarzP<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for SchwarzP<T> {
     fn parameters(&self) -> &[Parameter] {
         SCHWARZ_PARAMETERS
     }

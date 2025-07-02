@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
     model::{Data, DataType, Parameter},
-    traits::{ImplicitComponent, ImplicitFunction},
+    traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
 };
 
 use super::{
@@ -241,7 +241,7 @@ impl<T: Float> BoundingBox<T> {
     }
 }
 
-impl<T: Float + Send + Sync> SignedDistance<T> for BoundingBox<T> {
+impl<T: ModelFloat> SignedDistance<T> for BoundingBox<T> {
     fn signed_distance(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(&Vec3::new(x, y, z))
     }
@@ -258,13 +258,13 @@ static BOUNDING_BOX_PARAMETERS: [Parameter; 2] = [
     },
 ];
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for BoundingBox<T> {
+impl<T: ModelFloat> ImplicitFunction<T> for BoundingBox<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(&Vec3::new(x, y, z))
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for BoundingBox<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for BoundingBox<T> {
     fn parameters(&self) -> &[Parameter] {
         &BOUNDING_BOX_PARAMETERS
     }

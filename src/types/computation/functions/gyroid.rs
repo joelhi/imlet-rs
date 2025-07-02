@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     types::computation::{
         model::{Data, DataType, Parameter},
-        traits::{ImplicitComponent, ImplicitFunction},
+        traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
     },
     utils::math_helper::Pi,
 };
@@ -73,7 +73,7 @@ static GYROID_PARAMETERS: &[Parameter; 4] = &[
     },
 ];
 
-impl<T: Pi + Float + Send + Sync + Serialize> ImplicitFunction<T> for Gyroid<T> {
+impl<T: ModelFloat> ImplicitFunction<T> for Gyroid<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         let two = T::from(2.0).unwrap();
         let normalized_distance = (T::pi() * x / self.length_x).sin()
@@ -93,7 +93,7 @@ impl<T: Pi + Float + Send + Sync + Serialize> ImplicitFunction<T> for Gyroid<T> 
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Gyroid<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for Gyroid<T> {
     fn parameters(&self) -> &[Parameter] {
         GYROID_PARAMETERS
     }
