@@ -61,10 +61,8 @@
 //! // Combine the sphere and gyroid using a Boolean intersection
 //! let intersection = model
 //!     .add_operation(
-//!     .add_operation(
 //!         "Intersection",
 //!         BooleanIntersection::new(),
-//!         Some(&[&sphere, &gyroid]))
 //!         Some(&[&sphere, &gyroid]))
 //!     .unwrap();
 //!
@@ -72,13 +70,13 @@
 //! let config = SparseFieldConfig {
 //!     internal_size: BlockSize::Size64,       // Internal node subdivision.
 //!     leaf_size: BlockSize::Size4,            // Leaf node subdivision.
-//!     sampling_mode: SamplingMode::CORNERS,   // Sampling logic for Leaf node exclusion.
+//!     sampling_mode: SamplingMode::CORNERS,    // Sampling logic for Leaf node exclusion.
 //!     cell_size,                              // Sampling resolution.
 //! };
 //!
 //! let mut sampler = SparseSampler::builder()
 //!     .with_bounds(bounds)                    // Set the bounds for the sampling.
-//!     .with_config(config)                    // Set the sparse field parameters.
+//!     .with_config(config)             // Set the sparse field parameters.
 //!     .build()
 //!     .expect("Should be able to build the sampler.");
 //!
@@ -90,7 +88,7 @@
 //!     .iso_surface(0.0)
 //!     .expect("Extracting iso-surface should work.");
 //!
-//! write_obj_file(&mesh, "example").unwrap();
+//! write_obj_file(&mesh, "interpolation_example").unwrap();
 //!
 //!
 //! ```
