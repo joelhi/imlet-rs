@@ -26,6 +26,7 @@
 //! Here's a basic example demonstrating how to use `Imlet` to combine a sphere and a gyroid using an intersection operation. The result is polygonized and saved as an `.obj` file:
 //!
 //! ```rust
+//!
 //! # use imlet::utils::io::write_obj_file;
 //! # use imlet::types::geometry::{Vec3, BoundingBox, Sphere};
 //! # use imlet::types::computation::{
@@ -90,6 +91,7 @@
 //!     .expect("Extracting iso-surface should work.");
 //!
 //! write_obj_file(&mesh, "example").unwrap();
+//!
 //!
 //! ```
 //!
