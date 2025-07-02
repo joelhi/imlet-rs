@@ -2,15 +2,19 @@ use core::str;
 use std::{
     fmt::Display,
     fs,
-    io::{self, BufRead, Read, Write},
+    io::{self, BufRead, Write},
     path::Path,
 };
 
 use num_traits::Float;
+
+#[cfg(feature = "serde")]
+use crate::types::computation::{model::ImplicitModel, traits::ModelFloat};
+#[cfg(feature = "serde")]
 use serde::de::DeserializeOwned;
 
 use crate::types::{
-    computation::{data::field_iterator::ValueIterator, model::ImplicitModel, traits::ModelFloat},
+    computation::data::field_iterator::ValueIterator,
     geometry::{Mesh, Vec3},
 };
 
@@ -208,6 +212,7 @@ where
 }
 
 /// Write an imlet model to a text file as json.
+#[cfg(feature = "serde")]
 pub fn write_model_to_file<T: ModelFloat>(
     model: &ImplicitModel<T>,
     file_name: &str,
@@ -237,9 +242,12 @@ pub fn write_model_to_file<T: ModelFloat>(
 /// An error is something went wrong, such as if the file can't be found or the deserialization failed.
 ///
 /// Returns Ok() with the model if the read was successful.
+#[cfg(feature = "serde")]
 pub fn read_model_from_file<T: ModelFloat + 'static + DeserializeOwned>(
     file_path: &str,
 ) -> Result<ImplicitModel<T>, Box<dyn std::error::Error>> {
+    use std::io::Read;
+
     let path = Path::new(file_path);
 
     let extension = path.extension().ok_or_else(|| {
@@ -263,9 +271,9 @@ pub fn read_model_from_file<T: ModelFloat + 'static + DeserializeOwned>(
 }
 
 #[cfg(test)]
+#[cfg(feature = "serde")]
 mod tests {
     use super::*;
-
     #[test]
     fn test_deserialize_simple_model() {
         let model: ImplicitModel<f32> =

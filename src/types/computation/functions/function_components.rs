@@ -1,6 +1,8 @@
 use std::str::FromStr;
 
+#[cfg(feature = "serde")]
 use serde::Deserialize;
+#[cfg(feature = "serde")]
 use serde::Serialize;
 
 use crate::types::computation::functions::*;
@@ -10,7 +12,8 @@ use crate::types::computation::traits::ModelFloat;
 use crate::types::geometry::*;
 
 /// Different available function components
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Copy, Clone)]
 pub enum FunctionComponent {
     /// Function to generate a triply periodic Gyroid surface.
     Gyroid,

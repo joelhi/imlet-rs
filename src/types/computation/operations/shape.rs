@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use log::error;
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
@@ -14,7 +15,8 @@ use crate::types::computation::{
 /// This function takes two inputs.
 /// * First distance value (a)
 /// * Second distance value (b)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct BooleanUnion {}
 
 impl Default for BooleanUnion {
@@ -53,7 +55,8 @@ impl<T> ImplicitComponent<T> for BooleanUnion {
 /// This function takes two inputs.
 /// * First distance value (a)
 /// * Second distance value (b)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct BooleanIntersection {}
 
 impl Default for BooleanIntersection {
@@ -90,7 +93,8 @@ impl<T: Float> ImplicitComponent<T> for BooleanIntersection {
 /// This function takes two inputs.
 /// * First distance value (a)
 /// * Second distance value (b)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct BooleanDifference {}
 
 impl Default for BooleanDifference {
@@ -128,7 +132,8 @@ impl<T: Float> ImplicitComponent<T> for BooleanDifference {
 ///
 /// This function takes one input.
 /// * Distance value (a)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Offset<T> {
     distance: T,
 }
@@ -191,7 +196,8 @@ impl<T: ModelFloat> ImplicitComponent<T> for Offset<T> {
 ///
 /// This function takes one input.
 /// * Thickness value
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Thickness<T> {
     t: T,
 }

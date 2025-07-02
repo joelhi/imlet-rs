@@ -10,14 +10,15 @@
 //! ### Key Features
 //!
 //! - **Functional Modeling**: Create geometries by combining distance functions (e.g., spheres, toruses) and operations (e.g., intersections, unions).
-//! - **Geometric Types**: The engine includes the core geometric types, like [Vec3](crate::types::geometry::Vec3), [Plane](crate::types::geometry::Plane), [Mesh](crate::types::geometry::Mesh), and more.
+//! - **Geometric Types**: Provides core geometric types, like `Vec3`, `Plane`, `Mesh`, and more.
 //! - **Custom Distance Functions**: Define distance functions mathematically or derive them from external triangle meshes.
-//! - **Model Serialization**: Save and load implicit models using the `.json` format for easy sharing and reuse.
 //! - **Mesh Export/Import**: Export results to `.obj` files or import external `.obj` files to create custom distance functions.
 //! - **Iso-surfacing**: Efficient iso-surface extraction from discretized scalar fields.
-//! - **CLI Interface**: Run saved models and show `.obj` files directly from the command line.
-//! - **Built-in Viewer** *(optional)*: Visualize mesh outputs quickly using the `viewer` feature built on top of `wgpu`.
 //!
+//! *Optional feature flags*
+//! - `serde`: Save and load implicit models using the `.json` format for easy sharing and reuse.
+//! - `viewer`: Visualize mesh outputs quickly using the `viewer` feature built on top of `wgpu`.
+//! 
 //! The main modules of the crate are [`types::geometry`] and [`types::computation`], which together form the foundation for creating and manipulating implicit models. At the heart of `Imlet` is the [`ImplicitModel`](types::computation::model::ImplicitModel) struct, which represents the computation graph used for modeling.
 //!
 //! ## Example: Creating a Simple Geometry
@@ -68,13 +69,13 @@
 //! let config = SparseFieldConfig {
 //!     internal_size: BlockSize::Size64,       // Internal node subdivision.
 //!     leaf_size: BlockSize::Size4,            // Leaf node subdivision.
-//!     sampling_mode: SamplingMode::CORNERS,    // Sampling logic for Leaf node exclusion.
+//!     sampling_mode: SamplingMode::CORNERS,   // Sampling logic for Leaf node exclusion.
 //!     cell_size,                              // Sampling resolution.
 //! };
 //!
 //! let mut sampler = SparseSampler::builder()
 //!     .with_bounds(bounds)                    // Set the bounds for the sampling.
-//!     .with_config(config)             // Set the sparse field parameters.
+//!     .with_config(config)                    // Set the sparse field parameters.
 //!     .build()
 //!     .expect("Should be able to build the sampler.");
 //!
@@ -86,13 +87,15 @@
 //!     .iso_surface(0.0)
 //!     .expect("Extracting iso-surface should work.");
 //!
-//! write_obj_file(&mesh, "interpolation_example").unwrap();
+//! write_obj_file(&mesh, "example").unwrap();
 //!
 //! ```
 //!
 //! For detailed usage and API references, explore the module documentation.
 //!
 //!
+
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 /// The current version of the `Imlet` library.
 pub const IMLET_VERSION: &str = env!("CARGO_PKG_VERSION");

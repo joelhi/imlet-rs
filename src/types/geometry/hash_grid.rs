@@ -1,10 +1,14 @@
 use num_traits::Float;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 use super::Vec3;
 use hashbrown::HashMap;
 
 /// Simple implementation of a spatial hash grid, not properly checking adjacent bins.
 /// Tolerances may not be guaranteed to be satisfied in the event of close points in adjacent bins.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct SpatialHashGrid<T> {
     map: HashMap<i64, Vec<usize>>,
     vertices: Vec<Vec3<T>>,

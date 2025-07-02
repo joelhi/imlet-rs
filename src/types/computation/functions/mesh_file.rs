@@ -1,6 +1,8 @@
-use std::{error::Error, fmt::Debug};
+use std::error::Error;
 
 use log::{error, info};
+
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -36,14 +38,14 @@ const MAX_TREE_DEPTH: usize = 12;
 /// let mesh_tag = model.add_function("Mesh", mesh_file).unwrap();
 ///
 /// ```
-#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MeshFile<T> {
     /// Storing the origin of the file.
     pub file_path: Option<String>,
     /// Option to center the geometry
     pub center: bool,
     /// Geometry to use for signed distance computation
-    #[serde(skip_serializing)]
+    #[cfg_attr(feature = "serde", serde(skip_serializing))]
     pub geometry_data: Option<Octree<Triangle<T>, T>>,
 }
 

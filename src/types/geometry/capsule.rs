@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
 use log::error;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::{
@@ -28,11 +29,12 @@ static CAPSULE_PARAMS: &[Parameter; 3] = &[
     },
 ];
 
-/// A capsule primitive defined by a line and a radius.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+/// A capsule defined by a line segment and radius.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Capsule<T> {
-    line: Line<T>,
-    radius: T,
+    pub line: Line<T>,
+    pub radius: T,
 }
 
 impl<T> Capsule<T> {

@@ -1,12 +1,14 @@
+use std::fmt::Debug;
+
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use super::Vec3;
 
-/// A Transform operation.
-///
-/// The operation is defined as a translation and rotation component.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+/// A 3D transformation matrix.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Transform<T> {
     pub translation: Vec3<T>,
     pub rotation: Vec3<T>,

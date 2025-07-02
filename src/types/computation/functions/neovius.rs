@@ -2,6 +2,8 @@ use std::fmt::Debug;
 
 use log::error;
 use num_traits::Float;
+
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::model::{Data, DataType, Parameter};
@@ -29,7 +31,8 @@ static NEOVIUS_PARAMETERS: &[Parameter; 4] = &[
 /// Function representing an approximate distance function for a neovius surface.
 ///
 /// This fuction is not a perfect distance function, and values deviate slightly from the true distance away from the surface.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Neovius<T> {
     pub length_x: T,
     pub length_y: T,

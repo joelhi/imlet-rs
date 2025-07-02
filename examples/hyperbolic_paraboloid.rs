@@ -4,13 +4,11 @@ use imlet::types::{
         functions::XYZValue,
         model::ImplicitModel,
         operations::math::{Divide, Multiply, Subtract},
-        traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
         ModelError,
     },
     geometry::{BoundingBox, Vec3},
 };
 use imlet::utils;
-use serde::Serialize;
 
 /// Create a new implicit model representing a hyperbolic paraboloid surface.
 fn create_hyperbolic_paraboliod(a: f32, b: f32) -> Result<ImplicitModel<f32>, ModelError> {
@@ -38,21 +36,6 @@ fn create_hyperbolic_paraboliod(a: f32, b: f32) -> Result<ImplicitModel<f32>, Mo
     let _ = model.add_operation("sub_2", Subtract::new(), Some(&[&z_coord, &sub_1]))?;
 
     Ok(model)
-}
-
-#[derive(Debug, Clone, Copy, Serialize)]
-pub struct HyperbolicParaboloid<T: Serialize> {
-    a: T,
-    b: T,
-}
-
-// Default implementation of base trait.
-impl<T: ModelFloat> ImplicitComponent<T> for HyperbolicParaboloid<T> {}
-
-impl<T: ModelFloat> ImplicitFunction<T> for HyperbolicParaboloid<T> {
-    fn eval(&self, x: T, y: T, z: T) -> T {
-        (y.powi(2) / self.b.powi(2)) - (x.powi(2) / self.a.powi(2)) - z
-    }
 }
 
 pub fn main() {

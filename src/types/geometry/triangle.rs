@@ -1,4 +1,5 @@
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::fmt::{self, Display};
@@ -12,7 +13,8 @@ use super::{
 };
 
 /// A single triangle with vertices in 3d space.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Triangle<T> {
     /// Positions of the three vertices.
     pub p: [Vec3<T>; 3],

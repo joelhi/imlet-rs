@@ -1,4 +1,7 @@
+use std::fmt::Debug;
+
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::traits::ModelFloat;
@@ -11,7 +14,8 @@ use super::{
 /// Octree used for storing object and accelerating closest point and distance queries.
 ///
 /// The octree can be built for any geometric object which implements the relevant traits.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct Octree<Q, T> {
     objects: Vec<Q>,
     root: OctreeNode<T>,
@@ -145,7 +149,9 @@ impl<Q, T: Float> Default for Octree<Q, T> {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// A node in an octree.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub(crate) enum OctreeNode<T> {
     /// Empty node.
     Empty,

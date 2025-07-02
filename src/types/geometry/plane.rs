@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use log::error;
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
@@ -12,7 +13,8 @@ use crate::types::computation::{
 use super::{traits::SignedDistance, Vec3};
 
 /// Infinite plane, defined by origin point and normal direction.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Plane<T> {
     origin: Vec3<T>,
     normal: Vec3<T>,

@@ -8,17 +8,19 @@ use imlet::types::{
     geometry::{BoundingBox, Vec3},
 };
 use imlet::utils;
-use serde::Serialize;
 
 // Custom implicit function.
-#[derive(Debug, Serialize)]
 pub struct HyperbolicParaboloid<T> {
     a: T,
     b: T,
 }
 
 // Default implementation of base trait.
-impl<T: ModelFloat> ImplicitComponent<T> for HyperbolicParaboloid<T> {}
+impl<T: ModelFloat> ImplicitComponent<T> for HyperbolicParaboloid<T> {
+    fn name(&self) -> &'static str {
+        "HyperbolicParaboloid"
+    }
+}
 
 impl<T: ModelFloat> ImplicitFunction<T> for HyperbolicParaboloid<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {

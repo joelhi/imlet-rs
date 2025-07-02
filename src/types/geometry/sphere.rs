@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use log::error;
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::{
@@ -9,10 +10,10 @@ use crate::types::{
         model::{Data, DataType, Parameter},
         traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
     },
-    geometry::Vec3,
+    geometry::{BoundingBox, Vec3},
 };
 
-use super::{traits::SignedDistance, BoundingBox};
+use super::traits::SignedDistance;
 
 static SPHERE_PARAMS: &[Parameter; 2] = &[
     Parameter {
@@ -25,8 +26,9 @@ static SPHERE_PARAMS: &[Parameter; 2] = &[
     },
 ];
 
-/// A sphere object, defined by a centre point and a radius.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+/// A sphere defined by its centre point and radius.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Sphere<T> {
     pub centre: Vec3<T>,
     pub radius: T,

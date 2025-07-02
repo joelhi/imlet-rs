@@ -2,11 +2,9 @@ use std::fmt::Debug;
 use std::time::Instant;
 
 use num_traits::Float;
-use rayon::iter::IndexedParallelIterator;
-use rayon::iter::IntoParallelRefMutIterator;
-use rayon::iter::ParallelIterator;
-use serde::Deserialize;
-use serde::Serialize;
+use rayon::prelude::*;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 use crate::types::computation::data::field_iterator::CellIterator;
 use crate::types::computation::data::field_iterator::DenseCellValueIterator;
@@ -39,7 +37,8 @@ use super::field_iterator::{
 ///
 /// Note: This type should not be constructed directly. Instead, use [`~DenseSampler`][crate::types::computation::data::sampler::DenseSampler]
 /// to sample and extract a dense field from an implicit model.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct DenseField<T> {
     origin: Vec3<T>,
     cell_size: T,

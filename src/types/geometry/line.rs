@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use log::error;
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
@@ -22,8 +23,9 @@ static LINE_PARAMS: &[Parameter; 2] = &[
     },
 ];
 
-/// Single line segment defined by a start and end point.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+/// A line segment defined by start and end points.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Line<T> {
     pub start: Vec3<T>,
     pub end: Vec3<T>,

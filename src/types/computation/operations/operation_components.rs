@@ -1,3 +1,4 @@
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
@@ -13,7 +14,8 @@ use crate::types::computation::{
 };
 
 /// Enum listing valid operation components.
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Copy, Clone)]
 pub enum OperationComponent {
     Add,
     Subtract,

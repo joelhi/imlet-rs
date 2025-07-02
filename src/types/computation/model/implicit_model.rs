@@ -2,13 +2,15 @@ use crate::types::computation::traits::{ImplicitFunction, ImplicitOperation, Mod
 use crate::types::computation::ModelError;
 use crate::IMLET_VERSION;
 use log::{debug, info};
-use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::{self, Debug, Display};
 use std::time::Instant;
 
 use super::ComputationGraph;
 use super::{ComponentId, ModelComponent};
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 /// An implicit model composed of distance functions and operations.
 ///
@@ -56,8 +58,9 @@ use super::{ComponentId, ModelComponent};
 ///
 /// ```
 ///
-#[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ImplicitModel<T: ModelFloat + 'static> {
+    #[allow(dead_code)]
     version: String,
     components: HashMap<String, ModelComponent<T>>,
     inputs: HashMap<String, Vec<Option<String>>>,

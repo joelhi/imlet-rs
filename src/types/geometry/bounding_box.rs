@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use log::error;
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
@@ -14,8 +15,9 @@ use super::{
     Line, Triangle, Vec3,
 };
 
-/// Axis-Aligned Bounding Box based on a max and min coordinate.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+/// An axis-aligned bounding box.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct BoundingBox<T> {
     // Minimum coordinate of the box
     pub min: Vec3<T>,

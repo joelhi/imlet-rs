@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 
 use log::error;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::{
@@ -26,8 +27,9 @@ static TORUS_PARAMS: &[Parameter; 3] = &[
     },
 ];
 
-/// Distance function for a torus, defined by an a centre point, major radius and minor radius.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+/// A torus defined by its center, normal, major radius and minor radius.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Torus<T> {
     /// The centre point
     pub centre: Vec3<T>,

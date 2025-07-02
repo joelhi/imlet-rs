@@ -1,13 +1,15 @@
 use std::fmt::Debug;
 
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::traits::{ImplicitFunction, ImplicitOperation, ModelFloat};
 
 use super::{Data, DataType, Parameter};
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Copy, Clone)]
 pub(crate) struct ComponentId(pub usize);
 
 impl From<usize> for ComponentId {
@@ -25,7 +27,7 @@ impl From<usize> for ComponentId {
 /// * `Constant` - Representing a constant value across the entire model domain.
 /// * `Function` - Represents a function in 3d space `f(x,y,z)`. This takes no inputs from other components, and is variable across the domain.
 /// * `Operation` - Represents an operation on some values in the model. The operation does not depend on the evaluation coordinate directly, but instead operates on the output of other components.
-#[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ModelComponent<T: ModelFloat + 'static> {
     Constant(T),
     Function(Box<dyn ImplicitFunction<T>>),

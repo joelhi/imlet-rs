@@ -2,6 +2,7 @@ use log::error;
 use std::fmt::Debug;
 
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::model::{Data, DataType, Parameter};
@@ -20,7 +21,8 @@ static COORD_PARAMETERS: [Parameter; 2] = [
 ];
 
 /// Distance function that evaluates to the z-coordinate
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct ZDomain<T> {
     min: T,
     max: T,
@@ -93,7 +95,8 @@ impl<T: ModelFloat> ImplicitComponent<T> for ZDomain<T> {
 }
 
 /// Distance function that evaluates to the y-coordinate
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct YDomain<T> {
     min: T,
     max: T,
@@ -166,7 +169,8 @@ impl<T: ModelFloat> ImplicitComponent<T> for YDomain<T> {
 }
 
 /// Distance function that evaluates to the x-coordinate
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct XDomain<T> {
     min: T,
     max: T,
@@ -238,14 +242,16 @@ impl<T: ModelFloat> ImplicitComponent<T> for XDomain<T> {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub enum CoordinateValue {
     X,
     Y,
     Z,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct XYZValue {
     coordinate_value: CoordinateValue,
 }
