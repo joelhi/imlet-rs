@@ -60,8 +60,10 @@
 //! // Combine the sphere and gyroid using a Boolean intersection
 //! let intersection = model
 //!     .add_operation(
+//!     .add_operation(
 //!         "Intersection",
 //!         BooleanIntersection::new(),
+//!         Some(&[&sphere, &gyroid]))
 //!         Some(&[&sphere, &gyroid]))
 //!     .unwrap();
 //!

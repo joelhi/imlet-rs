@@ -69,6 +69,8 @@ pub const OPERATION_COMPONENTS: &[OperationComponent] = &[
     OperationComponent::LinearInterpolation,
     OperationComponent::VariableLinearInterpolation,
     OperationComponent::Remap,
+    OperationComponent::VariableLinearInterpolation,
+    OperationComponent::Remap,
     // Shape
     OperationComponent::BooleanUnion,
     OperationComponent::BooleanIntersection,

@@ -168,6 +168,7 @@ impl<T: Float> ImplicitComponent<T> for Divide {
 /// Operation to perform a linear interpolation between two values -> a + t*(b-a).
 ///
 /// This operation takes two inptus.
+/// This operation takes two inptus.
 /// * First value to interpolate (a)
 /// * Second value to interpolate (b)
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
