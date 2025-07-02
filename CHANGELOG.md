@@ -1,7 +1,7 @@
 # imlet - Changelog
 
 ## Latest
-- Clean up trait bounds and move serialization behind a feature flag. ([#32](https://github.com/joelhi/imlet-rs/pull/33))
+- Clean up trait bounds and move serialization behind a feature flag. ([#33](https://github.com/joelhi/imlet-rs/pull/33))
 - API clean up, improved examples and some additional operations `Remap` & `VariableLinearInterpolation`. ([#32](https://github.com/joelhi/imlet-rs/pull/32))
 - Implement sparse field and decouple sampling from model definition. ([#31](https://github.com/joelhi/imlet-rs/pull/31))
 - Minor fix to barycentric coord. ([#30](https://github.com/joelhi/imlet-rs/pull/30))
