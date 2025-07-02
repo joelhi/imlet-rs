@@ -625,9 +625,7 @@ impl<T: ModelFloat> ImplicitModel<T> {
     }
 }
 
-impl<T: ModelFloat + Display + Debug > Display
-    for ImplicitModel<T>
-{
+impl<T: ModelFloat + Display + Debug> Display for ImplicitModel<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (name, component) in self.components.iter() {
             writeln!(f, "Component: {name}")?;

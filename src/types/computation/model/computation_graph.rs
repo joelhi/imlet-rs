@@ -1,10 +1,8 @@
 use std::cell::RefCell;
 
-use num_traits::Float;
-use serde::Serialize;
 use smallvec::SmallVec;
 
-use crate::{types::computation::traits::ModelFloat, utils::math_helper::Pi};
+use crate::types::computation::traits::ModelFloat;
 
 use super::{ComponentId, ComponentValues, ModelComponent};
 
@@ -20,7 +18,7 @@ pub(crate) struct ComputationGraph<'a, T: ModelFloat + 'static> {
     inputs: Vec<Vec<ComponentId>>,
 }
 
-impl<'a, T: ModelFloat + 'static > ComputationGraph<'a, T> {
+impl<'a, T: ModelFloat + 'static> ComputationGraph<'a, T> {
     /// Create a new, empty, computation graph.
     pub fn new() -> Self {
         Self {

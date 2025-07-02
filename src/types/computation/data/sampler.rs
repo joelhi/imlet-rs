@@ -5,7 +5,10 @@ use crate::{
     algorithms::{self, marching_cubes},
     types::{
         computation::{
-            data::{DenseField, SparseField, SparseFieldConfig}, model::ImplicitModel, traits::ModelFloat, ModelError
+            data::{DenseField, SparseField, SparseFieldConfig},
+            model::ImplicitModel,
+            traits::ModelFloat,
+            ModelError,
         },
         geometry::{BoundingBox, Mesh},
     },
@@ -98,7 +101,7 @@ pub trait Sampler<T: ModelFloat, F> {
 /// ```
 pub struct SparseSampler<T>
 where
-    T: ModelFloat + 'static
+    T: ModelFloat + 'static,
 {
     min_val: T,
     max_val: T,
@@ -223,9 +226,7 @@ where
     }
 }
 
-impl<T: ModelFloat + 'static + Default>
-    Sampler<T, SparseField<T>> for SparseSampler<T>
-{
+impl<T: ModelFloat + 'static + Default> Sampler<T, SparseField<T>> for SparseSampler<T> {
     fn sample_field(&mut self, model: &ImplicitModel<T>) -> Result<&SparseField<T>, ModelError> {
         let component_tag = model
             .get_default_output()

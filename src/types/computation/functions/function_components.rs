@@ -1,6 +1,5 @@
 use std::str::FromStr;
 
-use num_traits::Float;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -9,7 +8,6 @@ use crate::types::computation::model::ModelComponent;
 use crate::types::computation::traits::ImplicitFunction;
 use crate::types::computation::traits::ModelFloat;
 use crate::types::geometry::*;
-use crate::utils::math_helper::Pi;
 
 /// Different available function components
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
@@ -46,9 +44,7 @@ impl FunctionComponent {
     /// Create an instance of the component with default values.
     ///
     /// Used when creating components from a UI or other interface.
-    pub fn create_default<T: ModelFloat + 'static>(
-        &self,
-    ) -> ModelComponent<T> {
+    pub fn create_default<T: ModelFloat + 'static>(&self) -> ModelComponent<T> {
         let default_value = T::from(45.).unwrap();
         let func: Box<dyn ImplicitFunction<T>> = match self {
             FunctionComponent::Gyroid => {

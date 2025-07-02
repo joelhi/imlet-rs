@@ -237,9 +237,7 @@ pub fn write_model_to_file<T: ModelFloat>(
 /// An error is something went wrong, such as if the file can't be found or the deserialization failed.
 ///
 /// Returns Ok() with the model if the read was successful.
-pub fn read_model_from_file<
-    T: ModelFloat + 'static + DeserializeOwned,
->(
+pub fn read_model_from_file<T: ModelFloat + 'static + DeserializeOwned>(
     file_path: &str,
 ) -> Result<ImplicitModel<T>, Box<dyn std::error::Error>> {
     let path = Path::new(file_path);

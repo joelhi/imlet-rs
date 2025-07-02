@@ -1,17 +1,15 @@
 use std::{marker::PhantomData, str::FromStr};
 
 use num_traits::Float;
-use serde::{Deserialize};
+use serde::Deserialize;
 
-use crate::{
-    types::{
-        computation::{
-            functions::*,
-            operations::{math::*, shape::*},
-            traits::{ImplicitFunction, ImplicitOperation, ModelFloat},
-        },
-        geometry::*,
+use crate::types::{
+    computation::{
+        functions::*,
+        operations::{math::*, shape::*},
+        traits::{ImplicitFunction, ImplicitOperation, ModelFloat},
     },
+    geometry::*,
 };
 
 impl<T: ModelFloat> serde::Serialize for dyn ImplicitFunction<T> {
@@ -54,8 +52,8 @@ where
     }
 }
 
-impl<'de, T: ModelFloat + Deserialize<'de> + 'static>
-    serde::Deserialize<'de> for Box<dyn ImplicitFunction<T>>
+impl<'de, T: ModelFloat + Deserialize<'de> + 'static> serde::Deserialize<'de>
+    for Box<dyn ImplicitFunction<T>>
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -78,8 +76,8 @@ impl<T: ModelFloat> FunctionVisitor<T> {
     }
 }
 
-impl<'de, T: ModelFloat + Deserialize<'de> + 'static>
-    serde::de::Visitor<'de> for FunctionVisitor<T>
+impl<'de, T: ModelFloat + Deserialize<'de> + 'static> serde::de::Visitor<'de>
+    for FunctionVisitor<T>
 {
     type Value = Box<dyn ImplicitFunction<T>>;
 
@@ -124,10 +122,7 @@ impl<'de, T: Float> serde::de::DeserializeSeed<'de> for FunctionTypeVisitor<'de,
 type DeserializeFunctionFn<'de, T> = fn(
     &mut dyn erased_serde::Deserializer<'de>,
 ) -> erased_serde::Result<Box<dyn ImplicitFunction<T>>>;
-fn function_runtime_reflection<
-    'de,
-    T: ModelFloat + Deserialize<'de> + 'static,
->(
+fn function_runtime_reflection<'de, T: ModelFloat + Deserialize<'de> + 'static>(
     type_info: &str,
 ) -> Option<DeserializeFunctionFn<'de, T>> {
     match FunctionComponent::from_str(type_info) {
@@ -315,10 +310,7 @@ type DeserializeOperationFn<'de, T> = fn(
     &mut dyn erased_serde::Deserializer<'de>,
 ) -> erased_serde::Result<Box<dyn ImplicitOperation<T>>>;
 
-fn operation_runtime_reflection<
-    'de,
-    T: ModelFloat + Deserialize<'de> + 'static,
->(
+fn operation_runtime_reflection<'de, T: ModelFloat + Deserialize<'de> + 'static>(
     type_info: &str,
 ) -> Option<DeserializeOperationFn<'de, T>> {
     if type_info == "Add" {

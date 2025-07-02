@@ -3,9 +3,7 @@ use std::fmt::Debug;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    types::computation::traits::{ImplicitFunction, ImplicitOperation, ModelFloat}
-};
+use crate::types::computation::traits::{ImplicitFunction, ImplicitOperation, ModelFloat};
 
 use super::{Data, DataType, Parameter};
 

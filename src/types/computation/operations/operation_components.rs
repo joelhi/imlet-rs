@@ -1,17 +1,15 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    types::computation::{
-        model::ModelComponent,
-        operations::{
-            math::{
-                Add, Divide, LinearInterpolation, Multiply, Remap, Subtract,
-                VariableLinearInterpolation,
-            },
-            shape::{BooleanDifference, BooleanIntersection, BooleanUnion, Offset, Thickness},
+use crate::types::computation::{
+    model::ModelComponent,
+    operations::{
+        math::{
+            Add, Divide, LinearInterpolation, Multiply, Remap, Subtract,
+            VariableLinearInterpolation,
         },
-        traits::{ImplicitOperation, ModelFloat},
+        shape::{BooleanDifference, BooleanIntersection, BooleanUnion, Offset, Thickness},
     },
+    traits::{ImplicitOperation, ModelFloat},
 };
 
 /// Enum listing valid operation components.
@@ -35,9 +33,7 @@ impl OperationComponent {
     /// Create an instance of the component with default values.
     ///
     /// Used when creating components from a UI or other interface.
-    pub fn create_default<T: ModelFloat + 'static>(
-        &self,
-    ) -> ModelComponent<T> {
+    pub fn create_default<T: ModelFloat + 'static>(&self) -> ModelComponent<T> {
         let op: Box<dyn ImplicitOperation<T>> = match self {
             // Maths
             OperationComponent::Add => Box::new(Add::new()),
