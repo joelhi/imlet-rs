@@ -97,8 +97,6 @@
 //!
 //!
 
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
-
 /// The current version of the `Imlet` library.
 pub const IMLET_VERSION: &str = env!("CARGO_PKG_VERSION");
 
