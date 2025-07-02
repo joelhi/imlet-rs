@@ -7,7 +7,6 @@ use crate::{
         model::{Data, DataType, Parameter},
         traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
     },
-    utils::math_helper::Pi,
 };
 use std::fmt::Debug;
 

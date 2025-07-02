@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::computation::model::{Data, DataType, Parameter};
 use crate::types::computation::traits::{ImplicitComponent, ImplicitFunction, ModelFloat};
-use crate::utils::math_helper::Pi;
 
 static NEOVIUS_PARAMETERS: &[Parameter; 4] = &[
     Parameter {

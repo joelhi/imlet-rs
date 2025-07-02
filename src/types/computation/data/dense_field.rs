@@ -20,7 +20,6 @@ use crate::types::geometry::Vec3i;
 use crate::utils;
 use crate::utils::math_helper::index1d_from_index3d;
 use crate::utils::math_helper::index3d_from_index1d;
-use crate::utils::math_helper::Pi;
 
 use super::field_iterator::{
     CellGridIter, CellGridIterator, CellValueIterator, PointGridIter, PointIterator, ValueIterator,

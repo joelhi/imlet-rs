@@ -79,6 +79,8 @@ mod tests {
         geometry::{BoundingBox, Sphere, Vec3},
     };
 
+    use num_traits::Float;
+
     use super::*;
 
     #[test]

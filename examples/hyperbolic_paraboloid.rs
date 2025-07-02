@@ -10,7 +10,6 @@ use imlet::types::{
     geometry::{BoundingBox, Vec3},
 };
 use imlet::utils;
-use num_traits::Float;
 use serde::Serialize;
 
 /// Create a new implicit model representing a hyperbolic paraboloid surface.

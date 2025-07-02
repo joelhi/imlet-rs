@@ -1,6 +1,3 @@
-use num_traits::Float;
-use serde::Serialize;
-
 use crate::{
     algorithms::{self, marching_cubes},
     types::{
@@ -12,7 +9,6 @@ use crate::{
         },
         geometry::{BoundingBox, Mesh},
     },
-    utils::math_helper::Pi,
 };
 
 /// Trait for sampling implicit models into discrete fields and extracting iso-surfaces.

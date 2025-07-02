@@ -16,7 +16,6 @@ use crate::types::computation::model::ComputationGraph;
 use crate::types::computation::traits::ModelFloat;
 use crate::types::computation::ModelError;
 use crate::types::geometry::{BoundingBox, Vec3};
-use crate::utils::math_helper::Pi;
 
 /// 3-dimensional sparse field for scalar values.
 ///
