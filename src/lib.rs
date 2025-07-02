@@ -18,7 +18,7 @@
 //! *Optional feature flags*
 //! - `serde`: Save and load implicit models using the `.json` format for easy sharing and reuse.
 //! - `viewer`: Visualize mesh outputs quickly using the `viewer` feature built on top of `wgpu`.
-//! 
+//!
 //! The main modules of the crate are [`types::geometry`] and [`types::computation`], which together form the foundation for creating and manipulating implicit models. At the heart of `Imlet` is the [`ImplicitModel`](types::computation::model::ImplicitModel) struct, which represents the computation graph used for modeling.
 //!
 //! ## Example: Creating a Simple Geometry
