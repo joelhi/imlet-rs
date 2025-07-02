@@ -2,11 +2,12 @@ use std::fmt::Debug;
 
 use log::error;
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
     model::{Data, DataType, Parameter},
-    traits::{ImplicitComponent, ImplicitFunction},
+    traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
 };
 
 use super::{
@@ -14,8 +15,9 @@ use super::{
     Line, Triangle, Vec3,
 };
 
-/// Axis-Aligned Bounding Box based on a max and min coordinate.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+/// An axis-aligned bounding box.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct BoundingBox<T> {
     // Minimum coordinate of the box
     pub min: Vec3<T>,
@@ -241,7 +243,7 @@ impl<T: Float> BoundingBox<T> {
     }
 }
 
-impl<T: Float + Send + Sync> SignedDistance<T> for BoundingBox<T> {
+impl<T: ModelFloat> SignedDistance<T> for BoundingBox<T> {
     fn signed_distance(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(&Vec3::new(x, y, z))
     }
@@ -258,13 +260,13 @@ static BOUNDING_BOX_PARAMETERS: [Parameter; 2] = [
     },
 ];
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for BoundingBox<T> {
+impl<T: ModelFloat> ImplicitFunction<T> for BoundingBox<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(&Vec3::new(x, y, z))
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for BoundingBox<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for BoundingBox<T> {
     fn parameters(&self) -> &[Parameter] {
         &BOUNDING_BOX_PARAMETERS
     }

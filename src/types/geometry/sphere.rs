@@ -2,17 +2,18 @@ use std::fmt::Debug;
 
 use log::error;
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::{
     computation::{
         model::{Data, DataType, Parameter},
-        traits::{ImplicitComponent, ImplicitFunction},
+        traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
     },
-    geometry::Vec3,
+    geometry::{BoundingBox, Vec3},
 };
 
-use super::{traits::SignedDistance, BoundingBox};
+use super::traits::SignedDistance;
 
 static SPHERE_PARAMS: &[Parameter; 2] = &[
     Parameter {
@@ -25,8 +26,9 @@ static SPHERE_PARAMS: &[Parameter; 2] = &[
     },
 ];
 
-/// A sphere object, defined by a centre point and a radius.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+/// A sphere defined by its centre point and radius.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Sphere<T> {
     pub centre: Vec3<T>,
     pub radius: T,
@@ -66,19 +68,19 @@ impl<T: Float> Sphere<T> {
     }
 }
 
-impl<T: Float + Send + Sync> SignedDistance<T> for Sphere<T> {
+impl<T: ModelFloat> SignedDistance<T> for Sphere<T> {
     fn signed_distance(&self, x: T, y: T, z: T) -> T {
         self.centre.distance_to_coord(x, y, z) - self.radius
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Sphere<T> {
+impl<T: ModelFloat> ImplicitFunction<T> for Sphere<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.centre.distance_to_coord(x, y, z) - self.radius
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Sphere<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for Sphere<T> {
     fn parameters(&self) -> &[Parameter] {
         SPHERE_PARAMS
     }

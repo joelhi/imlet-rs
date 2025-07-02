@@ -2,11 +2,12 @@ use std::fmt::Debug;
 
 use log::error;
 use num_traits::Float;
+
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::model::{Data, DataType, Parameter};
-use crate::types::computation::traits::{ImplicitComponent, ImplicitFunction};
-use crate::utils::math_helper::Pi;
+use crate::types::computation::traits::{ImplicitComponent, ImplicitFunction, ModelFloat};
 
 static NEOVIUS_PARAMETERS: &[Parameter; 4] = &[
     Parameter {
@@ -30,7 +31,8 @@ static NEOVIUS_PARAMETERS: &[Parameter; 4] = &[
 /// Function representing an approximate distance function for a neovius surface.
 ///
 /// This fuction is not a perfect distance function, and values deviate slightly from the true distance away from the surface.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Neovius<T> {
     pub length_x: T,
     pub length_y: T,
@@ -70,7 +72,7 @@ impl<T: Float> Neovius<T> {
     }
 }
 
-impl<T: Pi + Float + Send + Sync + Serialize> ImplicitFunction<T> for Neovius<T> {
+impl<T: ModelFloat> ImplicitFunction<T> for Neovius<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         let two = T::from(2.0).expect("Failed to convert number to T");
         let three = T::from(2.0).expect("Failed to convert number to T");
@@ -94,7 +96,7 @@ impl<T: Pi + Float + Send + Sync + Serialize> ImplicitFunction<T> for Neovius<T>
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Neovius<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for Neovius<T> {
     fn parameters(&self) -> &[Parameter] {
         NEOVIUS_PARAMETERS
     }

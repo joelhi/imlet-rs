@@ -14,10 +14,12 @@
  - **Functional Modeling**: Create geometries by combining distance functions (e.g., spheres, toruses) and operations (e.g., intersections, unions).
  - **Geometric Types**: Provides core geometric types, like `Vec3`, `Plane`, `Mesh`, and more.
  - **Custom Distance Functions**: Define distance functions mathematically or derive them from external triangle meshes.
- - **Model Serialization**: Save and load implicit models using the `.json` format for sharing and reuse.
  - **Mesh Export/Import**: Export results to `.obj` files or import external `.obj` files to create custom distance functions.
  - **Iso-surfacing**: Efficient iso-surface extraction from discretized scalar fields.
- - **Built-in Viewer** *(optional)*: Visualize mesh outputs quickly using the `viewer` feature built on top of `wgpu`.
+
+ *Optional feature flags*
+ - `serde`: Save and load implicit models using the `.json` format for easy sharing and reuse.
+ - `viewer`: Visualize mesh outputs quickly using the `viewer` feature built on top of `wgpu`.
 
  For a more in-depth explanation of the library, see the [docs](https://docs.rs/imlet)
 
@@ -80,7 +82,7 @@ The model is then evaluated over a 3D space and saved as a mesh in an OBJ file.
      .iso_surface(0.0)
      .expect("Extracting iso-surface should work.");
 
- utils::io::write_obj_file(&mesh, "interpolation_example").unwrap();
+ utils::io::write_obj_file(&mesh, "example").unwrap();
 
  ```
 

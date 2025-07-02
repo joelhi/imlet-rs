@@ -10,13 +10,14 @@
 //! ### Key Features
 //!
 //! - **Functional Modeling**: Create geometries by combining distance functions (e.g., spheres, toruses) and operations (e.g., intersections, unions).
-//! - **Geometric Types**: The engine includes the core geometric types, like [Vec3](crate::types::geometry::Vec3), [Plane](crate::types::geometry::Plane), [Mesh](crate::types::geometry::Mesh), and more.
+//! - **Geometric Types**: Provides core geometric types, like `Vec3`, `Plane`, `Mesh`, and more.
 //! - **Custom Distance Functions**: Define distance functions mathematically or derive them from external triangle meshes.
-//! - **Model Serialization**: Save and load implicit models using the `.json` format for easy sharing and reuse.
 //! - **Mesh Export/Import**: Export results to `.obj` files or import external `.obj` files to create custom distance functions.
 //! - **Iso-surfacing**: Efficient iso-surface extraction from discretized scalar fields.
-//! - **CLI Interface**: Run saved models and show `.obj` files directly from the command line.
-//! - **Built-in Viewer** *(optional)*: Visualize mesh outputs quickly using the `viewer` feature built on top of `wgpu`.
+//!
+//! *Optional feature flags*
+//! - `serde`: Save and load implicit models using the `.json` format for easy sharing and reuse.
+//! - `viewer`: Visualize mesh outputs quickly using the `viewer` feature built on top of `wgpu`.
 //!
 //! The main modules of the crate are [`types::geometry`] and [`types::computation`], which together form the foundation for creating and manipulating implicit models. At the heart of `Imlet` is the [`ImplicitModel`](types::computation::model::ImplicitModel) struct, which represents the computation graph used for modeling.
 //!

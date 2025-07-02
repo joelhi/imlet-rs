@@ -2,16 +2,15 @@ use std::fmt::Debug;
 use std::time::Instant;
 
 use num_traits::Float;
-use rayon::iter::IndexedParallelIterator;
-use rayon::iter::IntoParallelRefMutIterator;
-use rayon::iter::ParallelIterator;
-use serde::Deserialize;
-use serde::Serialize;
+use rayon::prelude::*;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 use crate::types::computation::data::field_iterator::CellIterator;
 use crate::types::computation::data::field_iterator::DenseCellValueIterator;
 use crate::types::computation::data::field_iterator::GridIterator;
 use crate::types::computation::model::ComputationGraph;
+use crate::types::computation::traits::ModelFloat;
 use crate::types::computation::ModelError;
 use crate::types::geometry::BoundingBox;
 use crate::types::geometry::Vec3;
@@ -19,7 +18,6 @@ use crate::types::geometry::Vec3i;
 use crate::utils;
 use crate::utils::math_helper::index1d_from_index3d;
 use crate::utils::math_helper::index3d_from_index1d;
-use crate::utils::math_helper::Pi;
 
 use super::field_iterator::{
     CellGridIter, CellGridIterator, CellValueIterator, PointGridIter, PointIterator, ValueIterator,
@@ -39,7 +37,8 @@ use super::field_iterator::{
 ///
 /// Note: This type should not be constructed directly. Instead, use [`~DenseSampler`][crate::types::computation::data::sampler::DenseSampler]
 /// to sample and extract a dense field from an implicit model.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct DenseField<T> {
     origin: Vec3<T>,
     cell_size: T,
@@ -508,7 +507,7 @@ impl<T: Float> DenseField<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize + 'static + Pi> DenseField<T> {
+impl<T: ModelFloat + 'static> DenseField<T> {
     /// Evaluate the computation graph over a discretized domain.
     ///
     /// # Arguments

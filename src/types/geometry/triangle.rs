@@ -1,7 +1,10 @@
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use std::fmt::{self, Display};
+
+use crate::types::computation::traits::ModelFloat;
 
 use super::traits::{Bounded, SignedDistance};
 use super::{
@@ -10,7 +13,8 @@ use super::{
 };
 
 /// A single triangle with vertices in 3d space.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Triangle<T> {
     /// Positions of the three vertices.
     pub p: [Vec3<T>; 3],
@@ -242,7 +246,7 @@ impl<T: Float> SignedQuery<T> for Triangle<T> {
     }
 }
 
-impl<T: Float + Send + Sync> SignedDistance<T> for Triangle<T> {
+impl<T: ModelFloat> SignedDistance<T> for Triangle<T> {
     fn signed_distance(&self, x: T, y: T, z: T) -> T {
         let query_point = Vec3::new(x, y, z);
         let (closest_point, normal) = self.closest_point_with_normal(&query_point);

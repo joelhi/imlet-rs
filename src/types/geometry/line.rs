@@ -2,11 +2,12 @@ use std::fmt::Debug;
 
 use log::error;
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
     model::{Data, DataType, Parameter},
-    traits::{ImplicitComponent, ImplicitFunction},
+    traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
 };
 
 use super::{traits::SignedDistance, Vec3};
@@ -22,8 +23,9 @@ static LINE_PARAMS: &[Parameter; 2] = &[
     },
 ];
 
-/// Single line segment defined by a start and end point.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+/// A line segment defined by start and end points.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Line<T> {
     pub start: Vec3<T>,
     pub end: Vec3<T>,
@@ -69,19 +71,19 @@ impl<T: Float> Line<T> {
     }
 }
 
-impl<T: Float + Send + Sync> SignedDistance<T> for Line<T> {
+impl<T: ModelFloat> SignedDistance<T> for Line<T> {
     fn signed_distance(&self, x: T, y: T, z: T) -> T {
         self.distance_to(Vec3::new(x, y, z))
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Line<T> {
+impl<T: ModelFloat> ImplicitFunction<T> for Line<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(x, y, z)
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Line<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for Line<T> {
     fn parameters(&self) -> &[Parameter] {
         LINE_PARAMS
     }

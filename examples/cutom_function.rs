@@ -2,26 +2,27 @@ use imlet::types::{
     computation::{
         data::sampler::{DenseSampler, Sampler},
         model::ImplicitModel,
-        traits::{ImplicitComponent, ImplicitFunction},
+        traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
         ModelError,
     },
     geometry::{BoundingBox, Vec3},
 };
 use imlet::utils;
-use num_traits::Float;
-use serde::Serialize;
 
 // Custom implicit function.
-#[derive(Debug, Serialize)]
 pub struct HyperbolicParaboloid<T> {
     a: T,
     b: T,
 }
 
 // Default implementation of base trait.
-impl<T: Send + Sync + Serialize> ImplicitComponent<T> for HyperbolicParaboloid<T> {}
+impl<T: ModelFloat> ImplicitComponent<T> for HyperbolicParaboloid<T> {
+    fn name(&self) -> &'static str {
+        "HyperbolicParaboloid"
+    }
+}
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for HyperbolicParaboloid<T> {
+impl<T: ModelFloat> ImplicitFunction<T> for HyperbolicParaboloid<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         (y.powi(2) / self.b.powi(2)) - (x.powi(2) / self.a.powi(2)) - z
     }

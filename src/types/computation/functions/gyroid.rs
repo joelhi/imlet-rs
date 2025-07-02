@@ -1,20 +1,19 @@
 use log::error;
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    types::computation::{
-        model::{Data, DataType, Parameter},
-        traits::{ImplicitComponent, ImplicitFunction},
-    },
-    utils::math_helper::Pi,
+use crate::types::computation::{
+    model::{Data, DataType, Parameter},
+    traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
 };
 use std::fmt::Debug;
 
 /// Function representing an approximate distance function for a gyroid surface.
 ///
 /// This fuction is not a perfect distance function, and values deviate slightly from the true distance away from the surface.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Gyroid<T> {
     pub length_x: T,
     pub length_y: T,
@@ -73,7 +72,7 @@ static GYROID_PARAMETERS: &[Parameter; 4] = &[
     },
 ];
 
-impl<T: Pi + Float + Send + Sync + Serialize> ImplicitFunction<T> for Gyroid<T> {
+impl<T: ModelFloat> ImplicitFunction<T> for Gyroid<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         let two = T::from(2.0).unwrap();
         let normalized_distance = (T::pi() * x / self.length_x).sin()
@@ -93,7 +92,7 @@ impl<T: Pi + Float + Send + Sync + Serialize> ImplicitFunction<T> for Gyroid<T> 
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Gyroid<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for Gyroid<T> {
     fn parameters(&self) -> &[Parameter] {
         GYROID_PARAMETERS
     }

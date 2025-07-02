@@ -2,11 +2,12 @@ use std::fmt::Debug;
 
 use log::error;
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
     model::{Data, DataType, Parameter},
-    traits::{ImplicitComponent, ImplicitOperation},
+    traits::{ImplicitComponent, ImplicitOperation, ModelFloat},
 };
 
 /// Operation to perform a boolean union on two distance values -> min(a, b)
@@ -14,7 +15,8 @@ use crate::types::computation::{
 /// This function takes two inputs.
 /// * First distance value (a)
 /// * Second distance value (b)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct BooleanUnion {}
 
 impl Default for BooleanUnion {
@@ -53,7 +55,8 @@ impl<T> ImplicitComponent<T> for BooleanUnion {
 /// This function takes two inputs.
 /// * First distance value (a)
 /// * Second distance value (b)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct BooleanIntersection {}
 
 impl Default for BooleanIntersection {
@@ -90,7 +93,8 @@ impl<T: Float> ImplicitComponent<T> for BooleanIntersection {
 /// This function takes two inputs.
 /// * First distance value (a)
 /// * Second distance value (b)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct BooleanDifference {}
 
 impl Default for BooleanDifference {
@@ -128,7 +132,8 @@ impl<T: Float> ImplicitComponent<T> for BooleanDifference {
 ///
 /// This function takes one input.
 /// * Distance value (a)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Offset<T> {
     distance: T,
 }
@@ -153,7 +158,7 @@ static OFFSET_PARAMETERS: &[Parameter] = &[Parameter {
     data_type: DataType::Value,
 }];
 
-impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Offset<T> {
+impl<T: ModelFloat> ImplicitOperation<T> for Offset<T> {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0] - self.distance
     }
@@ -163,7 +168,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Offset<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Offset<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for Offset<T> {
     fn parameters(&self) -> &[Parameter] {
         OFFSET_PARAMETERS
     }
@@ -191,7 +196,8 @@ impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Offset<T> {
 ///
 /// This function takes one input.
 /// * Thickness value
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Thickness<T> {
     t: T,
 }
@@ -214,7 +220,7 @@ impl<T> Thickness<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Thickness<T> {
+impl<T: ModelFloat> ImplicitOperation<T> for Thickness<T> {
     fn eval(&self, inputs: &[T]) -> T {
         let two = T::from(2.0).unwrap();
         (inputs[0] - self.t / two).max(-(inputs[0] + self.t / two))
@@ -225,7 +231,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Thickness<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Thickness<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for Thickness<T> {
     fn parameters(&self) -> &[Parameter] {
         THICKNESS_PARAMETERS
     }

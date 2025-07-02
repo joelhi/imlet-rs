@@ -1,13 +1,13 @@
 use std::fmt::Debug;
 
 use log::error;
-use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::{
     computation::{
         model::{Data, DataType, Parameter},
-        traits::{ImplicitComponent, ImplicitFunction},
+        traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
     },
     geometry::{Line, Vec3},
 };
@@ -29,11 +29,12 @@ static CAPSULE_PARAMS: &[Parameter; 3] = &[
     },
 ];
 
-/// A capsule primitive defined by a line and a radius.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+/// A capsule defined by a line segment and radius.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Capsule<T> {
-    line: Line<T>,
-    radius: T,
+    pub line: Line<T>,
+    pub radius: T,
 }
 
 impl<T> Capsule<T> {
@@ -59,19 +60,19 @@ impl<T> Capsule<T> {
     }
 }
 
-impl<T: Float + Send + Sync> SignedDistance<T> for Capsule<T> {
+impl<T: ModelFloat> SignedDistance<T> for Capsule<T> {
     fn signed_distance(&self, x: T, y: T, z: T) -> T {
         self.line.distance_to(Vec3::new(x, y, z)) - self.radius
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Capsule<T> {
+impl<T: ModelFloat> ImplicitFunction<T> for Capsule<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         self.signed_distance(x, y, z)
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Capsule<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for Capsule<T> {
     fn parameters(&self) -> &[Parameter] {
         CAPSULE_PARAMS
     }

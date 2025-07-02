@@ -1,24 +1,21 @@
-use num_traits::Float;
-use serde::Serialize;
-
 use crate::{
     algorithms::{self, marching_cubes},
     types::{
         computation::{
             data::{DenseField, SparseField, SparseFieldConfig},
             model::ImplicitModel,
+            traits::ModelFloat,
             ModelError,
         },
         geometry::{BoundingBox, Mesh},
     },
-    utils::math_helper::Pi,
 };
 
 /// Trait for sampling implicit models into discrete fields and extracting iso-surfaces.
 ///
 /// This trait defines the core functionality for converting implicit models into
 /// discretized fields and extracting meshes at specific iso-values.
-pub trait Sampler<T: Float + Send + Sync + Serialize + Pi, F> {
+pub trait Sampler<T: ModelFloat, F> {
     /// Sample a field with a certain resolution for the default component given by [`ImplicitModel::get_default_output`]
     ///
     /// # Arguments
@@ -100,7 +97,7 @@ pub trait Sampler<T: Float + Send + Sync + Serialize + Pi, F> {
 /// ```
 pub struct SparseSampler<T>
 where
-    T: Float + Send + Sync + Serialize + 'static + Pi,
+    T: ModelFloat + 'static,
 {
     min_val: T,
     max_val: T,
@@ -109,7 +106,7 @@ where
 
 impl<T> SparseSampler<T>
 where
-    T: Float + Send + Sync + Serialize + 'static + Pi,
+    T: ModelFloat + 'static,
 {
     fn new(
         min_val: T,
@@ -141,7 +138,7 @@ where
 /// all necessary parameters.
 pub struct SparseSamplerBuilder<T>
 where
-    T: Float + Send + Sync + Serialize + 'static + Pi,
+    T: ModelFloat,
 {
     max_val: Option<T>,
     min_val: Option<T>,
@@ -151,7 +148,7 @@ where
 
 impl<T> Default for SparseSamplerBuilder<T>
 where
-    T: Float + Send + Sync + Serialize + 'static + Pi,
+    T: ModelFloat + 'static,
 {
     fn default() -> Self {
         Self::new()
@@ -160,7 +157,7 @@ where
 
 impl<T> SparseSamplerBuilder<T>
 where
-    T: Float + Send + Sync + Serialize + 'static + Pi,
+    T: ModelFloat + 'static,
 {
     /// Creates a new builder with default values.
     pub fn new() -> Self {
@@ -218,16 +215,14 @@ where
 
 impl<T> SparseSampler<T>
 where
-    T: Float + Send + Sync + Serialize + Pi,
+    T: ModelFloat,
 {
     pub fn builder() -> SparseSamplerBuilder<T> {
         SparseSamplerBuilder::new()
     }
 }
 
-impl<T: Float + Send + Sync + Serialize + 'static + Pi + Serialize + Default>
-    Sampler<T, SparseField<T>> for SparseSampler<T>
-{
+impl<T: ModelFloat + 'static + Default> Sampler<T, SparseField<T>> for SparseSampler<T> {
     fn sample_field(&mut self, model: &ImplicitModel<T>) -> Result<&SparseField<T>, ModelError> {
         let component_tag = model
             .get_default_output()
@@ -306,7 +301,7 @@ impl<T: Float + Send + Sync + Serialize + 'static + Pi + Serialize + Default>
 /// ```
 pub struct DenseSampler<T>
 where
-    T: Float + Send + Sync + Serialize + 'static + Pi,
+    T: ModelFloat + 'static,
 {
     smoothing_iter: u32,
     smoothing_factor: T,
@@ -320,7 +315,7 @@ where
 /// all necessary parameters.
 pub struct DenseSamplerBuilder<T>
 where
-    T: Float + Send + Sync + Serialize + 'static + Pi,
+    T: ModelFloat + 'static,
 {
     cell_size: Option<T>,
     bounds: Option<BoundingBox<T>>,
@@ -331,7 +326,7 @@ where
 
 impl<T> Default for DenseSamplerBuilder<T>
 where
-    T: Float + Send + Sync + Serialize + 'static + Pi,
+    T: ModelFloat + 'static,
 {
     fn default() -> Self {
         Self::new()
@@ -340,7 +335,7 @@ where
 
 impl<T> DenseSamplerBuilder<T>
 where
-    T: Float + Send + Sync + Serialize + Pi,
+    T: ModelFloat,
 {
     /// Creates a new builder with default values.
     pub fn new() -> Self {
@@ -404,14 +399,14 @@ where
 
 impl<T> DenseSampler<T>
 where
-    T: Float + Send + Sync + Serialize + 'static + Pi,
+    T: ModelFloat + 'static,
 {
     pub fn builder() -> DenseSamplerBuilder<T> {
         DenseSamplerBuilder::new()
     }
 }
 
-impl<T: Float + Send + Sync + Serialize + Pi> Sampler<T, DenseField<T>> for DenseSampler<T> {
+impl<T: ModelFloat> Sampler<T, DenseField<T>> for DenseSampler<T> {
     fn sample_field(&mut self, model: &ImplicitModel<T>) -> Result<&DenseField<T>, ModelError> {
         let component_tag = model
             .get_default_output()

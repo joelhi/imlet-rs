@@ -4,6 +4,8 @@ use std::time::Instant;
 use hashbrown::HashMap;
 use num_traits::Float;
 use rayon::prelude::*;
+
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use super::field_iterator::{
@@ -13,9 +15,9 @@ use crate::types::computation::data::field_iterator::{
     CellIterator, CellValueIterator, DenseCellValueIterator, ValueIterator,
 };
 use crate::types::computation::model::ComputationGraph;
+use crate::types::computation::traits::ModelFloat;
 use crate::types::computation::ModelError;
 use crate::types::geometry::{BoundingBox, Vec3};
-use crate::utils::math_helper::Pi;
 
 /// 3-dimensional sparse field for scalar values.
 ///
@@ -30,7 +32,8 @@ use crate::utils::math_helper::Pi;
 ///
 /// Note: This type should not be constructed directly. Instead, use [`~SparseSampler`][crate::types::computation::data::sampler::SparseSampler]
 /// to sample and extract a sparse field from an implicit model.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct SparseField<T: Float> {
     /// The configuration for block sizes
     config: SparseFieldConfig<T>,
@@ -62,7 +65,7 @@ impl<T: Float> SparseField<T> {
     }
 }
 
-impl<T: Float + Default + Copy + Send + Sync + Serialize + 'static + Pi> SparseField<T> {
+impl<T: ModelFloat + 'static + Default> SparseField<T> {
     /// Samples the field using a computation graph.
     ///
     /// # Arguments
@@ -103,7 +106,8 @@ impl<T: Float + Default + Copy + Send + Sync + Serialize + 'static + Pi> SparseF
 }
 
 /// Block size options for the sparse field
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BlockSize {
     /// 2x2x2 blocks (8 values)
     Size2,
@@ -158,7 +162,8 @@ impl BlockSize {
 }
 
 /// Configuration for the sparse field structure
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct SparseFieldConfig<T> {
     /// The size of internal nodes.
     pub internal_size: BlockSize,
@@ -208,7 +213,8 @@ impl<T: Float> SparseFieldConfig<T> {
 }
 
 /// Root node containing pointers to other nodes
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 struct RootNode<T: Float> {
     /// Table of nodes (can be internal nodes, leaves, constants, or empty)
     table: HashMap<(usize, usize, usize), NodeHandle<T>>,
@@ -272,7 +278,8 @@ impl<T: Float> RootNode<T> {
 
 /// Handle to a node in the tree - can be a leaf with actual data, an internal node with children,
 /// a constant value for uniform regions, or empty space
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 enum NodeHandle<T> {
     /// Pointer to a leaf node containing values.
     Leaf(LeafNode<T>),
@@ -285,7 +292,8 @@ enum NodeHandle<T> {
 }
 
 /// Internal node in the sparse field tree structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 struct InternalNode<T> {
     /// The origin index of this block in the global coordinate system
     bounds: BoundingBox<T>,
@@ -367,7 +375,8 @@ impl<T: Float> InternalNode<T> {
 ///   Faster but only accurate for linear distance fields. (For example may not be valid for TPS such as gyroids.)
 /// - [`SamplingMode::CORNERS`]: Evaluates all corners to determine if node intersects the iso-surface.
 ///   More robust but computationally expensive.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub enum SamplingMode {
     /// Sample only the center point. Fast but requires linear distance fields.
     CENTRE,
@@ -375,7 +384,7 @@ pub enum SamplingMode {
     CORNERS,
 }
 
-impl<T: Float + Send + Sync + Serialize + Default + 'static + Pi> InternalNode<T> {
+impl<T: ModelFloat + Default + 'static> InternalNode<T> {
     /// Checks if a cell overlaps with the computation graph's non-zero region.
     ///
     /// # Arguments
@@ -464,7 +473,8 @@ impl<T: Float + Send + Sync + Serialize + Default + 'static + Pi> InternalNode<T
 }
 
 /// A dense block of values used as leaf nodes in the sparse field
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 struct LeafNode<T> {
     /// The bounding box of this block in index space
     bounds: BoundingBox<T>,
@@ -487,7 +497,7 @@ impl<T: Float + Default> LeafNode<T> {
     }
 }
 
-impl<T: Float + Default + Send + Sync + Serialize + Pi> LeafNode<T> {
+impl<T: ModelFloat + Default> LeafNode<T> {
     /// Samples points in this leaf node using the computation graph.
     ///
     /// # Arguments

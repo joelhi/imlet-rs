@@ -10,25 +10,19 @@ use std::any::type_name;
 ///
 /// Example implementations can be found in the [`geometry`](crate::types::geometry) module. For example, for a sphere, it would look something like this:
 ///
-///
-/// use num_traits::Float;
-/// use imlet::types::geometry::Sphere;
-/// use imlet::types::computation::traits::ImplicitFunction;
-///
 /// ```rust
-/// # use imlet::types::computation::traits::{ImplicitFunction, ImplicitComponent};
+/// # use imlet::types::computation::traits::{ModelFloat, ImplicitFunction, ImplicitComponent};
 /// # use imlet::types::geometry::Vec3;
 /// # use num_traits::Float;
-/// # use serde::{Deserialize, Serialize};
 /// # use std::marker::{Send, Sync};
 /// #
-/// # #[derive(Debug, Clone, Copy, Serialize)]
-/// # pub struct Sphere<T: Serialize>{ centre: Vec3<T>, radius: T};
+/// # #[derive(Debug, Clone, Copy)]
+/// # pub struct Sphere<T>{ centre: Vec3<T>, radius: T};
 ///
 /// // Default implementation of base trait.
-/// impl<T: Send + Sync + Serialize> ImplicitComponent<T> for Sphere<T>{};
+/// impl<T: ModelFloat> ImplicitComponent<T> for Sphere<T>{};
 ///
-/// impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for Sphere<T> {
+/// impl<T: ModelFloat> ImplicitFunction<T> for Sphere<T> {
 ///     fn eval(&self, x: T, y: T, z: T) -> T {
 ///         self.centre.distance_to_coord(x, y, z) - self.radius
 ///     }
@@ -56,18 +50,15 @@ pub trait ImplicitFunction<T>: ImplicitComponent<T> {
 /// Examples can be found in the [`computation::operations`](crate::types::computation::operations) module, for example a simple addition would look like this:
 ///
 /// ```rust
-///
-/// # use imlet::types::computation::traits::{ImplicitOperation, ImplicitComponent};
-/// # use num_traits::Float;
-/// # use serde::{Deserialize, Serialize};
-/// # #[derive(Debug, Clone, Copy, Serialize)]
+/// # use imlet::types::computation::traits::{ModelFloat, ImplicitOperation, ImplicitComponent};
+/// # #[derive(Debug, Clone, Copy)]
 /// # pub struct Add;
 ///
 /// static INPUT_NAMES: [&str; 2] = ["First Number", "Second Number"];
-/// // Default implementation of base trait.
+/// // Default implementation of base trait    .
 /// impl<T> ImplicitComponent<T> for Add{};
 ///
-/// impl<T: Float> ImplicitOperation<T> for Add {
+/// impl<T: ModelFloat> ImplicitOperation<T> for Add {
 ///     fn eval(&self, inputs: &[T]) -> T {
 ///         inputs[0] + inputs[1]
 ///     }
@@ -88,12 +79,11 @@ pub trait ImplicitOperation<T>: ImplicitComponent<T> {
     /// Communicates to the model the number of inputs required for this operation.
     fn inputs(&self) -> &[&str];
 }
-
 /// Trait for general functionality of an implicit component.
 ///
 /// The trait offers the ability to expose parameters, which can be manipulated at runtime.
 /// By default nothing is exposed and nothing has to be implemented, but it is recommended to implement the `name` function.
-pub trait ImplicitComponent<T>: Sync + Send + erased_serde::Serialize {
+pub trait ImplicitComponent<T>: Root {
     /// Declare variable parameters for the component.
     ///
     /// If no parameters are applicable, this can just return an empty array.
@@ -118,3 +108,23 @@ pub trait ImplicitComponent<T>: Sync + Send + erased_serde::Serialize {
         type_name::<Self>()
     }
 }
+
+// 2) Serde helper: only adds erased_serde::Serialize when the `serde` feature is on
+#[cfg(feature = "serde")]
+#[doc(hidden)]
+pub trait SerdeComponent: erased_serde::Serialize {}
+#[cfg(feature = "serde")]
+impl<T: erased_serde::Serialize> SerdeComponent for T {}
+
+#[cfg(not(feature = "serde"))]
+#[doc(hidden)]
+pub trait SerdeComponent {}
+#[cfg(not(feature = "serde"))]
+#[doc(hidden)]
+impl<T> SerdeComponent for T {}
+
+// 3) Root alias: always present, but expands to whatever the two helpers demand
+#[doc(hidden)]
+pub trait Root: super::Concurrency + SerdeComponent {}
+#[doc(hidden)]
+impl<T: super::Concurrency + SerdeComponent> Root for T {}

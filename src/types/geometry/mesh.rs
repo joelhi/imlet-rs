@@ -1,25 +1,29 @@
 use hashbrown::HashSet;
+use std::fmt::Debug;
+use std::time::Instant;
+
 use num_traits::Float;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+use crate::types::geometry::{BoundingBox, Transform, Vec3};
+
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::IntoParallelRefMutIterator;
 use rayon::iter::ParallelIterator;
-use serde::Deserialize;
-use serde::Serialize;
 
+use crate::types::computation::traits::ModelFloat;
 use crate::utils;
 
-use super::BoundingBox;
 use super::Line;
 use super::Octree;
 use super::SpatialHashGrid;
-use super::Transform;
 use super::Triangle;
-use super::Vec3;
-use std::time::Instant;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// Indexed triangle mesh.
+/// A triangle mesh.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct Mesh<T> {
     vertices: Vec<Vec3<T>>,
     faces: Vec<[usize; 3]>,
@@ -275,7 +279,7 @@ impl<T: Float> Mesh<T> {
     }
 }
 
-impl<T: Float + Send + Sync> Mesh<T> {
+impl<T: ModelFloat> Mesh<T> {
     /// Create a indexed mesh from a list of triangle objects.
     ///
     /// # Arguments

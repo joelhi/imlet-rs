@@ -1,14 +1,15 @@
-use std::{error::Error, fmt::Debug};
+use std::error::Error;
 
 use log::{error, info};
-use num_traits::Float;
+
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::{
     types::{
         computation::{
             model::{Data, DataType, Parameter},
-            traits::{ImplicitComponent, ImplicitFunction},
+            traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
         },
         geometry::{BoundingBox, Octree, Transform, Triangle, Vec3},
     },
@@ -37,24 +38,24 @@ const MAX_TREE_DEPTH: usize = 12;
 /// let mesh_tag = model.add_function("Mesh", mesh_file).unwrap();
 ///
 /// ```
-#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MeshFile<T> {
     /// Storing the origin of the file.
     pub file_path: Option<String>,
     /// Option to center the geometry
     pub center: bool,
     /// Geometry to use for signed distance computation
-    #[serde(skip_serializing)]
+    #[cfg_attr(feature = "serde", serde(skip_serializing))]
     pub geometry_data: Option<Octree<Triangle<T>, T>>,
 }
 
-impl<T: Float + Send + Sync> Default for MeshFile<T> {
+impl<T: ModelFloat> Default for MeshFile<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: Float + Send + Sync> MeshFile<T> {
+impl<T: ModelFloat> MeshFile<T> {
     /// Create a new unset reference to some mesh data in a file.
     pub fn new() -> Self {
         Self {
@@ -125,7 +126,7 @@ static MESH_FILE_PARAMETERS: &[Parameter] = &[
     },
 ];
 
-impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for MeshFile<T> {
+impl<T: ModelFloat> ImplicitFunction<T> for MeshFile<T> {
     fn eval(&self, x: T, y: T, z: T) -> T {
         if let Some(geometry_data) = &self.geometry_data {
             geometry_data.signed_distance(&Vec3::new(x, y, z))
@@ -135,7 +136,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitFunction<T> for MeshFile<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for MeshFile<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for MeshFile<T> {
     fn parameters(&self) -> &[Parameter] {
         MESH_FILE_PARAMETERS
     }

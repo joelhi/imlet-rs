@@ -2,11 +2,12 @@ use std::fmt::Debug;
 
 use log::error;
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
     model::{Data, DataType, Parameter},
-    traits::{ImplicitComponent, ImplicitOperation},
+    traits::{ImplicitComponent, ImplicitOperation, ModelFloat},
 };
 
 static INPUT_NAMES: [&str; 2] = ["First Number", "Second Number"];
@@ -16,7 +17,8 @@ static INPUT_NAMES: [&str; 2] = ["First Number", "Second Number"];
 /// This operation takes two inputs.
 /// * First value (a)
 /// * Second value (b)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Multiply {}
 
 impl Default for Multiply {
@@ -53,7 +55,8 @@ impl<T: Float> ImplicitComponent<T> for Multiply {
 /// This operation takes two inputs.
 /// * First value (a)
 /// * Second value (b)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Add {}
 
 impl Default for Add {
@@ -90,7 +93,8 @@ impl<T: Float> ImplicitComponent<T> for Add {
 /// This operation takes two inputs.
 /// * First value (a)
 /// * Second value (b)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Subtract {}
 
 impl Default for Subtract {
@@ -127,7 +131,8 @@ impl<T> ImplicitComponent<T> for Subtract {
 /// This operation takes two inputs.
 /// * First value (a)
 /// * Second value (b)
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Divide {}
 
 impl Default for Divide {
@@ -163,9 +168,11 @@ impl<T: Float> ImplicitComponent<T> for Divide {
 /// Operation to perform a linear interpolation between two values -> a + t*(b-a).
 ///
 /// This operation takes two inptus.
+/// This operation takes two inptus.
 /// * First value to interpolate (a)
 /// * Second value to interpolate (b)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct LinearInterpolation<T> {
     factor: T,
 }
@@ -192,7 +199,7 @@ impl<T: Float> LinearInterpolation<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for LinearInterpolation<T> {
+impl<T: ModelFloat> ImplicitOperation<T> for LinearInterpolation<T> {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0] + self.factor * (inputs[1] - inputs[0])
     }
@@ -202,7 +209,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for LinearInterpol
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for LinearInterpolation<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for LinearInterpolation<T> {
     fn parameters(&self) -> &[Parameter] {
         LINEAR_INTERPOLATION_PARAMETERS
     }
@@ -238,7 +245,8 @@ impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for LinearInterpol
 /// * First value to interpolate (a)
 /// * Second value to interpolate (b)
 /// * Interpolation factor.
-#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug)]
 pub struct VariableLinearInterpolation {}
 
 static VAR_LINEAR_INTERPOLATION_INPUTS: &[&str] = &["First Value", "Second Value", "Factor"];
@@ -256,7 +264,7 @@ impl VariableLinearInterpolation {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for VariableLinearInterpolation {
+impl<T: ModelFloat> ImplicitOperation<T> for VariableLinearInterpolation {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0] + inputs[2] * (inputs[1] - inputs[0])
     }
@@ -266,13 +274,14 @@ impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for VariableLinear
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for VariableLinearInterpolation {
+impl<T: ModelFloat> ImplicitComponent<T> for VariableLinearInterpolation {
     fn name(&self) -> &'static str {
         "VariableLinearInterpolation"
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub struct Remap<T> {
     from_min: T,
     from_max: T,
@@ -308,7 +317,7 @@ impl<T: Float> Default for Remap<T> {
 }
 
 impl<T: Float> Remap<T> {
-    /// Create a new Remap operation with default range [0,1] -> [0,1].
+    /// Create a new Remap operation with default range \[0,1\] -> \[0,1\].
     pub fn new() -> Self {
         Self {
             from_min: T::zero(),
@@ -339,7 +348,7 @@ impl<T: Float> Remap<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Remap<T> {
+impl<T: ModelFloat> ImplicitOperation<T> for Remap<T> {
     fn eval(&self, inputs: &[T]) -> T {
         let value = inputs[0];
         // First normalize to [0,1]
@@ -353,7 +362,7 @@ impl<T: Float + Send + Sync + Serialize> ImplicitOperation<T> for Remap<T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize> ImplicitComponent<T> for Remap<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for Remap<T> {
     fn parameters(&self) -> &[Parameter] {
         REMAP_PARAMETERS
     }

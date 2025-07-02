@@ -2,15 +2,19 @@ use core::str;
 use std::{
     fmt::Display,
     fs,
-    io::{self, BufRead, Read, Write},
+    io::{self, BufRead, Write},
     path::Path,
 };
 
 use num_traits::Float;
-use serde::{de::DeserializeOwned, Serialize};
+
+#[cfg(feature = "serde")]
+use crate::types::computation::{model::ImplicitModel, traits::ModelFloat};
+#[cfg(feature = "serde")]
+use serde::de::DeserializeOwned;
 
 use crate::types::{
-    computation::{data::field_iterator::ValueIterator, model::ImplicitModel},
+    computation::data::field_iterator::ValueIterator,
     geometry::{Mesh, Vec3},
 };
 
@@ -62,8 +66,6 @@ pub fn write_obj_file<T: Display>(mesh: &Mesh<T>, file_name: &str) -> io::Result
 
 use std::fs::File;
 
-use super::math_helper::Pi;
-
 /// Read a mesh from an .obj file.
 ///
 /// # Arguments
@@ -71,7 +73,7 @@ use super::math_helper::Pi;
 /// * `file_path` - Relative path to the file.
 /// * `flip_yz` - Option to flip the y and z directions. Imlet uses z as up-direction so if the mesh has y, you may want to flip it.
 /// * `read_normals` - Option to read the normals from the `.obj`. If not smooth vertex normals will be calculated automatically. Using `false` is advised if the mesh is to be used as a distance field.
-pub fn parse_obj_file<T: Float + Send + Sync>(
+pub fn parse_obj_file<T: Float>(
     file_path: &str,
     flip_yz: bool,
     read_normals: bool,
@@ -163,7 +165,7 @@ pub fn parse_obj_file<T: Float + Send + Sync>(
     if read_normals {
         mesh.set_normals(&normals);
     } else {
-        mesh.compute_vertex_normals_par();
+        mesh.compute_vertex_normals();
     }
 
     log::info!(
@@ -210,7 +212,8 @@ where
 }
 
 /// Write an imlet model to a text file as json.
-pub fn write_model_to_file<T: Float + Send + Sync + Serialize + 'static + Pi>(
+#[cfg(feature = "serde")]
+pub fn write_model_to_file<T: ModelFloat>(
     model: &ImplicitModel<T>,
     file_name: &str,
 ) -> io::Result<()> {
@@ -239,11 +242,12 @@ pub fn write_model_to_file<T: Float + Send + Sync + Serialize + 'static + Pi>(
 /// An error is something went wrong, such as if the file can't be found or the deserialization failed.
 ///
 /// Returns Ok() with the model if the read was successful.
-pub fn read_model_from_file<
-    T: Float + Send + Sync + Serialize + 'static + Pi + DeserializeOwned,
->(
+#[cfg(feature = "serde")]
+pub fn read_model_from_file<T: ModelFloat + 'static + DeserializeOwned>(
     file_path: &str,
 ) -> Result<ImplicitModel<T>, Box<dyn std::error::Error>> {
+    use std::io::Read;
+
     let path = Path::new(file_path);
 
     let extension = path.extension().ok_or_else(|| {
@@ -267,9 +271,9 @@ pub fn read_model_from_file<
 }
 
 #[cfg(test)]
+#[cfg(feature = "serde")]
 mod tests {
     use super::*;
-
     #[test]
     fn test_deserialize_simple_model() {
         let model: ImplicitModel<f32> =

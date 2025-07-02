@@ -1,23 +1,21 @@
-use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    types::computation::{
-        model::ModelComponent,
-        operations::{
-            math::{
-                Add, Divide, LinearInterpolation, Multiply, Remap, Subtract,
-                VariableLinearInterpolation,
-            },
-            shape::{BooleanDifference, BooleanIntersection, BooleanUnion, Offset, Thickness},
+use crate::types::computation::{
+    model::ModelComponent,
+    operations::{
+        math::{
+            Add, Divide, LinearInterpolation, Multiply, Remap, Subtract,
+            VariableLinearInterpolation,
         },
-        traits::ImplicitOperation,
+        shape::{BooleanDifference, BooleanIntersection, BooleanUnion, Offset, Thickness},
     },
-    utils::math_helper::Pi,
+    traits::{ImplicitOperation, ModelFloat},
 };
 
 /// Enum listing valid operation components.
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Copy, Clone)]
 pub enum OperationComponent {
     Add,
     Subtract,
@@ -37,9 +35,7 @@ impl OperationComponent {
     /// Create an instance of the component with default values.
     ///
     /// Used when creating components from a UI or other interface.
-    pub fn create_default<T: Float + Send + Sync + 'static + Serialize + Pi>(
-        &self,
-    ) -> ModelComponent<T> {
+    pub fn create_default<T: ModelFloat + 'static>(&self) -> ModelComponent<T> {
         let op: Box<dyn ImplicitOperation<T>> = match self {
             // Maths
             OperationComponent::Add => Box::new(Add::new()),
@@ -71,6 +67,8 @@ pub const OPERATION_COMPONENTS: &[OperationComponent] = &[
     OperationComponent::Multiply,
     OperationComponent::Divide,
     OperationComponent::LinearInterpolation,
+    OperationComponent::VariableLinearInterpolation,
+    OperationComponent::Remap,
     OperationComponent::VariableLinearInterpolation,
     OperationComponent::Remap,
     // Shape

@@ -4,12 +4,14 @@ use std::{
 };
 
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use super::Transform;
 
 /// Vector or Point with 3 coordinates.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy)]
 pub struct Vec3<T> {
     pub x: T,
     pub y: T,
@@ -365,6 +367,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "serde")]
     fn test_serialize_vec3() {
         let v1 = Vec3::new(1.0, 2.0, 3.0);
 

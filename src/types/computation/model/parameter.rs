@@ -1,6 +1,10 @@
-use crate::types::geometry::Vec3;
+use std::fmt::Debug;
+
 use num_traits::Float;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+
+use crate::types::geometry::Vec3;
 
 /// Defines an input parameter to change the value of a [`ModelComponent`](super::ModelComponent).
 ///
@@ -178,7 +182,8 @@ pub enum DataType {
 }
 
 /// Enum which holds the various types of data that can be fed to a component parameter.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone)]
 pub enum Data<T> {
     /// A floating point value. Should be [`f32`] or [`f64`]
     Value(T),
