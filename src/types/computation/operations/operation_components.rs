@@ -1,4 +1,3 @@
-use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -11,9 +10,8 @@ use crate::{
             },
             shape::{BooleanDifference, BooleanIntersection, BooleanUnion, Offset, Thickness},
         },
-        traits::ImplicitOperation,
+        traits::{ImplicitOperation, ModelFloat},
     },
-    utils::math_helper::Pi,
 };
 
 /// Enum listing valid operation components.

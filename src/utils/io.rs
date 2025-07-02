@@ -7,7 +7,7 @@ use std::{
 };
 
 use num_traits::Float;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::de::DeserializeOwned;
 
 use crate::types::{
     computation::{data::field_iterator::ValueIterator, model::ImplicitModel, traits::ModelFloat},
@@ -61,8 +61,6 @@ pub fn write_obj_file<T: Display>(mesh: &Mesh<T>, file_name: &str) -> io::Result
 }
 
 use std::fs::File;
-
-use super::math_helper::Pi;
 
 /// Read a mesh from an .obj file.
 ///
@@ -163,7 +161,7 @@ pub fn parse_obj_file<T: Float>(
     if read_normals {
         mesh.set_normals(&normals);
     } else {
-        mesh.compute_vertex_normals_par();
+        mesh.compute_vertex_normals();
     }
 
     log::info!(

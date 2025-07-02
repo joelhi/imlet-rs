@@ -1,7 +1,7 @@
 use std::{marker::PhantomData, str::FromStr};
 
 use num_traits::Float;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize};
 
 use crate::{
     types::{
@@ -12,7 +12,6 @@ use crate::{
         },
         geometry::*,
     },
-    utils::math_helper::Pi,
 };
 
 impl<T: ModelFloat> serde::Serialize for dyn ImplicitFunction<T> {

@@ -1,7 +1,6 @@
 use std::fmt::Debug;
 
 use log::error;
-use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{

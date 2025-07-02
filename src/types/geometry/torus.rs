@@ -1,7 +1,6 @@
 use std::fmt::Debug;
 
 use log::error;
-use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{
@@ -95,6 +94,7 @@ impl<T: ModelFloat> ImplicitComponent<T> for Torus<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use num_traits::Float;
 
     #[test]
     fn test_torus_centre_distance_value() {

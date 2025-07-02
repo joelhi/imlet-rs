@@ -4,8 +4,7 @@ use num_traits::Float;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    types::computation::traits::{ImplicitFunction, ImplicitOperation, ModelFloat},
-    utils::math_helper::Pi,
+    types::computation::traits::{ImplicitFunction, ImplicitOperation, ModelFloat}
 };
 
 use super::{Data, DataType, Parameter};

@@ -36,7 +36,7 @@ impl<'a, T: ModelFloat + 'static > ComputationGraph<'a, T> {
     }
 }
 
-impl<T: Float + Send + Sync + Serialize + 'static + Pi> ComputationGraph<'_, T> {
+impl<T: ModelFloat + 'static> ComputationGraph<'_, T> {
     thread_local! {
         static COMPONENT_VALUES: RefCell<ComponentValues> = RefCell::new(ComponentValues::new());
     }
