@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::computation::{
     model::{Data, DataType, Parameter},
-    traits::{ImplicitComponent, ImplicitFunction},
+    traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
 };
 
 use super::{traits::SignedDistance, Vec3};
