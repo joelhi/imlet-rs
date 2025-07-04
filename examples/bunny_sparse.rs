@@ -35,21 +35,20 @@ pub fn main() {
         .add_operation(
             "Output",
             BooleanIntersection::new(),
-            Some(&[&mesh_tag, &offset_gyroid]),
-        )
+            Some(&[&mesh_tag, &offset_gyroid]))
         .unwrap();
 
     let mut sampler = SparseSampler::builder()
         .with_bounds(bounds)
+        .with_tolerance(1E-3)
         .with_config(
             SparseFieldConfig::default()
                 .set_cell_size(cell_size)
-                .set_sampling_mode(SamplingMode::CORNERS),
-        )
+                .set_sampling_mode(SamplingMode::CORNERS))
         .build()
         .expect("Should be able to build the sampler.");
 
-    sampler.sample_field(&model).expect("Sampling should work.");
+    sampler.sample_field_for_component(&model, &mesh_tag).expect("Sampling should work.");
 
     let mesh = sampler
         .iso_surface(0.0)
