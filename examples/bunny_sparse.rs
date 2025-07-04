@@ -14,7 +14,7 @@ use imlet::{
 pub fn main() {
     utils::logging::init_debug();
 
-    let cell_size = 0.5;
+    let cell_size = 0.25;
     let mesh_file = MeshFile::from_path("assets/geometry/bunny.obj").unwrap();
     let bounds = mesh_file.bounds().unwrap().offset(cell_size);
 
@@ -24,7 +24,7 @@ pub fn main() {
     let mesh_tag = model.add_function("Mesh", mesh_file).unwrap();
 
     let gyroid_tag = model
-        .add_function("Gyroid", Gyroid::with_equal_spacing(15.0, true))
+        .add_function("Gyroid", Gyroid::with_equal_spacing(15.0, false))
         .unwrap();
 
     let offset_gyroid = model
@@ -35,7 +35,8 @@ pub fn main() {
         .add_operation(
             "Output",
             BooleanIntersection::new(),
-            Some(&[&mesh_tag, &offset_gyroid]))
+            Some(&[&mesh_tag, &offset_gyroid]),
+        )
         .unwrap();
 
     let mut sampler = SparseSampler::builder()
@@ -44,11 +45,13 @@ pub fn main() {
         .with_config(
             SparseFieldConfig::default()
                 .set_cell_size(cell_size)
-                .set_sampling_mode(SamplingMode::CORNERS))
+                .set_leaf_size(imlet::types::computation::data::BlockSize::Size8)
+                .set_sampling_mode(SamplingMode::CORNERS),
+        )
         .build()
         .expect("Should be able to build the sampler.");
 
-    sampler.sample_field_for_component(&model, &mesh_tag).expect("Sampling should work.");
+    sampler.sample_field(&model).expect("Sampling should work.");
 
     let mesh = sampler
         .iso_surface(0.0)
