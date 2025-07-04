@@ -43,6 +43,7 @@ impl<T: Float> SpatialHashGrid<T> {
     /// If the point is in a bin already populated, it will return the index of the existing point.
     /// If the bin is empty, it will add the point and return the index of the new point.
     pub fn add_point(&mut self, v: Vec3<T>) -> usize {
+        // TODO: Make more robust
         let hash = self.spatial_hash(v);
         match self.map.get_mut(&hash) {
             Some(index) => {
