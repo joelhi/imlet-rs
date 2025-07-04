@@ -286,7 +286,11 @@ impl<T: ModelFloat> Mesh<T> {
     /// * `triangles` - slice of triangles to create mesh from.
     /// * `compute_normals` - If true will compute the smooth mesh normals for the vertices.
     /// * `tolerance` - Optional tolerance for merging vertices. If [`None`] will use default provided by [`Vec3::default_tolerance`]
-    pub fn from_triangles(triangles: &[Triangle<T>], compute_normals: bool, tolerance: Option<T>) -> Mesh<T> {
+    pub fn from_triangles(
+        triangles: &[Triangle<T>],
+        compute_normals: bool,
+        tolerance: Option<T>,
+    ) -> Mesh<T> {
         let tol = tolerance.unwrap_or(Vec3::default_tolerance());
         let before = Instant::now();
         let mut faces: Vec<[usize; 3]> = Vec::with_capacity(triangles.len());
@@ -319,7 +323,6 @@ impl<T: ModelFloat> Mesh<T> {
         );
 
         if compute_normals {
-            log::info!("Computing normals");
             mesh.compute_vertex_normals_par();
         }
 

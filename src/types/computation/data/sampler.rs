@@ -198,7 +198,7 @@ where
         self
     }
 
-    /// Sets the tolerance for the sampler. 
+    /// Sets the tolerance for the sampler.
     /// Mainly used for merging vertices in the iso-surface generation.
     pub fn with_tolerance(mut self, tolerance: T) -> Self {
         self.tolerance = tolerance;
@@ -393,7 +393,7 @@ where
         self
     }
 
-    /// Sets the tolerance for the sampler. 
+    /// Sets the tolerance for the sampler.
     /// Mainly used for merging vertices in the iso-surface generation.
     pub fn with_tolerance(mut self, tolerance: T) -> Self {
         self.tolerance = tolerance;
@@ -415,7 +415,7 @@ where
             smoothing_factor: self.smoothing_factor,
             padding: self.padding,
             dense_field,
-            tolerance: self.tolerance
+            tolerance: self.tolerance,
         })
     }
 }
