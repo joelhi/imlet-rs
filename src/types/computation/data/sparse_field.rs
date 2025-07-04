@@ -769,7 +769,10 @@ impl<T: Float + 'static> CellValueIterator<T> for SparseField<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{computation::model::ImplicitModel, geometry::Vec3};
+    use crate::types::{
+        computation::{data::sampler::{Sampler, SparseSampler}, model::ImplicitModel},
+        geometry::{Sphere, Vec3},
+    };
 
     fn create_test_bounds() -> BoundingBox<f32> {
         BoundingBox::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(10.0, 10.0, 10.0))
@@ -940,5 +943,49 @@ mod tests {
         field.init_bounds(&bounds);
         let result = model.compile("nonexistent");
         assert!(result.is_err(), "Compiling invalid component should fail");
+    }
+
+    #[test]
+    fn sample_sparse_field_multiple_root_nodes() {
+        let cell_size = 0.5;
+        let size: f32 = 16.0;
+        let sphere = Sphere::at_coord(0., 0., 0., 0.9 * size);
+        let bounds = BoundingBox::new(
+            Vec3 {
+                x: -size,
+                y: -size,
+                z: -size,
+            },
+            Vec3 {
+                x: size,
+                y: size,
+                z: size,
+            },
+        );
+
+        let mut model = ImplicitModel::new();
+        let _ = model.add_function("sphere", sphere).unwrap();
+
+        let config = SparseFieldConfig::default()
+            .set_cell_size(cell_size)
+            .set_internal_size(BlockSize::Size32)
+            .set_leaf_size(BlockSize::Size2);
+
+        let mut sampler = SparseSampler::builder()
+            .with_bounds(bounds)
+            .with_config(config)
+            .build()
+            .unwrap();
+
+        sampler.sample_field(&model).unwrap();
+        let mesh = sampler.iso_surface(0.0).unwrap();
+
+
+        let num_f = mesh.faces().len();
+        let num_v = mesh.vertices().len();
+        let expected_f = 31208;
+        let expected_v = 15606;
+        assert_eq!(expected_v, num_v, "Expected {expected_v} vertices but found {num_v}");
+        assert_eq!(expected_f, num_f, "Expected {expected_f} faces but found {num_f}");
     }
 }
