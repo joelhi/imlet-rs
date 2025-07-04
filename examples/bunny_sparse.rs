@@ -14,7 +14,7 @@ use imlet::{
 pub fn main() {
     utils::logging::init_debug();
 
-    let cell_size = 0.5;
+    let cell_size = 0.25;
     let mesh_file = MeshFile::from_path("assets/geometry/bunny.obj").unwrap();
     let bounds = mesh_file.bounds().unwrap().offset(cell_size);
 
@@ -24,7 +24,7 @@ pub fn main() {
     let mesh_tag = model.add_function("Mesh", mesh_file).unwrap();
 
     let gyroid_tag = model
-        .add_function("Gyroid", Gyroid::with_equal_spacing(15.0, true))
+        .add_function("Gyroid", Gyroid::with_equal_spacing(15.0, false))
         .unwrap();
 
     let offset_gyroid = model
@@ -41,9 +41,11 @@ pub fn main() {
 
     let mut sampler = SparseSampler::builder()
         .with_bounds(bounds)
+        .with_tolerance(1E-3)
         .with_config(
             SparseFieldConfig::default()
                 .set_cell_size(cell_size)
+                .set_leaf_size(imlet::types::computation::data::BlockSize::Size8)
                 .set_sampling_mode(SamplingMode::CORNERS),
         )
         .build()

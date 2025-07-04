@@ -67,16 +67,13 @@
 //!     .unwrap();
 //!
 //! // Sample a sparse field and generate an iso-surface.
-//! let config = SparseFieldConfig {
-//!     internal_size: BlockSize::Size64,       // Internal node subdivision.
-//!     leaf_size: BlockSize::Size4,            // Leaf node subdivision.
-//!     sampling_mode: SamplingMode::CORNERS,    // Sampling logic for Leaf node exclusion.
-//!     cell_size,                              // Sampling resolution.
-//! };
+//! let config = SparseFieldConfig::default()
+//!     .set_cell_size(cell_size)
+//!     .set_sampling_mode(SamplingMode::CORNERS);
 //!
 //! let mut sampler = SparseSampler::builder()
-//!     .with_bounds(bounds)                    // Set the bounds for the sampling.
-//!     .with_config(config)             // Set the sparse field parameters.
+//!     .with_bounds(bounds)                        // Set the bounds for the sampling.
+//!     .with_config(config)                        // Set the sparse field parameters.
 //!     .build()
 //!     .expect("Should be able to build the sampler.");
 //!
@@ -89,7 +86,6 @@
 //!     .expect("Extracting iso-surface should work.");
 //!
 //! write_obj_file(&mesh, "interpolation_example").unwrap();
-//!
 //!
 //! ```
 //!

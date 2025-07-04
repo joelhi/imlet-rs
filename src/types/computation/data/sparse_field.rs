@@ -1,6 +1,8 @@
 use std::fmt::Debug;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Instant;
 
+use crate::utils;
 use hashbrown::HashMap;
 use num_traits::Float;
 use rayon::prelude::*;
@@ -88,6 +90,7 @@ impl<T: ModelFloat + 'static + Default> SparseField<T> {
             return Err(ModelError::Custom("Space not initialized.".to_owned()));
         }
 
+        let mut count: AtomicUsize = 0.into();
         for (_, node) in self.root.table.iter_mut() {
             if let NodeHandle::Internal(internal) = node {
                 internal.sample_cells(
@@ -96,12 +99,39 @@ impl<T: ModelFloat + 'static + Default> SparseField<T> {
                     max_val,
                     self.config.leaf_size,
                     self.config.sampling_mode,
+                    &mut count,
                 );
             }
         }
 
-        log::info!("Sparse field generated in {:.2?}", before.elapsed());
+        log::info!(
+            "Sparse field generated with {} sampled ({:.2?}% of active) points in {:.2?}",
+            utils::math_helper::format_integer(count.load(Ordering::Relaxed)),
+            100.0
+                * (count.load(Ordering::Relaxed) as f64
+                    / (self.n_active_nodes() * self.config.leaf_size.total_size()) as f64),
+            before.elapsed()
+        );
         Ok(())
+    }
+
+    /// Compute the total number of active leaf nodes.
+    pub fn n_active_nodes(&self) -> usize {
+        self.root
+            .table
+            .values()
+            .filter_map(|node| {
+                if let NodeHandle::Internal(internal) = node {
+                    Some(internal)
+                } else {
+                    None
+                }
+            })
+            .flat_map(|internal| internal.children.iter())
+            .filter(|child| {
+                matches!(child, NodeHandle::Leaf(_)) || matches!(child, NodeHandle::Constant(_, _))
+            })
+            .count()
     }
 }
 
@@ -438,6 +468,7 @@ impl<T: ModelFloat + Default + 'static> InternalNode<T> {
     /// * `max_val` - The maximum value threshold.
     /// * `leaf_size` - The size configuration for leaf nodes.
     /// * `sampling_mode` - The mode to use for sampling points.
+    /// * `count` - Counter for the total number of sampled points.
     pub(crate) fn sample_cells(
         &mut self,
         graph: &ComputationGraph<T>,
@@ -445,6 +476,7 @@ impl<T: ModelFloat + Default + 'static> InternalNode<T> {
         max_val: T,
         leaf_size: BlockSize,
         sampling_mode: SamplingMode,
+        count: &mut AtomicUsize,
     ) {
         let bounds: Vec<_> = (0..self.children.len())
             .map(|index| self.cell_bounds(index))
@@ -460,6 +492,7 @@ impl<T: ModelFloat + Default + 'static> InternalNode<T> {
                         let mut leaf = LeafNode::new(cell_bounds, leaf_size);
                         leaf.sample_points(graph);
                         *child = NodeHandle::Leaf(leaf);
+                        count.fetch_add(leaf_size.total_size(), Ordering::Relaxed);
                     } else {
                         let centre = cell_bounds.centroid();
                         *child = NodeHandle::Constant(
@@ -769,7 +802,13 @@ impl<T: Float + 'static> CellValueIterator<T> for SparseField<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{computation::model::ImplicitModel, geometry::Vec3};
+    use crate::types::{
+        computation::{
+            data::sampler::{Sampler, SparseSampler},
+            model::ImplicitModel,
+        },
+        geometry::{Sphere, Vec3},
+    };
 
     fn create_test_bounds() -> BoundingBox<f32> {
         BoundingBox::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(10.0, 10.0, 10.0))
@@ -940,5 +979,54 @@ mod tests {
         field.init_bounds(&bounds);
         let result = model.compile("nonexistent");
         assert!(result.is_err(), "Compiling invalid component should fail");
+    }
+
+    #[test]
+    fn sample_sparse_field_multiple_root_nodes() {
+        let cell_size = 0.5;
+        let size: f32 = 16.0;
+        let sphere = Sphere::at_coord(0., 0., 0., 0.9 * size);
+        let bounds = BoundingBox::new(
+            Vec3 {
+                x: -size,
+                y: -size,
+                z: -size,
+            },
+            Vec3 {
+                x: size,
+                y: size,
+                z: size,
+            },
+        );
+
+        let mut model = ImplicitModel::new();
+        let _ = model.add_function("sphere", sphere).unwrap();
+
+        let config = SparseFieldConfig::default()
+            .set_cell_size(cell_size)
+            .set_internal_size(BlockSize::Size32)
+            .set_leaf_size(BlockSize::Size2);
+
+        let mut sampler = SparseSampler::builder()
+            .with_bounds(bounds)
+            .with_config(config)
+            .build()
+            .unwrap();
+
+        sampler.sample_field(&model).unwrap();
+        let mesh = sampler.iso_surface(0.0).unwrap();
+
+        let num_f = mesh.faces().len();
+        let num_v = mesh.vertices().len();
+        let expected_f = 31208;
+        let expected_v = 15606;
+        assert_eq!(
+            expected_v, num_v,
+            "Expected {expected_v} vertices but found {num_v}"
+        );
+        assert_eq!(
+            expected_f, num_f,
+            "Expected {expected_f} faces but found {num_f}"
+        );
     }
 }

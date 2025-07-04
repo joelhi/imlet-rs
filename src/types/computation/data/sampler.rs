@@ -7,7 +7,7 @@ use crate::{
             traits::ModelFloat,
             ModelError,
         },
-        geometry::{BoundingBox, Mesh},
+        geometry::{BoundingBox, Mesh, Vec3},
     },
 };
 
@@ -101,6 +101,7 @@ where
 {
     min_val: T,
     max_val: T,
+    tolerance: T,
     field: SparseField<T>,
 }
 
@@ -111,6 +112,7 @@ where
     fn new(
         min_val: T,
         max_val: T,
+        tolerance: T,
         bounds: BoundingBox<T>,
         sparse_config: SparseFieldConfig<T>,
     ) -> Self {
@@ -119,6 +121,7 @@ where
         Self {
             min_val,
             max_val,
+            tolerance,
             field,
         }
     }
@@ -142,6 +145,7 @@ where
 {
     max_val: Option<T>,
     min_val: Option<T>,
+    tolerance: T,
     bounds: Option<BoundingBox<T>>,
     sparse_config: Option<SparseFieldConfig<T>>,
 }
@@ -164,6 +168,7 @@ where
         Self {
             max_val: Some(SparseSampler::default_max()),
             min_val: Some(SparseSampler::default_min()),
+            tolerance: Vec3::default_tolerance(),
             bounds: None,
             sparse_config: None,
         }
@@ -193,6 +198,13 @@ where
         self
     }
 
+    /// Sets the tolerance for the sampler.
+    /// Mainly used for merging vertices in the iso-surface generation.
+    pub fn with_tolerance(mut self, tolerance: T) -> Self {
+        self.tolerance = tolerance;
+        self
+    }
+
     /// Builds the sampler with the configured parameters.
     ///
     /// # Returns
@@ -208,7 +220,7 @@ where
 
         let min_val = self.min_val.unwrap_or(SparseSampler::default_min());
         let max_val = self.max_val.unwrap_or(SparseSampler::default_max());
-        let field = SparseSampler::new(min_val, max_val, bounds, sparse_config);
+        let field = SparseSampler::new(min_val, max_val, self.tolerance, bounds, sparse_config);
         Ok(field)
     }
 }
@@ -254,7 +266,7 @@ impl<T: ModelFloat + 'static + Default> Sampler<T, SparseField<T>> for SparseSam
             ));
         }
         let tris = marching_cubes::generate_iso_surface(&self.field, iso_val);
-        Ok(Mesh::from_triangles(&tris, true))
+        Ok(Mesh::from_triangles(&tris, true, Some(self.tolerance)))
     }
 
     fn field(&self) -> &SparseField<T> {
@@ -307,6 +319,7 @@ where
     smoothing_factor: T,
     padding: bool,
     dense_field: DenseField<T>,
+    tolerance: T,
 }
 
 /// A builder for configuring and creating dense samplers.
@@ -322,6 +335,7 @@ where
     smoothing_iter: u32,
     smoothing_factor: T,
     padding: bool,
+    tolerance: T,
 }
 
 impl<T> Default for DenseSamplerBuilder<T>
@@ -345,6 +359,7 @@ where
             smoothing_iter: 0,
             smoothing_factor: T::from(0.5).unwrap(),
             padding: false,
+            tolerance: Vec3::default_tolerance(),
         }
     }
 
@@ -378,6 +393,13 @@ where
         self
     }
 
+    /// Sets the tolerance for the sampler.
+    /// Mainly used for merging vertices in the iso-surface generation.
+    pub fn with_tolerance(mut self, tolerance: T) -> Self {
+        self.tolerance = tolerance;
+        self
+    }
+
     /// Builds the sampler with the configured parameters.
     ///
     /// # Returns
@@ -393,6 +415,7 @@ where
             smoothing_factor: self.smoothing_factor,
             padding: self.padding,
             dense_field,
+            tolerance: self.tolerance,
         })
     }
 }
@@ -438,7 +461,7 @@ impl<T: ModelFloat> Sampler<T, DenseField<T>> for DenseSampler<T> {
 
     fn iso_surface(&self, iso_val: T) -> Result<Mesh<T>, ModelError> {
         let tris = algorithms::marching_cubes::generate_iso_surface(&self.dense_field, iso_val);
-        Ok(Mesh::from_triangles(&tris, true))
+        Ok(Mesh::from_triangles(&tris, true, Some(self.tolerance)))
     }
 
     fn field(&self) -> &DenseField<T> {
