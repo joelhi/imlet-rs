@@ -58,7 +58,7 @@ impl<T> Mesh<T> {
 
     /// Returns the optional vertex normals of the mesh.
     pub fn normals(&self) -> Option<&[Vec3<T>]> {
-        self.normals.as_ref().map(|n| n.as_slice())
+        self.normals.as_deref()
     }
 
     /// Total number of vertices

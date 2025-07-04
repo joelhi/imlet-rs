@@ -492,7 +492,7 @@ impl<T: ModelFloat + Default + 'static> InternalNode<T> {
                         let mut leaf = LeafNode::new(cell_bounds, leaf_size);
                         leaf.sample_points(graph);
                         *child = NodeHandle::Leaf(leaf);
-                        count.fetch_add(leaf_size.total_size().into(), Ordering::Relaxed);
+                        count.fetch_add(leaf_size.total_size(), Ordering::Relaxed);
                     } else {
                         let centre = cell_bounds.centroid();
                         *child = NodeHandle::Constant(
