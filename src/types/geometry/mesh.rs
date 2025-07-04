@@ -47,18 +47,18 @@ impl<T> Mesh<T> {
     }
 
     /// Returns the vertices of the mesh
-    pub fn vertices(&self) -> &Vec<Vec3<T>> {
+    pub fn vertices(&self) -> &[Vec3<T>] {
         &self.vertices
     }
 
     /// Returns the faces of the mesh.
-    pub fn faces(&self) -> &Vec<[usize; 3]> {
+    pub fn faces(&self) -> &[[usize; 3]] {
         &self.faces
     }
 
     /// Returns the optional vertex normals of the mesh.
-    pub fn normals(&self) -> Option<&Vec<Vec3<T>>> {
-        self.normals.as_ref()
+    pub fn normals(&self) -> Option<&[Vec3<T>]> {
+        self.normals.as_ref().map(|n| n.as_slice())
     }
 
     /// Total number of vertices
@@ -285,10 +285,12 @@ impl<T: ModelFloat> Mesh<T> {
     /// # Arguments
     /// * `triangles` - slice of triangles to create mesh from.
     /// * `compute_normals` - If true will compute the smooth mesh normals for the vertices.
-    pub fn from_triangles(triangles: &[Triangle<T>], compute_normals: bool) -> Mesh<T> {
+    /// * `tolerance` - Optional tolerance for merging vertices. If [`None`] will use default provided by [`Vec3::default_tolerance`]
+    pub fn from_triangles(triangles: &[Triangle<T>], compute_normals: bool, tolerance: Option<T>) -> Mesh<T> {
+        let tol = tolerance.unwrap_or(Vec3::default_tolerance());
         let before = Instant::now();
         let mut faces: Vec<[usize; 3]> = Vec::with_capacity(triangles.len());
-        let mut grid = SpatialHashGrid::new();
+        let mut grid = SpatialHashGrid::with_tolerance(tol);
 
         let mut mesh = Mesh::new();
         for triangle in triangles {
