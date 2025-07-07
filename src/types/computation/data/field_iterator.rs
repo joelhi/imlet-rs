@@ -233,7 +233,7 @@ impl<'a, T> DenseCellValueIterator<'a, T> {
     ///
     /// * `data` - The data buffer. The size must match the total number of points.
     /// * `point_count` - The number of points in each dimension (x, y, z).
-    pub fn new(data: &'a[T], point_count: (usize, usize, usize)) -> Self {
+    pub fn new(data: &'a [T], point_count: (usize, usize, usize)) -> Self {
         Self {
             data,
             current: (0, 0, 0),
@@ -324,23 +324,20 @@ mod tests {
 
     #[test]
     fn test_point_grid_iterator() {
-        let bounds = BoundingBox::new(
-            Vec3::new(0.0, 0.0, 0.0),
-            Vec3::new(1.0, 1.0, 1.0),
-        );
+        let bounds = BoundingBox::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0));
         let point_counts = (2, 2, 2);
         let iter = PointGridIter::new(bounds, point_counts);
-        
+
         let points: Vec<Vec3<f64>> = iter.collect();
-        
+
         // Should have 8 points total (2x2x2)
         assert_eq!(points.len(), 8);
-        
+
         // Check first point (0,0,0)
         assert_float_eq(points[0].x, 0.0);
         assert_float_eq(points[0].y, 0.0);
         assert_float_eq(points[0].z, 0.0);
-        
+
         // Check last point (1,1,1)
         assert_float_eq(points[7].x, 1.0);
         assert_float_eq(points[7].y, 1.0);
@@ -349,18 +346,15 @@ mod tests {
 
     #[test]
     fn test_cell_grid_iterator() {
-        let bounds = BoundingBox::new(
-            Vec3::new(0.0, 0.0, 0.0),
-            Vec3::new(1.0, 1.0, 1.0),
-        );
+        let bounds = BoundingBox::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0));
         let cell_counts = (1, 1, 1);
         let iter = CellGridIter::new(bounds, cell_counts);
-        
+
         let cells: Vec<BoundingBox<f64>> = iter.collect();
-        
+
         // Should have 1 cell (1x1x1)
         assert_eq!(cells.len(), 1);
-        
+
         // Check cell bounds
         assert_float_eq(cells[0].min.x, 0.0);
         assert_float_eq(cells[0].min.y, 0.0);
@@ -374,17 +368,17 @@ mod tests {
     fn test_dense_cell_value_iterator() {
         // Create a 2x2x2 grid of points (8 points total)
         let data = vec![
-            0.0, 1.0, 2.0, 3.0,  // z=0 layer
-            4.0, 5.0, 6.0, 7.0,  // z=1 layer
+            0.0, 1.0, 2.0, 3.0, // z=0 layer
+            4.0, 5.0, 6.0, 7.0, // z=1 layer
         ];
         let point_count = (2, 2, 2);
         let iter = DenseCellValueIterator::new(&data, point_count);
-        
+
         let cell_values: Vec<[f64; 8]> = iter.collect();
-        
+
         // Should have 1 cell (1x1x1)
         assert_eq!(cell_values.len(), 1);
-        
+
         // Check cell corner values
         // The order should be:
         // z=0 layer: (0,0), (1,0), (1,1), (0,1)
