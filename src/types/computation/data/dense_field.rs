@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 use std::time::Instant;
 
+use hashbrown::HashSet;
 use num_traits::Float;
 use rayon::prelude::*;
 #[cfg(feature = "serde")]
@@ -80,7 +81,7 @@ impl<T> DenseField<T> {
     /// # Returns
     ///
     /// An array of 8 indices corresponding to the corners of the cell in the data buffer.
-    fn cell_ids(&self, i: usize, j: usize, k: usize) -> [usize; 8] {
+    pub(crate) fn cell_ids(&self, i: usize, j: usize, k: usize) -> [usize; 8] {
         [
             self.point_index1d(i, j, k),
             self.point_index1d(i + 1, j, k),
@@ -194,11 +195,11 @@ impl<T: Float> DenseField<T> {
     /// # Returns
     ///
     /// A new [`DenseField`] initialized with zeros and dimensions derived from the bounds and cell size.
-    pub fn from_bounds(bounds: &BoundingBox<T>, cell_size: T) -> Self {
+    pub fn from_bounds(bounds: BoundingBox<T>, cell_size: T) -> Self {
         DenseField::new(
             bounds.min,
             cell_size,
-            DenseField::point_count(bounds, cell_size),
+            DenseField::point_count(&bounds, cell_size),
         )
     }
 
@@ -549,6 +550,50 @@ impl<T: ModelFloat + 'static> DenseField<T> {
         );
     }
 
+    /// Evaluate the computation graph over a discretized domain for a selection of specific point ids.
+    ///
+    /// # Arguments
+    ///
+    /// * `graph` - The computation graph to evaluate.
+    /// * `ids` - The point ids to sample.
+    ///
+    /// This method evaluates the computation graph at each point in the field in parallel.
+    /// The results are stored in the field's data buffer.
+    pub(crate) fn sample_selected_from_graph(
+        &mut self,
+        graph: &ComputationGraph<T>,
+        ids: &HashSet<usize>,
+    ) {
+        let before = Instant::now();
+
+        log::debug!(
+            "Evaluating {} points from model with {}x{}x{} points",
+            ids.len(),
+            self.n.i,
+            self.n.j,
+            self.n.k
+        );
+
+        let n = self.n;
+        self.data
+            .par_iter_mut()
+            .enumerate()
+            .filter(|(id, _)| ids.contains(id))
+            .for_each(|(index, value)| {
+                let (i, j, k) = index3d_from_index1d(index, n.i, n.j, n.k);
+                *value = graph.evaluate_at_coord(
+                    self.origin.x
+                        + self.cell_size * T::from(i).expect("Failed to convert number to T"),
+                    self.origin.y
+                        + self.cell_size * T::from(j).expect("Failed to convert number to T"),
+                    self.origin.z
+                        + self.cell_size * T::from(k).expect("Failed to convert number to T"),
+                );
+            });
+
+        log::debug!("{} points computed in {:.2?}", ids.len(), before.elapsed());
+    }
+
     /// Performs a laplacian smoothing operation on the field data using parallel iteration.
     ///
     /// The value of each point will be updated based on the average of the adjacent points.
@@ -588,7 +633,7 @@ impl<T: ModelFloat + 'static> DenseField<T> {
 impl<T: Float> PointIterator<T> for DenseField<T> {
     /// Returns an iterator that yields all point coordinates in the field.
     fn iter_points(&self) -> PointGridIter<T> {
-        PointGridIter::new(self.bounds, self.n.into())
+        self.iter_grid()
     }
 
     type Iter<'a>
@@ -605,7 +650,7 @@ impl<T: Float> GridIterator<T> for DenseField<T> {
 
     /// Returns an iterator that yields all grid point coordinates in the field.
     fn iter_grid<'a>(&'a self) -> Self::GridIter<'a> {
-        PointGridIter::new(self.bounds, self.n.into())
+        self.bounds.iter_point_grid(self.n)
     }
 }
 

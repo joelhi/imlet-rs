@@ -11,7 +11,7 @@ use imlet::{
 pub fn main() {
     utils::logging::init_info();
 
-    let cell_size = 0.5;
+    let cell_size = 0.25;
     let mesh_file = MeshFile::from_path("assets/geometry/bunny.obj").unwrap();
     let bounds = mesh_file.bounds().unwrap().offset(cell_size);
     // Build model

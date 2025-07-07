@@ -5,9 +5,13 @@ use num_traits::Float;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::types::computation::{
-    model::{Data, DataType, Parameter},
-    traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
+use crate::types::{
+    computation::{
+        data::field_iterator::PointGridIter,
+        model::{Data, DataType, Parameter},
+        traits::{ImplicitComponent, ImplicitFunction, ModelFloat},
+    },
+    geometry::Vec3i,
 };
 
 use super::{
@@ -216,6 +220,15 @@ impl<T: Float> BoundingBox<T> {
         } else {
             dist
         }
+    }
+
+    /// Iterate a point grid covering the domain of the box.
+    ///
+    /// # Arguments
+    ///
+    /// * `n` - Number of points in (x, y, z) directions.
+    pub fn iter_point_grid(&self, n: Vec3i) -> PointGridIter<T> {
+        PointGridIter::new(*self, n.into())
     }
 
     /// Offset the box equally in all directions.
