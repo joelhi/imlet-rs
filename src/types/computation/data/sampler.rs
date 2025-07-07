@@ -16,19 +16,18 @@ use crate::{
 /// This trait defines the core functionality for converting implicit models into
 /// discretized fields and extracting meshes at specific iso-values.
 pub trait Sampler<T: ModelFloat, F> {
-    /// Sample a field with a certain resolution for the default component given by [`ImplicitModel::get_default_output`]
+    /// Sample a field for the default component given by [`ImplicitModel::get_default_output`]
     ///
     /// # Arguments
     ///
-    /// * `cell_size` - The size of each cell in the discretized field.
-    /// * `component_tag` - The tag of the model component to evaluate.
+    /// * `model` - The model to sample from.
     fn sample_field(&mut self, model: &ImplicitModel<T>) -> Result<&F, ModelError>;
 
-    /// Sample a field with a certain resolution from one of the model components.
+    /// Sample a field from one of the model components.
     ///
     /// # Arguments
     ///
-    /// * `cell_size` - The size of each cell in the discretized field.
+    /// * `model` - The model to sample from.
     /// * `component_tag` - The tag of the model component to evaluate.
     fn sample_field_for_component(
         &mut self,
@@ -36,9 +35,7 @@ pub trait Sampler<T: ModelFloat, F> {
         component_tag: &str,
     ) -> Result<&F, ModelError>;
 
-    /// Access the field data if present.
-    ///
-    /// Returns the current field.
+    /// Access the field data.
     fn field(&self) -> &F;
 
     /// Extract an iso-surface for a certain iso value.
@@ -49,7 +46,7 @@ pub trait Sampler<T: ModelFloat, F> {
     ///
     /// # Returns
     ///
-    /// A mesh representing the iso-surface, or an error if the field hasn't been computed.
+    /// A mesh representing the iso-surface, or an error if the field hasn't been computed or the computation failed.
     fn iso_surface(&self, iso_val: T) -> Result<Mesh<T>, ModelError>;
 }
 
@@ -173,13 +170,13 @@ where
         }
     }
 
-    /// Sets the maximum value threshold for the field.
+    /// Sets the maximum threshold value for the field.
     pub fn with_max_val(mut self, max_val: T) -> Self {
         self.max_val = Some(max_val);
         self
     }
 
-    /// Sets the minimum value threshold for the field.
+    /// Sets the minimum threshold value for the field.
     pub fn with_min_val(mut self, min_val: T) -> Self {
         self.min_val = Some(min_val);
         self

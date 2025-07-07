@@ -11,7 +11,7 @@ use super::{
     BoundingBox, Vec3,
 };
 
-/// Octree used for storing object and accelerating closest point and distance queries.
+/// Octree used for storing objects and accelerating closest point and distance queries.
 ///
 /// The octree can be built for any geometric object which implements the relevant traits.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -25,10 +25,6 @@ pub struct Octree<Q, T> {
 
 impl<Q, T: Float> Octree<Q, T> {
     /// Create a new empty octree. To build the octree, add some objects and call [`Octree::build`].
-    /// # Arguments
-    ///
-    /// * `max_depth` - Maximum allowed recursive depth when constructing the tree.
-    /// * `max_objects` - Maximum number of objects per leaf node.
     pub fn new() -> Self {
         Self {
             objects: Vec::new(),

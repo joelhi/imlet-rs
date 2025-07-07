@@ -163,7 +163,7 @@ impl<T: Float> Mesh<T> {
         self.normals = Some(vertex_normals);
 
         log::info!(
-            "!!Mesh normals computed for {} points in {:.2?}",
+            "Mesh normals computed for {} points in {:.2?}",
             utils::math_helper::format_integer(self.num_vertices()),
             before.elapsed()
         );

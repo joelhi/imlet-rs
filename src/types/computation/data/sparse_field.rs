@@ -58,12 +58,11 @@ impl<T: Float> SparseField<T> {
         }
     }
 
-    /// Initializes the field's bounds and creates the necessary internal nodes.
+    /// Initializes the field's bounds and activates the necessary internal nodes.
     ///
     /// # Arguments
     ///
     /// * `bounds` - The bounding box defining the field's extents.
-    /// * `cell_size` - The size of each cell in the field.
     pub fn init_bounds(&mut self, bounds: &BoundingBox<T>) {
         self.root.init_bounds(bounds, &self.config);
     }
@@ -130,7 +129,9 @@ impl<T: ModelFloat + 'static + Default> SparseField<T> {
     }
 }
 
-/// Block size options for the sparse field
+/// Block size options for the nodes of a sparse field. 
+/// 
+/// The block size defines a grid of `n`x`n`x`n` points or cells. 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BlockSize {
