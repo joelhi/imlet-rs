@@ -58,12 +58,11 @@ impl<T: Float> SparseField<T> {
         }
     }
 
-    /// Initializes the field's bounds and creates the necessary internal nodes.
+    /// Initializes the field's bounds and activates the necessary internal nodes.
     ///
     /// # Arguments
     ///
     /// * `bounds` - The bounding box defining the field's extents.
-    /// * `cell_size` - The size of each cell in the field.
     pub fn init_bounds(&mut self, bounds: &BoundingBox<T>) {
         self.root.init_bounds(bounds, &self.config);
     }
@@ -130,7 +129,9 @@ impl<T: ModelFloat + 'static + Default> SparseField<T> {
     }
 }
 
-/// Block size options for the sparse field
+/// Block size options for the nodes of a sparse field.
+///
+/// The block size defines a grid of `n`x`n`x`n` points or cells.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BlockSize {
@@ -251,7 +252,6 @@ impl<T: Float> RootNode<T> {
     /// # Arguments
     ///
     /// * `bounds` - The bounding box defining the field's extents.
-    /// * `cell_size` - The size of each cell in the field.
     /// * `config` - The configuration specifying block sizes and sampling mode.
     fn init_bounds(&mut self, bounds: &BoundingBox<T>, config: &SparseFieldConfig<T>) {
         let steps = config.internal_size.value() * (config.leaf_size.value() - 1);
@@ -395,11 +395,10 @@ impl<T: ModelFloat + Default + 'static> InternalNode<T> {
     ///
     /// # Arguments
     ///
-    /// * `graph` - The computation graph to evaluate.
+    /// * `cell_bounds` - The bounds of the cell to check.
+    /// * `cell_values` - The values of the field at the cell corners.
     /// * `min_val` - The minimum value threshold.
     /// * `max_val` - The maximum value threshold.
-    /// * `cell_bounds` - The bounds of the cell to check.
-    /// * `sampling_mode` - The mode to use for sampling points.
     ///
     /// # Returns
     ///
@@ -410,6 +409,7 @@ impl<T: ModelFloat + Default + 'static> InternalNode<T> {
         min_val: T,
         max_val: T,
     ) -> bool {
+        // Check min / max bounds.
         let mut cell_min = cell_values[0];
         let mut cell_max = cell_values[0];
         for &val in &cell_values[1..] {
@@ -418,16 +418,7 @@ impl<T: ModelFloat + Default + 'static> InternalNode<T> {
         }
 
         let half_diag = cell_bounds.min.distance_to_vec3(&cell_bounds.max) / T::from(2).unwrap();
-        if cell_max + half_diag < min_val || cell_min - half_diag > max_val {
-            return false;
-        }
-
-        for &val in cell_values {
-            if val - half_diag <= max_val && val + half_diag >= min_val {
-                return true;
-            }
-        }
-        false
+        !(cell_max + half_diag < min_val || cell_min - half_diag > max_val)
     }
 
     /// Samples the cells in this node using the computation graph.
@@ -438,7 +429,6 @@ impl<T: ModelFloat + Default + 'static> InternalNode<T> {
     /// * `min_val` - The minimum value threshold.
     /// * `max_val` - The maximum value threshold.
     /// * `leaf_size` - The size configuration for leaf nodes.
-    /// * `sampling_mode` - The mode to use for sampling points.
     /// * `count` - Counter to be incremented for each sampled point.
     pub(crate) fn sample_cells(
         &mut self,
@@ -906,36 +896,6 @@ mod tests {
         // Test cell iterator
         let cells: Vec<_> = field.iter_cells().collect();
         assert!(!cells.is_empty(), "Cell iterator should yield cells");
-    }
-
-    #[test]
-    fn test_sampling_modes() {
-        // Test CENTRE mode
-        let mut field_centre = SparseField::new(SparseFieldConfig {
-            internal_size: BlockSize::Size8,
-            leaf_size: BlockSize::Size4,
-            cell_size: 1.0,
-        });
-        let bounds = create_test_bounds();
-        let model = create_test_model();
-
-        field_centre.init_bounds(&bounds);
-        let graph = model.compile("constant").unwrap();
-        field_centre.sample_from_graph(&graph, -0.1, 0.1).unwrap();
-
-        // Test CORNERS mode
-        let mut field_corners = SparseField::new(SparseFieldConfig {
-            internal_size: BlockSize::Size8,
-            leaf_size: BlockSize::Size4,
-            cell_size: 1.0,
-        });
-
-        field_corners.init_bounds(&bounds);
-        field_corners.sample_from_graph(&graph, -0.1, 0.1).unwrap();
-
-        // Both modes should produce valid fields
-        assert!(!field_centre.root.table.is_empty());
-        assert!(!field_corners.root.table.is_empty());
     }
 
     #[test]

@@ -7,7 +7,7 @@ use imlet::{
         functions::{Gyroid, MeshFile, XYZValue},
         model::ImplicitModel,
         operations::{
-            math::{Remap, VariableLinearInterpolation},
+            math::{Remap, VariableLerp},
             shape::{BooleanIntersection, Thickness},
         },
     },
@@ -48,7 +48,7 @@ pub fn main() {
     let interp_factor_tag = model
         .add_operation(
             "factor",
-            Remap::with_source_domain(bounds.min.z, bounds.max.z),
+            Remap::normalize_domain(bounds.min.z, bounds.max.z),
             Some(&[&z_coord_tag]),
         )
         .unwrap();
@@ -56,7 +56,7 @@ pub fn main() {
     let _ = model
         .add_operation(
             "ShapeInterpolation",
-            VariableLinearInterpolation::new(),
+            VariableLerp::new(),
             Some(&[&mesh_tag, &union_tag, &interp_factor_tag]),
         )
         .unwrap();

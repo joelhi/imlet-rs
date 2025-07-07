@@ -220,10 +220,26 @@ impl<T: Float> Iterator for CellGridIter<T> {
 ///
 /// This struct provides efficient iteration over cell values in a dense field,
 /// returning the eight corner values for each cell.
-pub struct DenseCellValueIterator<'a, T: Float> {
+pub struct DenseCellValueIterator<'a, T> {
     pub(crate) data: &'a [T],
     pub(crate) current: (usize, usize, usize),
     pub(crate) point_count: (usize, usize, usize),
+}
+
+impl<'a, T> DenseCellValueIterator<'a, T> {
+    /// Creates a new dense cell value iterator.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - The data buffer. The size must match the total number of points.
+    /// * `point_count` - The number of points in each dimension (x, y, z).
+    pub fn new(data: &'a [T], point_count: (usize, usize, usize)) -> Self {
+        Self {
+            data,
+            current: (0, 0, 0),
+            point_count,
+        }
+    }
 }
 
 impl<T: Float> DenseCellValueIterator<'_, T> {
@@ -293,5 +309,81 @@ impl<'a, T: Float> Iterator for DenseCellValueIterator<'a, T> {
         }
 
         Some(values)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const EPSILON: f64 = 1e-10;
+
+    fn assert_float_eq(a: f64, b: f64) {
+        assert!((a - b).abs() < EPSILON, "Expected {b} but got {a}");
+    }
+
+    #[test]
+    fn test_point_grid_iterator() {
+        let bounds = BoundingBox::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0));
+        let point_counts = (2, 2, 2);
+        let iter = PointGridIter::new(bounds, point_counts);
+
+        let points: Vec<Vec3<f64>> = iter.collect();
+
+        // Should have 8 points total (2x2x2)
+        assert_eq!(points.len(), 8);
+
+        // Check first point (0,0,0)
+        assert_float_eq(points[0].x, 0.0);
+        assert_float_eq(points[0].y, 0.0);
+        assert_float_eq(points[0].z, 0.0);
+
+        // Check last point (1,1,1)
+        assert_float_eq(points[7].x, 1.0);
+        assert_float_eq(points[7].y, 1.0);
+        assert_float_eq(points[7].z, 1.0);
+    }
+
+    #[test]
+    fn test_cell_grid_iterator() {
+        let bounds = BoundingBox::new(Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 1.0));
+        let cell_counts = (1, 1, 1);
+        let iter = CellGridIter::new(bounds, cell_counts);
+
+        let cells: Vec<BoundingBox<f64>> = iter.collect();
+
+        // Should have 1 cell (1x1x1)
+        assert_eq!(cells.len(), 1);
+
+        // Check cell bounds
+        assert_float_eq(cells[0].min.x, 0.0);
+        assert_float_eq(cells[0].min.y, 0.0);
+        assert_float_eq(cells[0].min.z, 0.0);
+        assert_float_eq(cells[0].max.x, 1.0);
+        assert_float_eq(cells[0].max.y, 1.0);
+        assert_float_eq(cells[0].max.z, 1.0);
+    }
+
+    #[test]
+    fn test_dense_cell_value_iterator() {
+        // Create a 2x2x2 grid of points (8 points total)
+        let data = vec![
+            0.0, 1.0, 2.0, 3.0, // z=0 layer
+            4.0, 5.0, 6.0, 7.0, // z=1 layer
+        ];
+        let point_count = (2, 2, 2);
+        let iter = DenseCellValueIterator::new(&data, point_count);
+
+        let cell_values: Vec<[f64; 8]> = iter.collect();
+
+        // Should have 1 cell (1x1x1)
+        assert_eq!(cell_values.len(), 1);
+
+        // Check cell corner values
+        // The order should be:
+        // z=0 layer: (0,0), (1,0), (1,1), (0,1)
+        // z=1 layer: (0,0), (1,0), (1,1), (0,1)
+        let expected = [0.0, 1.0, 3.0, 2.0, 4.0, 5.0, 7.0, 6.0];
+        assert_eq!(cell_values[0], expected);
     }
 }

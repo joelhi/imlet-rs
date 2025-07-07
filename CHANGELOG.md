@@ -1,6 +1,7 @@
 # imlet - Changelog
 
 ## Latest
+- Documentation and other minor fixes. ([#36](https://github.com/joelhi/imlet-rs/pull/36))
 - Improve sparse field sampling performance and remove sampling mode parameter. ([#35](https://github.com/joelhi/imlet-rs/pull/35))
 - Add join tolerance parameter to sampling options. ([#34](https://github.com/joelhi/imlet-rs/pull/34))
 - Clean up trait bounds and move serialization behind a feature flag. ([#33](https://github.com/joelhi/imlet-rs/pull/33))
