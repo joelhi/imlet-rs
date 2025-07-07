@@ -152,7 +152,7 @@ impl<T: Float> Iterator for PointGridIter<T> {
 
 /// Iterator for traversing cells in a regular 3D grid.
 ///
-/// This struct provides efficient iteration over cells arranged in a regular grid pattern,
+/// This struct provides iteration over cells arranged in a regular grid pattern,
 /// computing their bounding boxes based on the grid's bounds and cell counts.
 pub struct CellGridIter<T> {
     bounds: BoundingBox<T>,
