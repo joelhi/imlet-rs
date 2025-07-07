@@ -82,8 +82,7 @@ The model is then evaluated over a 3D space and saved as a mesh in an OBJ file.
 
  // Sample a sparse field and generate an iso-surface.
  let config = SparseFieldConfig::default()
-     .set_cell_size(cell_size)
-     .set_sampling_mode(SamplingMode::CORNERS);
+     .set_cell_size(cell_size);
 
  let mut sampler = SparseSampler::builder()
      .with_bounds(bounds)                        // Set the bounds for the sampling.

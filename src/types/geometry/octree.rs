@@ -24,7 +24,8 @@ pub struct Octree<Q, T> {
 }
 
 impl<Q, T: Float> Octree<Q, T> {
-    /// Create a new empty octree. To build the octree, add some objects and call [`Octree::build`].
+    /// Create a new empty octree. 
+    /// To build the octree, add some objects and call [`Octree::build`].
     pub fn new() -> Self {
         Self {
             objects: Vec::new(),

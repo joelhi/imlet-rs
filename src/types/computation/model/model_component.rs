@@ -35,7 +35,7 @@ pub enum ModelComponent<T: ModelFloat + 'static> {
 }
 
 impl<T: ModelFloat> ModelComponent<T> {
-    /// Evaluate the output of the component
+    /// Evaluate the output of the compoP1nent
     ///
     /// # Arguments
     ///
