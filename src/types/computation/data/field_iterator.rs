@@ -227,7 +227,7 @@ pub struct DenseCellValueIterator<'a, T> {
 }
 
 impl<'a, T> DenseCellValueIterator<'a, T> {
-    /// Creates dense cell value iterator.
+    /// Creates a new dense cell value iterator.
     ///
     /// # Arguments
     ///
