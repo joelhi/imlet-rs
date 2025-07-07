@@ -2,8 +2,10 @@ use std::fmt::Debug;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Instant;
 
+use crate::types::computation::data::DenseField;
 use crate::utils;
-use hashbrown::HashMap;
+use crate::utils::math_helper::index3d_from_index1d;
+use hashbrown::{HashMap, HashSet};
 use num_traits::Float;
 use rayon::prelude::*;
 
@@ -19,7 +21,7 @@ use crate::types::computation::data::field_iterator::{
 use crate::types::computation::model::ComputationGraph;
 use crate::types::computation::traits::ModelFloat;
 use crate::types::computation::ModelError;
-use crate::types::geometry::{BoundingBox, Vec3};
+use crate::types::geometry::{BoundingBox, Vec3, Vec3i};
 
 /// 3-dimensional sparse field for scalar values.
 ///
@@ -93,19 +95,12 @@ impl<T: ModelFloat + 'static + Default> SparseField<T> {
         let mut count: AtomicUsize = 0.into();
         for (_, node) in self.root.table.iter_mut() {
             if let NodeHandle::Internal(internal) = node {
-                internal.sample_cells(
-                    graph,
-                    min_val,
-                    max_val,
-                    self.config.leaf_size,
-                    self.config.sampling_mode,
-                    &mut count,
-                );
+                internal.sample_cells(graph, min_val, max_val, self.config.leaf_size, &mut count);
             }
         }
 
         log::info!(
-            "Sparse field generated with {} sampled ({:.2?}% of active) points in {:.2?}",
+            "Sparse field generated with {} sampled points ({:.2?}% of active) in {:.2?}",
             utils::math_helper::format_integer(count.load(Ordering::Relaxed)),
             100.0
                 * (count.load(Ordering::Relaxed) as f64
@@ -199,8 +194,6 @@ pub struct SparseFieldConfig<T> {
     pub internal_size: BlockSize,
     /// The size of leaf nodes.
     pub leaf_size: BlockSize,
-    /// Sampling mode.
-    pub sampling_mode: SamplingMode,
     /// Cell size
     pub cell_size: T,
 }
@@ -210,7 +203,6 @@ impl<T: Float> Default for SparseFieldConfig<T> {
         Self {
             internal_size: BlockSize::Size32,
             leaf_size: BlockSize::Size8,
-            sampling_mode: SamplingMode::CENTRE,
             cell_size: T::one(),
         }
     }
@@ -232,12 +224,6 @@ impl<T: Float> SparseFieldConfig<T> {
     /// Set the leaf node size of the config. Returns self for chaining.
     pub fn set_leaf_size(mut self, leaf_size: BlockSize) -> Self {
         self.leaf_size = leaf_size;
-        self
-    }
-
-    /// Set the sampling mode of the config. Returns self for chaining.
-    pub fn set_sampling_mode(mut self, sampling_mode: SamplingMode) -> Self {
-        self.sampling_mode = sampling_mode;
         self
     }
 }
@@ -345,6 +331,11 @@ impl<T: Float> InternalNode<T> {
         }
     }
 
+    /// Size of the grid in any dimension.
+    fn cells_per_dim(&self) -> usize {
+        (self.children.len() as f64).cbrt() as usize
+    }
+
     /// Initializes the cells within this node that intersect with the given bounds.
     ///
     /// # Arguments
@@ -376,7 +367,7 @@ impl<T: Float> InternalNode<T> {
     ///
     /// The bounding box of the specified cell.
     pub fn cell_bounds(&self, index: usize) -> BoundingBox<T> {
-        let cells_per_dim = (self.children.len() as f64).cbrt() as usize;
+        let cells_per_dim = self.cells_per_dim();
         let size = self.bounds.dimensions();
         let dx = size.0 / T::from(cells_per_dim).unwrap();
         let dy = size.1 / T::from(cells_per_dim).unwrap();
@@ -399,21 +390,6 @@ impl<T: Float> InternalNode<T> {
     }
 }
 
-/// Controls how internal nodes in the sparse field are evaluated to determine if they should be filled.
-///
-/// - [`SamplingMode::CENTRE`]: Evaluates only the center point and estimates coverage based on the size.
-///   Faster but only accurate for linear distance fields. (For example may not be valid for TPS such as gyroids.)
-/// - [`SamplingMode::CORNERS`]: Evaluates all corners to determine if node intersects the iso-surface.
-///   More robust but computationally expensive.
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, Clone, Copy)]
-pub enum SamplingMode {
-    /// Sample only the center point. Fast but requires linear distance fields.
-    CENTRE,
-    /// Sample all corners. More robust but slower.
-    CORNERS,
-}
-
 impl<T: ModelFloat + Default + 'static> InternalNode<T> {
     /// Checks if a cell overlaps with the computation graph's non-zero region.
     ///
@@ -429,34 +405,29 @@ impl<T: ModelFloat + Default + 'static> InternalNode<T> {
     ///
     /// `true` if the cell overlaps with the non-zero region, `false` otherwise.
     fn is_overlapping(
-        graph: &ComputationGraph<T>,
+        cell_bounds: &BoundingBox<T>,
+        cell_values: &[T; 8],
         min_val: T,
         max_val: T,
-        cell_bounds: &BoundingBox<T>,
-        sampling_mode: SamplingMode,
     ) -> bool {
-        match sampling_mode {
-            SamplingMode::CENTRE => {
-                // Sample only the centre. Assumes a linear & valid distance field.
-                let centre = cell_bounds.centroid();
-                let half_diag = cell_bounds.min.distance_to_vec3(&centre);
-                let centre_val = graph.evaluate_at_coord(centre.x, centre.y, centre.z);
-                centre_val - half_diag <= max_val && centre_val + half_diag >= min_val
-            }
-            SamplingMode::CORNERS => {
-                let corners = cell_bounds.corners();
-                let half_diag =
-                    cell_bounds.min.distance_to_vec3(&cell_bounds.max) / T::from(2).unwrap();
-                for pt in corners.iter() {
-                    let corner_val = graph.evaluate_at_coord(pt.x, pt.y, pt.z);
-                    if corner_val - half_diag <= max_val && corner_val + half_diag >= min_val {
-                        return true;
-                    }
-                }
+        let mut cell_min = cell_values[0];
+        let mut cell_max = cell_values[0];
+        for &val in &cell_values[1..] {
+            cell_min = cell_min.min(val);
+            cell_max = cell_max.max(val);
+        }
 
-                false
+        let half_diag = cell_bounds.min.distance_to_vec3(&cell_bounds.max) / T::from(2).unwrap();
+        if cell_max + half_diag < min_val || cell_min - half_diag > max_val {
+            return false;
+        }
+
+        for &val in cell_values {
+            if val - half_diag <= max_val && val + half_diag >= min_val {
+                return true;
             }
         }
+        false
     }
 
     /// Samples the cells in this node using the computation graph.
@@ -468,40 +439,76 @@ impl<T: ModelFloat + Default + 'static> InternalNode<T> {
     /// * `max_val` - The maximum value threshold.
     /// * `leaf_size` - The size configuration for leaf nodes.
     /// * `sampling_mode` - The mode to use for sampling points.
-    /// * `count` - Counter for the total number of sampled points.
+    /// * `count` - Counter to be incremented for each sampled point.
     pub(crate) fn sample_cells(
         &mut self,
         graph: &ComputationGraph<T>,
         min_val: T,
         max_val: T,
         leaf_size: BlockSize,
-        sampling_mode: SamplingMode,
         count: &mut AtomicUsize,
     ) {
         let bounds: Vec<_> = (0..self.children.len())
             .map(|index| self.cell_bounds(index))
             .collect();
 
+        let corner_values = self.sample_corner_values(graph);
         self.children
             .par_iter_mut()
             .enumerate()
             .for_each(|(index, child)| {
                 if !matches!(child, NodeHandle::Empty) {
                     let cell_bounds = bounds[index];
-                    if Self::is_overlapping(graph, min_val, max_val, &cell_bounds, sampling_mode) {
+                    let (i, j, k) = corner_values.cell_index3d(index);
+                    let cell_corner_vals = corner_values.cell_values(i, j, k);
+                    if Self::is_overlapping(&cell_bounds, &cell_corner_vals, min_val, max_val) {
                         let mut leaf = LeafNode::new(cell_bounds, leaf_size);
                         leaf.sample_points(graph);
                         *child = NodeHandle::Leaf(leaf);
                         count.fetch_add(leaf_size.total_size(), Ordering::Relaxed);
                     } else {
-                        let centre = cell_bounds.centroid();
                         *child = NodeHandle::Constant(
                             cell_bounds,
-                            graph.evaluate_at_coord(centre.x, centre.y, centre.z),
+                            Self::average_corners(&cell_corner_vals),
                         );
                     }
                 }
             });
+    }
+
+    /// Compute the average value of the eight corners.
+    fn average_corners(corners: &[T; 8]) -> T {
+        let sum = corners.iter().fold(T::zero(), |acc, &x| acc + x);
+        sum / T::from(8.0).unwrap()
+    }
+
+    /// Sample the function value at each cell corner.
+    fn sample_corner_values(&self, graph: &ComputationGraph<T>) -> DenseField<T> {
+        let n = self.cells_per_dim();
+        let cell_size = self.bounds.dimensions().0 / T::from(n).unwrap();
+        let mut dense_field =
+            DenseField::new(self.bounds.min, cell_size, Vec3i::new(n + 1, n + 1, n + 1));
+
+        let ids = self.get_corners_from_active(&dense_field);
+        dense_field.sample_selected_from_graph(graph, &ids);
+        dense_field
+    }
+
+    // Get the node indices from the active cells to be sampled.
+    fn get_corners_from_active(&self, field: &DenseField<T>) -> HashSet<usize> {
+        let mut set = HashSet::new();
+        let n = self.cells_per_dim();
+        for (index, child) in self.children.iter().enumerate() {
+            if !matches!(child, NodeHandle::Empty) {
+                let (i, j, k) = index3d_from_index1d(index, n, n, n);
+                let cell_corner_ids = field.cell_ids(i, j, k);
+                for id in cell_corner_ids {
+                    set.insert(id);
+                }
+            }
+        }
+
+        set
     }
 }
 
@@ -646,7 +653,7 @@ impl<T: Float + Copy> CellGridIterator<T> for InternalNode<T> {
 
     /// Returns an iterator that yields all cell coordinates in this internal node's grid.
     fn iter_cell_grid<'a>(&'a self) -> Self::GridIter<'a> {
-        let cells_per_dim = (self.children.len() as f64).cbrt() as usize;
+        let cells_per_dim = self.cells_per_dim();
         CellGridIter::new(self.bounds, (cells_per_dim, cells_per_dim, cells_per_dim))
     }
 }
@@ -824,7 +831,6 @@ mod tests {
         SparseFieldConfig {
             internal_size: BlockSize::Size8,
             leaf_size: BlockSize::Size4,
-            sampling_mode: SamplingMode::CENTRE,
             cell_size: 1.0,
         }
     }
@@ -908,7 +914,6 @@ mod tests {
         let mut field_centre = SparseField::new(SparseFieldConfig {
             internal_size: BlockSize::Size8,
             leaf_size: BlockSize::Size4,
-            sampling_mode: SamplingMode::CENTRE,
             cell_size: 1.0,
         });
         let bounds = create_test_bounds();
@@ -922,7 +927,6 @@ mod tests {
         let mut field_corners = SparseField::new(SparseFieldConfig {
             internal_size: BlockSize::Size8,
             leaf_size: BlockSize::Size4,
-            sampling_mode: SamplingMode::CORNERS,
             cell_size: 1.0,
         });
 
