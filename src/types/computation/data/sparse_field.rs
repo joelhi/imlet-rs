@@ -409,7 +409,6 @@ impl<T: ModelFloat + Default + 'static> InternalNode<T> {
         min_val: T,
         max_val: T,
     ) -> bool {
-
         // Check min / max bounds.
         let mut cell_min = cell_values[0];
         let mut cell_max = cell_values[0];
