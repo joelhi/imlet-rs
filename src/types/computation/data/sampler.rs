@@ -62,7 +62,7 @@ pub trait Sampler<T: ModelFloat, F> {
 ///
 /// ```rust
 /// # use imlet::types::computation::{
-/// #    data::{sampler::{Sampler, SparseSampler}, BlockSize, SamplingMode, SparseFieldConfig},
+/// #    data::{sampler::{Sampler, SparseSampler}, BlockSize, SparseFieldConfig},
 /// #    model::ImplicitModel,
 /// # };
 /// # use imlet::types::geometry::BoundingBox;
@@ -75,7 +75,6 @@ pub trait Sampler<T: ModelFloat, F> {
 /// let config = SparseFieldConfig {
 ///     internal_size: BlockSize::Size64,
 ///     leaf_size: BlockSize::Size4,
-///     sampling_mode: SamplingMode::CENTRE,
 ///     cell_size: 1.0,
 /// };
 ///
@@ -409,7 +408,7 @@ where
         let bounds = self.bounds.ok_or("bounds is required")?;
         let cell_size = self.cell_size.ok_or("cell size is required")?;
 
-        let dense_field = DenseField::from_bounds(&bounds, cell_size);
+        let dense_field = DenseField::from_bounds(bounds, cell_size);
         Ok(DenseSampler {
             smoothing_iter: self.smoothing_iter,
             smoothing_factor: self.smoothing_factor,
@@ -474,7 +473,7 @@ mod tests {
     use super::*;
     use crate::types::{
         computation::{
-            data::{field_iterator::ValueIterator, BlockSize, SamplingMode},
+            data::{field_iterator::ValueIterator, BlockSize},
             functions::XYZValue,
         },
         geometry::Vec3,
@@ -547,7 +546,6 @@ mod tests {
         let config = SparseFieldConfig {
             internal_size: BlockSize::Size64,
             leaf_size: BlockSize::Size4,
-            sampling_mode: SamplingMode::CENTRE,
             cell_size: 1.0,
         };
 
@@ -583,7 +581,6 @@ mod tests {
         let config = SparseFieldConfig {
             internal_size: BlockSize::Size64,
             leaf_size: BlockSize::Size4,
-            sampling_mode: SamplingMode::CENTRE,
             cell_size: 1.0,
         };
 
@@ -609,7 +606,6 @@ mod tests {
         let config = SparseFieldConfig {
             internal_size: BlockSize::Size64,
             leaf_size: BlockSize::Size4,
-            sampling_mode: SamplingMode::CENTRE,
             cell_size: 1.0,
         };
 
@@ -683,7 +679,6 @@ mod tests {
         let config_small = SparseFieldConfig {
             internal_size: BlockSize::Size8,
             leaf_size: BlockSize::Size2,
-            sampling_mode: SamplingMode::CENTRE,
             cell_size: 1.0,
         };
 
@@ -701,7 +696,6 @@ mod tests {
         let config_large = SparseFieldConfig {
             internal_size: BlockSize::Size32,
             leaf_size: BlockSize::Size8,
-            sampling_mode: SamplingMode::CENTRE,
             cell_size: 1.0,
         };
 
@@ -728,7 +722,6 @@ mod tests {
         let config_centre = SparseFieldConfig {
             internal_size: BlockSize::Size8,
             leaf_size: BlockSize::Size4,
-            sampling_mode: SamplingMode::CENTRE,
             cell_size: 1.0,
         };
 
@@ -746,7 +739,6 @@ mod tests {
         let config_corners = SparseFieldConfig {
             internal_size: BlockSize::Size8,
             leaf_size: BlockSize::Size4,
-            sampling_mode: SamplingMode::CORNERS,
             cell_size: 1.0,
         };
 
@@ -782,7 +774,6 @@ mod tests {
         let config = SparseFieldConfig {
             internal_size: BlockSize::Size8,
             leaf_size: BlockSize::Size4,
-            sampling_mode: SamplingMode::CENTRE,
             cell_size: 1.0,
         };
 
@@ -812,7 +803,6 @@ mod tests {
         let config = SparseFieldConfig {
             internal_size: BlockSize::Size8,
             leaf_size: BlockSize::Size4,
-            sampling_mode: SamplingMode::CENTRE,
             cell_size: 1.0,
         };
 
