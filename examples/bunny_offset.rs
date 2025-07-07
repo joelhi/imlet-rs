@@ -4,9 +4,8 @@ use imlet::{
             sampler::{Sampler, SparseSampler},
             SparseFieldConfig,
         },
-        functions::{Gyroid, MeshFile},
+        functions::MeshFile,
         model::ImplicitModel,
-        operations::shape::{BooleanIntersection, Thickness},
     },
     utils::{self, io::write_obj_file},
 };
