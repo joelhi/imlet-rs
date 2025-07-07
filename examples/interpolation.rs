@@ -2,7 +2,7 @@ use imlet::{
     types::computation::{
         data::{
             sampler::{Sampler, SparseSampler},
-            SamplingMode, SparseFieldConfig,
+            SparseFieldConfig,
         },
         functions::{Gyroid, MeshFile, XYZValue},
         model::ImplicitModel,
@@ -63,11 +63,7 @@ pub fn main() {
 
     let mut sampler = SparseSampler::builder()
         .with_bounds(bounds)
-        .with_config(
-            SparseFieldConfig::default()
-                .set_cell_size(cell_size)
-                .set_sampling_mode(SamplingMode::CORNERS),
-        )
+        .with_config(SparseFieldConfig::default().set_cell_size(cell_size))
         .build()
         .unwrap();
 
