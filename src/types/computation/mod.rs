@@ -1,5 +1,14 @@
 //! # Computation Module
 //!
+//! [`ImplicitModel`]: crate::types::computation::model::ImplicitModel
+//! [`ModelComponent`]: crate::types::computation::model::ModelComponent
+//! [`Functions`]: crate::types::computation::functions::FunctionComponent
+//! [`Operations`]: crate::types::computation::operations::OperationComponent
+//! [`ImplicitFunction`]: crate::types::computation::traits::ImplicitFunction
+//! [`ImplicitOperation`]: crate::types::computation::traits::ImplicitOperation
+//! 
+//! [`ModelError`]: crate::types::computation::ModelError
+//! 
 //! The `computation` module provides the core tools and abstractions for building, manipulating, and evaluating implicit models.
 //! These models represent continuous scalar fields in 3D space and can be used to define and polygonize complex geometries.
 //!
@@ -12,7 +21,7 @@
 //!
 //! ## Core Components
 //!
-//! The computation graph in an [`ImplicitModel`] consists of three types of nodes:
+//! The computation graph in an [`ImplicitModel`] consists of three types of nodes, described by the [`ModelComponent`]:
 //!
 //! 1. **[`Functions`]**: Transform spatial coordinates to scalar values
 //!    - Implement [`ImplicitFunction`] trait
@@ -26,7 +35,7 @@
 //!    - Examples: boolean operations, arithmetic
 //!    - Evaluated as `f(inputs[]) -> scalar`
 //!
-//! 3. **[`Constants`]**: Provide fixed scalar values
+//! 3. **`Constants`**: Provide fixed scalar values
 //!    - Examples: thresholds, scale factors
 //!    - No dependencies
 //!
@@ -71,24 +80,9 @@
 //!
 //! The system uses [`ModelError`] to handle various failure cases:
 //!
-//! 1. **Graph Structure Errors**:
-//!    - `CyclicDependency` - A component depends on itself (directly or indirectly)
-//!    - `MissingTag` - Referenced component tag doesn't exist
-//!    - `DuplicateTag` - Attempted to add component with already used tag
-//!
-//! 2. **Input Errors**:
-//!    - `InputIndexOutOfRange` - Input index larger than component's input count
-//!    - `IncorrectInputCount` - Wrong number of inputs provided to operation
-//!    - `MissingInput` - Required input not connected
-//!
-//! 3. **Configuration Errors**:
-//!    - `MissingOutput` - No output component specified for evaluation
-//!    - `MissingConfig` - Required configuration not provided
-//!    - `MissingRequiredParam` - Required parameter missing from builder
-//!    - `IncorrectDataSize` - Data buffer size doesn't match field dimensions
-//!    - `NoDefaultOutput` - No default output component set
-//!
-//! Custom error messages can also be created using the `Custom` variant.
+//!   - Computation graph errors
+//!   - Configuration or input errors
+//!   - Computation errors
 //!
 //! ## Extending the System
 //!
@@ -97,22 +91,16 @@
 //! 1. **Custom Functions**:
 //!    - Implement [`ImplicitFunction`] trait
 //!    - Define spatial mapping
-//!    - Handle boundary cases
 //!
 //! 2. **Custom Operations**:
 //!    - Implement [`ImplicitOperation`] trait
 //!    - Define input requirements
-//!    - Ensure thread safety
+//! 
+//! In both cases the struct has to be thread safe.
 //!
-//! > ⚠️ **Note**: Due to Rust's lack of runtime reflection, deserialization of custom implementations
+//! > ⚠️ **Note**: Due to Rust's lack of runtime reflection, when using the `serde` feature, deserialization of custom implementations
 //! > of [`ImplicitFunction`] and [`ImplicitOperation`] is not currently supported.
 //!
-//! [`ImplicitModel`]: model::ImplicitModel
-//! [`Functions`]: functions::FunctionComponent
-//! [`Operations`]: operations::OperationComponent
-//! [`ImplicitFunction`]: traits::ImplicitFunction
-//! [`ImplicitOperation`]: traits::ImplicitOperation
-//! [`ModelError`]: model_error::ModelError
 
 /// Error types related to model computation.
 mod model_error;
