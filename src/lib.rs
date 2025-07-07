@@ -12,10 +12,12 @@
 //! - **Functional Modeling**: Create geometries by combining distance functions (e.g., spheres, toruses) and operations (e.g., intersections, unions).
 //! - **Geometric Types**: Provides core geometric types, like `Vec3`, `Plane`, `Mesh`, and more.
 //! - **Custom Distance Functions**: Define distance functions mathematically or derive them from external triangle meshes.
+//! - **Field Sampling**: Both dense and sparse field sampling for handling large domains.
+//! - **Iso-surfacing**: Efficient iso-surface extraction from discretized scalar fields using marching cubes.
 //! - **Mesh Export/Import**: Export results to `.obj` files or import external `.obj` files to create custom distance functions.
-//! - **Iso-surfacing**: Efficient iso-surface extraction from discretized scalar fields.
 //!
-//! *Optional feature flags*
+//! ### Optional Feature Flags
+//!
 //! - `serde`: Save and load implicit models using the `.json` format for easy sharing and reuse.
 //! - `viewer`: Visualize mesh outputs quickly using the `viewer` feature built on top of `wgpu`.
 //!
@@ -23,10 +25,9 @@
 //!
 //! ## Example: Creating a Simple Geometry
 //!
-//! Here's a basic example demonstrating how to use `Imlet` to combine a sphere and a gyroid using an intersection operation. The result is polygonized and saved as an `.obj` file:
+//! Here's a basic example demonstrating how to use `Imlet` to combine a sphere and a gyroid using an intersection operation:
 //!
 //! ```rust
-//!
 //! # use imlet::utils::io::write_obj_file;
 //! # use imlet::types::geometry::{Vec3, BoundingBox, Sphere};
 //! # use imlet::types::computation::{
@@ -85,11 +86,12 @@
 //!     .expect("Extracting iso-surface should work.");
 //!
 //! write_obj_file(&mesh, "interpolation_example").unwrap();
-//!
 //! ```
 //!
-//! For detailed usage and API references, explore the module documentation.
-//!
+//! For more examples and detailed API documentation, see:
+//! - The `examples/` directory in the repository
+//! - The [`types::computation`] module for model building
+//! - The [`types::geometry`] module for geometric primitives
 //!
 
 /// The current version of the `Imlet` library.

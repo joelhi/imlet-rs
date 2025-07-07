@@ -212,10 +212,10 @@ where
     pub fn build(self) -> Result<SparseSampler<T>, ModelError> {
         let bounds = self
             .bounds
-            .ok_or(ModelError::Custom("bounds is required".to_owned()))?;
+            .ok_or(ModelError::MissingRequiredParam("bounds".to_owned()))?;
         let sparse_config = self
             .sparse_config
-            .ok_or(ModelError::Custom("config is required".to_owned()))?;
+            .ok_or(ModelError::MissingRequiredParam("config".to_owned()))?;
 
         let min_val = self.min_val.unwrap_or(SparseSampler::default_min());
         let max_val = self.max_val.unwrap_or(SparseSampler::default_max());
@@ -237,7 +237,7 @@ impl<T: ModelFloat + 'static + Default> Sampler<T, SparseField<T>> for SparseSam
     fn sample_field(&mut self, model: &ImplicitModel<T>) -> Result<&SparseField<T>, ModelError> {
         let component_tag = model
             .get_default_output()
-            .ok_or(ModelError::Custom("No default output defined.".to_owned()))?;
+            .ok_or(ModelError::NoDefaultOutput)?;
         self.sample_field_for_component(model, component_tag)
     }
 
@@ -432,7 +432,7 @@ impl<T: ModelFloat> Sampler<T, DenseField<T>> for DenseSampler<T> {
     fn sample_field(&mut self, model: &ImplicitModel<T>) -> Result<&DenseField<T>, ModelError> {
         let component_tag = model
             .get_default_output()
-            .ok_or(ModelError::Custom("No default output defined.".to_owned()))?;
+            .ok_or(ModelError::NoDefaultOutput)?;
         self.sample_field_for_component(model, component_tag)
     }
 

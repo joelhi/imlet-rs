@@ -4,10 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::types::computation::{
     model::ModelComponent,
     operations::{
-        math::{
-            Add, Divide, LinearInterpolation, Multiply, Remap, Subtract,
-            VariableLinearInterpolation,
-        },
+        math::{Add, Divide, Lerp, Multiply, Remap, Subtract, VariableLerp},
         shape::{BooleanDifference, BooleanIntersection, BooleanUnion, Offset, Thickness},
     },
     traits::{ImplicitOperation, ModelFloat},
@@ -21,8 +18,8 @@ pub enum OperationComponent {
     Subtract,
     Multiply,
     Divide,
-    LinearInterpolation,
-    VariableLinearInterpolation,
+    Lerp,
+    VariableLerp,
     Remap,
     BooleanUnion,
     BooleanDifference,
@@ -42,10 +39,8 @@ impl OperationComponent {
             OperationComponent::Subtract => Box::new(Subtract::new()),
             OperationComponent::Multiply => Box::new(Multiply::new()),
             OperationComponent::Divide => Box::new(Divide::new()),
-            OperationComponent::LinearInterpolation => Box::new(LinearInterpolation::new()),
-            OperationComponent::VariableLinearInterpolation => {
-                Box::new(VariableLinearInterpolation::new())
-            }
+            OperationComponent::Lerp => Box::new(Lerp::new()),
+            OperationComponent::VariableLerp => Box::new(VariableLerp::new()),
             OperationComponent::Remap => Box::new(Remap::new()),
             // Shape
             OperationComponent::BooleanUnion => Box::new(BooleanUnion::new()),
@@ -66,10 +61,8 @@ pub const OPERATION_COMPONENTS: &[OperationComponent] = &[
     OperationComponent::Subtract,
     OperationComponent::Multiply,
     OperationComponent::Divide,
-    OperationComponent::LinearInterpolation,
-    OperationComponent::VariableLinearInterpolation,
-    OperationComponent::Remap,
-    OperationComponent::VariableLinearInterpolation,
+    OperationComponent::Lerp,
+    OperationComponent::VariableLerp,
     OperationComponent::Remap,
     // Shape
     OperationComponent::BooleanUnion,

@@ -76,7 +76,7 @@ pub trait ImplicitOperation<T>: ImplicitComponent<T> {
     /// * `inputs` - Inputs for operation, passed from components in implicit model.
     fn eval(&self, inputs: &[T]) -> T;
 
-    /// Communicates to the model the number of inputs required for this operation.
+    /// Communicates to the model the names of and number of inputs to this operation.
     fn inputs(&self) -> &[&str];
 }
 /// Trait for general functionality of an implicit component.

@@ -173,25 +173,25 @@ impl<T: Float> ImplicitComponent<T> for Divide {
 /// * Second value to interpolate (b)
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone)]
-pub struct LinearInterpolation<T> {
+pub struct Lerp<T> {
     factor: T,
 }
 
-static LINEAR_INTERPOLATION_PARAMETERS: &[Parameter] = &[Parameter {
+static LERP_PARAMETERS: &[Parameter] = &[Parameter {
     name: "Factor",
     data_type: DataType::Value,
 }];
 
-static LINEAR_INTERPOLATION_INPUTS: &[&str] = &["First Value", "Second Value"];
+static LERP_INPUTS: &[&str] = &["First Value", "Second Value"];
 
-impl<T: Float> Default for LinearInterpolation<T> {
+impl<T: Float> Default for Lerp<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: Float> LinearInterpolation<T> {
-    /// Create a new LinearInterpolation operation.
+impl<T: Float> Lerp<T> {
+    /// Create a new Lerp operation.
     pub fn new() -> Self {
         Self {
             factor: T::from(0.5).expect("Should be able to conver 0,5 to T"),
@@ -199,23 +199,23 @@ impl<T: Float> LinearInterpolation<T> {
     }
 }
 
-impl<T: ModelFloat> ImplicitOperation<T> for LinearInterpolation<T> {
+impl<T: ModelFloat> ImplicitOperation<T> for Lerp<T> {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0] + self.factor * (inputs[1] - inputs[0])
     }
 
     fn inputs(&self) -> &[&str] {
-        LINEAR_INTERPOLATION_INPUTS
+        LERP_INPUTS
     }
 }
 
-impl<T: ModelFloat> ImplicitComponent<T> for LinearInterpolation<T> {
+impl<T: ModelFloat> ImplicitComponent<T> for Lerp<T> {
     fn parameters(&self) -> &[Parameter] {
-        LINEAR_INTERPOLATION_PARAMETERS
+        LERP_PARAMETERS
     }
 
     fn name(&self) -> &'static str {
-        "LinearInterpolation"
+        "Lerp"
     }
 
     fn set_parameter(&mut self, parameter_name: &str, data: Data<T>) {
@@ -247,39 +247,40 @@ impl<T: ModelFloat> ImplicitComponent<T> for LinearInterpolation<T> {
 /// * Interpolation factor.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug)]
-pub struct VariableLinearInterpolation {}
+pub struct VariableLerp {}
 
-static VAR_LINEAR_INTERPOLATION_INPUTS: &[&str] = &["First Value", "Second Value", "Factor"];
+static VAR_LERP_INPUTS: &[&str] = &["First Value", "Second Value", "Factor"];
 
-impl Default for VariableLinearInterpolation {
+impl Default for VariableLerp {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl VariableLinearInterpolation {
-    /// Create a new VariableLinearInterpolation operation.
+impl VariableLerp {
+    /// Create a new VariableLerp operation.
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl<T: ModelFloat> ImplicitOperation<T> for VariableLinearInterpolation {
+impl<T: ModelFloat> ImplicitOperation<T> for VariableLerp {
     fn eval(&self, inputs: &[T]) -> T {
         inputs[0] + inputs[2] * (inputs[1] - inputs[0])
     }
 
     fn inputs(&self) -> &[&str] {
-        VAR_LINEAR_INTERPOLATION_INPUTS
+        VAR_LERP_INPUTS
     }
 }
 
-impl<T: ModelFloat> ImplicitComponent<T> for VariableLinearInterpolation {
+impl<T: ModelFloat> ImplicitComponent<T> for VariableLerp {
     fn name(&self) -> &'static str {
-        "VariableLinearInterpolation"
+        "VariableLerp"
     }
 }
 
+/// Remap a value from a source range to a target range.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone)]
 pub struct Remap<T> {
@@ -338,7 +339,7 @@ impl<T: Float> Remap<T> {
     }
 
     /// Create a new Remap operation to normalize a certain range.
-    pub fn with_source_domain(from_min: T, from_max: T) -> Self {
+    pub fn normalize_domain(from_min: T, from_max: T) -> Self {
         Self {
             from_min,
             from_max,

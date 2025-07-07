@@ -29,6 +29,12 @@ pub enum ModelError {
     MissingOutput(),
     /// Can't compute as no model config is defined.
     MissingConfig(),
+    /// A required param is missing from a builder.
+    MissingRequiredParam(String),
+    /// Data size for the dense field does not match the specified size.
+    IncorrectDataSize(usize, usize),
+    /// Model has no default output assigned.
+    NoDefaultOutput,
     /// A generic error with a custom message.
     Custom(String),
 }
@@ -78,7 +84,16 @@ impl std::fmt::Display for ModelError {
                 f,
                 "Failed to generate output as no config is specified for the model."
             ),
+            ModelError::MissingRequiredParam(param) => {
+                write!(f, "Required parameter {param} is missing from the builder.")
+            }
             ModelError::Custom(message) => write!(f, "{message}"),
+            ModelError::IncorrectDataSize(data_size, field_size) => {
+                write!(f, "The provided data buffer of size (size={data_size}) is not matching the point count of the field (n={field_size}).")
+            }
+            ModelError::NoDefaultOutput => {
+                write!(f, "The model has no default output set. Please set one or provide a specific component.")
+            }
         }
     }
 }

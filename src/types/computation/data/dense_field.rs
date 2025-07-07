@@ -224,10 +224,7 @@ impl<T: Float> DenseField<T> {
         data: Vec<T>,
     ) -> Result<Self, ModelError> {
         if num_pts.product() != data.len() {
-            return Err(ModelError::Custom(
-                "Failed to generate field from data. Point count and data length must match"
-                    .to_owned(),
-            ));
+            return Err(ModelError::IncorrectDataSize(data.len(), num_pts.product()));
         }
         Ok(Self {
             origin,
