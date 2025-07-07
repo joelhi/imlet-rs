@@ -6,9 +6,9 @@
 //! [`Operations`]: crate::types::computation::operations::OperationComponent
 //! [`ImplicitFunction`]: crate::types::computation::traits::ImplicitFunction
 //! [`ImplicitOperation`]: crate::types::computation::traits::ImplicitOperation
-//! 
+//!
 //! [`ModelError`]: crate::types::computation::ModelError
-//! 
+//!
 //! The `computation` module provides the core tools and abstractions for building, manipulating, and evaluating implicit models.
 //! These models represent continuous scalar fields in 3D space and can be used to define and polygonize complex geometries.
 //!
@@ -95,7 +95,7 @@
 //! 2. **Custom Operations**:
 //!    - Implement [`ImplicitOperation`] trait
 //!    - Define input requirements
-//! 
+//!
 //! In both cases the struct has to be thread safe.
 //!
 //! > ⚠️ **Note**: Due to Rust's lack of runtime reflection, when using the `serde` feature, deserialization of custom implementations
