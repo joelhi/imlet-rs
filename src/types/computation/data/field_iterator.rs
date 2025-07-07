@@ -319,7 +319,7 @@ mod tests {
     const EPSILON: f64 = 1e-10;
 
     fn assert_float_eq(a: f64, b: f64) {
-        assert!((a - b).abs() < EPSILON, "Expected {} but got {}", b, a);
+        assert!((a - b).abs() < EPSILON, "Expected {b} but got {a}");
     }
 
     #[test]
