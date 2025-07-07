@@ -24,8 +24,8 @@ pub fn main() {
 
     let mut sampler = SparseSampler::builder()
         .with_bounds(bounds)
-        .with_min_val(offset_dist - 0.1)
-        .with_max_val(offset_dist + 0.1)
+        .with_min_val(offset_dist - 0.01)
+        .with_max_val(offset_dist + 0.01)
         .with_tolerance(1E-3)
         .with_config(SparseFieldConfig::default().set_cell_size(cell_size))
         .build()
