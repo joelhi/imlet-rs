@@ -34,7 +34,7 @@
 //! #    operations::shape::BooleanIntersection,
 //! # };
 //! # use imlet::types::computation::model::ImplicitModel;
-//! # use imlet::types::computation::data::{SparseField, SparseFieldConfig, SamplingMode, BlockSize};
+//! # use imlet::types::computation::data::{SparseField, SparseFieldConfig, BlockSize};
 //! # use imlet::types::computation::data::sampler::{SparseSampler, Sampler};
 //! # use imlet::utils::io;
 //!
@@ -68,8 +68,7 @@
 //!
 //! // Sample a sparse field and generate an iso-surface.
 //! let config = SparseFieldConfig::default()
-//!     .set_cell_size(cell_size)
-//!     .set_sampling_mode(SamplingMode::CORNERS);
+//!     .set_cell_size(cell_size);
 //!
 //! let mut sampler = SparseSampler::builder()
 //!     .with_bounds(bounds)                        // Set the bounds for the sampling.
