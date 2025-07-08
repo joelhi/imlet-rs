@@ -1,6 +1,6 @@
 # imlet - Changelog
 
-## Latest
+## v0.2.0 (2025-07-08)
 - Documentation and other minor fixes. ([#36](https://github.com/joelhi/imlet-rs/pull/36))
 - Improve sparse field sampling performance and remove sampling mode parameter. ([#35](https://github.com/joelhi/imlet-rs/pull/35))
 - Add join tolerance parameter to sampling options. ([#34](https://github.com/joelhi/imlet-rs/pull/34))
