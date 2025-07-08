@@ -14,10 +14,12 @@
  - **Functional Modeling**: Create geometries by combining distance functions (e.g., spheres, toruses) and operations (e.g., intersections, unions).
  - **Geometric Types**: Provides core geometric types, like `Vec3`, `Plane`, `Mesh`, and more.
  - **Custom Distance Functions**: Define distance functions mathematically or derive them from external triangle meshes.
+ - **Field Sampling**: Both dense and sparse field sampling for handling large domains.
+ - **Iso-surfacing**: Efficient iso-surface extraction from discretized scalar fields using marching cubes.
  - **Mesh Export/Import**: Export results to `.obj` files or import external `.obj` files to create custom distance functions.
- - **Iso-surfacing**: Efficient iso-surface extraction from discretized scalar fields.
 
- *Optional feature flags*
+ ### Optional Feature Flags
+
  - `serde`: Save and load implicit models using the `.json` format for easy sharing and reuse.
  - `viewer`: Visualize mesh outputs quickly using the `viewer` feature built on top of `wgpu`.
 
